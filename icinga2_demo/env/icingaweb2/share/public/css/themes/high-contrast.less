@@ -1,0 +1,234 @@
+/*! Icinga Web 2 | (c) 2016 Icinga Development Team | GPLv2+ */
+
+@icinga-blue: #006D8C;
+
+// Gray colors
+@gray: #7F7F7F;
+@gray-semilight: #A9A9A9;
+@gray-light: #C9C9C9;
+@gray-lighter: #EEEEEE;
+@gray-lightest: #F7F7F7;
+@disabled-gray: #9a9a9a;
+
+// State colors
+@color-ok: #006400;
+@color-critical: #EE0000;
+@color-critical-handled: #EE0000;
+@color-warning: #8B5A00;
+@color-warning-handled: #8B5A00;
+@color-unknown: #800080;
+@color-unknown-handled: #800080;
+@color-unreachable: #800080;
+@color-unreachable-handled: #800080;
+@color-pending: #0000EE;
+
+// Icinga colors
+@low-sat-blue: #dae3e6;
+
+// Background color for <body>
+@body-bg-color: @white;
+
+@text-color: #191919;
+@text-color-light: #555555;
+
+@menu-highlight-color: white;
+@menu-2ndlvl-color: white;
+@menu-2ndlvl-highlight-color: white;
+@menu-2ndlvl-active-hover-color: @text-color;
+
+#menu ul.nav-level-1 > .nav-item > a {
+  &:focus, &:hover {
+    text-decoration: underline;
+  }
+}
+
+#menu ul.nav-level-1 > .nav-item.active > a,
+#menu .nav-level-1 > .nav-item.active:not(.selected) > a:hover {
+  color: @text-color;
+  background-color: @white;
+}
+
+#menu .nav-level-2 > .nav-item.active {
+  background-color: @white;
+
+  a {
+    color: @text-color;
+  }
+
+  > a:focus, > a:hover {
+    opacity: 1;
+  }
+}
+
+#menu .nav-level-2 > .nav-item > a {
+  &:hover, &:focus {
+    text-decoration: underline;
+  }
+}
+
+#menu ul:not(.nav-level-2) > .selected > a {
+  color: @text-color;
+}
+
+#menu .active > a {
+  text-decoration: underline;
+}
+
+.badge:not(.handled),
+.state-badge:not(.handled) {
+  &.state-warning {
+    border: 1px solid @color-warning;
+  }
+
+  &.state-critical,
+  &.state-down {
+    border: 1px solid @color-critical;
+  }
+
+  &.state-unreachable {
+    border: 1px solid @color-unreachable;
+  }
+
+  &.state-unknown {
+    border: 1px solid @color-unknown;
+  }
+
+  &.state-ok,
+  &.state-up {
+    border: 1px solid @color-ok;
+  }
+}
+
+.badge.handled,
+.badge.state-ok,
+.state-badge.handled,
+.state-badge.state-ok {
+  background-color: @body-bg-color !important;
+  color: @text-color !important;
+
+  &.state-warning {
+    border: 1px solid @color-warning-handled;
+  }
+
+  &.state-critical,
+  &.state-down {
+    border: 1px solid @color-critical-handled;
+  }
+
+  &.state-unreachable {
+    border: 1px solid @color-unreachable-handled;
+  }
+
+  &.state-unknown {
+    border: 1px solid @color-unknown-handled;
+  }
+}
+
+.boxview a:focus {
+    color: @text-color;
+    text-decoration: underline;
+}
+
+.icinga-module.module-monitoring {
+  @timeline-notification-color: #1650CF;
+  @timeline-hard-state-color: #A24600;
+  @timeline-comment-color: #346964;
+  @timeline-ack-color: #855D18;
+  @timeline-downtime-start-color: #515151;
+  @timeline-downtime-end-color: #5e5e2f;
+
+  // Unfortunately it does not suffice to only override the timeline colors here, because our less compiler seems to
+  // have the related style block in module.less already evaluated
+
+  .timeline-notification {
+    background-color: @timeline-notification-color;
+
+    &.extrapolated {
+      background-color: lighten(@timeline-notification-color, 20%);
+    }
+  }
+
+  .timeline-hard-state {
+    background-color: @timeline-hard-state-color;
+
+    &.extrapolated {
+      background-color: lighten(@timeline-hard-state-color, 20%);
+    }
+  }
+
+  .timeline-comment {
+    background-color: @timeline-comment-color;
+
+    &.extrapolated {
+      background-color: lighten(@timeline-comment-color, 20%);
+    }
+  }
+
+  .timeline-ack {
+    background-color: @timeline-ack-color;
+
+    &.extrapolated {
+      background-color: lighten(@timeline-ack-color, 20%);
+    }
+  }
+
+  .timeline-downtime-start {
+    background-color: @timeline-downtime-start-color;
+
+    &.extrapolated {
+      background-color: lighten(@timeline-downtime-start-color, 20%);
+    }
+  }
+
+  .timeline-downtime-end {
+    background-color: @timeline-downtime-end-color;
+
+    &.extrapolated {
+      background-color: lighten(@timeline-downtime-end-color, 20%);
+    }
+  }
+}
+
+.icinga-controls,
+.search-editor {
+  input:not([type="checkbox"]):not([type="radio"]),
+  .toggle-switch .toggle-slider:before,
+  .toggle-switch > .toggle-slider,
+  select,
+  textarea {
+    border: 1px solid @icinga-blue;
+  }
+
+  input[type="checkbox"]:not(:checked) + .toggle-switch .toggle-slider:before {
+    height: 1.166666667em;
+    width: 1.166666667em;
+    margin: 1px;
+  }
+}
+
+.icinga-module.module-icingadb .list-item.overdue {
+  background: none;
+
+  header > *:not(time),
+  .caption {
+    opacity: 1;
+  }
+}
+
+.controls input.search,
+input.search {
+  background-image: url(../img/icons/search.png);
+}
+
+.search-bar,
+.button-link {
+  border: 1px solid @icinga-blue;
+}
+
+.view-mode-switcher > label {
+  border: 1px solid @icinga-blue;
+
+  &:not(:first-of-type) {
+    border-left: none;
+  }
+}

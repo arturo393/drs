@@ -1,0 +1,107 @@
+/*! Icinga Web 2 | (c) 2014 Icinga Development Team | GPLv2+ */
+
+// Styles for tab navigation of containers
+
+.tabs {
+  .var(background-color, menu-bg-color);
+  letter-spacing: -0.417em;
+}
+
+.tabs > li {
+  display: inline-block;
+  letter-spacing: normal;
+}
+
+.tabs a {
+    padding: 0 1em;
+    line-height: 2.5em;
+
+    &:focus {
+      outline-offset: -0.5em;
+    }
+}
+
+.tabs > li {
+  &:not(:last-child) {
+    margin-right: 0.5em;
+  }
+
+  > a {
+    .var(color, menu-color);
+
+    &:hover {
+      text-decoration: none;
+      .var(background, tab-hover-bg-color);
+    }
+  }
+
+  &.active > a,
+  > a:focus {
+    .var(background-color, body-bg-color);
+    .var(color, text-color);
+  }
+}
+
+.tabs > .dropdown-nav-item > a,
+.tabs > li > .close-container-control,
+.tabs > li > .refresh-container-control {
+  text-align: center;
+  width: 3em;
+}
+
+.tabs > .dropdown-nav-item:hover > a,
+.tabs > .dropdown-nav-item > a:focus,
+.tabs > li > .close-container-control:focus,
+.tabs > li > .close-container-control:hover,
+.tabs > li > .refresh-container-control:focus,
+.tabs > li > .refresh-container-control:hover {
+  .var(background-color, body-bg-color);
+  .var(color, text-color);
+  text-decoration: none;
+}
+
+.tabs > .dropdown-nav-item > ul {
+  .box-shadow();
+  .rounded-corners(0 0 0.3em 0.3em);
+
+  .var(background-color, body-bg-color);
+  border: 1px solid;
+  .var(border-color, gray-light);
+  border-top: none;
+  margin-left: -1px;
+  min-width: 14em;
+  z-index: 10;
+}
+
+.tabs > .dropdown-nav-item > ul > li:hover > a {
+  .var(background-color, gray-lighter);
+  text-decoration: none;
+}
+
+// Dropdown tabs after the fourth title should be right-aligned
+.tabs > li:nth-child(n+5).dropdown-nav-item > ul {
+  // Offset according to width
+  margin-left: -10.95em;
+  margin-right: 1px;
+  width: 14em;
+}
+
+// TODO(el): Rename display-on-hover and move it to main.less
+.display-on-hover {
+  font-size: @font-size-small;
+  left: -999em;
+  position: relative;
+}
+
+.dropdown-nav-item > ul > li > a:focus > .display-on-hover,
+.dropdown-nav-item > ul > li:hover > a > .display-on-hover {
+  position: static;
+}
+
+.tabs > li > .close-container-control {
+  display: none;
+}
+
+#layout.twocols .tabs > li > .close-container-control {
+  display: block;
+}

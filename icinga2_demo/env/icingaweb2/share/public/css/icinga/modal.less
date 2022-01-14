@@ -1,0 +1,113 @@
+#layout > #modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  background-color: rgba(0, 0, 0, .6);
+  opacity: 0;
+  font-size: @font-size;
+  line-height: @line-height;
+  pointer-events: none;
+  transition: opacity .2s ease-in; // This is coupled with a `setTimout` in modal.js
+  z-index: 1000;
+
+  &.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  > div {
+    height: 100%;
+    pointer-events: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+#modal-content {
+  display: flex;
+  flex: 10;
+  flex-direction: column;
+  justify-content: stretch;
+
+  > .content {
+    padding: 1em;
+
+    > .icinga-form {
+      width: 100%;
+    }
+  }
+}
+
+#modal-ghost {
+  display: none;
+}
+
+.modal-area {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  justify-content: stretch;
+}
+
+.modal-header {
+  padding: .25em 0;
+  position: relative;
+  text-align: center;
+
+  > button {
+    position: absolute;
+    top: .75em;
+    right: 1em;
+
+    .var(background-color, "gray");
+    border: none;
+    border-radius: 50%;
+    .var(color, text-color-inverted);
+    height: 1.5em;
+    line-height: 1em;
+    padding: 0;
+    text-align: center;
+    width: 1.5em;
+
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-appearance: none;
+    appearance: none;
+  }
+
+  > button:hover {
+    opacity: .8;
+  }
+
+  > button > .icon-cancel:before {
+    margin-right: 0;
+  }
+}
+
+.modal-header h1 {
+  padding: .25em;
+  margin: 0;
+}
+
+.modal-window {
+  overflow: auto;
+  pointer-events: auto;
+
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+
+  .var(background-color, body-bg-color);
+  border-radius: .5em;
+  box-shadow: 0 0 2em 0 rgba(0, 0, 0, .6);
+  flex: 1;
+  margin: 0 auto;
+  max-height: 80%;
+  min-height: 40vh;
+  max-width: 60em;
+}

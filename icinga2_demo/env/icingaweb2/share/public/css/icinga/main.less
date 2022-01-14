@@ -1,0 +1,452 @@
+/*! Icinga Web 2 | (c) 2014 Icinga Development Team | GPLv2+ */
+
+// Url for static ipl assets
+@iplWebAssets: "../lib/icinga/icinga-php-library";
+
+// Width for the name column--th--of name-value-table
+@name-value-table-name-width: 38/3em;
+
+.action-link {
+  .var(color, icinga-blue);
+}
+
+.error-message {
+  font-weight: @font-weight-bold;
+}
+
+.error-reason {
+  margin-top: 4em;
+}
+
+.large-icon {
+  font-size: 200%;
+}
+
+.content-centered {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.icon-col {
+  text-align: center;
+  width: 1em;
+}
+
+.preformatted {
+  font-family: @font-family-fixed;
+  white-space: pre-wrap;
+}
+
+.markdown {
+  > * {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  a {
+    border-bottom: 1px @text-color-light dotted;
+
+    &:hover, &:focus {
+      border-bottom: 1px @text-color solid;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 32em;
+    }
+
+    &.with-thumbnail {
+      img {
+        padding: 1px;
+      }
+
+      &:hover, &:focus {
+        img {
+          padding: 0;
+        }
+      }
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      background-color: @gray-lighter;
+    }
+
+    &, th, td {
+      border: 1px solid @gray-light;
+    }
+  }
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+.pull-right {
+  float: right;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.user-avatar {
+  height: 16px;
+  width: 16px;
+}
+
+.v-center {
+  > * {
+    vertical-align: middle;
+  }
+}
+
+.section {
+  margin-bottom: 2em;
+}
+
+a:hover > .icon-cancel {
+  .var(color, color-critical);
+}
+
+.icon-stateful {
+  .fg-stateful();
+}
+
+// Link styles
+
+.button-link {
+  .action-link();
+  .rounded-corners(3px);
+
+  .var(background, low-sat-blue);
+  display: inline-block;
+  padding: 0.25em 0.5em;
+
+  &:hover {
+    .var(background, low-sat-blue-dark);
+    text-decoration: none;
+  }
+}
+
+// List styles
+
+.comment-list {
+  margin: 0;
+
+  > dt {
+    border-bottom: 1px solid;
+    .var(border-bottom-color, gray-lighter);
+    margin-bottom: 0.25em;
+
+    &:hover {
+      .var(background-color, gray-lightest);
+
+      > .remove-action {
+        visibility: visible;
+      }
+    }
+
+    > .remove-action {
+      visibility: hidden;
+    }
+  }
+
+  > dd {
+    margin: 0 0 1em 0;
+  }
+}
+
+.comment-time {
+  .var(color, text-color-light);
+  font-size: @font-size-small;
+}
+
+.name-value-list {
+  > dd {
+    // Reset default margin
+    margin: 0;
+  }
+
+  > dt {
+    .var(color, text-color-light);
+    font-size: @font-size-small;
+  }
+}
+
+// Table styles
+
+.common-table {
+  width: 100%;
+
+  td, th {
+    padding-top: 1em;
+  }
+
+  td {
+    padding-bottom: 1em;
+  }
+
+  th {
+    text-align: left;
+    padding-bottom: 0.5em;
+  }
+
+  thead {
+    border-bottom: 1px solid;
+    .var(border-bottom-color, gray-light);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid;
+    .var(border-bottom-color, gray-lightest);
+    border-left: 5px solid transparent;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  tr[href].active {
+    .var(background-color, tr-active-color);
+    .var(border-left-color, icinga-blue);
+  }
+
+  tr[href]:hover {
+    .var(background-color, tr-hover-color);
+    cursor: pointer;
+  }
+}
+
+.name-value-table {
+  width: 100%;
+}
+
+.name-value-table > caption {
+  margin-top: .5em;
+  text-align: left;
+  font-weight: bold;
+}
+
+.name-value-table > tbody > tr > th {
+  .var(color, text-color-light);
+  // Reset default font-weight
+  font-weight: normal;
+  padding-left: 0;
+  text-align: left;
+  vertical-align: top;
+  width: @name-value-table-name-width;
+}
+
+/* Styles for centering content of unknown width and height both horizontally and vertically
+ *
+ * Example markup:
+ * <div class="centered-ghost">
+ *     <div class="centered-content">
+ *         <p>I'm centered.</p>
+ *     </div>
+ * </div>
+ */
+
+.centered-content {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.centered-ghost {
+  height: 100%;
+  text-align: center;
+  letter-spacing: -0.417em; // Remove gap between content and ghost
+}
+
+.centered-ghost > * {
+  letter-spacing: normal;
+}
+
+.centered-ghost:after {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+// Responsive iFrames
+
+.iframe-container {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  padding-bottom: 75%;
+  width: 100%;
+
+  & > iframe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+// Collapsible Control
+#collapsible-control-ghost {
+  display: none;
+}
+
+.collapsible-control {
+  position: relative;
+  z-index: 1;
+
+  button {
+    .rounded-corners(50%);
+
+    float: right;
+    width: 2em;
+    height: 2em;
+    padding: 0;
+    margin-top: -1em;
+    margin-right: .25em;
+
+    .var(background, gray-lighter);
+    .var(color, "gray");
+    border: none;
+    -webkit-box-shadow: 0 0 1/3em rgba(0,0,0,.3);
+    -moz-box-shadow: 0 0 1/3em rgba(0,0,0,.3);
+    box-shadow: 0 0 1/3em rgba(0,0,0,.3);
+
+    &:hover {
+      .var(background, gray-light);
+    }
+  }
+
+  button i:before {
+    margin-right: 0;
+  }
+}
+
+.collapsible.can-collapse:not(.collapsed) + .collapsible-control button {
+  > i.expand-icon {
+    display: none;
+  }
+
+  > i.collapse-icon {
+    display: inline;
+  }
+}
+
+.collapsible.collapsed + .collapsible-control button {
+  > i.expand-icon {
+    display: inline;
+  }
+
+  > i.collapse-icon {
+    display: none;
+  }
+}
+
+// Collapsibles
+
+.collapsible.collapsed {
+  overflow: hidden;
+}
+
+.collapsible.collapsed:not([data-toggle-element]) {
+  position: relative;
+
+  &:after {
+    content: "";
+    display: block;
+    height: 2em;
+    background: linear-gradient(@body-bg-color-transparent, @body-bg-color);
+    background: linear-gradient(var(--body-bg-color-transparent, @body-bg-color-transparent), var(--body-bg-color, @body-bg-color));
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+
+    opacity: 1;
+    transition: opacity 2s 1s linear;
+  }
+}
+
+.role-memberships {
+  letter-spacing: -0.417em;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+
+  > li {
+    display: inline-block;
+    letter-spacing: normal;
+    margin: 0;
+    padding: 0 0.25em 0 0;
+
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+}
+
+.module-dependencies {
+  .unmet-dependencies {
+    .var(background-color, color-warning);
+    .var(color, text-color-on-icinga-blue);
+    padding: .25em .5em;
+    margin-left: -.5em;
+  }
+
+  .name-value-table {
+    > caption {
+      font-weight: normal;
+      .var(color, text-color-light);
+    }
+
+    > tbody > tr > th {
+      font-weight: bold;
+      .var(color, text-color);
+    }
+
+    .missing {
+      .var(color, color-critical);
+      font-weight: bold;
+    }
+
+    td {
+      white-space: nowrap;
+
+      &.or-separator {
+        width: 100%;
+        transform: translate(0, 50%);
+        padding-left: 3em;
+
+        &::before {
+          content: "";
+          position: absolute;
+          height: 1.5em;
+          width: 1.5em;
+          left: 0.5em;
+          border-top: 3px solid;
+          border-right: 3px solid;
+          .var(border-top-color, "gray");
+          .var(border-right-color, "gray");
+          border-top-right-radius: .50em;
+          transform: rotate(45deg);
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+<?php
+
+use Icinga\Data\Updatable;
+use Icinga\Data\Reducible;
+use Icinga\Data\Selectable;
+
+?>
+<div class="controls separated">
+<?php if (! $this->compact): ?>
+    <?= $tabs; ?>
+<?php endif ?>
+    <h2><?= $this->escape($user->user_name) ?></h2>
+    <?php
+    if ($this->hasPermission('config/access-control/users') && $backend instanceof Updatable) {
+        echo $this->qlink(
+            $this->translate('Edit User'),
+            'user/edit',
+            array(
+                'backend'   => $backend->getName(),
+                'user'      => $user->user_name
+            ),
+            array(
+                'class' => 'button-link',
+                'icon'  => 'edit',
+                'title' => sprintf($this->translate('Edit user %s'), $user->user_name)
+            )
+        );
+    }
+    ?>
+    <table class="name-value-table">
+        <tr>
+            <th><?= $this->translate('State'); ?></th>
+            <td><?= $user->is_active === null ? '-' : ($user->is_active ? $this->translate('Active') : $this->translate('Inactive')); ?></td>
+        </tr>
+        <tr>
+            <th><?= $this->translate('Created at'); ?></th>
+            <td><?= $user->created_at === null ? '-' : $this->formatDateTime($user->created_at); ?></td>
+        </tr>
+        <tr>
+            <th><?= $this->translate('Last modified'); ?></th>
+            <td><?= $user->last_modified === null ? '-' : $this->formatDateTime($user->last_modified); ?></td>
+        </tr>
+        <tr>
+            <th><?= $this->translate('Role Memberships'); ?></th>
+            <td>
+            <?php $roles = $userObj->getRoles(); ?>
+            <?php if (! empty($roles)): ?>
+                <ul class="role-memberships">
+                <?php foreach($roles as $role): ?>
+                    <li>
+                    <?php if ($this->allowedToEditRoles): ?>
+                        <?= $this->qlink(
+                            $role->getName(),
+                            'role/edit',
+                            ['role' => $role->getName()],
+                            ['title' => sprintf($this->translate('Edit role %s'), $role->getName())]
+                        );
+                        $role === end($roles) ? print '' : print ', '; ?>
+                    <?php else: ?>
+                        <?= $role->getName() ?>
+                    <?php endif ?>
+                    </li>
+                <?php endforeach ?>
+                </ul>
+            <?php else: ?>
+                <p><?= $this->translate('No memberships found'); ?></p>
+            <?php endif ?>
+            </td>
+        </tr>
+    </table>
+<?php if (! $this->compact): ?>
+    <h2><?= $this->translate('Group Memberships'); ?></h2>
+    <div class="sort-controls-container">
+        <?= $this->limiter; ?>
+        <?= $this->paginator; ?>
+        <?= $this->sortBox; ?>
+    </div>
+    <?= $this->filterEditor; ?>
+<?php endif ?>
+</div>
+<div class="content">
+<?php if ($showCreateMembershipLink): ?>
+    <?= $this->qlink(
+        $this->translate('Create New Membership'),
+        'user/createmembership',
+        array(
+            'backend'   => $backend->getName(),
+            'user'      => $user->user_name
+        ),
+        array(
+            'icon'  => 'plus',
+            'class' => 'button-link'
+        )
+    ) ?>
+<?php endif ?>
+
+<?php if (! $memberships->hasResult()): ?>
+    <p><?= $this->translate('No memberships found matching the filter'); ?></p>
+</div>
+<?php return; endif ?>
+
+    <table data-base-target="_next" class="table-row-selectable common-table">
+        <thead>
+            <tr>
+                <th><?= $this->translate('Group'); ?></th>
+                <th><?= $this->translate('Cancel', 'group.membership'); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($memberships as $membership): ?>
+            <tr>
+                <td>
+                <?php if ($this->hasPermission('config/access-control/groups') && $membership->backend instanceof Selectable): ?>
+                    <?= $this->qlink($membership->group_name, 'group/show', array(
+                        'backend' => $membership->backend->getName(),
+                        'group'   => $membership->group_name
+                    ), array(
+                        'title'   => sprintf($this->translate('Show detailed information for group %s'), $membership->group_name)
+                    )); ?>
+                <?php else: ?>
+                    <?= $this->escape($membership->group_name); ?>
+                <?php endif ?>
+                </td>
+                <td class="icon-col" data-base-target="_self">
+                <?php if (isset($removeForm) && $membership->backend instanceof Reducible): ?>
+                    <?= $removeForm->setAction($this->url('group/removemember', array(
+                        'backend'   => $membership->backend->getName(),
+                        'group'     => $membership->group_name
+                    ))); ?>
+                <?php else: ?>
+                    -
+                <?php endif ?>
+                </td>
+            </tr>
+        <?php endforeach ?>
+        </tbody>
+    </table>
+</div>

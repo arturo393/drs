@@ -1,0 +1,42 @@
+/*! Icinga Web 2 | (c) 2015 Icinga Development Team | GPLv2+ */
+
+.refresh-container-control > i:before {
+  margin: 0;
+}
+
+a.spinner.active > i,
+button.spinner.active > i,
+i.spinner.active {
+  &:before {
+    .animate(spin 2s infinite linear);
+
+    // icon-spin6
+    content: '\e874';
+  }
+
+  &.fa:before {
+    // fa spinner
+    content: '\f110';
+  }
+}
+
+div.spinner {
+  display: inline-block;
+  vertical-align: middle;
+
+  i {
+    visibility: hidden;
+
+    &.active {
+      visibility: visible;
+
+      &:before {
+        .animate(spin 2s infinite linear);
+      }
+    }
+
+    &:before {
+      margin: 0; // Disables wobbling
+    }
+  }
+}

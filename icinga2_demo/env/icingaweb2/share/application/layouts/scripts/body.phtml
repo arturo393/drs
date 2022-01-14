@@ -1,0 +1,98 @@
+<?php
+
+use Icinga\Web\Url;
+use Icinga\Web\Notification;
+use Icinga\Authentication\Auth;
+use ipl\Html\HtmlString;
+use ipl\Web\Widget\Icon;
+
+$moduleName = $this->layout()->moduleName;
+if ($moduleName !== 'default') {
+    $moduleClass = ' icinga-module module-' . $moduleName;
+} else {
+    $moduleClass = '';
+}
+
+$refresh = '';
+if ($this->layout()->autorefreshInterval) {
+    $refresh = ' data-icinga-refresh="' . $this->layout()->autorefreshInterval . '"';
+}
+
+if ($this->layout()->inlineLayout) {
+    $inlineLayoutScript = $this->layout()->inlineLayout . '.phtml';
+} else {
+    $inlineLayoutScript = 'inline.phtml';
+}
+
+?>
+<div id="header">
+    <div id="announcements" class="container">
+        <?= $this->widget('announcements') ?>
+    </div>
+</div>
+<div id="content-wrapper">
+<?php if (! $this->layout()->isIframe): ?>
+    <div id="sidebar">
+        <div id="header-logo-container">
+            <?= $this->qlink(
+                '',
+                Auth::getInstance()->isAuthenticated() ? 'dashboard' : '',
+                null,
+                array(
+                    'aria-hidden'       => 'true',
+                    'data-base-target'  => '_main',
+                    'id'                => 'header-logo'
+                )
+            ); ?>
+            <div id="mobile-menu-toggle">
+                <button type="button"><?= $this->icon('menu') ?><?= $this->icon('cancel') ?></button>
+            </div>
+        </div>
+        <?= $this->render('parts/navigation.phtml'); ?>
+    </div>
+<?php endif ?>
+    <div id="main" role="main">
+        <div id="col1"
+            class="container<?= $moduleClass ?>"
+        <?php if ($moduleName): ?>
+            data-icinga-module="<?= $moduleName ?>"
+        <?php endif ?>
+            data-icinga-url="<?= $this->escape(Url::fromRequest()->without('renderLayout')->getAbsoluteUrl()); ?>"
+            <?= $refresh; ?>
+        >
+            <?= $this->render($inlineLayoutScript) ?>
+      </div>
+      <div id="col2" class="container"></div>
+      <div id="col3" class="container"></div>
+    </div>
+</div>
+<div id="footer">
+  <ul role="alert" id="notifications"><?php
+
+    $notifications = Notification::getInstance();
+    if ($notifications->hasMessages()) {
+        foreach ($notifications->popMessages() as $m) {
+            switch ($m->type) {
+                case 'success':
+                    $icon = new HtmlString(new Icon('check-circle'));
+                    break;
+                case 'error':
+                    $icon = new HtmlString(new Icon('times'));
+                    break;
+                case 'warning':
+                    $icon = new HtmlString(new Icon('exclamation-triangle'));
+                    break;
+                case 'info':
+                    $icon = new HtmlString(new Icon('info-circle'));
+                    break;
+                default:
+                    $icon = '';
+                    break;
+            }
+
+            echo '<li class="' . $m->type . '">' . $icon . $this->escape($m->message) . '</li>';
+        }
+    }
+  ?></ul>
+  <div id="application-state-summary" class="container" data-icinga-url="<?= $this->url('application-state/summary') ?>" data-last-update="-1" data-icinga-refresh="60"></div>
+</div>

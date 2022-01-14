@@ -1,0 +1,183 @@
+/*! Icinga Web 2 | (c) 2013 Icinga Development Team | GPLv2+ */
+
+// Login page styles
+
+#login {
+  height: 100%;
+  .var(background-color, menu-bg-color);
+  background-image: url(../img/icingaweb2-background-orbs.jpg);
+  background-repeat:  no-repeat;
+  background-size: cover;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .login-form {
+    width: 36em;
+    position: relative;
+    z-index: 10;
+    padding: 2em 6em;
+    .var(background-color, login-box-background);
+    .box-shadow(0, 0, 1em, 1em, ~"var(--login-box-background, @{login-box-background})");
+  }
+
+  #icinga-logo {
+    width: 100%;
+    max-width: 18em;
+    height: auto;
+    margin: 0 auto 2em auto;
+
+    &:after {
+      content: "";
+      display: block;
+      width: 100%;
+      padding-bottom: 35%;
+    }
+  }
+
+  .errors,
+  .form-errors {
+    list-style-type: none;
+    padding: 0.5em;
+  }
+
+  .errors {
+    .var(background-color, color-critical);
+    color: white;
+  }
+
+  .form-errors {
+    margin-top: 0;
+    padding: 0;
+  }
+
+  .form-errors,
+  .control-group {
+    &:not(:last-child) {
+      margin-bottom: 1em;
+    }
+  }
+
+  input[type=password],
+  input[type=text] {
+    display: block;
+    height: 2.5em;
+    margin: 0;
+    transition: none;
+    width: 100%;
+
+    &:focus {
+      .rounded-corners(3px);
+      border-radius: 0;
+      padding-bottom: 3px;
+    }
+  }
+
+  input[type="submit"]:focus {
+    outline: 3px solid;
+    .var(outline-color, icinga-blue-light);
+  }
+
+  input[type=submit] {
+    border-radius: .25em;
+    .var(background, icinga-secondary);
+    color: white;
+    border: none;
+    height: 2.5em;
+    margin: 0;
+    width: 100%;
+
+    &:hover {
+      .var(background-color, icinga-secondary-dark);
+    }
+  }
+
+  .config-note {
+    .var(background-color, color-critical);
+    margin: 0 auto 2em auto; // Center horizontally w/ bottom margin
+    max-width: 50%;
+    min-width: 24em;
+    padding: 1em;
+
+    a {
+      .var(color, text-color-inverted);
+      font-weight: bold;
+    }
+  }
+
+  .remember-me-box {
+    display: flex;
+    align-items: flex-start;
+
+    .toggle-switch {
+      margin-right: 1em;
+    }
+
+    .control-info {
+      line-height: 1.5;
+      margin-left: .5em;
+    }
+  }
+}
+
+#social {
+  position: fixed;
+  right: 1em; bottom: 1em;
+  letter-spacing: -.417em;
+  margin: 0;
+
+  > * {
+    letter-spacing: normal;
+  }
+
+  > li {
+    display: inline-block;
+
+    a {
+      display: block;
+      text-decoration: none;
+      -webkit-transform: scale(1, 1);
+      -moz-transform: scale(1, 1);
+      -ms-transform: scale(1, 1);
+      transform: scale(1, 1);
+    }
+
+    i {
+      font-size: 3em;
+      color: white;
+      text-shadow: 0 0 .5em #01507B;
+    }
+  }
+
+  > li a:hover {
+    -webkit-transform: scale(1.2, 1.2);
+    -moz-transform: scale(1.2, 1.2);
+    -ms-transform: scale(1.2, 1.2);
+    transform: scale(1.2, 1.2);
+  }
+
+  li:not(:last-child) {
+    margin-right: 2em;
+  }
+}
+
+#login-footer {
+  padding: .5em 0;
+
+  p {
+    margin-bottom: 0;
+  }
+
+  a {
+    text-decoration: underline;
+
+    &:hover {
+      opacity: .8;
+    }
+  }
+}
+
+.orb {
+  display: none;
+}

@@ -1,0 +1,46 @@
+/*! Icinga Web 2 | (c) 2015 Icinga Development Team | GPLv2+ */
+
+.badge-nav-item {
+  > a {
+    .clearfix();
+
+    > .badge {
+      float: right;
+    }
+  }
+}
+
+.dropdown-nav-item > ul {
+  display: none;
+  position: absolute;
+}
+
+.dropdown-nav-item.active > ul,
+.dropdown-nav-item:hover > ul {
+  display: block;
+}
+
+.nav {
+  // Reset defaults
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+
+  li > a,
+  li > span {
+    // Rollover
+    display: block;
+  }
+}
+
+.tab-nav {
+  .clearfix();
+
+  > li {
+    float: left;
+  }
+}
+
+.primary-nav a {
+  font-weight: 500;
+}

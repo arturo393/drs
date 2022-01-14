@@ -1,0 +1,79 @@
+<?php if ($this->pageCount <= 1) return; ?>
+<div class="pagination-control" role="navigation">
+    <h2 id="<?= $this->protectId('pagination') ?>" class="sr-only" tabindex="-1"><?= $this->translate('Pagination') ?></h2>
+    <ul class="nav tab-nav">
+    <?php if (isset($this->previous)): ?>
+        <?php $label = sprintf(
+            $this->translate('Show rows %u to %u of %u'),
+            ($this->current - 2) * $this->itemCountPerPage + 1,
+            ($this->current - 1) * $this->itemCountPerPage,
+            $this->totalItemCount
+        ) ?>
+        <li class="nav-item">
+            <a  href="<?= $this->escape($this->url()->overwriteParams(array('page' => $this->previous))->getAbsoluteUrl()) ?>"
+                title="<?= $label ?>"
+                aria-label="<?= $label ?>"
+                class="previous-page">
+                <?= $this->icon('angle-double-left') ?>
+            </a>
+        </li>
+    <?php else: ?>
+        <li class="nav-item disabled" aria-hidden="true">
+            <span class="previous-page">
+                <span class="sr-only"><?= $this->translate('Previous page') ?></span>
+                <?= $this->icon('angle-double-left') ?>
+            </span>
+        </li>
+    <?php endif ?>
+    <?php foreach ($this->pagesInRange as $page): ?>
+        <?php if ($page === '...'): ?>
+            <li class="nav-item disabled">
+                <span>...</span>
+            </li>
+        <?php else: ?>
+            <?php
+            $end = $page * $this->itemCountPerPage;
+            if ($end > $this->totalItemCount) {
+                $end = $this->totalItemCount;
+            }
+            $label = sprintf(
+                $this->translate('Show rows %u to %u of %u'),
+                ($page - 1) * $this->itemCountPerPage + 1,
+                $end,
+                $this->totalItemCount
+            );
+            ?>
+            <li<?= $page === $this->current ? ' class="active nav-item"' : ' class="nav-item"' ?>>
+                <a  href="<?= $this->escape($this->url()->overwriteParams(array('page' => $page))->getAbsoluteUrl()) ?>"
+                    title="<?= $label ?>"
+                    aria-label="<?= $label ?>">
+                    <?= $page ?>
+                </a>
+            </li>
+        <?php endif ?>
+    <?php endforeach ?>
+    <?php if (isset($this->next)): ?>
+        <?php $label = sprintf(
+            $this->translate('Show rows %u to %u of %u'),
+            $this->current * $this->itemCountPerPage + 1,
+            ($this->current + 1) * $this->itemCountPerPage,
+            $this->totalItemCount
+        ) ?>
+        <li class="nav-item">
+            <a  href="<?= $this->escape($this->url()->overwriteParams(array('page' => $this->next))->getAbsoluteUrl()) ?>"
+                title="<?= $label ?>"
+                aria-label="<?= $label ?>"
+                class="next-page">
+                <?= $this->icon('angle-double-right') ?>
+            </a>
+        </li>
+    <?php else: ?>
+        <li class="disabled nav-item" aria-hidden="true">
+            <span class="next-page">
+                <span class="sr-only"><?= $this->translate('Next page') ?></span>
+                <?= $this->icon('angle-double-right') ?>
+            </span>
+        </li>
+    <?php endif ?>
+    </ul>
+</div>

@@ -1,0 +1,6 @@
+/vendor/
+/.idea/
+.*.sw[op]
+composer.lock
+public/css/combined.less
+public/js/combined.js

@@ -1,0 +1,10 @@
+[Unit]
+Description=Icinga Certificate Monitoring Module Jobs Runner
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/icingacli x509 jobs run
+Restart=on-success
+
+[Install]
+WantedBy=multi-user.target

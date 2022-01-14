@@ -1,0 +1,305 @@
+/*! Icinga Web 2 | (c) 2013 Icinga Development Team | GPLv2+ */
+
+// Black colors
+@black: #535353;
+@white: #fff;
+
+// Gray colors
+@gray: #c4c4c4;
+@gray-semilight: #888;
+@gray-light: #5c5c5c;
+@gray-lighter: #4b4b4b;
+@gray-lightest: #3a3a3a;
+
+@disabled-gray: #9a9a9a;
+
+
+// State colors
+@color-ok: #44bb77;
+@color-up: @color-ok;
+@color-warning: #ffaa44;
+@color-warning-handled: #ffcc66;
+@color-critical: #ff5566;
+@color-critical-handled: #ff99aa;
+@color-critical-accentuated: darken(@color-critical, 10%);
+@color-down: @color-critical;
+@color-down-handled: @color-critical-handled;
+@color-unknown: #aa44ff;
+@color-unknown-handled: #cc77ff;
+@color-unreachable: @color-unknown;
+@color-unreachable-handled: @color-unknown-handled;
+@color-pending: #77aaff;
+
+// Icinga colors
+@icinga-blue: #00C3ED;
+@icinga-secondary: #EF4F98;
+@icinga-secondary-dark: darken(@icinga-secondary, 10%);
+@low-sat-blue: #404d72;
+@low-sat-blue-dark: #434374;
+@icinga-blue-light: fade(@icinga-blue, 50%);
+@icinga-blue-dark: #0081a6;
+
+// Notification colors
+@color-notification-error: @color-critical;
+@color-notification-info: @color-pending;
+@color-notification-success: @color-ok;
+@color-notification-warning: @color-warning;
+
+// Background color for <body>
+@body-bg-color: #282E39;
+@body-bg-color-transparent: fade(@body-bg-color, 0);
+
+// Text colors
+@text-color: @white;
+@text-color-inverted: @body-bg-color;
+@text-color-light: fade(@text-color, 75%);
+@text-color-on-icinga-blue: @body-bg-color;
+@light-text-bg-color: fade(@gray, 5%);
+
+// Text color on <a>
+@link-color: @text-color;
+
+@tr-active-color: fade(@icinga-blue, 25);
+@tr-hover-color: fade(@icinga-blue, 5);
+
+// Menu colors
+@menu-bg-color: #06062B;
+@menu-hover-bg-color: lighten(@menu-bg-color, 5%);
+@menu-search-hover-bg-color: @menu-hover-bg-color;
+@menu-active-bg-color: #181742;
+@menu-active-hover-bg-color: lighten(@menu-active-bg-color, 5%);
+@menu-color: #DBDBDB;
+@menu-active-color: @text-color;
+@menu-highlight-color: @icinga-blue;
+@menu-highlight-hover-bg-color: @icinga-blue-dark;
+@menu-2ndlvl-color: #c4c4c4;
+@menu-2ndlvl-highlight-bg-color: @tr-hover-color;
+@menu-2ndlvl-active-bg-color: @menu-highlight-color;
+@menu-2ndlvl-active-color: @text-color-inverted;
+@menu-2ndlvl-active-hover-bg-color: darken(@menu-2ndlvl-active-bg-color, 5%);
+@menu-2ndlvl-active-hover-color: @menu-2ndlvl-active-color;
+@menu-flyout-bg-color: @body-bg-color;
+@menu-flyout-color: @text-color;
+@tab-hover-bg-color: fade(@body-bg-color, 50%);
+
+// Form colors
+@form-info-bg-color: fade(@color-ok, 20%);
+@form-error-bg-color: fade(@color-critical, 30%);
+@form-warning-bg-color: fade(@color-warning, 40%);
+@login-box-background: fade(#0B0B2F, 30%);
+
+// Other colors
+@color-granted: #59cd59;
+@color-refused: #ee7373;
+@color-restricted: #dede7d;
+
+// Font families
+@font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+@font-family-fixed: "Liberation Mono", "Lucida Console", Courier, monospace;
+@font-family-wide: Tahoma, Verdana, sans-serif;
+
+// Font sizes
+@font-size: 0.750em; // 12px
+@font-size-small: 11/12em; // 11px
+@font-size-dashboard: 3.5em; // 56px
+@font-size-dashboard-small: 1.1em; // 17px
+@font-weight-bold: 600;
+
+// Set line-height w/o unit so that the line-height is dynamically calculated as font-size * line-height
+@line-height: 1.5;
+
+@table-column-padding: 0.333em; // 4px
+
+@vertical-padding: 0.5em; // 6px
+@horizontal-padding: 1em; // 12px
+
+@media (min-height: @prefer-light-color-scheme), (prefers-color-scheme: light) and (min-height: @enable-color-preference) {
+
+  @light-body-bg-color: #F5F9FA;
+
+  :root {
+    --body-bg-color: @light-body-bg-color;
+    --body-bg-color-transparent: fade(@light-body-bg-color, 0);
+    --badge-color: #F5F9FA;
+    --text-color-inverted: #F5F9FA;
+    --text-color-on-icinga-blue: #F5F9FA;
+    --menu-flyout-bg-color: #F5F9FA;
+    --tab-hover-bg-color: fade(#F5F9FA, 50%);
+
+    --menu-color: #676767;
+    --menu-bg-color: #DEECF1;
+    --menu-hover-bg-color: darken(#DEECF1, 10%);
+    --menu-search-hover-bg-color: darken(#DEECF1, 10%);
+    --menu-active-bg-color: #EDF7FC;
+    --menu-active-hover-bg-color: darken(#EDF7FC, 20%);
+    --menu-highlight-hover-bg-color: darken(#EDF7FC, 20%);
+    --menu-2ndlvl-color: #7E8182;
+
+    --text-color: #535353;
+    --text-color-light: fade(#535353, 75%);
+    --light-text-bg-color: fade(#7F7F7F, 5%);
+    --link-color: #535353;
+    --menu-active-color: #535353;
+    --menu-flyout-color: #535353;
+
+    --low-sat-blue: #DEECF1;
+    --low-sat-blue-dark: #c0cccd;
+
+    --gray: #819398;
+    --gray-semilight: #94a5a6;
+    --gray-light: #d0d3da;
+    --gray-lighter: #e8ecef;
+    --gray-lightest: #F7F7F7;
+  }
+}
+
+// Make padding not affect the final computed width of an element
+html {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: inherit;
+     -moz-box-sizing: inherit;
+          box-sizing: inherit;
+}
+
+a {
+  // Reset defaults
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+:focus {
+  outline: 3px solid fade(@icinga-blue, 50%);
+  outline-offset: 1px;
+}
+
+// Default margin for block text
+blockquote, p, pre {
+  margin: 0 0 1em 0;
+}
+
+blockquote {
+  border-left: 5px solid;
+  .var(border-left-color, gray-lighter);
+  padding: 0.667em 0.333em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: @font-weight-bold;
+  margin: 0.556em 0 0.333em;
+}
+
+h1 {
+  border-bottom: 1px solid;
+  .var(border-bottom-color, gray-lighter);
+  font-size: 1.333em;
+}
+
+h2 {
+  font-size: 1.333em;
+}
+
+h3 {
+  font-size: 1.167em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+h5 {
+  font-size: @font-size-small;
+}
+
+h6 {
+  font-size: @font-size-small;
+  font-weight: normal;
+}
+
+pre {
+  .rounded-corners(.25em);
+  .var(background-color, gray-lighter);
+  font-family: @font-family-fixed;
+  font-size: @font-size-small;
+  padding: @vertical-padding @horizontal-padding;
+  white-space: pre-wrap;
+}
+
+td, th {
+  padding: @table-column-padding;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  // Smooth icons; ifont claims to have it, but it does not work in :before
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  &:before {
+    margin-left: 0;
+  }
+}
+
+// Styles for when the page is loading. JS will remove this class once the document is ready
+.loading * {
+  // Disable all transition on page load
+  -webkit-transition: none !important;
+     -moz-transition: none !important;
+       -o-transition: none !important;
+          transition: none !important;
+}
+
+.container {
+  &:before,
+  > .content:before {
+    content: "";
+    display: block;
+
+    background: url(../img/icinga-loader.gif) no-repeat center center;
+    .var(background-color, body-bg-color);
+    background-size: 4em 4em;
+
+    opacity: 0;
+    z-index: -1;
+    pointer-events: none;
+    .transition(none);
+  }
+
+  &.impact,
+  > .content.impact {
+    overflow: hidden;
+    position: relative;
+
+    &:before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+
+      opacity: .7;
+      z-index: 1000;
+      pointer-events: all;
+      .transition(opacity 1s 2s linear);
+    }
+  }
+
+  &.impact:before {
+    top: 2.5em;
+  }
+}
+
+@media (min-height: @prefer-light-color-scheme), (prefers-color-scheme: light) and (min-height: @enable-color-preference) {
+  .container {
+    &:before,
+    > .content:before {
+      background-image: url(../img/icinga-loader-light.gif)
+    }
+  }
+}

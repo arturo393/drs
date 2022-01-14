@@ -1,0 +1,479 @@
+// Icinga Web 2 Cube Module | (c) 2016 Icinga GmbH | GPLv2
+
+.controls > a {
+  color: @icinga-blue;
+
+  &:hover::before {
+    text-decoration: none;
+  }
+}
+
+div.cube {
+  div.cube-dimension0 > .header {
+    font-size: 1.2em;
+    font-weight: bold;
+    border-bottom: 1px solid black;
+  }
+
+  div.cube-dimension1 {
+    clear: both;
+    border-left: 0.5em solid transparent;
+  }
+
+  div.cube-dimension1 > .header,
+  div.cube-dimension2 {
+    display: inline-block;
+    width: 10em;
+    height: 10em;
+    margin: 0;
+    padding: 0.2em;
+    margin-top: 0.3em;
+    overflow: hidden;
+    border: 1px solid white;
+  }
+
+  div.cube-dimension1 > .header {
+    display: flex;
+    float: left;
+    font-weight: bold;
+    text-align: center;
+    padding-left: 0;
+
+    > a:first-child {
+      flex: 1;
+      max-width: 8em;
+      word-wrap: break-word;
+    }
+  }
+
+  div.cube-dimension2 {
+    > .header {
+      display: flex;
+      text-align: center;
+      color: white;
+      margin-bottom: 1em;
+
+      > a:first-child {
+        flex: 1;
+        max-width: 8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    background: @color-ok;
+
+    &.critical {
+      background: @color-critical;
+    }
+
+    &.warning {
+      background: @color-warning;
+    }
+
+    &.unknown {
+      background: @color-unknown;
+    }
+
+    &.unreachable {
+      background: @color-unreachable;
+    }
+
+    &.ok {
+      background: @color-ok;
+    }
+
+    > .body {
+      text-align: center;
+
+      span.sum {
+        font-size: 3em;
+        display: block;
+        text-align: center;
+        color: white;
+      }
+    }
+  }
+
+  span.critical, span.warning, span.unknown, span.unreachable, span.ok {
+    display: inline;
+    border-radius: 0.1em;
+    padding: 0.05em 0.2em;
+    color: white;
+    font-size: 3em;
+  }
+
+  span.ok {
+    background: @color-ok;
+  }
+
+  .others {
+    display: flex;
+    justify-content: center;
+    span {
+      margin-left: 0.2em;
+      margin-top: 0.8em;
+      font-size: 1em;
+    }
+  }
+
+  span.critical {
+    background: @color-critical;
+  }
+
+  span.critical.handled {
+    background: @color-critical-handled;
+  }
+
+  div.cube-dimension0.critical > .header {
+    color: @color-critical;
+    border-color: @color-critical;
+  }
+
+  div.cube-dimension1.critical {
+    border-left-color: @color-critical;
+
+    &.handled {
+      border-left-color: @color-critical-handled;
+    }
+  }
+
+  div.cube-dimension2.critical {
+    span.sum {
+      font-size: 1em;
+    }
+  }
+
+  span.warning {
+    background: @color-warning;
+  }
+
+  span.warning.handled {
+    background: @color-warning-handled;
+  }
+
+  div.cube-dimension0.warning > .header {
+    color: @color-warning;
+    border-color: @color-warning;
+  }
+
+  div.cube-dimension1.warning {
+    border-left-color: @color-warning;
+
+    &.handled {
+      border-left-color: @color-warning-handled;
+    }
+  }
+
+  div.cube-dimension2.warning {
+    span.sum {
+      font-size: 1em;
+    }
+  }
+
+  span.unknown{
+    background: @color-unknown;
+  }
+
+  span.unknown.handled {
+    background: @color-unknown-handled;
+  }
+
+  div.cube-dimension0.unknown > .header {
+    color: @color-unknown;
+    border-color: @color-unknown;
+  }
+
+  div.cube-dimension1.unknown {
+    border-left-color: @color-unknown;
+
+    &.handled {
+      border-left-color: @color-unknown-handled;
+    }
+  }
+
+  div.cube-dimension2.unknown {
+    span.sum {
+      font-size: 1em;
+    }
+  }
+}
+
+span.unreachable{
+  background: @color-unreachable;
+}
+
+span.unreachable.handled {
+  background: @color-unreachable-handled;
+}
+
+div.cube-dimension0.unreachable > .header {
+  color: @color-unreachable;
+  border-color: @color-unreachable;
+}
+
+div.cube-dimension1.unreachable {
+  border-left-color: @color-unreachable;
+
+  &.handled {
+    border-left-color: @color-unreachable-handled;
+  }
+}
+
+div.cube-dimension2.unreachable {
+  span.sum {
+    font-size: 1em;
+  }
+}
+
+fieldset.dimensions {
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  span {
+    min-width: 18em;
+    display: inline-block;
+  }
+  input[type=submit] {
+    border: none;
+    color: @text-color;
+    font-family: 'ifont';
+    font-weight: bold;
+  }
+
+  input[type=submit][disabled] {
+    color: white;
+    background-color: white;
+    cursor: auto;
+  }
+
+  input[type=submit]:nth-of-type(2) {
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+  }
+
+  input[type=submit]:nth-of-type(3) {
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+  }
+
+  &:last-of-type {
+    margin-bottom: 0.5em;
+  }
+}
+
+.dimension-name {
+  font-weight: bold;
+  margin-left: 1em;
+}
+
+ul.action-links {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.action-links {
+  li {
+    margin: 0;
+    padding: 0;
+    float: left;
+    display: inline-block;
+    width: 18em;
+    height: 10em;
+    overflow: hidden;
+  }
+
+  li.error {
+    background-color: @colorCritical;
+    color: white;
+    padding: 1em;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  a {
+    width: 100%;
+    height: 100%;
+    padding: 0.5em 1em;
+    display: block;
+    text-decoration: none;
+
+    .title {
+      margin-left: 5em;
+      font-weight: bold;
+    }
+
+    p {
+      margin-left: 5em;
+    }
+
+    i {
+      position: absolute;
+      font-size: 3em;
+      display: inline-block;
+    }
+    &:hover {
+      background: @text-color;
+      color: white;
+      text-decoration: none;
+    }
+  }
+}
+
+/** Form, stolen from Director **/
+
+.content form {
+  margin-bottom: 2em;
+}
+
+
+form input[type=submit] {
+  .button();
+  border-width: 1px;
+  margin-top: 0.5em;
+
+  &:disabled {
+    border-color: @gray-light;
+    background-color: @gray-light;
+    color: #fff;
+  }
+}
+
+form input[type=submit]:first-of-type {
+    border-width: 2px;
+}
+
+form input[type=submit].link-button {
+  color: @icinga-blue;
+  background: none;
+  border: none;
+  padding: 0;
+
+  text-align: left;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+form p.description {
+  padding: 1em 1em;
+  margin: 0;
+  font-style: italic;
+  width: 100%;
+}
+
+input, select, select option, textarea {
+   -webkit-appearance: none;
+   -moz-appearance: none;
+   appearance: none;
+}
+
+form ul.form-errors {
+    margin-bottom: 0.5em;
+
+    ul.errors li {
+        background: @color-critical;
+        font-weight: bold;
+        padding: 0.5em 1em;
+        color: white;
+    }
+}
+
+select::-ms-expand, input::-ms-expand, textarea::-ms-expand { /* for IE 11 */
+    display: none;
+}
+
+select {
+    border: 1px solid #ddd;
+    cursor: pointer;
+    background: none;
+}
+
+input[type=text], input[type=password], textarea, select {
+    max-width: 36em;
+    min-width: 20em;
+    width: 100%;
+    line-height: 2em;
+    height: 2.4em;
+    padding-left: 0.5em;
+    border-style: solid;
+    border-color: transparent;
+    border-bottom-color: @gray-lighter;
+    border-width: 1px 1px 1px 3px;
+    background-color: white;
+
+    &.search {
+        background: transparent url("../img/icons/search.png") no-repeat scroll 0.5em center / 1em 1em;
+        padding-left: 2em;
+    }
+}
+
+select[multiple] {
+    height: auto;
+}
+
+select option {
+    height: 2em;
+    padding-top: 0.3em;
+}
+
+select[multiple=multiple] {
+  height: auto;
+}
+
+label {
+    line-height: 2em;
+}
+
+form dl {
+    margin: 0;
+    padding: 0;
+}
+
+
+select::-moz-focus-inner { border: 0; }
+
+select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 #000;
+}
+
+select, input[type=text], textarea {
+    &:hover {
+        border-style: dotted solid dotted solid;
+        border-color: @gray-light;
+    }
+
+    &:focus, &:focus:hover {
+        border-style: solid;
+        border-color: @icinga-blue;
+        outline: none;
+    }
+}
+
+select[value=""] {
+    color: blue;
+    border: 1px solid #666;
+    background-color: white;
+}
+
+select option {
+    color: inherit;
+    padding-left: 0.5em;
+    background-color: white;
+}
+
+select option[value=""] {
+    color: #aaa;
+    background-color: white;
+}
