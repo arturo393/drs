@@ -1,0 +1,26 @@
+---
+- name: "Fix hosts with no python at all"
+  import_playbook: fix_python.yaml
+
+
+- name: Install RDSS Software
+  hosts: all
+  vars_files:
+    - ../vars.yaml
+  become: yes
+
+  tasks:
+    - name: "Install MariaDB Server"
+      apk:
+        name: mariadb
+        state: present
+    - name: "Post install - create a new database"
+      shell: /etc/init.d/mariadb setup
+    - name: "Start MariaDB Server"
+      service:
+        name: mariadb
+        state: started
+    - name: "Install MariaDB Client"
+      apk:
+        name: mariadb-client
+        state: present

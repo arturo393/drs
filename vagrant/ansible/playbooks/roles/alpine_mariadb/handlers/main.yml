@@ -1,0 +1,13 @@
+---
+# handlers file for alpine_mariadb
+- name: Install MariaDB Server
+  apk:
+    name: mariadb
+    state: present
+- name: "Configure MariaDB Server"
+  shell:
+    - "rc-update add mariadb default"
+- name: "Start MariaDB Server"
+  service:
+    name: mariadb
+    state: started

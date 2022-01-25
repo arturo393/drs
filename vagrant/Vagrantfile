@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "generic/alpine315"
+  # config.disksize.size = '8GB'
+  config.vm.hostname = "miniPC1"
+  config.vm.define "miniPC1"
+  config.vm.network :public_network, bridge: "en0: Wi-Fi", ip: "192.168.0.250"
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.memory = "2048"
+    vb.name = "miniPC1"
+  end
+
+  # config.vm.provision "ansible" do |ansible|
+  #   ansible.playbook = "ansible/playbooks/main.yaml"
+  # end
+  
+end

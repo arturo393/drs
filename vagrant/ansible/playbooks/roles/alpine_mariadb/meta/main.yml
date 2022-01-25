@@ -1,0 +1,16 @@
+galaxy_info:
+  author: ytannus
+  description: Installs mariadb on Alpine linux servers.
+  company: iTaum
+  license: license (GPL-2.0-or-later, MIT, etc)
+  min_ansible_version: 2.1
+  platforms:
+  - name: Alpine Linux
+    versions:
+    - 3.15
+  galaxy_tags:
+    - alpine
+    - mariadb
+    - mysql
+dependencies: []
+
