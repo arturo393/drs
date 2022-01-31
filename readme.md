@@ -214,3 +214,22 @@ Service Template -> Service
 Host Template -> Host
 
 `apk add nagios-plugins-all`
+
+## Modbus plugin
+
+```
+cd /tmp
+git clone https://github.com/AndreySV/check_modbus.git
+cd check_modbus/
+apk add automake autoconf make gcc libmodbus libmodbus-dev gccmakedep gc libgc++ libstdc++6 gcc-objc
+
+./autogen.sh
+./configure --prefix=/usr/lib/monitoring-plugins
+make
+cp src/check_modbus /usr/lib/monitoring-plugins
+
+```
+
+# Web Modules development
+
+https://github.com/Icinga/icingaweb2-module-training/blob/master/doc/extending-icinga-web-2.md#your-own-module-in-the-web-frontend
