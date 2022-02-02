@@ -1,3 +1,10 @@
+# Prerequisites
+
+- Admin rights on the host
+- Virtual Box
+- Vagrant
+- Ansible
+
 # Run dev env
 
 `cd vagrant`
@@ -6,24 +13,44 @@
 
 # Install
 
+`sudo -i`
 `apk update && apk upgrade`
 
 open https://icinga.com/docs/icinga-2/latest/doc/02-installation/
 
 ## Install Icinga2
 
-`apk add icinga2 monitoring-plugins`
-`rc-update add icinga2 default`
-`rc-service icinga2 start`
+```
+
+apk add icinga2 monitoring-plugins
+rc-update add icinga2 default
+rc-service icinga2 start
+
+```
 
 ## Install IcingaWeb2
 
 ### Install MariaDB
 
-`apk add mariadb mariadb-client`
-`rc-update add mariadb default`
-`mariadb-secure-installation`
-`rc-service mariadb start`
+```
+apk add mariadb mariadb-client
+
+rc-update add mariadb default
+
+/etc/init.d/mariadb setup
+
+rc-service mariadb start
+
+mariadb-secure-installation
+enter
+Yes
+password
+Yes
+Yes
+Yes
+Yes
+
+```
 
 ### Installing the IDO modules for MySQL and MariaDB
 
@@ -32,22 +59,36 @@ On Alpine Linux the IDO modules for MySQL are included with the icinga2 package 
 ### Setting up the MySQL database
 
 ```
+
 mysql -u root -p
 
 CREATE DATABASE icinga;
-GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga.* TO 'admin'@'localhost' IDENTIFIED BY 'Admin.123';
-quit
+GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga.\* TO 'admin'@'localhost' IDENTIFIED BY 'Admin.123';
+quit;
+
 ```
 
 ```
+
 mysql -u root -p icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+
 ```
 
-ediit `/etc/icinga2/features-enabled/ido-mysql.conf`
+icinga2
+
+````
+
+
+```
+
+
 
 ### Enabling the IDO MySQL module
 
 `icinga2 feature enable ido-mysql`
+
+edit `/etc/icinga2/features-enabled/ido-mysql.conf`
+
 `rc-service icinga2 restart`
 
 ## Webserver
@@ -55,32 +96,42 @@ ediit `/etc/icinga2/features-enabled/ido-mysql.conf`
 `apk add apache2 php8-apache2`
 
 ```
+
 sed -i -e "s/^#LoadModule rewrite_module/LoadModule rewrite_module/" /etc/apache2/httpd.conf
 rc-update add apache2 default
 rc-service apache2 start
+
 ```
 
 ## Setting Up Icinga 2 REST API
 
 ```
+
 icinga2 api setup
+
 ```
 
 `vim /etc/icinga2/conf.d/api-users.conf`
 
 ```
+
 object ApiUser "icingaweb2" {
-  password = "Wijsn8Z9eRs5E25d"
-  permissions = [ "status/query", "actions/*", "objects/modify/*", "objects/query/*" ]
+password = "Wijsn8Z9eRs5E25d"
+permissions = [ "status/query", "actions/*", "objects/modify/*", "objects/query/*" ]
 }
+
 ```
 
 ## Enabling Modules
 
-`icinga2 feature enable notification`
-`icinga2 feature enable checker`
-`icinga2 feature enable mainlog`
-`icinga2 feature enable icingadb`
+````
+
+icinga2 feature enable notification
+icinga2 feature enable checker
+icinga2 feature enable mainlog
+icinga2 feature enable icingadb
+
+````
 
 ## Post installs
 
@@ -90,17 +141,25 @@ object ApiUser "icingaweb2" {
 
 `apk add icingaweb2 icingaweb2-doc icingaweb2-bash-completion`
 
-`icingacli setup token create`
-`icingacli setup token show`
-`chown -R apache: /etc/icingaweb2`
-`chown -R apache: /var/lib/icingaweb2`
+```
+
+icingacli setup token create
+icingacli setup token show
+chown -R apache: /etc/icingaweb2
+chown -R apache: /var/lib/icingaweb2
+
+```
 
 ### Configuring Icinga Web 2
 
 ```
+
 CREATE DATABASE icingaweb2;
 
-GRANT ALL ON icingaweb2.* TO icingaweb2@localhost IDENTIFIED BY 'CHANGEME';
+GRANT ALL ON icingaweb2.\* TO icingaweb2@localhost IDENTIFIED BY 'Admin.123';
+
+quit;
+
 ```
 
 `icingacli setup config webserver apache --document-root /usr/share/webapps/icingaweb2/public > /etc/apache2/conf.d/icingaweb2.conf`
@@ -109,9 +168,25 @@ GRANT ALL ON icingaweb2.* TO icingaweb2@localhost IDENTIFIED BY 'CHANGEME';
 
 `rc-service apache2 restart`
 
+
+
+# Post Install/Setup
+
+```
+
+http://localhost:8080/icingaweb2/setup
+
+```
+
+---
+
+# Extra Modules
+
+
 ### Incubator
 
 ```
+
 apk add icingaweb2-module-incubator-doc icingaweb2-module-incubator
 
 ```
@@ -133,15 +208,6 @@ apk add icingaweb2-module-incubator-doc icingaweb2-module-incubator
 `rc-update add icinga-director default`
 `rc-service icinga-director start`
 
-# Post Install/Setup
-
-```
-http://localhost:8080/icingaweb2/setup
-```
-
----
-
-# Extra Modules
 
 `apk add git`
 `cd /usr/share/webapps/icingaweb2/modules`
@@ -163,13 +229,17 @@ http://localhost:8080/icingaweb2/config/modules
 `git clone https://github.com/Icinga/icingaweb2-module-reporting.git reporting`
 
 ```
+
 CREATE DATABASE reporting;
-GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON reporting.* TO reporting@localhost IDENTIFIED BY 'Admin.123';
+GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON reporting.\* TO reporting@localhost IDENTIFIED BY 'Admin.123';
+
 ```
 
 ```
+
 cd reporting
 mysql -p -u root reporting < schema/mysql.sql
+
 ```
 
 Configuration -> Application -> Resources
@@ -181,33 +251,38 @@ Configuration -> Modules -> reporting -> Backend
 ### RC Reporting Service
 
 ```
+
 #!/sbin/openrc-run
 
 name=$RC_SVCNAME
 command="/usr/bin/icingacli"
 command_args="reporting schedule run"
 supervisor="supervise-daemon"
+
 ```
 
 ```
+
 chmod a+x /etc/init.d/icinga-reporting
 rc-update add icinga-reporting default
 rc-service icinga-reporting start
+
 ```
 
 ## Manubulon SNMP Plugins
 
 ```
-apk add perl perl-net-snmp perl-getopt-long perl-crypt-des perl-crypt-rijndael perl-digest-hmac
 
+apk add perl perl-net-snmp perl-getopt-long perl-crypt-des perl-crypt-rijndael perl-digest-hmac
 
 cd /tmp
 git clone https://github.com/SteScho/manubulon-snmp.git
 cd manubulon-snmp
 
-install -o root -g root -m755 plugins/*.pl /usr/lib/monitoring-plugins
+install -o root -g root -m755 plugins/\*.pl /usr/lib/monitoring-plugins
 
 echo 'const ManubulonSnmpCommunity = "icingasnmpro"' >> /etc/icinga2/constants.conf
+
 ```
 
 Service Template -> Service
@@ -218,6 +293,7 @@ Host Template -> Host
 ## Modbus plugin
 
 ```
+
 cd /tmp
 git clone https://github.com/AndreySV/check_modbus.git
 cd check_modbus/
@@ -233,3 +309,8 @@ cp src/check_modbus /usr/lib/monitoring-plugins
 # Web Modules development
 
 https://github.com/Icinga/icingaweb2-module-training/blob/master/doc/extending-icinga-web-2.md#your-own-module-in-the-web-frontend
+
+```
+
+```
+````
