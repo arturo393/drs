@@ -76,13 +76,6 @@ mysql -u root -p icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
 
 icinga2
 
-````
-
-
-```
-
-
-
 ### Enabling the IDO MySQL module
 
 `icinga2 feature enable ido-mysql`
@@ -105,13 +98,9 @@ rc-service apache2 start
 
 ## Setting Up Icinga 2 REST API
 
-```
+`icinga2 api setup`
 
-icinga2 api setup
-
-```
-
-`vim /etc/icinga2/conf.d/api-users.conf`
+add the follow object to the file `/etc/icinga2/conf.d/api-users.conf`
 
 ```
 
@@ -124,14 +113,14 @@ permissions = [ "status/query", "actions/*", "objects/modify/*", "objects/query/
 
 ## Enabling Modules
 
-````
+```
 
 icinga2 feature enable notification
 icinga2 feature enable checker
 icinga2 feature enable mainlog
 icinga2 feature enable icingadb
 
-````
+```
 
 ## Post installs
 
@@ -152,6 +141,8 @@ chown -R apache: /var/lib/icingaweb2
 
 ### Configuring Icinga Web 2
 
+mysql
+
 ```
 
 CREATE DATABASE icingaweb2;
@@ -162,26 +153,29 @@ quit;
 
 ```
 
-`icingacli setup config webserver apache --document-root /usr/share/webapps/icingaweb2/public > /etc/apache2/conf.d/icingaweb2.conf`
+console
 
-`chown -R apache: /usr/share/webapps/icingaweb2/`
+```
 
-`rc-service apache2 restart`
+icingacli setup config webserver apache --document-root /usr/share/webapps/icingaweb2/public > /etc/apache2/conf.d/icingaweb2.conf
 
+chown -R apache: /usr/share/webapps/icingaweb2/
 
+rc-service apache2 restart
+
+```
 
 # Post Install/Setup
 
-```
-
-http://localhost:8080/icingaweb2/setup
-
-```
+visit http://localhost:8080/icingaweb2/setup and complete setup
 
 ---
 
 # Extra Modules
 
+`cd /usr/share/webapps/icingaweb2/modules`
+
+Enable module http://localhost:8080/icingaweb2/config/modules
 
 ### Incubator
 
@@ -193,40 +187,58 @@ apk add icingaweb2-module-incubator-doc icingaweb2-module-incubator
 
 ### Director
 
+console
 `apk add icingaweb2-module-director icinga-director-openrc icingaweb2-module-director-doc`
 
-`CREATE DATABASE director CHARACTER SET 'utf8';`
-`CREATE USER director@localhost IDENTIFIED BY 'Admin.123';`
-`GRANT ALL ON director.* TO director@localhost;`
+mysql
 
-`icingacli module enable director`
+```
+CREATE DATABASE director CHARACTER SET 'utf8';
+CREATE USER director@localhost IDENTIFIED BY 'Admin.123';
+GRANT ALL ON director.* TO director@localhost;
+```
 
-`grep NodeName /etc/icinga2/constants.conf`
+console:
 
-`http://localhost:8080/icingaweb2/config/resource`
+```
+icingacli module enable director
 
-`rc-update add icinga-director default`
-`rc-service icinga-director start`
+grep NodeName /etc/icinga2/constants.conf
+```
 
+Add new resource: http://localhost:8080/icingaweb2/config/resource
 
-`apk add git`
-`cd /usr/share/webapps/icingaweb2/modules`
+console:
 
-http://localhost:8080/icingaweb2/config/modules
+```
+rc-update add icinga-director default
+rc-service icinga-director start
+```
+
+console
+
+```
+apk add git
+cd /usr/share/webapps/icingaweb2/modules
+```
 
 ## PDF Export
 
-`apk add dbus dbus-openrc`
-`rc-update add dbus default`
-
-`apk add chromium chromium-swiftshader chromium-chromedriver mesa-osmesa mesa-dev font-noto-gothic php8-fileinfo`
-`apk add ttf-freefont font-noto-emoji`
-`apk add wait4ports zlib-dev dhclient`
-`git clone https://github.com/Icinga/icingaweb2-module-pdfexport.git pdfexport`
+```
+cd /usr/share/webapps/icingaweb2/modules
+apk add dbus dbus-openrc
+rc-update add dbus default
+apk add chromium chromium-swiftshader chromium-chromedriver mesa-osmesa mesa-dev font-noto-gothic php8-fileinfo
+apk add ttf-freefont font-noto-emoji
+apk add wait4ports zlib-dev dhclient
+git clone https://github.com/Icinga/icingaweb2-module-pdfexport.git pdfexport
+```
 
 ## Reporting
 
 `git clone https://github.com/Icinga/icingaweb2-module-reporting.git reporting`
+
+mysql:
 
 ```
 
@@ -235,8 +247,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON repor
 
 ```
 
-```
+console
 
+```
+cd /usr/share/webapps/icingaweb2/modules
 cd reporting
 mysql -p -u root reporting < schema/mysql.sql
 
@@ -309,8 +323,3 @@ cp src/check_modbus /usr/lib/monitoring-plugins
 # Web Modules development
 
 https://github.com/Icinga/icingaweb2-module-training/blob/master/doc/extending-icinga-web-2.md#your-own-module-in-the-web-frontend
-
-```
-
-```
-````
