@@ -7,11 +7,12 @@ Vagrant.configure("2") do |config|
   # config.disksize.size = '8GB'
   config.vm.hostname = "miniPC1"
   config.vm.define "miniPC1"
-  config.vm.network :public_network, bridge: "en0: Wi-Fi", ip: "192.168.0.250"
-  config.vm.network "forwarded_port", guest: 80, host: 8080
+  #config.vm.network :public_network, bridge: "en0: Wi-Fi", ip: "192.168.0.250"
+  config.vm.network "forwarded_port", guest: 80, host: 8000, protocol: "tcp"
 
 
-  config.vm.provider "virtualbox" do |vb|
+  # config.vm.provider "virtualbox" do |vb|
+  config.vm.provider "docker" do |vb|
     vb.gui = false
     vb.memory = "2048"
     vb.name = "miniPC1"
