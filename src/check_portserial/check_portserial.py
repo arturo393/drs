@@ -20,6 +20,15 @@ import getopt
 import serial
 
 #--------------------------------
+#-- Declaracion de constantes
+#--------------------------------
+C_HEADER = '7E'
+C_MODULE_ADDRESS_ADDRESS = '00'
+C_DATA_TYPE = '00'
+C_RESPONSE_FLAG = '00'
+C_END = '7E'
+
+#--------------------------------
 #-- Imprimir mensaje de ayuda  
 #--------------------------------
 def help():
@@ -27,11 +36,13 @@ def help():
     Ejemplo de uso del puerto serie en Python
 
     opciones:
-    -p, --port=PORT: Puerto serie a leer o escribir Ej. /dev/ttyS0 
-    -d, --device=DEVICE:  ID del MCU o RDUx. 
-    -a, --action=ACTION: 02 = Query ; 03 = Set o write
-    -o, --object=OBJECT: ID de objeto, voltaje, temperatura, etc.
-    -r, --data=DATA: valor a escribir 
+    -p, --port=  PORT o DEVICE: Puerto serie a leer o escribir Ej. /dev/ttyS0
+    -a, --action= ACTION: 02 = Query ; 03 = Set o write 
+    -i, --interface= INTERFACE: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
+    -c, --cmdNumber= CMDNUMBER: Comando a enviar
+    -l, --cmdBodyLenght= CMDBODYLENGHT: Indentica si lee o escribe
+    -d, --cmdData= CMDDATA: dato a escribir 
+    -t, --crc=  CRC: Byte de control
     
     Ejemplo:
     check_portserial.py -p COM0       --> Usar el primer puerto serie (Windows)
@@ -43,18 +54,20 @@ def help():
 #--  Analizar los argumentos pasados por el usuario
 #--  Devuelve el puerto y otros argumentos enviados como parametros
 #-----------------------------------------------------
-def Analizar_argumentos():
+def analizar_argumentos():
 
-    Port = -1
-    Device = -1
+    Port = -1   
     Action = ""
-    Object = -1
-    Data = -1
+    Interface = -1
+    CmdNumber = -1
+    CmdBodyLenght = -1
+    CmdData = -1
+    Crc = -1
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-            "hpdaor:",
-            ["help", "port=", "device=", "action=", "object=", "data="]
+            "haicldt:",
+            ["help", "port=", "action=", "interface=", "cmdNumber=", "cmdBodyLenght=", "cmdData=", "crc="]
         )
     except getopt.GetoptError:
         # print help information and exit:
@@ -66,42 +79,111 @@ def Analizar_argumentos():
         if o in ("-h", "--help"):
             help()
             sys.exit()
+        
         elif o in ("-p", "--port"): 
             try:                
                 Port = a               
             except ValueError:
                 print('Puerto invalido')
-        elif o in ("-d", "--device"): 
-            try:
-                Device = a                
-            except ValueError:
-                print('Dispositivo invalido')  
+        
         elif o in ("-a", "--action"): 
             try:
                 Action = a                
             except ValueError:
                 print('Accion invalida')  
-        elif o in ("-r", "--data"): 
-            try:
-                Data = a                
-            except ValueError:
-                print('Data invalida')           
-            
-    return Port, Device, Action, Object, Data
 
+        elif o in ("-i", "--interface"): 
+            try:
+                Interface = a                
+            except ValueError:
+                print('Interface invalido')
+        
+        elif o in ("-c", "--cmdNumber"): 
+            try:
+                CmdNumber = a                
+            except ValueError:
+                print('Data invalida')
+
+        elif o in ("-l", "--cmdBodyLenght"): 
+            try:
+                CmdBodyLenght = a                
+            except ValueError:
+                print('cmdBodyLenght invalida')
+
+        elif o in ("-c", "--cmdData"): 
+            try:
+                CmdData = a                
+            except ValueError:
+                print('cmdData invalida')  
+
+        elif o in ("-t", "--crc"): 
+            try:
+                Crc = a                
+            except ValueError:
+                print('crc invalida') 
+    if Port == -1:
+       sys.stderr.write("Error: El puerto es obligatorio\n")      
+       sys.exit(2) 
+
+    if Interface == -1:
+       sys.stderr.write("Error: La Interface es obligatorio\n")      
+       sys.exit(2)    
+
+    if CmdNumber == -1:
+       sys.stderr.write("Error: CmdNumber es obligatorio\n")      
+       sys.exit(2) 
+
+    if CmdBodyLenght == -1:
+       sys.stderr.write("Error: CmdBodyLenght es obligatorio\n")      
+       sys.exit(2)  
+
+    if CmdData == -1:
+       sys.stderr.write("Error: CmdData es obligatorio\n")      
+       sys.exit(2) 
+
+    if Crc == -1:
+       sys.stderr.write("Error: Crc es obligatorio\n")      
+       sys.exit(2)                                                      
+            
+    return Port, Action, Interface, CmdNumber, CmdBodyLenght, CmdData, Crc
+
+#----------------------------------------------------
+#-- Armar trama de escritura o lectura
+#-- (PARAMETROS)
+#-- Interface: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
+#-- CmdNumber: 80 = Send ; 00 = Receive
+#-- CmdBodyLenght: Indentica si lee o escribe
+#-- CmdData: dato a escribir <integer en hex>
+#-- Crc: Byte de control
+#---------------------------------------------------
+def obtener_trama(Interface, CmdNumber, CmdBodyLenght, CmdData, Crc):
+    CmdNumber_hex = CmdNumber.encode('utf8').hex()
+    CmdBodyLenght_hex = CmdBodyLenght.encode('utf8').hex()
+    CmdData_hex = CmdData.encode('utf8').hex()
+    Crc_hex = Crc.encode('utf8').hex()
+    
+    trama = str(C_HEADER + Interface + C_MODULE_ADDRESS_ADDRESS + C_DATA_TYPE + CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex + Crc_hex + C_END)
+    trama_out = str(C_HEADER + ' ' + Interface + ' ' + C_MODULE_ADDRESS_ADDRESS + ' ' + C_DATA_TYPE + ' ' + CmdNumber_hex + ' ' + C_RESPONSE_FLAG + ' ' + CmdBodyLenght_hex + ' ' + CmdData_hex + ' ' + Crc_hex + ' ' + C_END)
+    
+    print('La trama es: %s' % trama_out)
+    return trama.encode('utf8')
 
 #----------------------
 #   MAIN
 #----------------------
 def main():
+    
     #-- Analizar los argumentos pasados por el usuario
-    Port, Device, Action, Object, Data = Analizar_argumentos()
+    Port, Action, Interface, CmdNumber, CmdBodyLenght, CmdData, Crc = analizar_argumentos()
+
+    #-- Armando la trama
+    Trama = obtener_trama(Interface, CmdNumber, CmdBodyLenght, CmdData, Crc)
 
     #--------------------------------------------------------
     #-- Abrir el puerto serie. Si hay algun error se termina
     #--------------------------------------------------------
     try:
-        s = serial.Serial(Port, 9600)
+        s = serial.Serial(Port, 9600,serial.EIGHTBITS)
 
         #-- Timeout: 1 seg
         s.timeout=1
@@ -120,13 +202,18 @@ def main():
         #--  Devuelve el puerto y otros argumentos enviados como parametros
         #-----------------------------------------------------
         print("aqui va el codigo")
-        Trama = s.readline()
-        print("(%s)" % str(Trama))
+        Result = s.read(serial.EIGHTBITS)
+        print("(%s)" % str(Result))
         s.close()
         #-- leer el puerto
     elif Action == "03":
-        Trama = "Esta seria la trama en hexadecimal"
-        s.write(Trama)
+        print('Escribiendo en el puerto la trama: [%s]' % Trama)
+        nBytes = s.write(Trama)        
+        s.flush()
+        print('numero de Bytes devueltos: %s' % str(nBytes))        
+        Result = s.read(nBytes)        
+        print("Leyendo el puerto: [%s]" % Result.decode('utf8'))
+        s.close()
     else:
         sys.stderr.write("Accion invalida:  %s \n" % Action)      
         sys.exit(1)
