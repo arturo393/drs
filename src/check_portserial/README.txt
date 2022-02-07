@@ -24,3 +24,20 @@ python check_portserial.py --port=/dev/ttyS3 --action=03 --i=07 --cmdNumber=F8 -
 python check_portserial.py --port=/dev/pts/2 --action=03 --i=07 --cmdNumber=F8 --cmdBodyLenght=02 --cmdData=0 --crc=B282
 
 python -m serial.tools.list_ports
+
+
+opciones:
+    -p, --port=  PORT o DEVICE: Puerto serie a leer o escribir Ej. /dev/ttyS0
+    -a, --action= ACTION: read = Query ; write = Set o write
+    -i, --dmuId= INTERFACE: ID de PA Ã³ DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
+    -d, --druId= DIVICE: DRU ID number, En la trama MODULE_ADDRESS_FUNCTION
+    -n, --cmdNumber= CMDNUMBER: Comando a enviar
+    -l, --cmdBodyLenght= CMDBODYLENGHT: Indentica si lee o escribe
+    -c, --cmdData= CMDDATA: dato a escribir
+
+
+    Ejemplo:
+    check_portserial.py -p COM0       --> Usar el primer puerto serie (Windows)
+    check_portserial.py -p /dev/ttyS0 --> Especificar el dispositivo serie (Linux)
+
+python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=99  --druId=1 --cmdNumber=F8 --cmdBodyLenght=21 --cmdData=0

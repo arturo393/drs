@@ -18,12 +18,12 @@
 import sys
 import getopt
 import serial
+from crccheck.crc import Crc16Xmodem
 
 #--------------------------------
 #-- Declaracion de constantes
 #--------------------------------
 C_HEADER = '7E'
-C_MODULE_ADDRESS_ADDRESS = '00'
 C_DATA_TYPE = '00'
 C_RESPONSE_FLAG = '00'
 C_END = '7E'
@@ -37,12 +37,13 @@ def help():
 
     opciones:
     -p, --port=  PORT o DEVICE: Puerto serie a leer o escribir Ej. /dev/ttyS0
-    -a, --action= ACTION: 02 = Query ; 03 = Set o write 
-    -i, --interface= INTERFACE: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
-    -c, --cmdNumber= CMDNUMBER: Comando a enviar
+    -a, --action= ACTION: read = Query ; write = Set o write 
+    -i, --dmuId= INTERFACE: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
+    -d, --druId= DIVICE: DRU ID number, En la trama MODULE_ADDRESS_FUNCTION
+    -n, --cmdNumber= CMDNUMBER: Comando a enviar
     -l, --cmdBodyLenght= CMDBODYLENGHT: Indentica si lee o escribe
-    -d, --cmdData= CMDDATA: dato a escribir 
-    -t, --crc=  CRC: Byte de control
+    -c, --cmdData= CMDDATA: dato a escribir 
+
     
     Ejemplo:
     check_portserial.py -p COM0       --> Usar el primer puerto serie (Windows)
@@ -58,16 +59,16 @@ def analizar_argumentos():
 
     Port = -1   
     Action = ""
-    Interface = -1
+    DmuId = -1
+    DruId = -1
     CmdNumber = -1
     CmdBodyLenght = -1
     CmdData = -1
-    Crc = -1
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-            "haicldt:",
-            ["help", "port=", "action=", "interface=", "cmdNumber=", "cmdBodyLenght=", "cmdData=", "crc="]
+            "hpaidnlc:",
+            ["help", "port=", "action=", "dmuId=", "druId=", "cmdNumber=", "cmdBodyLenght=", "cmdData="]
         )
     except getopt.GetoptError:
         # print help information and exit:
@@ -92,11 +93,17 @@ def analizar_argumentos():
             except ValueError:
                 print('Accion invalida')  
 
-        elif o in ("-i", "--interface"): 
+        elif o in ("-i", "--dmuId"): 
             try:
-                Interface = a                
+                DmuId = a                
             except ValueError:
-                print('Interface invalido')
+                print('dmuId es invalido')
+
+        elif o in ("-d", "--druId"): 
+            try:
+                DruId = a                
+            except ValueError:
+                print('druId es invalido invalido')        
         
         elif o in ("-c", "--cmdNumber"): 
             try:
@@ -125,9 +132,13 @@ def analizar_argumentos():
        sys.stderr.write("Error: El puerto es obligatorio\n")      
        sys.exit(2) 
 
-    if Interface == -1:
-       sys.stderr.write("Error: La Interface es obligatorio\n")      
-       sys.exit(2)    
+    if DmuId == -1:
+       sys.stderr.write("Error: El DMU es obligatorio\n")      
+       sys.exit(2)  
+
+    if DruId == -1:
+       sys.stderr.write("Error: El DRU es obligatorio\n")      
+       sys.exit(2)      
 
     if CmdNumber == -1:
        sys.stderr.write("Error: CmdNumber es obligatorio\n")      
@@ -141,11 +152,26 @@ def analizar_argumentos():
        sys.stderr.write("Error: CmdData es obligatorio\n")      
        sys.exit(2) 
 
-    if Crc == -1:
-       sys.stderr.write("Error: Crc es obligatorio\n")      
-       sys.exit(2)                                                      
-            
-    return Port, Action, Interface, CmdNumber, CmdBodyLenght, CmdData, Crc
+
+    return Port, Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData
+
+def getChecksum(cmd):
+    """
+    -Description: this fuction calculate the checksum for a given comand
+    -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
+    -return: cheksum for the given command
+    """
+    data = bytearray.fromhex(cmd)
+  
+    crc = hex(Crc16Xmodem.calc(data))
+    print("crc: %s" % crc)
+    
+    if (len(crc) == 5):
+        checksum = crc[3:5] + '0' + crc[2:3]
+    else:
+        checksum = crc[4:6] + crc[2:4]
+    print("checksum: %s" % checksum)  
+    return checksum
 
 #----------------------------------------------------
 #-- Armar trama de escritura o lectura
@@ -156,17 +182,22 @@ def analizar_argumentos():
 #-- CmdData: dato a escribir <integer en hex>
 #-- Crc: Byte de control
 #---------------------------------------------------
-def obtener_trama(Interface, CmdNumber, CmdBodyLenght, CmdData, Crc):
-    CmdNumber_hex = CmdNumber.encode('utf8').hex()
-    CmdBodyLenght_hex = CmdBodyLenght.encode('utf8').hex()
+def obtener_trama(DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData):
+
+    DmuId_hex = DmuId.encode('utf8').hex() #hex(int(DmuId))  # debe completar 1Byte
+    DruId_hex = DruId.encode('utf8').hex()  # Completar 1 byte
+    CmdNumber_hex = CmdNumber.encode('utf8').hex() #1 Byte
+    CmdBodyLenght_hex = CmdBodyLenght.encode('utf8').hex()  #Logitud del comando en bytes
     CmdData_hex = CmdData.encode('utf8').hex()
-    Crc_hex = Crc.encode('utf8').hex()
-    
-    trama = str(C_HEADER + Interface + C_MODULE_ADDRESS_ADDRESS + C_DATA_TYPE + CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex + Crc_hex + C_END)
-    trama_out = str(C_HEADER + ' ' + Interface + ' ' + C_MODULE_ADDRESS_ADDRESS + ' ' + C_DATA_TYPE + ' ' + CmdNumber_hex + ' ' + C_RESPONSE_FLAG + ' ' + CmdBodyLenght_hex + ' ' + CmdData_hex + ' ' + Crc_hex + ' ' + C_END)
-    
-    print('La trama es: %s' % trama_out)
-    return trama.encode('utf8')
+    cmd_string = DmuId_hex + DruId_hex + C_DATA_TYPE + CmdNumber_hex  + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
+    print('La trama corta: %s' % cmd_string)
+    checksum = getChecksum(cmd_string) # calcula CRC
+   
+    trama = C_HEADER + cmd_string + checksum +  C_END
+
+    print('La trama es: %s' % trama)
+    return str(trama)
+
 
 #----------------------
 #   MAIN
@@ -174,16 +205,16 @@ def obtener_trama(Interface, CmdNumber, CmdBodyLenght, CmdData, Crc):
 def main():
     
     #-- Analizar los argumentos pasados por el usuario
-    Port, Action, Interface, CmdNumber, CmdBodyLenght, CmdData, Crc = analizar_argumentos()
+    Port, Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData = analizar_argumentos()
 
     #-- Armando la trama
-    Trama = obtener_trama(Interface, CmdNumber, CmdBodyLenght, CmdData, Crc)
+    Trama = obtener_trama(DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData)
 
     #--------------------------------------------------------
     #-- Abrir el puerto serie. Si hay algun error se termina
     #--------------------------------------------------------
     try:
-        s = serial.Serial(Port, 9600,serial.EIGHTBITS)
+        s = serial.Serial(Port, 9600)
 
         #-- Timeout: 1 seg
         s.timeout=1
@@ -196,7 +227,7 @@ def main():
     #-- Mostrar el nombre del dispositivo
     print("Puerto (%s): (%s)" % (str(Port),s.portstr))
 
-    if Action == "02":
+    if Action == "read":
         #-----------------------------------------------------
         #--  Action: Leer el puerto
         #--  Devuelve el puerto y otros argumentos enviados como parametros
@@ -206,13 +237,18 @@ def main():
         print("(%s)" % str(Result))
         s.close()
         #-- leer el puerto
-    elif Action == "03":
-        print('Escribiendo en el puerto la trama: [%s]' % Trama)
-        nBytes = s.write(Trama)        
-        s.flush()
-        print('numero de Bytes devueltos: %s' % str(nBytes))        
-        Result = s.read(nBytes)        
-        print("Leyendo el puerto: [%s]" % Result.decode('utf8'))
+    elif Action == "write":
+        cmd_bytes = bytearray.fromhex(Trama)
+        print(cmd_bytes)
+        hex_byte = ''
+        for cmd_byte in cmd_bytes:
+            hex_byte = ("{0:02x}".format(cmd_byte))            
+            s.write(bytes.fromhex(hex_byte))
+
+        # ---- Read from serial
+        hexResponse = s.read(21)
+        print("GET: "+hexResponse.hex('-'))
+        
         s.close()
     else:
         sys.stderr.write("Accion invalida:  %s \n" % Action)      

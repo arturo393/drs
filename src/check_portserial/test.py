@@ -19,6 +19,7 @@ import sys
 import getopt
 import serial
 
+
 #--------------------------------
 #-- Imprimir mensaje de ayuda  
 #--------------------------------
@@ -88,6 +89,16 @@ def Analizar_argumentos():
                 print('Data invalida')           
             
     return Port, Device, Action, Object, Data
+
+
+data = bytes([0, 1, 2, 3, 4, 5 ])
+expected_checksum = 0xBC
+crc_calculator = CrcCalculator(Crc8.CCITT)
+
+checksum = crc_calculator.calculate_checksum(data)
+
+assert checksum == expected_checksum
+assert crc_calculator.verify_checksum(data, expected_checksum)
 
 
 #----------------------
