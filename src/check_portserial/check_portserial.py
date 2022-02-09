@@ -145,7 +145,7 @@ def analizar_argumentos():
        sys.stderr.write("Error: CmdNumber es obligatorio\n")      
        sys.exit(2) 
 
-    if CmdBodyLenght == -1:
+    if CmdBodyLenght == -1 and Action == 'set':
        sys.stderr.write("Error: CmdBodyLenght es obligatorio\n")      
        sys.exit(2)  
 
@@ -240,30 +240,29 @@ def obtener_trama(Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData):
     print('La trama es: %s' % trama)
     return str(trama)
 
-def validar_trama_respuesta(hexResponse, tamano_trama, cantidad_bytes):
+def validar_trama_respuesta(hexResponse):
     #cantidad_bytes = 6
     #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
-    print('len(hexResponse): %d' % len(hexResponse))
-    print('tamano_trama: %d' % tamano_trama)
+    #print('len(hexResponse): %d' % len(hexResponse))
+    #print('tamano_trama: %d' % tamano_trama)
     try:
-        data = list()              
-        if ((
-                (len(hexResponse) > tamano_trama)
-                or (len(hexResponse) < tamano_trama)
-                or hexResponse == None
+        data = list() 
+        
+        if (
+                hexResponse == None                
                 or hexResponse == ""
                 or hexResponse == " "
-            ) or (
-                hexResponse[0] != 126
-                and hexResponse[tamano_trama-1] != 126
-            ) ):
-                sys.stderr.write("Error al leer trama de salida\n")      
+                or len(hexResponse) == 0
+                or hexResponse[0] != 126
+            ):
+                sys.stderr.write("Error: trama de salida invalida\n" )      
                 sys.exit(2) 
-
-        print("GET: "+hexResponse.hex('-'))    
+        cant_bytes_resp = int (hexResponse[6])        
+        print('Cant Byte respuesta:' )  
+        print(cant_bytes_resp)
+        print("GET: "+hexResponse.hex('-'))         
         print('longitud trama: %d' % len(hexResponse))
-        for i in range(7, 7+cantidad_bytes): 
-            print('CmdBodyLenght result: %s' % str(hexResponse[i]))
+        for i in range(7, 7+cant_bytes_resp): 
             data.append(hexResponse[i])        
         return data          
     except ValueError:
@@ -285,7 +284,12 @@ def main():
     #-- Abrir el puerto serie. Si hay algun error se termina
     #--------------------------------------------------------
     try:
-        s = serial.Serial(Port, 9600)
+        if Port == '/dev/ttyUSB0':
+           baudrate = 19200
+        else:
+           baudrate = 9600  
+        print('baudrate: %d' % baudrate)
+        s = serial.Serial(Port, baudrate)
 
         #-- Timeout: 1 seg
         s.timeout=1
@@ -318,18 +322,20 @@ def main():
 
         # ---- Read from serial
         #Calcular el tamano de la trama
-        tamano_trama = 7 + CmdBodyLenght + 3
+        
+        #tamano_trama = 7 + CmdBodyLenght + 3
         #hexResponse = s.read(tamano_trama)
-        hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
+        hexResponse = s.readline()
+        #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
         print("GET: "+hexResponse.hex('-'))
         ##Aqui se realiza la validacion de la respuesta
-        data = validar_trama_respuesta(hexResponse,tamano_trama, CmdBodyLenght )
+        data = validar_trama_respuesta(hexResponse)
         print("Resultado de la Query es:")
         print(data)
         a_bytearray = bytearray(data)
 
         hex_string = a_bytearray.hex()
-        sys.stderr.write(hex_string)          
+        sys.stderr.write(hex_string + '\n')          
         s.close()
     else:
         sys.stderr.write("Accion invalida:  %s \n" % Action)      

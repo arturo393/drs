@@ -8,6 +8,10 @@ python3 -m ensurepip
 
 ln -sf python3 /usr/bin/python
 
+Instalacion de librerias
+===============================
+pip install crccheck
+
 
 Instalando EMULADOR puerta serial
 ====================================
@@ -42,3 +46,10 @@ opciones:
 
 python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=0x07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=2 --cmdData=0x3801
 python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=0x07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=3 --cmdData=0x3801
+
+
+python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --dmuId=0x07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=1
+
+
+Query
+python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --dmuId=07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=1
