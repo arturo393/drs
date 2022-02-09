@@ -37,11 +37,11 @@ def help():
 
     opciones:
     -p, --port=  PORT o DEVICE: Puerto serie a leer o escribir Ej. /dev/ttyS0
-    -a, --action= ACTION: read = Query ; write = Set o write 
-    -i, --dmuId= INTERFACE: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
-    -d, --druId= DIVICE: DRU ID number, En la trama MODULE_ADDRESS_FUNCTION
+    -a, --action= ACTION: query ; set 
+    -i, --dmuId= INTERFACE: ID de PA ó DSP, Ej. F8, F9, FA, etc
+    -d, --druId= DIVICE: DRU ID number, Ej. 80, E7, 41, etc
     -n, --cmdNumber= CMDNUMBER: Comando a enviar
-    -l, --cmdBodyLenght= CMDBODYLENGHT: Indentica si lee o escribe
+    -l, --cmdBodyLenght= tamano del cuerpo en bytes, 1, 2.
     -c, --cmdData= CMDDATA: dato a escribir 
 
     
@@ -113,9 +113,10 @@ def analizar_argumentos():
 
         elif o in ("-l", "--cmdBodyLenght"): 
             try:
-                CmdBodyLenght = a                
+                CmdBodyLenght = int(a)                
             except ValueError:
-                print('cmdBodyLenght invalida')
+                sys.stderr.write("cmdBodyLenght invalido, de indicar la cantidad de byte\n")      
+                sys.exit(2)                 
 
         elif o in ("-c", "--cmdData"): 
             try:
@@ -148,7 +149,7 @@ def analizar_argumentos():
        sys.stderr.write("Error: CmdBodyLenght es obligatorio\n")      
        sys.exit(2)  
 
-    if CmdData == -1:
+    if CmdData == -1 and Action == 'set':
        sys.stderr.write("Error: CmdData es obligatorio\n")      
        sys.exit(2) 
 
@@ -182,13 +183,54 @@ def getChecksum(cmd):
 #-- CmdData: dato a escribir <integer en hex>
 #-- Crc: Byte de control
 #---------------------------------------------------
-def obtener_trama(DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData):
+def obtener_trama(Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData):
+    print('DmuId: %s' % DmuId)    
+    if DmuId[0:2] == '0x':
+        DmuId_hex =  DmuId[2:] 
+    else:
+        DmuId_hex = DmuId
+    print('DmuId_hex: %s' % DmuId_hex)     
 
-    DmuId_hex = DmuId.encode('utf8').hex() #hex(int(DmuId))  # debe completar 1Byte
-    DruId_hex = DruId.encode('utf8').hex()  # Completar 1 byte
-    CmdNumber_hex = CmdNumber.encode('utf8').hex() #1 Byte
-    CmdBodyLenght_hex = CmdBodyLenght.encode('utf8').hex()  #Logitud del comando en bytes
-    CmdData_hex = CmdData.encode('utf8').hex()
+    print('DruId: %s' % DruId)    
+    if DruId[0:2] == '0x':
+        DruId_hex =  DruId[2:] 
+    else:
+        DruId_hex = DruId  
+    print('DruId_hex: %s' % DruId_hex)      
+
+    print('CmdNumber: %s' % CmdNumber)    
+    if CmdNumber[0:2] == '0x':
+        CmdNumber_hex =  CmdNumber[2:] 
+    else:
+        CmdNumber_hex = CmdNumber     
+    print('CmdNumber_hex: %s' % CmdNumber_hex)       
+    
+    print('CmdBodyLenght: %s' % str(CmdBodyLenght))  
+    CmdBodyLenght_hex = '00'
+    
+    if (Action == 'set'): 
+        print('CmdData: %s' % CmdData)
+        if CmdData[0:2] == '0x':
+            CmdData_hex =  CmdData[2:] 
+        else:
+            CmdData_hex = CmdData    
+        print('CmdData_hex: %s' % CmdData_hex) 
+        print('Tamano CmdData_hex: %d' % len(CmdData_hex))
+
+        if  int(len(CmdData_hex)/2) > CmdBodyLenght:
+            sys.stderr.write("Cmd data no corresponde a la cantidad de bytes indicados en CmdBodyLenght\n")      
+            sys.exit(2) 
+
+
+        byte_pend = int (CmdBodyLenght - (len(CmdData_hex)/2))
+        print('byte_pend: %s' % byte_pend)
+        if byte_pend > 0:
+            for i in range(byte_pend):
+                CmdData_hex = CmdData_hex + '00'
+        print('CmdData_hex: %s' % CmdData_hex)   
+    else:
+        CmdData_hex = ''     
+
     cmd_string = DmuId_hex + DruId_hex + C_DATA_TYPE + CmdNumber_hex  + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
     print('La trama corta: %s' % cmd_string)
     checksum = getChecksum(cmd_string) # calcula CRC
@@ -198,6 +240,35 @@ def obtener_trama(DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData):
     print('La trama es: %s' % trama)
     return str(trama)
 
+def validar_trama_respuesta(hexResponse, tamano_trama, cantidad_bytes):
+    #cantidad_bytes = 6
+    #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
+    print('len(hexResponse): %d' % len(hexResponse))
+    print('tamano_trama: %d' % tamano_trama)
+    try:
+        data = list()              
+        if ((
+                (len(hexResponse) > tamano_trama)
+                or (len(hexResponse) < tamano_trama)
+                or hexResponse == None
+                or hexResponse == ""
+                or hexResponse == " "
+            ) or (
+                hexResponse[0] != 126
+                and hexResponse[tamano_trama-1] != 126
+            ) ):
+                sys.stderr.write("Error al leer trama de salida\n")      
+                sys.exit(2) 
+
+        print("GET: "+hexResponse.hex('-'))    
+        print('longitud trama: %d' % len(hexResponse))
+        for i in range(7, 7+cantidad_bytes): 
+            print('CmdBodyLenght result: %s' % str(hexResponse[i]))
+            data.append(hexResponse[i])        
+        return data          
+    except ValueError:
+        sys.stderr.write("Error al leer trama de salida2\n")      
+        sys.exit(2)      
 
 #----------------------
 #   MAIN
@@ -208,7 +279,7 @@ def main():
     Port, Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData = analizar_argumentos()
 
     #-- Armando la trama
-    Trama = obtener_trama(DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData)
+    Trama = obtener_trama(Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData)
 
     #--------------------------------------------------------
     #-- Abrir el puerto serie. Si hay algun error se termina
@@ -227,7 +298,7 @@ def main():
     #-- Mostrar el nombre del dispositivo
     print("Puerto (%s): (%s)" % (str(Port),s.portstr))
 
-    if Action == "read":
+    if Action == "set":
         #-----------------------------------------------------
         #--  Action: Leer el puerto
         #--  Devuelve el puerto y otros argumentos enviados como parametros
@@ -237,18 +308,28 @@ def main():
         print("(%s)" % str(Result))
         s.close()
         #-- leer el puerto
-    elif Action == "write":
+    elif Action == "query":
         cmd_bytes = bytearray.fromhex(Trama)
         print(cmd_bytes)
         hex_byte = ''
         for cmd_byte in cmd_bytes:
-            hex_byte = ("{0:02x}".format(cmd_byte))            
+            hex_byte = ("{0:02x}".format(cmd_byte))             
             s.write(bytes.fromhex(hex_byte))
 
         # ---- Read from serial
-        hexResponse = s.read(21)
+        #Calcular el tamano de la trama
+        tamano_trama = 7 + CmdBodyLenght + 3
+        #hexResponse = s.read(tamano_trama)
+        hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
         print("GET: "+hexResponse.hex('-'))
-        
+        ##Aqui se realiza la validacion de la respuesta
+        data = validar_trama_respuesta(hexResponse,tamano_trama, CmdBodyLenght )
+        print("Resultado de la Query es:")
+        print(data)
+        a_bytearray = bytearray(data)
+
+        hex_string = a_bytearray.hex()
+        sys.stderr.write(hex_string)          
         s.close()
     else:
         sys.stderr.write("Accion invalida:  %s \n" % Action)      

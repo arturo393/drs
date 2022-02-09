@@ -130,6 +130,7 @@ def main():
         #--  Action: Leer el puerto
         #--  Devuelve el puerto y otros argumentos enviados como parametros
         #-----------------------------------------------------
+        inicio = hex('7E')
         print("aqui va el codigo")
         Trama = s.readline()
         print("(%s)" % str(Trama))

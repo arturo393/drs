@@ -40,4 +40,5 @@ opciones:
     check_portserial.py -p COM0       --> Usar el primer puerto serie (Windows)
     check_portserial.py -p /dev/ttyS0 --> Especificar el dispositivo serie (Linux)
 
-python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=99  --druId=1 --cmdNumber=F8 --cmdBodyLenght=21 --cmdData=0
+python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=0x07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=2 --cmdData=0x3801
+python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=0x07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=3 --cmdData=0x3801
