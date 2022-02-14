@@ -51,5 +51,28 @@ python check_portserial.py --port=/dev/ttyS2 --action=write --dmuId=0x07  --druI
 python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --dmuId=0x07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=1
 
 
-Query
-python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --dmuId=07  --druId=00 --cmdNumber=F8 --cmdBodyLenght=1
+> sudo -i
+> cd /opt/check
+
+
+
+Para DMU y action:Query
+=======================
+python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --device=dmu --dmuDevice1=07 --dmuDevice2=00 --cmdNumber=F8
+
+
+Para DMU y action:Set
+=======================
+python3 check_portserial.py --port=/dev/ttyUSB0 --action=set --device=dmu --dmuDevice1=07 --dmuDevice2=00 --cmdNumber=80  --cmdBodyLenght=01  --cmdData=02
+
+
+Para DRU y action:Query
+=======================
+python3 check_portserial.py --port=/dev/ttyUSB1 --action=query --device=dru --druId=21 --cmdBodyLenght=04 --cmdNumber=0300 --cmdData=00
+
+python3 check_portserial.py --port=/dev/ttyUSB1 --action=query --device=dru --druId=21 --cmdBodyLenght=17 --cmdNumber=0400 --cmdData=0000000000000000000000000000000000000000
+
+python3 check_portserial.py --port=/dev/ttyUSB1 --action=query --device=dru --druId=21 --cmdBodyLenght=17 --cmdNumber=0500 --cmdData=0000000000000000000000000000000000000000
+
+
+

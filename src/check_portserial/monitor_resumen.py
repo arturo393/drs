@@ -20,6 +20,11 @@ def getChecksum(cmd):
     return checksum
 
 def main():  
+    hex_val = '00'
+
+    print(int(hex_val, 16))
+
+
     a_bytearray = bytearray([50, 100, 150, 200, 250])
 
     hex_string = a_bytearray.hex()

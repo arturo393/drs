@@ -27,6 +27,16 @@ C_HEADER = '7E'
 C_DATA_TYPE = '00'
 C_RESPONSE_FLAG = '00'
 C_END = '7E'
+C_UNKNOWN2BYTE01 = '0101'
+C_UNKNOWN2BYTE02 = '0100'
+C_UNKNOWN1BYTE = '01'
+C_TXRXS_80 = '80'
+C_TXRXS_FF = 'FF'
+C_TYPE_QUERY = '02'
+C_TYPE_SET = '03'
+C_RETURN = '0d'
+C_SITE_NUMBER = '00000000'
+
 
 #--------------------------------
 #-- Imprimir mensaje de ayuda  
@@ -36,13 +46,15 @@ def help():
     Ejemplo de uso del puerto serie en Python
 
     opciones:
-    -p, --port=  PORT o DEVICE: Puerto serie a leer o escribir Ej. /dev/ttyS0
+    -p, --port=  Puerto serie a leer o escribir Ej. /dev/ttyS0
     -a, --action= ACTION: query ; set 
-    -i, --dmuId= INTERFACE: ID de PA ó DSP, Ej. F8, F9, FA, etc
-    -d, --druId= DIVICE: DRU ID number, Ej. 80, E7, 41, etc
+    -d, --device= dmu, dru
+    -x, --dmuDevice1= INTERFACE: ID de PA o DSP, Ej. F8, F9, FA, etc
+    -y, --dmuDevice2= Device: DRU ID number, Ej. 80, E7, 41, etc
     -n, --cmdNumber= CMDNUMBER: Comando a enviar
     -l, --cmdBodyLenght= tamano del cuerpo en bytes, 1, 2.
     -c, --cmdData= CMDDATA: dato a escribir 
+    -i, --druId= DRU ID number Ej. 0x11-0x16 / 0x21-0x26 / 0x31-36 / 0x41-46 
 
     
     Ejemplo:
@@ -57,21 +69,25 @@ def help():
 #-----------------------------------------------------
 def analizar_argumentos():
 
-    Port = -1   
+    Port = ""  
     Action = ""
-    DmuId = -1
-    DruId = -1
-    CmdNumber = -1
-    CmdBodyLenght = -1
-    CmdData = -1
+    Device = ""
+    DmuDevice1 = ""
+    DmuDevice2 = ""
+    CmdNumber = ""
+    CmdBodyLenght = ""
+    CmdData = ""
+    DruId = ""
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-            "hpaidnlc:",
-            ["help", "port=", "action=", "dmuId=", "druId=", "cmdNumber=", "cmdBodyLenght=", "cmdData="]
+            "hpadxynlci:",
+            ["help", "port=", "action=", "device=", "dmuDevice1=", "dmuDevice2=", "cmdNumber=", "cmdBodyLenght=", "cmdData=", "druId="]
         )
-    except getopt.GetoptError:
+        
+    except getopt.GetoptError as e:
         # print help information and exit:
+        print(e.msg)
         help()
         sys.exit(2)
 
@@ -81,80 +97,68 @@ def analizar_argumentos():
             help()
             sys.exit()
         
-        elif o in ("-p", "--port"): 
-            try:                
-                Port = a               
-            except ValueError:
-                print('Puerto invalido')
+        elif o in ("-p", "--port"):                        
+            Port = a  
         
         elif o in ("-a", "--action"): 
-            try:
-                Action = a                
-            except ValueError:
-                print('Accion invalida')  
+            Action = a 
+        
+        elif o in ("-d", "--device"): 
+            Device = a    
+        
+        elif o in ("-x", "--dmuDevice1"): 
+            DmuDevice1 = a  
 
-        elif o in ("-i", "--dmuId"): 
-            try:
-                DmuId = a                
-            except ValueError:
-                print('dmuId es invalido')
-
-        elif o in ("-d", "--druId"): 
-            try:
-                DruId = a                
-            except ValueError:
-                print('druId es invalido invalido')        
+        elif o in ("-y", "--dmuDevice2"): 
+            DmuDevice2 = a   
         
         elif o in ("-c", "--cmdNumber"): 
-            try:
-                CmdNumber = a                
-            except ValueError:
-                print('Data invalida')
+            CmdNumber = a 
 
         elif o in ("-l", "--cmdBodyLenght"): 
-            try:
-                CmdBodyLenght = int(a)                
-            except ValueError:
-                sys.stderr.write("cmdBodyLenght invalido, de indicar la cantidad de byte\n")      
-                sys.exit(2)                 
+            CmdBodyLenght = a   
 
         elif o in ("-c", "--cmdData"): 
-            try:
-                CmdData = a                
-            except ValueError:
-                print('cmdData invalida')  
+            CmdData = a  
 
-        elif o in ("-t", "--crc"): 
-            try:
-                Crc = a                
-            except ValueError:
-                print('crc invalida') 
-    if Port == -1:
+        elif o in ("-i", "--druId"): 
+            DruId = a                
+            
+    #validamos los argumentos pasados    
+    if Port == "":
        sys.stderr.write("Error: El puerto es obligatorio\n")      
        sys.exit(2) 
 
-    if DmuId == -1:
-       sys.stderr.write("Error: El DMU es obligatorio\n")      
+    if Device == "":
+       sys.stderr.write("Error: El device es obligatorio\n")      
+       sys.exit(2)
+    
+    if DmuDevice1 == "" and Device == 'dmu':
+       sys.stderr.write("Error: El dmuDevice1 es obligatorio\n")      
        sys.exit(2)  
 
-    if DruId == -1:
-       sys.stderr.write("Error: El DRU es obligatorio\n")      
+    if DmuDevice2 == "" and Device == 'dmu':
+       sys.stderr.write("Error: El dmuDevice2 es obligatorio\n")      
        sys.exit(2)      
 
-    if CmdNumber == -1:
-       sys.stderr.write("Error: CmdNumber es obligatorio\n")      
+    if CmdNumber == "":
+       sys.stderr.write("Error: cmdNumber es obligatorio\n")      
        sys.exit(2) 
 
-    if CmdBodyLenght == -1 and Action == 'set':
-       sys.stderr.write("Error: CmdBodyLenght es obligatorio\n")      
+    if (CmdBodyLenght == "" and Action == 'set') or (CmdBodyLenght == "" and Device == 'dru'):
+       sys.stderr.write("Error: cmdBodyLenght es obligatorio\n")      
        sys.exit(2)  
 
-    if CmdData == -1 and Action == 'set':
-       sys.stderr.write("Error: CmdData es obligatorio\n")      
-       sys.exit(2) 
+    if (CmdData == "" and Action == 'set') or (CmdData == "" and Device == 'dru') :
+       sys.stderr.write("Error: cmdData es obligatorio\n")      
+       sys.exit(2)
+
+    if (DruId == "" and Device == 'dru'):
+       sys.stderr.write("Error: DruId es obligatorio\n")      
+       sys.exit(2)     
 
 
-    return Port, Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData
+    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId
 
 def getChecksum(cmd):
     """
@@ -175,6 +179,17 @@ def getChecksum(cmd):
     return checksum
 
 #----------------------------------------------------
+#-- Formateria formato cadena de byte a Hex
+#--------------------------------------------------
+def formatearHex(dato):
+   
+    if dato[0:2] == '0x':
+       dato_hex = dato[2:] 
+    else:
+        dato_hex = dato
+
+    return dato_hex
+#----------------------------------------------------
 #-- Armar trama de escritura o lectura
 #-- (PARAMETROS)
 #-- Interface: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
@@ -183,68 +198,68 @@ def getChecksum(cmd):
 #-- CmdData: dato a escribir <integer en hex>
 #-- Crc: Byte de control
 #---------------------------------------------------
-def obtener_trama(Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData):
-    print('DmuId: %s' % DmuId)    
-    if DmuId[0:2] == '0x':
-        DmuId_hex =  DmuId[2:] 
-    else:
-        DmuId_hex = DmuId
-    print('DmuId_hex: %s' % DmuId_hex)     
+def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):      
+    
+    DmuDevice1_hex = formatearHex(DmuDevice1)    
+    print('DmuDevice1_hex: %s' % DmuDevice1_hex)     
 
-    print('DruId: %s' % DruId)    
-    if DruId[0:2] == '0x':
-        DruId_hex =  DruId[2:] 
-    else:
-        DruId_hex = DruId  
-    print('DruId_hex: %s' % DruId_hex)      
+    DmuDevice2_hex = formatearHex(DmuDevice2)    
+    print('DmuDevice2_hex: %s' % DmuDevice2_hex)      
 
-    print('CmdNumber: %s' % CmdNumber)    
-    if CmdNumber[0:2] == '0x':
-        CmdNumber_hex =  CmdNumber[2:] 
-    else:
-        CmdNumber_hex = CmdNumber     
+    CmdNumber_hex = formatearHex(CmdNumber)        
     print('CmdNumber_hex: %s' % CmdNumber_hex)       
     
-    print('CmdBodyLenght: %s' % str(CmdBodyLenght))  
-    CmdBodyLenght_hex = '00'
-    
-    if (Action == 'set'): 
-        print('CmdData: %s' % CmdData)
-        if CmdData[0:2] == '0x':
-            CmdData_hex =  CmdData[2:] 
-        else:
-            CmdData_hex = CmdData    
-        print('CmdData_hex: %s' % CmdData_hex) 
-        print('Tamano CmdData_hex: %d' % len(CmdData_hex))
+    print('CmdBodyLenght: %s' % CmdBodyLenght)      
+    if (Device == 'dru'): 
+        CmdBodyLenght_hex = formatearHex(CmdBodyLenght)  
+              
+        CmdData_hex = formatearHex(CmdData)          
+        print('CmdData_hex: %s' % CmdData_hex)
 
-        if  int(len(CmdData_hex)/2) > CmdBodyLenght:
-            sys.stderr.write("Cmd data no corresponde a la cantidad de bytes indicados en CmdBodyLenght\n")      
-            sys.exit(2) 
+        DruId_hex = formatearHex(DruId)   
+        print('DruId_hex: %s' % DruId_hex)
+        
+        try:
+            cant_bytes  = int(CmdBodyLenght_hex, 16)  
+            print('cant_bytes: %s' % cant_bytes)           
+        except ValueError:
+            sys.stderr.write("Error: CmdBodyLenght no tiene formato hexadecimal\n")      
+            sys.exit(2)     
+        tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
+        print('tramaLengthCodeData: %s' % tramaLengthCodeData)     
+        lenTramaLengthCodeData = int(len(tramaLengthCodeData)/2)
+        print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)     
+        if lenTramaLengthCodeData != cant_bytes: 
+            sys.stderr.write("Error: CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")      
+            sys.exit(2)   
 
-
-        byte_pend = int (CmdBodyLenght - (len(CmdData_hex)/2))
-        print('byte_pend: %s' % byte_pend)
-        if byte_pend > 0:
-            for i in range(byte_pend):
-                CmdData_hex = CmdData_hex + '00'
-        print('CmdData_hex: %s' % CmdData_hex)   
+        Retunr_hex =  C_RETURN
+        
     else:
-        CmdData_hex = ''     
-
-    cmd_string = DmuId_hex + DruId_hex + C_DATA_TYPE + CmdNumber_hex  + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
+        CmdBodyLenght_hex = '00'        
+        Retunr_hex = ''
+        if (Action == 'set'):
+            CmdData_hex = formatearHex(CmdData)    
+            print('CmdData_hex: %s' % CmdData_hex)   
+        else:
+            CmdData_hex = ''
+    print('CmdNumber_hex: %s' % CmdNumber_hex)    
+ 
+    print('Device: %s' % Device)
+    if Device == 'dru':
+        cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + C_UNKNOWN1BYTE + C_TYPE_QUERY + C_TXRXS_FF + CmdBodyLenght_hex + CmdNumber_hex  + CmdData_hex
+    else:
+        cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + CmdNumber_hex  + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
+    
     print('La trama corta: %s' % cmd_string)
     checksum = getChecksum(cmd_string) # calcula CRC
    
-    trama = C_HEADER + cmd_string + checksum +  C_END
+    trama = C_HEADER + cmd_string + checksum +  C_END + Retunr_hex
 
-    print('La trama es: %s' % trama)
+    print('Query: %s' % trama)
     return str(trama)
 
-def validar_trama_respuesta(hexResponse):
-    #cantidad_bytes = 6
-    #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
-    #print('len(hexResponse): %d' % len(hexResponse))
-    #print('tamano_trama: %d' % tamano_trama)
+def validar_trama_respuesta(hexResponse, Device):
     try:
         data = list() 
         
@@ -257,16 +272,26 @@ def validar_trama_respuesta(hexResponse):
             ):
                 sys.stderr.write("Error: trama de salida invalida\n" )      
                 sys.exit(2) 
-        cant_bytes_resp = int (hexResponse[6])        
-        print('Cant Byte respuesta:' )  
-        print(cant_bytes_resp)
-        print("GET: "+hexResponse.hex('-'))         
+        if Device == 'dru':
+            byte_respuesta = 14   #Para equipos remotos  de la trama
+            cant_bytes_resp = int (hexResponse[byte_respuesta])
+            rango_i = byte_respuesta + 3
+            rango_n =  rango_i + cant_bytes_resp - 3
+        else:
+            byte_respuesta = 6    
+            cant_bytes_resp = int (hexResponse[byte_respuesta])
+            rango_i = byte_respuesta + 1
+            rango_n =  rango_i + cant_bytes_resp
+                      
+        print('Cant Byte respuesta: %d' % cant_bytes_resp)             
         print('longitud trama: %d' % len(hexResponse))
-        for i in range(7, 7+cant_bytes_resp): 
+        print('Rango i: %d' % rango_i)
+        print('Rango n: %d' % rango_n)
+        for i in range(rango_i, rango_n): 
             data.append(hexResponse[i])        
         return data          
     except ValueError:
-        sys.stderr.write("Error al leer trama de salida2\n")      
+        sys.stderr.write("Error: al leer trama de salida\n")      
         sys.exit(2)      
 
 #----------------------
@@ -275,10 +300,10 @@ def validar_trama_respuesta(hexResponse):
 def main():
     
     #-- Analizar los argumentos pasados por el usuario
-    Port, Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData = analizar_argumentos()
+    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId = analizar_argumentos()
 
     #-- Armando la trama
-    Trama = obtener_trama(Action, DmuId, DruId, CmdNumber, CmdBodyLenght, CmdData)
+    Trama = obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
 
     #--------------------------------------------------------
     #-- Abrir el puerto serie. Si hay algun error se termina
@@ -302,17 +327,7 @@ def main():
     #-- Mostrar el nombre del dispositivo
     print("Puerto (%s): (%s)" % (str(Port),s.portstr))
 
-    if Action == "set":
-        #-----------------------------------------------------
-        #--  Action: Leer el puerto
-        #--  Devuelve el puerto y otros argumentos enviados como parametros
-        #-----------------------------------------------------
-        print("aqui va el codigo")
-        Result = s.read(serial.EIGHTBITS)
-        print("(%s)" % str(Result))
-        s.close()
-        #-- leer el puerto
-    elif Action == "query":
+    if Action == "query" or Action == "set":
         cmd_bytes = bytearray.fromhex(Trama)
         print(cmd_bytes)
         hex_byte = ''
@@ -320,25 +335,28 @@ def main():
             hex_byte = ("{0:02x}".format(cmd_byte))             
             s.write(bytes.fromhex(hex_byte))
 
-        # ---- Read from serial
-        #Calcular el tamano de la trama
-        
-        #tamano_trama = 7 + CmdBodyLenght + 3
-        #hexResponse = s.read(tamano_trama)
         hexResponse = s.readline()
         #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
-        print("GET: "+hexResponse.hex('-'))
+        print("Answer: "+hexResponse.hex(chr(9)))
         ##Aqui se realiza la validacion de la respuesta
-        data = validar_trama_respuesta(hexResponse)
-        print("Resultado de la Query es:")
-        print(data)
-        a_bytearray = bytearray(data)
+        data = validar_trama_respuesta(hexResponse, Device)
+        
+        if Action == 'set':
+            if len(data) != 0:
+                sys.stderr.write("Error: al escribir puerto %s \n" % str(Port))   
+                sys.exit(2)
+            else:    
+               sys.stderr.write("OK\n")
+        else:                
+            print("Resultado de la Query es:")
+            print(data)
+            a_bytearray = bytearray(data)
 
-        hex_string = a_bytearray.hex()
-        sys.stderr.write(hex_string + '\n')          
+            hex_string = a_bytearray.hex()
+            sys.stderr.write(hex_string + '\n')          
         s.close()
     else:
-        sys.stderr.write("Accion invalida:  %s \n" % Action)      
+        sys.stderr.write("Error: Accion invalida:  %s \n" % Action)      
         sys.exit(1)
 
 if __name__ == "__main__":
