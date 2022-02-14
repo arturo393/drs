@@ -15,6 +15,7 @@
 #  LICENCIA GPL
 #-----------------------------------------------------------------------------
 
+from pickle import FALSE, TRUE
 import sys
 import getopt
 import serial
@@ -231,23 +232,29 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)     
         if lenTramaLengthCodeData != cant_bytes: 
             sys.stderr.write("Error: CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")      
-            sys.exit(2)   
+            sys.exit(2)  
+        if (Action == 'set'):
+            MessageType = C_TYPE_SET  
+        else:      
+            MessageType = C_TYPE_QUERY     
 
         Retunr_hex =  C_RETURN
         
     else:
-        CmdBodyLenght_hex = '00'        
+            
         Retunr_hex = ''
         if (Action == 'set'):
             CmdData_hex = formatearHex(CmdData)    
             print('CmdData_hex: %s' % CmdData_hex)   
+            CmdBodyLenght_hex = formatearHex(CmdBodyLenght)   
         else:
             CmdData_hex = ''
+            CmdBodyLenght_hex = '00'    
     print('CmdNumber_hex: %s' % CmdNumber_hex)    
  
     print('Device: %s' % Device)
     if Device == 'dru':
-        cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + C_UNKNOWN1BYTE + C_TYPE_QUERY + C_TXRXS_FF + CmdBodyLenght_hex + CmdNumber_hex  + CmdData_hex
+        cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + CmdBodyLenght_hex + CmdNumber_hex  + CmdData_hex
     else:
         cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + CmdNumber_hex  + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
     
@@ -273,6 +280,7 @@ def validar_trama_respuesta(hexResponse, Device):
                 sys.stderr.write("Error: trama de salida invalida\n" )      
                 sys.exit(2) 
         if Device == 'dru':
+            print('Entro aqui')
             byte_respuesta = 14   #Para equipos remotos  de la trama
             cant_bytes_resp = int (hexResponse[byte_respuesta])
             rango_i = byte_respuesta + 3
@@ -287,10 +295,12 @@ def validar_trama_respuesta(hexResponse, Device):
         print('longitud trama: %d' % len(hexResponse))
         print('Rango i: %d' % rango_i)
         print('Rango n: %d' % rango_n)
-        for i in range(rango_i, rango_n): 
-            data.append(hexResponse[i])        
+        for i in range(rango_i, rango_n):            
+            data.append(hexResponse[i])  
+        print("Resultado de la Query es:")
+        print(data)          
         return data          
-    except ValueError:
+    except ValueError:           
         sys.stderr.write("Error: al leer trama de salida\n")      
         sys.exit(2)      
 
@@ -334,22 +344,60 @@ def main():
         for cmd_byte in cmd_bytes:
             hex_byte = ("{0:02x}".format(cmd_byte))             
             s.write(bytes.fromhex(hex_byte))
+        s.flush()
+        #hexResponse = s.readline()
+      
+        hexadecimal_string = ''
+        rcvHexArray = list()
+        isDataReady = False
+        rcvcount = 0
+        while not isDataReady and rcvcount < 200:
+            Response = s.read()
+            rcvHex = Response.hex()
+            if(rcvHex == ''):
+                isDataReady = True
+                sys.stderr.write("Error: al leer el puerto de salida %s \n" % str(Port))   
+                sys.exit(2)
+            elif(rcvcount == 0 and rcvHex == '7e'):
+                rcvHexArray.append(rcvHex)
+                hexadecimal_string = hexadecimal_string + rcvHex
+                rcvcount = rcvcount + 1
+            elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
+                rcvHexArray.append(rcvHex)
+                hexadecimal_string = hexadecimal_string + rcvHex
+                rcvcount = rcvcount + 1
+                if(rcvHex == '7e' or rcvHex == '7f'):
+                    isDataReady = True
+        
+        hexResponse = bytearray.fromhex(hexadecimal_string)
+        print("Answer byte: ") 
+        print(hexResponse) 
+        print("Answer Hex: ") 
+        print(rcvHexArray) 
 
-        hexResponse = s.readline()
+
+
         #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
-        print("Answer: "+hexResponse.hex(chr(9)))
+        #print("Answer: "+hexResponse.hex(chr(9)))
+        #print("Answer: "+rcvHexArray.hex(chr(9)))
+        
         ##Aqui se realiza la validacion de la respuesta
         data = validar_trama_respuesta(hexResponse, Device)
         
-        if Action == 'set':
-            if len(data) != 0:
-                sys.stderr.write("Error: al escribir puerto %s \n" % str(Port))   
+        if Action == 'set':            
+            if len(data) != 0 and Device == 'dmu':
+                sys.stderr.write("Error: al escribir puerto dmu %s \n" % str(Port))   
                 sys.exit(2)
-            else:    
+            elif len(data) == 0 and Device == 'dru':
+                sys.stderr.write("Error: al escribir puerto dru %s \n" % str(Port))   
+                sys.exit(2)
+            else:   
+               if Device == 'dru':
+                    a_bytearray = bytearray(data)
+                    hex_string = a_bytearray.hex()
+                    sys.stderr.write(hex_string + '\n')    
                sys.stderr.write("OK\n")
-        else:                
-            print("Resultado de la Query es:")
-            print(data)
+        else:
             a_bytearray = bytearray(data)
 
             hex_string = a_bytearray.hex()
