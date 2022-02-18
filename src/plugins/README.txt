@@ -59,7 +59,7 @@ python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --dmuId=0x07  --d
 Para DMU y action:Query
 =======================
 python3 check_portserial.py --port=/dev/ttyUSB0 --action=query --device=dmu --dmuDevice1=07 --dmuDevice2=00 --cmdNumber=F8
-
+python3 check_rs485.py --port /dev/ttyUSB0 --action query --device dmu --dmuDevice1 07 --dmuDevice2 00 --cmdNumber F8
 
 Para DMU y action:Set
 =======================
@@ -75,4 +75,8 @@ python3 check_portserial.py --port=/dev/ttyUSB1 --action=query --device=dru --dr
 python3 check_portserial.py --port=/dev/ttyUSB1 --action=query --device=dru --druId=21 --cmdBodyLenght=17 --cmdNumber=0500 --cmdData=0000000000000000000000000000000000000000
 
 
+Para DRU y action:Set
+=======================
+python3 check_portserial.py --port=/dev/ttyUSB1 --action=set --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=4004 --cmdData=00
 
+python3 check_portserial.py --port=/dev/ttyUSB1 --action=set --device=dru --druId=11 --cmdBodyLenght=07 --cmdNumber=0101 --cmdData=00000000
