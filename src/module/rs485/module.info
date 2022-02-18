@@ -1,0 +1,7 @@
+Module: RS485
+Version: 1.0.0
+Description: Este modulo realiza SET sobre el puerto serial de un equipo
+   dmu o dru
+   Ej. 
+     
+
