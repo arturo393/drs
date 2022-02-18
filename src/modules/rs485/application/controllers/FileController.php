@@ -51,17 +51,21 @@ class FileController extends Controller
         parent::init();
     }
 
-    public function loadFile($path)
+    public function loadfileAction()
     {
-        
-        $handle = fopen("rdu-set.csv", "r");
+	    var_dump('Esta llenado loadFile');
+        var_dump(__DIR__);	    
+	    
+	    $handle = fopen(__DIR__ . "/rdu-set.csv", "r");
         $lineNumber = 1;
         while (($raw_string = fgets($handle)) !== false) {
             $row = str_getcsv($raw_string);
             var_dump($row);
             $lineNumber++;
         }
-        fclose($handle);
+	fclose($handle);
+
+	exit;
     }
 
 

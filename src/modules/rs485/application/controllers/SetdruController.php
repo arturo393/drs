@@ -3,10 +3,12 @@
 namespace Icinga\Module\Rs485\Controllers;
 
 use GuzzleHttp\Psr7\ServerRequest;
+use Icinga\Module\Rs485\Database;
 use Icinga\Application\Config;
 use Icinga\Module\Rs485\Forms\SetdruForm;
 use Icinga\Web\Controller;
 use ipl\Html\Html;
+use ipl\Sql\Select;
 use ipl\Web\Url;
 use ipl\Web\Widget\ButtonLink;
 use ipl\Web\Widget\Icon;
@@ -15,10 +17,11 @@ use ipl\Web\Widget\Link;
 
 class SetdruController extends Controller
 {
+    use Database;
     private $arraySet = array(
-       array('id' => 1, 
-             'name' => 'Site Number (DMU ID)', 
-             'header' => '7E', 
+       array('id' => 1,
+             'name' => 'Site Number (DMU ID)',
+             'header' => '7E',
              'x1' => '01 01' ,
              'site_number' => '00 00 00 00',
              'dru_id' => '11' ,
@@ -31,13 +34,13 @@ class SetdruController extends Controller
              'cmd_code' => '01 01' ,
              'cmd_data' => '00 00 00 00' ,
              'crc' => 'DB 30' ,
-             'end' => '7E' 
+             'end' => '7E'
              ) ,
 
-       array('id' => 2, 
-             'name' => 'Site Subnumber (DRU ID)', 
-             'header' => '7E', 
-             'x1' => '00 00', 
+       array('id' => 2,
+             'name' => 'Site Subnumber (DRU ID)',
+             'header' => '7E',
+             'x1' => '00 00',
              'site_number' => '00 00 00 00',
              'dru_id' => '11' ,
              'x2' => '01 00' ,
@@ -49,10 +52,10 @@ class SetdruController extends Controller
              'cmd_code' => '02 01' ,
              'cmd_data' => '11' ,
              'crc' => 'B7 E0' ,
-             'end' => '7E' 
-             )  
+             'end' => '7E'
+             )
         );
-    
+
     public function init()
     {
         $this->assertPermission('config/modules');
@@ -61,14 +64,35 @@ class SetdruController extends Controller
 
     public function listAction()
     {
-        $tableRows = [];
-        foreach ($this->arraySet as $row) {
-        $url = Url::fromPath('rs485/setdru/dru', ['id' => $row['id']])->getAbsoluteUrl('&');
-            //$trama = $this->obtenerTrama($row);
-            //$trama = $row['header'] . $row['x1'];
+        $select = (new Select())
+            ->from('dru_trama r')
+            ->columns(['r.*'])
+            ->orderBy('r.id', SORT_ASC);
+
+
+          $tableRows = [];
+        //foreach ($this->arraySet as $row) {
+
+
+        foreach ($this->getDb()->select($select) as $row) {
+            // $url = Url::fromPath('rs485/setdru/dru', ['id' => $row['id']])->getAbsoluteUrl('&');
+            $url = Url::fromPath('rs485/setdru/dru', ['id' => $row->id])->getAbsoluteUrl('&');
             $tableRows[] = Html::tag('tr', ['href' => $url], [
-                Html::tag('td', null, $row['name']),
-                //Html::tag('td', null, $trama),
+                Html::tag('td', null, $row->name),
+                Html::tag('td', null, $row->header),
+                Html::tag('td', null, $row->type),                
+                Html::tag('td', ['class' => 'icon-col'], [
+                    new Link(
+                        new Icon('edit'),
+                        Url::fromPath('reporting/report/edit', ['id' => $row->id])
+                    )
+                ])
+            ]);
+
+
+
+           /* $tableRows[] = Html::tag('tr', ['href' => $url], [
+                Html::tag('td', null, $row['name']),                
                 Html::tag('td', null, $row['header']),
                 Html::tag('td', null, $row['x1']),
                 Html::tag('td', null, $row['site_number']),
@@ -83,14 +107,14 @@ class SetdruController extends Controller
                 Html::tag('td', null, $row['cmd_data']),
                 Html::tag('td', null, $row['crc']),
                 Html::tag('td', null, $row['end']),
-
+                 
                 Html::tag('td', ['class' => 'icon-col'], [
                     new Link(
                         new Icon('edit'),
                         Url::fromPath('rs485/setdru/dru', ['id' => $row['id']])
                     )
                 ])
-            ]);
+            ]); */
         }
 
         if (! empty($tableRows)) {
@@ -107,20 +131,20 @@ class SetdruController extends Controller
                             [
                                 Html::tag('th', null, 'Comando'),
                                 Html::tag('th', null, 'H'),
-                                Html::tag('th', null, 'x'),   
-                                Html::tag('th', null, 'Si'),  
-                                Html::tag('th', null, 'DRU ID'), 
-                                Html::tag('th', null, 'x'), 
-                                Html::tag('th', null, 'Tx/Rx'), 
-                                Html::tag('th', null, 'x'), 
-                                Html::tag('th', null, 'M'), 
+                                Html::tag('th', null, 'x'),
+                                Html::tag('th', null, 'Si'),
+                                Html::tag('th', null, 'DRU ID'),
+                                Html::tag('th', null, 'x'),
+                                Html::tag('th', null, 'Tx/Rx'),
+                                Html::tag('th', null, 'x'),
+                                Html::tag('th', null, 'M'),
                                 Html::tag('th', null, 'Tx/Rx'),
                                 Html::tag('th', null, 'Length'),
-                                Html::tag('th', null, 'Code'),  
-                                Html::tag('th', null, 'Data'), 
-                                Html::tag('th', null, 'CRC'),  
-                                Html::tag('th', null, 'End'),                        
-                                Html::tag('th')									
+                                Html::tag('th', null, 'Code'),
+                                Html::tag('th', null, 'Data'),
+                                Html::tag('th', null, 'CRC'),
+                                Html::tag('th', null, 'End'),
+                                Html::tag('th')
                             ]
                         )
                     ),
@@ -184,22 +208,22 @@ class SetdruController extends Controller
            echo "<pre>$salida</pre>";
            $this->view->assign('dru_cmdcode', $salida);//assign here
     }
-    
-    private function obtenerTrama($row){
-        $trama = $row['header']. ' ' . 
-                 $row['x1'] . ' ' .
-                 $row['site_number']  . ' ' .     
-                 $row['dru_id']  . ' ' .       
-                 $row['x2']  . ' ' .       
-                 $row['x3']  . ' ' .       
-                 $row['message_type']  . ' ' .               
-                 $row['tx_rx2']  . ' ' .       
-                 $row['cmd_length']  . ' ' .       
-                 $row['cmd_code']  . ' ' .       
-                 $row['crc']  . ' ' .      
-                 $row['end'];     
 
-                 
+    private function obtenerTrama($row){
+        $trama = $row['header']. ' ' .
+                 $row['x1'] . ' ' .
+                 $row['site_number']  . ' ' .
+                 $row['dru_id']  . ' ' .
+                 $row['x2']  . ' ' .
+                 $row['x3']  . ' ' .
+                 $row['message_type']  . ' ' .
+                 $row['tx_rx2']  . ' ' .
+                 $row['cmd_length']  . ' ' .
+                 $row['cmd_code']  . ' ' .
+                 $row['crc']  . ' ' .
+                 $row['end'];
+
+
 
         /*Html::tag('td', null, ),
         Html::tag('td', null, ),
@@ -218,7 +242,7 @@ class SetdruController extends Controller
         return $trama;
     }
 
-    
+
 
 }
 
