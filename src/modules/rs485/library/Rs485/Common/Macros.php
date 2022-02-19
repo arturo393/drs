@@ -1,6 +1,6 @@
 <?php
 
-namespace Icinga\Module\Reporting\Common;
+namespace Icinga\Module\Rs485\Common;
 
 trait Macros
 {

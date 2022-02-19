@@ -1,13 +1,13 @@
 <?php
-// Icinga Reporting | (c) 2018 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Web\Forms;
+namespace Icinga\Module\Rs485\Web\Forms;
 
-use Icinga\Module\Reporting\Actions\SendMail;
-use Icinga\Module\Reporting\Database;
-use Icinga\Module\Reporting\ProvidedReports;
-use Icinga\Module\Reporting\Report;
-use Icinga\Module\Reporting\Web\Forms\Decorator\CompatDecorator;
+use Icinga\Module\Rs485\Actions\SendMail;
+use Icinga\Module\Rs485\Database;
+use Icinga\Module\Rs485\ProvidedReports;
+use Icinga\Module\Rs485\Report;
+use Icinga\Module\Rs485\Web\Forms\Decorator\CompatDecorator;
 use ipl\Web\Compat\CompatForm;
 
 class SendForm extends CompatForm

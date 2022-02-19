@@ -1,10 +1,10 @@
 <?php
-// Icinga Reporting | (c) 2018 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Hook;
+namespace Icinga\Module\Rs485\Hook;
 
 use Icinga\Application\Hook;
-use Icinga\Module\Reporting\Report;
+use Icinga\Module\Rs485\Report;
 use ipl\Html\Form;
 
 abstract class ActionHook

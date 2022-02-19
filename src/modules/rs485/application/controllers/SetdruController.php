@@ -18,43 +18,6 @@ use ipl\Web\Widget\Link;
 class SetdruController extends Controller
 {
     use Database;
-    private $arraySet = array(
-       array('id' => 1,
-             'name' => 'Site Number (DMU ID)',
-             'header' => '7E',
-             'x1' => '01 01' ,
-             'site_number' => '00 00 00 00',
-             'dru_id' => '11' ,
-             'x2' => '01 00' ,
-             'tx_rx1' => '80' ,
-             'x3' => '01' ,
-             'message_type' => '03' ,
-             'tx_rx2' => 'FF' ,
-             'cmd_length' => '07' ,
-             'cmd_code' => '01 01' ,
-             'cmd_data' => '00 00 00 00' ,
-             'crc' => 'DB 30' ,
-             'end' => '7E'
-             ) ,
-
-       array('id' => 2,
-             'name' => 'Site Subnumber (DRU ID)',
-             'header' => '7E',
-             'x1' => '00 00',
-             'site_number' => '00 00 00 00',
-             'dru_id' => '11' ,
-             'x2' => '01 00' ,
-             'tx_rx1' => '80' ,
-             'x3' => '01' ,
-             'message_type' => '03' ,
-             'tx_rx2' => 'FF' ,
-             'cmd_length' => '04' ,
-             'cmd_code' => '02 01' ,
-             'cmd_data' => '11' ,
-             'crc' => 'B7 E0' ,
-             'end' => '7E'
-             )
-        );
 
     public function init()
     {
@@ -68,19 +31,28 @@ class SetdruController extends Controller
             ->from('dru_trama r')
             ->columns(['r.*'])
             ->orderBy('r.id', SORT_ASC);
-
-
-          $tableRows = [];
-        //foreach ($this->arraySet as $row) {
-
-
+        
+        $tableRows = [];
+        
         foreach ($this->getDb()->select($select) as $row) {
-            // $url = Url::fromPath('rs485/setdru/dru', ['id' => $row['id']])->getAbsoluteUrl('&');
+            
             $url = Url::fromPath('rs485/setdru/dru', ['id' => $row->id])->getAbsoluteUrl('&');
             $tableRows[] = Html::tag('tr', ['href' => $url], [
                 Html::tag('td', null, $row->name),
-                Html::tag('td', null, $row->header),
-                Html::tag('td', null, $row->type),                
+                Html::tag('td', null, $row->header),                
+                Html::tag('td', null, $row->x1),
+                Html::tag('td', null, $row->site_number),
+                Html::tag('td', null, $row->dru_id),
+                Html::tag('td', null, $row->x2),
+                Html::tag('td', null, $row->tx_rx1),
+                Html::tag('td', null, $row->x3),
+                Html::tag('td', null, $row->message_type),
+                Html::tag('td', null, $row->tx_rx2),
+                Html::tag('td', null, $row->cmd_length),
+                Html::tag('td', null, $row->cmd_code),
+                Html::tag('td', null, $row->cmd_data),
+                Html::tag('td', null, $row->crc),
+                Html::tag('td', null, $row->end),                
                 Html::tag('td', ['class' => 'icon-col'], [
                     new Link(
                         new Icon('edit'),
@@ -89,32 +61,6 @@ class SetdruController extends Controller
                 ])
             ]);
 
-
-
-           /* $tableRows[] = Html::tag('tr', ['href' => $url], [
-                Html::tag('td', null, $row['name']),                
-                Html::tag('td', null, $row['header']),
-                Html::tag('td', null, $row['x1']),
-                Html::tag('td', null, $row['site_number']),
-                Html::tag('td', null, $row['dru_id']),
-                Html::tag('td', null, $row['x2']),
-                Html::tag('td', null, $row['tx_rx1']),
-                Html::tag('td', null, $row['x3']),
-                Html::tag('td', null, $row['message_type']),
-                Html::tag('td', null, $row['tx_rx2']),
-                Html::tag('td', null, $row['cmd_length']),
-                Html::tag('td', null, $row['cmd_code']),
-                Html::tag('td', null, $row['cmd_data']),
-                Html::tag('td', null, $row['crc']),
-                Html::tag('td', null, $row['end']),
-                 
-                Html::tag('td', ['class' => 'icon-col'], [
-                    new Link(
-                        new Icon('edit'),
-                        Url::fromPath('rs485/setdru/dru', ['id' => $row['id']])
-                    )
-                ])
-            ]); */
         }
 
         if (! empty($tableRows)) {
@@ -152,11 +98,9 @@ class SetdruController extends Controller
                 ]
             );
 
-            //$this->addContent($table);
             $this->view->assign('table_view', $table);
         } else {
             $this->view->assign('table_view', Html::tag('p', null, 'No reports created yet.'));
-           // $this->addContent(Html::tag('p', null, 'No reports created yet.'));
         }
     }
 
@@ -171,10 +115,7 @@ class SetdruController extends Controller
 
         //$this->view->tabs = $this->Module()->getConfigTabs()->activate('form');
         $this->view->form = $form;
-
-
-
-            $this->view->application = 'Icinga Web rdu';
+        $this->view->application = 'Icinga Web rdu';
         $this->view->moreData = array(
         'Work'   => 'done',
         'Result' => 'fantastic'
@@ -208,41 +149,6 @@ class SetdruController extends Controller
            echo "<pre>$salida</pre>";
            $this->view->assign('dru_cmdcode', $salida);//assign here
     }
-
-    private function obtenerTrama($row){
-        $trama = $row['header']. ' ' .
-                 $row['x1'] . ' ' .
-                 $row['site_number']  . ' ' .
-                 $row['dru_id']  . ' ' .
-                 $row['x2']  . ' ' .
-                 $row['x3']  . ' ' .
-                 $row['message_type']  . ' ' .
-                 $row['tx_rx2']  . ' ' .
-                 $row['cmd_length']  . ' ' .
-                 $row['cmd_code']  . ' ' .
-                 $row['crc']  . ' ' .
-                 $row['end'];
-
-
-
-        /*Html::tag('td', null, ),
-        Html::tag('td', null, ),
-        Html::tag('td', null, ),
-        Html::tag('td', null, $row['dru_id']),
-        Html::tag('td', null, $row['x2']),
-        Html::tag('td', null, $row['tx_rx1']),
-        Html::tag('td', null, $row['x3']),
-        Html::tag('td', null, $row['message_type']),
-        Html::tag('td', null, $row['tx_rx2']),
-        Html::tag('td', null, $row['cmd_length']),
-        Html::tag('td', null, $row['cmd_code']),
-        Html::tag('td', null, $row['cmd_data']),
-        Html::tag('td', null, $row['crc']),
-        Html::tag('td', null, $row['end']),*/
-        return $trama;
-    }
-
-
 
 }
 

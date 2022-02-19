@@ -1,12 +1,12 @@
 <?php
-// Icinga Reporting | (c) 2018 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting;
+namespace Icinga\Module\Rs485;
 
 use DateTime;
 use Exception;
 use Icinga\Module\Pdfexport\PrintableHtmlDocument;
-use Icinga\Module\Reporting\Web\Widget\Template;
+use Icinga\Module\Rs485\Web\Widget\Template;
 use ipl\Html\HtmlDocument;
 use ipl\Sql;
 

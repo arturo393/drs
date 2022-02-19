@@ -1,8 +1,8 @@
 <?php
 
-namespace Icinga\Module\Reporting\Web\Widget;
+namespace Icinga\Module\Rs485\Web\Widget;
 
-use Icinga\Module\Reporting\Common\Macros;
+use Icinga\Module\Rs485\Common\Macros;
 use ipl\Html\BaseHtmlElement;
 use ipl\Html\Html;
 

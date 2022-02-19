@@ -1,11 +1,11 @@
 <?php
-// Icinga Reporting | (c) 2018 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Cli;
+namespace Icinga\Module\Rs485\Cli;
 
 use Icinga\Application\Icinga;
 use Icinga\Application\Version;
-use Icinga\Module\Reporting\Database;
+use Icinga\Module\Rs485\Database;
 
 class Command extends \Icinga\Cli\Command
 {

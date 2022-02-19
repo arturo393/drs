@@ -1,13 +1,13 @@
 <?php
-// Icinga Reporting | (c) 2018 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Actions;
+namespace Icinga\Module\Rs485\Actions;
 
 use Icinga\Application\Config;
 use Icinga\Module\Pdfexport\ProvidedHook\Pdfexport;
-use Icinga\Module\Reporting\Hook\ActionHook;
-use Icinga\Module\Reporting\Mail;
-use Icinga\Module\Reporting\Report;
+use Icinga\Module\Rs485\Hook\ActionHook;
+use Icinga\Module\Rs485\Mail;
+use Icinga\Module\Rs485\Report;
 use Icinga\Util\StringHelper;
 use ipl\Html\Form;
 

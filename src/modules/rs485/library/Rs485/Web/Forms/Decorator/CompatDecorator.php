@@ -1,7 +1,7 @@
 <?php
-// Icinga Reporting | (c) 2021 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2021 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Web\Forms\Decorator;
+namespace Icinga\Module\Rs485\Web\Forms\Decorator;
 
 use Icinga\Application\Version;
 use ipl\Html\Attributes;

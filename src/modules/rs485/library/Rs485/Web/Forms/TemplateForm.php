@@ -1,11 +1,11 @@
 <?php
-// Icinga Reporting | (c) 2019 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2019 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Web\Forms;
+namespace Icinga\Module\Rs485\Web\Forms;
 
 use Icinga\Authentication\Auth;
-use Icinga\Module\Reporting\Database;
-use Icinga\Module\Reporting\Web\Forms\Decorator\CompatDecorator;
+use Icinga\Module\Rs485\Database;
+use Icinga\Module\Rs485\Web\Forms\Decorator\CompatDecorator;
 use ipl\Html\Contract\FormSubmitElement;
 use ipl\Html\Html;
 use ipl\Web\Compat\CompatForm;

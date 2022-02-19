@@ -1,10 +1,10 @@
 <?php
-// Icinga Reporting | (c) 2018 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Reports;
+namespace Icinga\Module\Rs485\Reports;
 
-use Icinga\Module\Reporting\Hook\ReportHook;
-use Icinga\Module\Reporting\Timerange;
+use Icinga\Module\Rs485\Hook\ReportHook;
+use Icinga\Module\Rs485\Timerange;
 use ipl\Html\HtmlString;
 
 class SystemReport extends ReportHook

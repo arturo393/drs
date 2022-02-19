@@ -1,7 +1,7 @@
 <?php
-// Icinga Reporting | (c) 2021 Icinga GmbH | GPLv2
+// Icinga Rs485 | (c) 2021 Icinga GmbH | GPLv2
 
-namespace Icinga\Module\Reporting\Web\Widget;
+namespace Icinga\Module\Rs485\Web\Widget;
 
 use ipl\Web\Widget\ActionLink;
 use ipl\Web\Widget\Dropdown;
