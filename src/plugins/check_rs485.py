@@ -105,35 +105,35 @@ def analizar_argumentos():
 
     #validamos los argumentos pasados    
     if Port == "":
-        sys.stderr.write("Error: El puerto es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: El puerto es obligatorio\n")      
         sys.exit(2) 
 
     if Device == "":
-        sys.stderr.write("Error: El device es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: El device es obligatorio\n")      
         sys.exit(2)
     
     if DmuDevice1 == "" and Device == 'dmu':
-        sys.stderr.write("Error: El dmuDevice1 es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: El dmuDevice1 es obligatorio\n")      
         sys.exit(2)  
 
     if DmuDevice2 == "" and Device == 'dmu':
-        sys.stderr.write("Error: El dmuDevice2 es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: El dmuDevice2 es obligatorio\n")      
         sys.exit(2)      
 
     if CmdNumber == "":
-        sys.stderr.write("Error: cmdNumber es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: cmdNumber es obligatorio\n")      
         sys.exit(2) 
 
     if (CmdBodyLenght == "" and Action == 'set') or (CmdBodyLenght == "" and Device == 'dru'):
-        sys.stderr.write("Error: cmdBodyLenght es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: cmdBodyLenght es obligatorio")      
         sys.exit(2)  
 
     if (CmdData == "" and Action == 'set') or (CmdData == "" and Device == 'dru') :
-        sys.stderr.write("Error: cmdData es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: cmdData es obligatorio")      
         sys.exit(2)
 
     if (DruId == "" and Device == 'dru'):
-        sys.stderr.write("Error: DruId es obligatorio\n")      
+        sys.stderr.write("CRITICAL error: DruId es obligatorio")      
         sys.exit(2)     
 
 
@@ -205,14 +205,14 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
             cant_bytes  = int(CmdBodyLenght_hex, 16)  
             #print('cant_bytes: %s' % cant_bytes)           
         except ValueError:
-            sys.stderr.write("Error: CmdBodyLenght no tiene formato hexadecimal\n")      
+            sys.stderr.write("CRITICAL error: CmdBodyLenght no tiene formato hexadecimal")      
             sys.exit(2)     
         tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
         #print('tramaLengthCodeData: %s' % tramaLengthCodeData)     
         lenTramaLengthCodeData = int(len(tramaLengthCodeData)/2)
         #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)     
         if lenTramaLengthCodeData != cant_bytes: 
-            sys.stderr.write("Error: CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")      
+            sys.stderr.write("CRITICAL error: CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")      
             sys.exit(2)  
         if (Action == 'set'):
             MessageType = C_TYPE_SET  
@@ -258,7 +258,7 @@ def validar_trama_respuesta(hexResponse, Device):
                 or len(hexResponse) == 0
                 or hexResponse[0] != 126
             ):
-                sys.stderr.write("Error: trama de salida invalida\n" )      
+                sys.stderr.write("CRITICAL error: Error trama de salida invalida\n" )      
                 sys.exit(2) 
         if Device == 'dru':
             #print('Entro aqui')
@@ -282,7 +282,7 @@ def validar_trama_respuesta(hexResponse, Device):
         #print(data)          
         return data          
     except ValueError:           
-        sys.stderr.write("Error: al leer trama de salida\n")      
+        sys.stderr.write("CRITICAL error: Error al leer trama de salida\n")      
         sys.exit(2)      
 
 #----------------------
@@ -312,7 +312,7 @@ def main():
 
     except serial.SerialException:
         #-- Error al abrir el puerto serie 
-        sys.stderr.write("Error al abrir puerto %s \n" % str(Port))   
+        sys.stderr.write("CRITICAL error: Error al abrir puerto %s \n" % str(Port))   
         sys.exit(1)
 
     #-- Mostrar el nombre del dispositivo
@@ -337,7 +337,7 @@ def main():
             rcvHex = Response.hex()
             if(rcvHex == ''):
                 isDataReady = True
-                sys.stderr.write("Error: al leer el puerto de salida %s \n" % str(Port))   
+                sys.stderr.write("CRITICAL error: al leer el puerto de salida %s \n" % str(Port))   
                 sys.exit(2)
             elif(rcvcount == 0 and rcvHex == '7e'):
                 rcvHexArray.append(rcvHex)
@@ -361,25 +361,25 @@ def main():
         
         if Action == 'set':            
             if len(data) != 0 and Device == 'dmu':
-                sys.stderr.write("Error: al escribir puerto dmu %s \n" % str(Port))   
+                sys.stderr.write("CRITICAL error: al escribir puerto dmu %s \n" % str(Port))   
                 sys.exit(2)
             elif len(data) == 0 and Device == 'dru':
-                sys.stderr.write("Error: al escribir puerto dru %s \n" % str(Port))   
+                sys.stderr.write("CRITICAL error: al escribir puerto dru %s \n" % str(Port))   
                 sys.exit(2)
             else:   
                if Device == 'dru':
                     a_bytearray = bytearray(data)
                     hex_string = a_bytearray.hex()
                     sys.stderr.write(hex_string + '\n')    
-               sys.stderr.write("OK\n")
+               sys.stderr.write("OK")
         else:
             a_bytearray = bytearray(data)
 
             hex_string = a_bytearray.hex()
-            sys.stderr.write(hex_string + '\n')          
+            sys.stderr.write("OK result: " + hex_string )          
         s.close()
     else:
-        sys.stderr.write("Error: Accion invalida:  %s \n" % Action)      
+        sys.stderr.write("WARNING error: Accion invalida:  %s \n" % Action)      
         sys.exit(1)
 
 if __name__ == "__main__":
