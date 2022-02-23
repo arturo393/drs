@@ -103,17 +103,7 @@ def analizar_argumentos():
     CmdData = str(args['cmdData'])
     DruId = str(args['druId'])
 
-    print('Port: %s' % Port)
-    print('Action: %s' % Action)
-    print('Device: %s' % Device)
-    print('DmuDevice1: %s' % DmuDevice1)
-    print('DmuDevice2: %s' % DmuDevice2)
-    print('CmdNumber: %s' % CmdNumber)
-    print('CmdBodyLenght: %s' % CmdBodyLenght)
-    print('CmdData: %s' % CmdData)
-    print('DruId: %s' % DruId)
-
-        #validamos los argumentos pasados    
+    #validamos los argumentos pasados    
     if Port == "":
         sys.stderr.write("Error: El puerto es obligatorio\n")      
         sys.exit(2) 
@@ -161,13 +151,13 @@ def getChecksum(cmd):
     data = bytearray.fromhex(cmd)
   
     crc = hex(Crc16Xmodem.calc(data))
-    print("crc: %s" % crc)
+    #print("crc: %s" % crc)
     
     if (len(crc) == 5):
         checksum = crc[3:5] + '0' + crc[2:3]
     else:
         checksum = crc[4:6] + crc[2:4]
-    print("checksum: %s" % checksum)  
+    #print("checksum: %s" % checksum)  
     return checksum
 
 #----------------------------------------------------
@@ -193,34 +183,34 @@ def formatearHex(dato):
 def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):      
     
     DmuDevice1_hex = formatearHex(DmuDevice1)    
-    print('DmuDevice1_hex: %s' % DmuDevice1_hex)     
+    #print('DmuDevice1_hex: %s' % DmuDevice1_hex)     
 
     DmuDevice2_hex = formatearHex(DmuDevice2)    
-    print('DmuDevice2_hex: %s' % DmuDevice2_hex)      
+    #print('DmuDevice2_hex: %s' % DmuDevice2_hex)      
 
     CmdNumber_hex = formatearHex(CmdNumber)        
-    print('CmdNumber_hex: %s' % CmdNumber_hex)       
+    #print('CmdNumber_hex: %s' % CmdNumber_hex)       
     
-    print('CmdBodyLenght: %s' % CmdBodyLenght)      
+    #print('CmdBodyLenght: %s' % CmdBodyLenght)      
     if (Device == 'dru'): 
         CmdBodyLenght_hex = formatearHex(CmdBodyLenght)  
               
         CmdData_hex = formatearHex(CmdData)          
-        print('CmdData_hex: %s' % CmdData_hex)
+        #print('CmdData_hex: %s' % CmdData_hex)
 
         DruId_hex = formatearHex(DruId)   
-        print('DruId_hex: %s' % DruId_hex)
+        #print('DruId_hex: %s' % DruId_hex)
         
         try:
             cant_bytes  = int(CmdBodyLenght_hex, 16)  
-            print('cant_bytes: %s' % cant_bytes)           
+            #print('cant_bytes: %s' % cant_bytes)           
         except ValueError:
             sys.stderr.write("Error: CmdBodyLenght no tiene formato hexadecimal\n")      
             sys.exit(2)     
         tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
-        print('tramaLengthCodeData: %s' % tramaLengthCodeData)     
+        #print('tramaLengthCodeData: %s' % tramaLengthCodeData)     
         lenTramaLengthCodeData = int(len(tramaLengthCodeData)/2)
-        print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)     
+        #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)     
         if lenTramaLengthCodeData != cant_bytes: 
             sys.stderr.write("Error: CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")      
             sys.exit(2)  
@@ -236,25 +226,25 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         Retunr_hex = ''
         if (Action == 'set'):
             CmdData_hex = formatearHex(CmdData)    
-            print('CmdData_hex: %s' % CmdData_hex)   
+            #print('CmdData_hex: %s' % CmdData_hex)   
             CmdBodyLenght_hex = formatearHex(CmdBodyLenght)   
         else:
             CmdData_hex = ''
             CmdBodyLenght_hex = '00'    
-    print('CmdNumber_hex: %s' % CmdNumber_hex)    
+    #print('CmdNumber_hex: %s' % CmdNumber_hex)    
  
-    print('Device: %s' % Device)
+    #print('Device: %s' % Device)
     if Device == 'dru':
         cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + CmdBodyLenght_hex + CmdNumber_hex  + CmdData_hex
     else:
         cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + CmdNumber_hex  + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
     
-    print('La trama corta: %s' % cmd_string)
+    #print('La trama corta: %s' % cmd_string)
     checksum = getChecksum(cmd_string) # calcula CRC
    
     trama = C_HEADER + cmd_string + checksum +  C_END + Retunr_hex
 
-    print('Query: %s' % trama)
+    #print('Query: %s' % trama)
     return str(trama)
 
 def validar_trama_respuesta(hexResponse, Device):
@@ -271,7 +261,7 @@ def validar_trama_respuesta(hexResponse, Device):
                 sys.stderr.write("Error: trama de salida invalida\n" )      
                 sys.exit(2) 
         if Device == 'dru':
-            print('Entro aqui')
+            #print('Entro aqui')
             byte_respuesta = 14   #Para equipos remotos  de la trama
             cant_bytes_resp = int (hexResponse[byte_respuesta])
             rango_i = byte_respuesta + 3
@@ -282,14 +272,14 @@ def validar_trama_respuesta(hexResponse, Device):
             rango_i = byte_respuesta + 1
             rango_n =  rango_i + cant_bytes_resp
                       
-        print('Cant Byte respuesta: %d' % cant_bytes_resp)             
-        print('longitud trama: %d' % len(hexResponse))
-        print('Rango i: %d' % rango_i)
-        print('Rango n: %d' % rango_n)
+        #print('Cant Byte respuesta: %d' % cant_bytes_resp)             
+        #print('longitud trama: %d' % len(hexResponse))
+        #print('Rango i: %d' % rango_i)
+        #print('Rango n: %d' % rango_n)
         for i in range(rango_i, rango_n):            
             data.append(hexResponse[i])  
-        print("Resultado de la Query es:")
-        print(data)          
+        #print("Resultado de la Query es:")
+        #print(data)          
         return data          
     except ValueError:           
         sys.stderr.write("Error: al leer trama de salida\n")      
@@ -314,7 +304,7 @@ def main():
            baudrate = 19200
         else:
            baudrate = 9600  
-        print('baudrate: %d' % baudrate)
+        #print('baudrate: %d' % baudrate)
         s = serial.Serial(Port, baudrate)
 
         #-- Timeout: 1 seg
@@ -326,11 +316,11 @@ def main():
         sys.exit(1)
 
     #-- Mostrar el nombre del dispositivo
-    print("Puerto (%s): (%s)" % (str(Port),s.portstr))
+    #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
 
     if Action == "query" or Action == "set":
         cmd_bytes = bytearray.fromhex(Trama)
-        print(cmd_bytes)
+        #print(cmd_bytes)
         hex_byte = ''
         for cmd_byte in cmd_bytes:
             hex_byte = ("{0:02x}".format(cmd_byte))             
@@ -361,17 +351,11 @@ def main():
                     isDataReady = True
         
         hexResponse = bytearray.fromhex(hexadecimal_string)
-        print("Answer byte: ") 
-        print(hexResponse) 
-        print("Answer Hex: ") 
-        print(rcvHexArray) 
+        #print("Answer byte: ") 
+        #print(hexResponse) 
+        #print("Answer Hex: ") 
+        #print(rcvHexArray) 
 
-
-
-        #hexResponse = b'~\x07\x00\x00\xf8\x00\x008\x01\x00`r~'
-        #print("Answer: "+hexResponse.hex(chr(9)))
-        #print("Answer: "+rcvHexArray.hex(chr(9)))
-        
         ##Aqui se realiza la validacion de la respuesta
         data = validar_trama_respuesta(hexResponse, Device)
         
