@@ -27,7 +27,9 @@ class SetdruForm extends ConfigForm
         $this->addElement('text', 'dru_cmddata', [
             'label'       => $this->translate('CMD Data'),
             'placeholder' => '00FF01'
-        ]);
+	]);
+
+	$this->addElement('hidden', 'id', null);
     }
 }
 

@@ -29,18 +29,18 @@ class SetdruController extends Controller
     {
         $select = (new Select())
             ->from('dru_trama r')
-            ->columns(['r.*'])
+            ->columns(['r.*'])            
             ->orderBy('r.id', SORT_ASC);
-        
+
         $tableRows = [];
-        
+
         foreach ($this->getDb()->select($select) as $row) {
-            
-            $url = Url::fromPath('rs485/setdru/dru', ['id' => $row->id])->getAbsoluteUrl('&');
+
+            $url = Url::fromPath('rs485/setdru/edit', ['id' => $row->id])->getAbsoluteUrl('&');
             $tableRows[] = Html::tag('tr', ['href' => $url], [
                 Html::tag('td', null, $row->name),
-                Html::tag('td', null, $row->header),                
-                Html::tag('td', null, $row->x1),
+                Html::tag('td', null, $row->header),
+                Html::tag('td', ['style' => 'background-color: #F2F1EE'], $row->x1),
                 Html::tag('td', null, $row->site_number),
                 Html::tag('td', null, $row->dru_id),
                 Html::tag('td', null, $row->x2),
@@ -50,20 +50,21 @@ class SetdruController extends Controller
                 Html::tag('td', null, $row->tx_rx2),
                 Html::tag('td', null, $row->cmd_length),
                 Html::tag('td', null, $row->cmd_code),
-                Html::tag('td', null, $row->cmd_data),
+                Html::tag('td', ['style'=> 'background-color:yellow'], $row->cmd_data),
                 Html::tag('td', null, $row->crc),
-                Html::tag('td', null, $row->end),                
+                Html::tag('td', null, $row->end),
                 Html::tag('td', ['class' => 'icon-col'], [
                     new Link(
                         new Icon('edit'),
-                        Url::fromPath('reporting/report/edit', ['id' => $row->id])
+                        Url::fromPath('rs485/setdru/edit', ['id' => $row->id])
                     )
                 ])
             ]);
 
         }
 
-        if (! empty($tableRows)) {
+	if (! empty($tableRows)) {
+	    $urlOrder = Url::fromPath('rs485/setdru/list', ['order' => 'name'])->getAbsoluteUrl('&');
             $table = Html::tag(
                 'table',
                 ['class' => 'common-table table-row-selectable', 'data-base-target' => '_next'],
@@ -106,49 +107,114 @@ class SetdruController extends Controller
 
 
 
-    public function druAction()
+    public function editAction()
     {
         $form = (new SetdruForm())
             ->setIniConfig(Config::module('rs485'));
 
+        
+        if ($this->_hasParam('id')){
+            $id = $this->_getParam('id');
+        } else {
+            $id = 0;
+        }
+        $select = (new Select())
+        ->from('dru_trama r')
+        ->columns(['r.*'])
+        ->where(['r.id = ?' => $id]);
+
+        $row  = $this->getDb()->select($select)->fetch();
+        if ($row) {
+            $this->view->assign('descripcion', $row->name);
+            $trama = $this->armaTrama($row);
+            $this->view->assign('trama', $trama);
+			  
+	    $values = [
+		        'id' => $row->id,
+		        'dru_cmdlength'  => $row->cmd_length,
+			'dru_cmdcode'  => $row->cmd_code,
+			'dru_cmddata'  => $row->cmd_data,
+            // TODO(el): Must cast to string here because ipl/html does not
+            //           support integer return values for attribute callbacks
+            ];
+
+            $form->populate($values);        
+        }
+
+
         $form->handleRequest();
 
-        //$this->view->tabs = $this->Module()->getConfigTabs()->activate('form');
         $this->view->form = $form;
-        $this->view->application = 'Icinga Web rdu';
-        $this->view->moreData = array(
-        'Work'   => 'done',
-        'Result' => 'fantastic'
-        );
 
-        echo "Paso x aca druAction";
-    }
+        $this->view->assign('id', $id);
+       }
+
 
     public function saveAction()
     {
-            // Check if user has submitted the form
+	$id = 0;
+	$druCmdLength = -1;    
+	$druCmdCode = -1; 
+        $druCmdData = -1;	
+       // Check if user has submitted the form
        if($this->getRequest()->isPost()) {
 
-          // Retrieve form data from POST variables
-            //$data = $this->params()->fromPost();
-            // // Get all route parameters at once as an array.
-            //$data = $this->params()->fromRoute();
-            if ($this->_hasParam('dru_cmdcode')){
-                $postId = $this->_getParam('dru_cmdcode');
-            } else {
-                $postId = 1;
-            }
+	    if ($this->_hasParam('id')){
+		    $id = $this->_getParam('id');
+	    }
 
-          // ... Do something with the data ...
-          //var_dump($postId);
-          }
-            echo "Llego a guardar la informacion";
-//           $postId  = $data['dru_cmdcode'];
-            //$postId = $this->params()->fromPost('dru_cmdcode');
-            $salida = shell_exec("cd /usr/lib/monitoring-plugins/ && ./check_dummy {$postId}" );
-           echo "<pre>$salida</pre>";
-           $this->view->assign('dru_cmdcode', $salida);//assign here
+	    if ($this->_hasParam('dru_cmdlength')){
+                $druCmdLength = $this->_getParam('dru_cmdlength');
+	    }
+
+	    if ($this->_hasParam('dru_cmdcode')){
+                $druCmdCode = $this->_getParam('dru_cmdcode');
+	    } 
+
+	    if ($this->_hasParam('dru_cmddata')){
+                $druCmdData = $this->_getParam('dru_cmddata');
+            }
+       }
+
+	$select = (new Select())
+        ->from('dru_trama r')
+        ->columns(['r.*'])
+        ->where(['r.id = ?' => $id]);
+
+        $row  = $this->getDb()->select($select)->fetch();
+	if ($row) {
+		$druId = $row->dru_id;
+		$druCmdLength = $row->cmd_length;
+		$druCmdCode = $row->cmd_code;
+		$druCmdData = $row->cmd_data;
+
+        }
+	$paramFijos = '--port /dev/ttyUSB1 --action set --device dru ';
+	$paramVariables = "--druId {$druId} --cmdBodyLenght {$druCmdLength} --cmdNumber {$druCmdCode} --cmdData {$druCmdData}";
+	$comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
+	$cd = "cd /usr/lib/monitoring-plugins/ && ";
+    	// $salida = shell_exec("cd /usr/lib/monitoring-plugins/ && ./check_dummy {$id}" );
+	$ejecutar =  $comando . $paramFijos . $paramVariables;
+	//$salida = shell_exec("{$ejecutar}");
+	//$ejecutar = $cd . "./check_shell_rs485.sh";
+	echo "Ejecutar: " . $ejecutar . "<br>";
+	$salida = system($ejecutar . " 2>&1");
+	usleep(1000000);
+	echo "salida: ". $salida;
+	//echo "array: ";
+        //var_dump($array);
+	//echo "<br>Result: ". $result;
+        exit();	
+	$this->view->assign('salida', $salida);
+        $this->view->assign('cmd', $ejecutar);	
     }
+
+    private function armaTrama($data)
+    {
+	   $trama = $data->header . $data->x1 . $data->site_number . $data->dru_id . $data->x2 . $data->tx_rx1 . $data->x3 . $data->message_type . $data->tx_rx2 . $data->cmd_length . $data->cmd_code . $data->cmd_data . $data->crc . $data->end;
+	   return $trama; 
+    }
+
 
 }
 

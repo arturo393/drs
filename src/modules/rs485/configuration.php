@@ -15,7 +15,17 @@ use Icinga\Application\Version;
         'url' => 'rs485/setdru/list',
     ));
 
-    
+    $this->menuSection(N_('Rs485'))->add(N_('Config DMU'), array(
+        'url' => 'rs485/setdmu/list',
+    ));
+
+
+   $this->provideConfigTab('form', array(
+        'title' => $this->translate('Formulario para ingresar datos dmu'),
+        'label' => $this->translate('Formulario DMU'),
+        'url'   => 'rs485/setdmu/dmu'
+    ));
+ 
 
     $this->provideConfigTab('form', array(
         'title' => $this->translate('Formulario para ingresar datos dru'),
@@ -29,21 +39,3 @@ use Icinga\Application\Version;
         'url'   => 'config/backend'
     ));
 
-
-/*
-$this->menuSection('RS485')
-     ->add('Configurar DMU')
-     ->setUrl('rs485/reporte/francis');
-
-$this->menuSection('RS485')
-     ->add('Hello World')
-     ->setUrl('rs485/hello/world');
-
-$this->menuSection('RS485')
-     ->add('Hello dmu')
-     ->setUrl('rs485/setdru/list');
-
-$this->menuSection('RS485')
-     ->add('Configurar DRU')
-     ->setUrl('rs485/setdru/dru');
-*/
