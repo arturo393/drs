@@ -12,19 +12,20 @@ GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON rs485
 console
 
 ```
-`cd /tmp`
-`git clone https://gitlab.com/itaum/sigma-rds.git`
+cd /tmp
+git clone https://gitlab.com/itaum/sigma-rds.git
 
 
-`cd sigma-rds/scr/modules`
-`mysql -p -u root rs485 < rs485/schema/mysql.sql`
+cd sigma-rds/scr/modules
+mysql -p -u root rs485 < rs485/schema/mysql.sql
 
-`cp -R rs485 /usr/share/webapps/icingaweb2/modules`
+cp -R rs485 /usr/share/webapps/icingaweb2/modules
 
-`cd /usr/share/webapps/icingaweb2/modules` 
-`chown -R apache: rs485`
+cd /usr/share/webapps/icingaweb2/modules
+chown -R apache: rs485
 ```
 
+Enable module http://localhost:8080/icingaweb2/config/modules
 
 Configuration -> Application -> Resources
 add rs485_db,
