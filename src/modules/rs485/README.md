@@ -16,7 +16,7 @@ cd /tmp
 git clone https://gitlab.com/itaum/sigma-rds.git
 
 
-cd sigma-rds/scr/modules
+cd sigma-rds/src/modules
 mysql -p -u root rs485 < rs485/schema/mysql.sql
 
 cp -R rs485 /usr/share/webapps/icingaweb2/modules
