@@ -4,13 +4,13 @@
 
 `git clone https://gitlab.com/itaum/sigma-rds.git`
 
-`cd sigma-rds/src/plugins`
+`cd sigma-rds`
 
-`cp rs485.py /usr/lib/monitoring-plugins`
+`cp src/plugins/check_rs485.py /usr/lib/monitoring-plugins`
 
 `cd /usr/lib/monitoring-plugins`
 
-`chown a+x rs485.py`
+`chmod a+x rs485.py`
 
 
 ## Instalando python
@@ -23,13 +23,12 @@
 
 `ln -sf python3 /usr/bin/python`
 
+`ln -sf pip3 /usr/bin/pip`
+
 
 ## Instalacion de librerias
 
-`pip install crccheck`
+`pip install crccheck serial pyserial`
 
-`pip install serial`
-
-`pip install pyserial`
 
 
