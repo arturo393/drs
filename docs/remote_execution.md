@@ -46,3 +46,13 @@ system("ssh remoteuser@<satellite-host_ip> 'check_command'");
 ?>
 ...
 ```
+
+### Shell Example
+
+```
+/home/ytannus $❯ uname -a
+Darwin Jinks.local 21.4.0 Darwin Kernel Version 21.4.0: Tue Jan 18 13:02:01 PST 2022; root:xnu-8020.100.406.0.1~18/RELEASE_X86_64 x86_64
+
+/home/ytannus $❯ ssh sigmadev@192.168.60.78 'uname -a'
+Linux drs 5.15.24-0-lts #1-Alpine SMP Thu, 17 Feb 2022 19:01:03 +0000 x86_64 Linux
+```
