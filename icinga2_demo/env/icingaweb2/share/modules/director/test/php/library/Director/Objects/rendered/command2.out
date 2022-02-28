@@ -1,4 +1,0 @@
-object CheckCommand "___TEST___command" {
-    command = [ "/tmp/bla" ]
-}
-

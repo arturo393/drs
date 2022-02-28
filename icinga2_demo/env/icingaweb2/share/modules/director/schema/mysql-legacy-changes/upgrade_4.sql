@@ -1,1 +1,0 @@
-ALTER TABLE icinga_servicegroup ADD COLUMN object_type ENUM('object', 'template') NOT NULL AFTER display_name;

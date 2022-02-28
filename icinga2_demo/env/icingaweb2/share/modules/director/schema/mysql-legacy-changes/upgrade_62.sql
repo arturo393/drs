@@ -1,1 +1,0 @@
-ALTER TABLE icinga_command MODIFY command TEXT DEFAULT NULL;

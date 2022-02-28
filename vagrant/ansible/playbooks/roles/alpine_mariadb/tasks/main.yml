@@ -1,5 +1,0 @@
----
-# tasks file for alpine_mariadb
----
-- include: secure-installation.yml
-  tags: ['mariadb-secure-installation']

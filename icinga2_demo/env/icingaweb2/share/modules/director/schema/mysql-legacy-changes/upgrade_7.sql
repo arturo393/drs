@@ -1,1 +1,0 @@
-ALTER TABLE icinga_service DROP INDEX object_name;

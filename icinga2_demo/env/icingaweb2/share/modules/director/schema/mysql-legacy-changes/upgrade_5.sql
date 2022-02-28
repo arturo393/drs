@@ -1,1 +1,0 @@
-ALTER TABLE icinga_usergroup ADD COLUMN object_type ENUM('object', 'template') NOT NULL AFTER zone_id;
