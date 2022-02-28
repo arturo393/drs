@@ -15,7 +15,7 @@ mkdir -p $REMOTEUSER_HOME/.ssh
 chmod 700 $REMOTEUSER_HOME/.ssh
 ```
 
-Copy content of master user public key `id_rsa.pub` to Satellite `remoteuser@<satellite-host_ip>$REMOTEUSER_HOME/.ssh/authorized_keys`
+Copy content of master user public key `id_rsa.pub` to Satellite `remoteuser@<satellite-host_ip>:$REMOTEUSER_HOME/.ssh/authorized_keys`
 
 `chmod 600 $REMOTEUSER_HOME/.ssh/authorized_keys`
 
