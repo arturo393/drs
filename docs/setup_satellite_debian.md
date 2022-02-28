@@ -3,7 +3,7 @@
 On master get provisioning ticket:
 
 ```
-icinga2 pki ticket --cn 'Satellite-FQDN
+icinga2 pki ticket --cn 'Satellite-FQDN'
 ```
 
 Add new Satellite zone and enpoint:
