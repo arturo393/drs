@@ -56,5 +56,4 @@ chown -R www-data:icingaweb2 .
 Enable módule in Icingaweb2
 Configurations->Modules->Graphite->Backend->:
 
-- Graphite Web URL: http://<MASTER-host-ip>:8080
--
+- Graphite Web URL: http://MASTER-host-ip:8080

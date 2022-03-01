@@ -73,7 +73,7 @@ Charset: utf8
 
 Go to menu "Icinga Director" -> "[Create Schema]"
 
-## Graphite
+## Graphite (Only Master)
 
 ### Install Graphite
 
