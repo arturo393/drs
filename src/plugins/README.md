@@ -10,12 +10,12 @@
 
 `cd /usr/lib/monitoring-plugins`
 
-`chmod a+x rs485.py`
+`chmod a+x check_rs485.py`
 
 
 ## Instalando python
 
-`sudo apk add python3 python3-dev`
+`apt install python3 python3-dev`
 
 `python3 --version`
 
