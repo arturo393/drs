@@ -22,7 +22,7 @@ You can verify that the CA public and private keys are stored in the `/var/lib/i
 
 ```
 apt install apache2 libapache2-mod-php icingacli icingaweb2 icingaweb2-module-director
-echo "." > /var/www/html/index.html
+echo $HOSTNAME > /var/www/html/index.html
 a2enmod rewrite
 
 echo -e '
@@ -77,7 +77,60 @@ Go to menu "Icinga Director" -> "[Create Schema]"
 
 ### Install Graphite
 
-`apt-get install graphite-web graphite-carbon git -y`
+```
+apt install docker docker-compose -y
+mkdir -p /opt/docker-compose
+
+echo -n 'version: '2'
+services:
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    restart: on-failure:5
+    hostname: graphite
+    volumes:
+      - /opt/graphite/conf:/opt/graphite/conf
+      - /opt/graphite/storage:/opt/graphite/storage
+      - /opt/graphite/log/graphite:/var/log/graphite
+      - /opt/graphite/log/carbon:/var/log/carbon
+    ports:
+      - 2003:2003
+      - 8080:80' > /opt/docker-compose/docker-compose.yml
+
+echo -n '[Unit]
+Description=docker-compose
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+User=root
+Group=docker
+WorkingDirectory=/opt/docker-compose
+# Shutdown container (if running) when unit is started
+ExecStartPre=/usr/bin/docker-compose -f docker-compose.yml down
+# Start container when unit is started
+ExecStart=/usr/bin/docker-compose -f docker-compose.yml up
+# Stop container when unit is stopped
+ExecStop=/usr/bin/docker-compose -f docker-compose.yml down
+
+[Install]
+WantedBy=multi-user.target' > /etc/systemd/system/docker-compose.service
+
+systemctl enable docker-compose
+systemctl start docker-compose
+docker ps -a|grep Up
+
+```
+
+http://<MASTER-host-ip>:8080/admin/auth/user/1
+http://<MASTER-host-ip>:8080/admin/auth/user/1/password/
+
+`systemctl restart docker-composes`
+
+References:
+https://graphite.readthedocs.io/en/latest/install.html#post-install-tasks
+https://computingforgeeks.com/install-graphite-graphite-web-on-centos-rhel/
 
 ### Enable Icinga2 Feature
 
