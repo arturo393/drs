@@ -44,16 +44,3 @@ usermod -a -G dialout nagios
 
 ```
 
-### Install Graphite Icingaweb2 Module
-
-```
-cd /usr/share/icingaweb2/modules/
-git clone https://github.com/Icinga/icingaweb2-module-graphite graphite
-cd graphite
-chown -R www-data:icingaweb2 .
-```
-
-Enable módule in Icingaweb2
-Configurations->Modules->Graphite->Backend->:
-
-- Graphite Web URL: http://MASTER-host-ip:8080

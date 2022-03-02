@@ -300,7 +300,7 @@ def main():
     #-- Abrir el puerto serie. Si hay algun error se termina
     #--------------------------------------------------------
     try:
-        if Port == '/dev/ttyUSB0':
+        if Port == '/dev/ttyS0':
            baudrate = 19200
         else:
            baudrate = 9600  
