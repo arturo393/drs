@@ -1,34 +1,38 @@
-## Instalando plugins
+## Instalación de plugin
 
-`cd /tmp`
 
-`git clone https://gitlab.com/itaum/sigma-rds.git`
+```
+cd /tmp
 
-`cd sigma-rds`
+git clone https://gitlab.com/itaum/sigma-rds.git
 
-`cp src/plugins/check_rs485.py /usr/lib/monitoring-plugins`
+cd sigma-rds
 
-`cd /usr/lib/monitoring-plugins`
+mkdir /usr/lib/monitoring-plugins
 
-`chmod a+x check_rs485.py`
+cp src/plugins/check_rs485.py /usr/lib/monitoring-plugins
 
+cd /usr/lib/monitoring-plugins
+
+chmod a+x check_rs485.py
+```
 
 ## Instalando python
 
-`apt install python3 python3-dev`
+```
+apt install python3 python3-dev python3-pip
 
-`python3 --version`
+python3 --version
 
-`python3 -m ensurepip`
+ln -sf python3 /usr/bin/python
 
-`ln -sf python3 /usr/bin/python`
+ln -sf pip3 /usr/bin/pip
 
-`ln -sf pip3 /usr/bin/pip`
-
-
+```
 ## Instalacion de librerias
 
-`pip install crccheck serial pyserial`
-
+```
+pip install crccheck serial pyserial
+```
 
 
