@@ -155,7 +155,10 @@ class SetdruController extends Controller
 	$id = 0;
 	$druCmdLength = -1;    
 	$druCmdCode = -1; 
-        $druCmdData = -1;	
+    $druCmdData = -1;
+    $user_remote = -1;
+    $password_remote = -1;
+    $host_remote = -1;	
        // Check if user has submitted the form
        if($this->getRequest()->isPost()) {
 
@@ -173,7 +176,19 @@ class SetdruController extends Controller
 
 	    if ($this->_hasParam('dru_cmddata')){
                 $druCmdData = $this->_getParam('dru_cmddata');
-            }
+        }
+
+        if ($this->_hasParam('user_remote')){
+            $user_remote = $this->_getParam('user_remote');
+        }
+    
+        if ($this->_hasParam('password_remote')){
+            $password_remote = $this->_getParam('password_remote');
+        }
+        
+        if ($this->_hasParam('host_remote')){
+            $host_remote = $this->_getParam('host_remote');
+        }    
        }
 
 	$select = (new Select())
@@ -189,7 +204,8 @@ class SetdruController extends Controller
 	$paramFijos = '--port /dev/ttyUSB1 --action set --device dru ';
 	$paramVariables = "--druId {$druId} --cmdBodyLenght {$druCmdLength} --cmdNumber {$druCmdCode} --cmdData {$druCmdData}";
 	$comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
-	$ejecutar =  $comando . $paramFijos . $paramVariables;
+	$ssh = "ssh {$user_remote}@{$host_remote} ";
+    $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
 	$salida = system($ejecutar . " 2>&1");
 	usleep(500000);
 	//echo "salida: <pre>". $salida ."</pre>";
