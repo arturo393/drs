@@ -26,6 +26,13 @@ mkdir -p $REMOTEUSER_HOME/.ssh
 chmod 700 $REMOTEUSER_HOME/.ssh
 ```
 
+## Allow www-data to run as sigmadev
+
+Add the flollowing to sudoers file:
+`www-data ALL=(sigmadev) /usr/bin/ssh`
+
+## Copy public key to Satellite/Agent Node
+
 Copy content of master user public key `id_rsa.pub` to Satellite:
 
 `user@masterhost:~/.ssh$ scp id_rsa.pub remoteuser@remotehost.com:~/.ssh/`
@@ -42,7 +49,7 @@ Copy content of master user public key `id_rsa.pub` to Satellite:
 
 ```php
 <?php
-system("ssh remoteuser@<satellite-host_ip> 'check_command'");
+system("sudo -u sigmadev ssh remoteuser@<satellite-host_ip> 'check_command'");
 ?>
 ...
 ```
