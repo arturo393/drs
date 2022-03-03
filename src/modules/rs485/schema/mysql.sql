@@ -1,4 +1,4 @@
-use rs485;
+use director;
 
 CREATE TABLE dru_trama (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,

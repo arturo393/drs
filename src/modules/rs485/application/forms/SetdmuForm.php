@@ -41,13 +41,6 @@ class SetdmuForm extends ConfigForm
 	    'required' => true,
         ]);
 
-        $this->addElement('password', 'password_remote', [
-            'label'       => $this->translate('Contraseña'),
-	    'placeholder' => '......',
-	    'required' => true,
-        ]);        
-        
-
         $this->addElement('text', 'dmu_cmdlength', [
             'label'       => $this->translate('CMD Length'),
 	    'placeholder' => '04',

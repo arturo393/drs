@@ -39,15 +39,7 @@ class SetdruForm extends ConfigForm
             'placeholder' => 'user',
             'required' => true,
         ]);
-
-        $this->addElement('password', 'password_remote', [
-            'label'       => $this->translate('Contraseña'),
-            'placeholder' => '......',
-            'required' => true,
-        ]); 
-        
-        
-        
+    
         $this->addElement('text', 'dru_cmdlength', [
             'label'       => $this->translate('CMD Length'),
             'placeholder' => '04',
