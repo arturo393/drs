@@ -196,10 +196,10 @@ class SetdmuController extends Controller
 	$comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
     $ssh = "ssh {$user_remote}@{$host_remote} ";
 	$ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
-	$salida = system($ejecutar . " 2>&1");
+	//$salida = system($ejecutar . " 2>&1");
 	usleep(500000);
 	//echo "salida: <pre>". $salida ."</pre>";
-	$this->view->assign('salida', $salida);
+	//$this->view->assign('salida', $salida);
         $this->view->assign('cmd', $ejecutar);	
     }
 
