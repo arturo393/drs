@@ -19,6 +19,9 @@ use Icinga\Application\Version;
         'url' => 'rs485/setdmu/list',
     ));
 
+    $this->menuSection(N_('Rs485'))->add(N_('Formulario General'), array(
+        'url' => 'rs485/general/edit',
+    ));
 
    $this->provideConfigTab('form', array(
         'title' => $this->translate('Formulario para ingresar datos dmu'),
