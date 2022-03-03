@@ -29,7 +29,7 @@ chmod 700 $REMOTEUSER_HOME/.ssh
 ## Allow www-data to run as sigmadev
 
 Add the flollowing to sudoers file:
-`www-data ALL=(sigmadev) /usr/bin/ssh`
+`www-data ALL=(sigmadev) NOPASSWD:/usr/bin/ssh`
 
 ## Copy public key to Satellite/Agent Node
 
