@@ -23,6 +23,8 @@ cp -R rs485 /usr/share/webapps/icingaweb2/modules
 
 cd /usr/share/webapps/icingaweb2/modules
 chown -R apache: rs485
+
+apt install icingaweb2-module-ipl
 ```
 
 Enable module http://localhost:8080/icingaweb2/config/modules

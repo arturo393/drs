@@ -191,15 +191,15 @@ class SetdmuController extends Controller
 		$dmuDevice2 = $row->dmu_device2;
 
         }
-	$paramFijos = '--port /dev/ttyUSB0 --action set --device dmu ';
-	$paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
-	$comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
-    $ssh = "ssh {$user_remote}@{$host_remote} ";
-	$ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
-	//$salida = system($ejecutar . " 2>&1");
-	usleep(500000);
-	//echo "salida: <pre>". $salida ."</pre>";
-	//$this->view->assign('salida', $salida);
+        $paramFijos = '--port /dev/ttyUSB0 --action set --device dmu ';
+        $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
+        $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
+        $ssh = "ssh {$user_remote}@{$host_remote} ";
+        $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
+        $salida = system($ejecutar . " 2>&1");
+        usleep(500000);
+        //echo "salida: <pre>". $salida ."</pre>";
+        $this->view->assign('salida', $salida);
         $this->view->assign('cmd', $ejecutar);	
     }
 
