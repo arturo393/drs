@@ -147,8 +147,7 @@ class SetdmuController extends Controller
 	$id = 0;
 	$dmuCmdLength = -1;    
     $dmuCmdData = -1;
-    $user_remote = -1;
-    $password_remote = -1;
+    $user_remote = -1;    
     $host_remote = -1;	
        // Check if user has submitted the form
        if($this->getRequest()->isPost()) {
@@ -169,11 +168,7 @@ class SetdmuController extends Controller
         if ($this->_hasParam('user_remote')){
             $user_remote = $this->_getParam('user_remote');
         }
-    
-        if ($this->_hasParam('password_remote')){
-            $password_remote = $this->_getParam('password_remote');
-        }
-
+            
         if ($this->_hasParam('host_remote')){
             $host_remote = $this->_getParam('host_remote');
         }
@@ -191,15 +186,15 @@ class SetdmuController extends Controller
 		$dmuDevice2 = $row->dmu_device2;
 
         }
-	$paramFijos = '--port /dev/ttyUSB0 --action set --device dmu ';
-	$paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
-	$comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
-    $ssh = "ssh {$user_remote}@{$host_remote} ";
-	$ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
-	$salida = system($ejecutar . " 2>&1");
-	usleep(500000);
-	//echo "salida: <pre>". $salida ."</pre>";
-	$this->view->assign('salida', $salida);
+        $paramFijos = '--port /dev/ttyUSB0 --action set --device dmu ';
+        $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
+        $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
+        $ssh = "sudo -u sigmadev ssh {$user_remote}@{$host_remote} ";
+        $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
+        $salida = system($ejecutar . " 2>&1");
+        usleep(500000);
+        //echo "salida: <pre>". $salida ."</pre>";
+        $this->view->assign('salida', $salida);
         $this->view->assign('cmd', $ejecutar);	
     }
 

@@ -204,7 +204,7 @@ class SetdruController extends Controller
 	$paramFijos = '--port /dev/ttyUSB1 --action set --device dru ';
 	$paramVariables = "--druId {$druId} --cmdBodyLenght {$druCmdLength} --cmdNumber {$druCmdCode} --cmdData {$druCmdData}";
 	$comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
-	$ssh = "ssh {$user_remote}@{$host_remote} ";
+	$ssh = "sudo -u sigmadev ssh {$user_remote}@{$host_remote} ";
     $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
 	$salida = system($ejecutar . " 2>&1");
 	usleep(500000);
