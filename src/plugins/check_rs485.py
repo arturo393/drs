@@ -376,7 +376,8 @@ def main():
             a_bytearray = bytearray(data)
 
             hex_string = a_bytearray.hex()
-            sys.stderr.write("RS485 OK - result = " + hex_string )          
+            print("RS485 OK - result = " + hex_string+"|value="+str(int(hex_string, 16)) )     
+            sys.exit(0)     
         s.close()
     else:
         sys.stderr.write("RS485 WARNING - error = Accion invalida:  %s \n" % Action)      
