@@ -376,7 +376,7 @@ def main():
             a_bytearray = bytearray(data)
 
             hex_string = a_bytearray.hex()
-            print("RS485 OK - result = " + hex_string+"|value="+str(int(hex_string, 16)) )     
+            print("RS485 OK - result = " + hex_string+"hex|value="+str(int(hex_string, 16)) )     
             sys.exit(0)     
         s.close()
     else:
