@@ -44,3 +44,11 @@ usermod -a -G dialout nagios
 
 ```
 
+# Configure Extra Dependencies
+
+- [MOXA Driver](moxa_drivers.md)
+- [Remote Execution](remote_execution.md)
+
+# Important!
+
+_Do not add Director module to satellite node_

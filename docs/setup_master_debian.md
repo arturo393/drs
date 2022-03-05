@@ -51,3 +51,10 @@ icingacli setup token show
 
 Finish setup:
 open `http://<host-ip>/icingaweb2`
+
+# Configure Extra Dependencies
+
+- [Director](director_module.md)
+- [Dependency](dependency_module.md)
+- [Remote Execution](remote_execution.md)
+- [Sigma Theme](sigma_theme.md)

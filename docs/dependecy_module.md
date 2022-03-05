@@ -2,7 +2,8 @@
 
 ```
 cd /usr/share/icingaweb2/modules/
-git clone https://github.com/visgence/icinga2-dependency-module dependency_plugin
+<!-- git clone https://github.com/visgence/icinga2-dependency-module dependency_plugin -->
+cp -r /tmp/sigma_rds/src/modules/dependency_plugin/ /usr/share/icingaweb2/modules/
 cd dependency_plugin
 
 mkdir -p /etc/icingaweb2/modules/dependency_plugin
@@ -13,50 +14,32 @@ echo -n '[db]
 resource = "dependencies"' > /etc/icingaweb2/modules/dependency_plugin/config.ini
 ```
 
+<!--
 ```
 echo -n 'apply Dependency "Parent" for (parent in host.vars.parents) to Host {
       parent_host_name = parent
       assign where host.address && host.vars.parents
 } ' > /var/lib/icinga2/api/zones/director-global/director/dependency_apply.conf
 
-```
+``` -->
 
-## Patch module js code:
+## Patch IcingaWeb2 IndexController
 
-```
-vi +534 /usr/share/icingaweb2/modules/dependency_plugin/public/js/graphManager.js
-```
-
-Change
+Edit `/usr/share/icingaweb2/application/controllers/IndexController.php` and change the following line:
 
 ```
-if (settings.fullscreen_mode === 'network') {
-            window.location.replace("./network?showFullscreen");
-        } else {
-            window.location.replace("./statusGrid?showFullscreen")
-        }
+...
+$this->redirectNow(Url::fromRequest()->setPath('dashboard'));
+...
 ```
 
-by
-
-```
-if (settings.fullscreen_mode === 'network') {
-            window.location.replace("./dependency_plugin/module/network?showFullscreen");
-        } else {
-            window.location.replace("./dependency_plugin/module/statusGrid?showFullscreen")
-        }
-```
-
-## Patch css
-
-Open `/usr/share/icingaweb2/modules/dependency_plugin/public/css/module.less`
-Change line `192` from:
-`font-size: large;`
 to:
-`font-size: medium;`
 
-Add line `197`:
-`border-radius: 11px;`
+```
+...
+$this->redirectNow(Url::fromRequest()->setPath('dependency_plugin/module/hierarchy'));
+...
+```
 
 ## Navigation Item
 
@@ -65,16 +48,18 @@ Admin->My Account->Navigation->Add
 
 - Name \*: Network Dashboard
 - Target: Single Column
-- Url: dependency_plugin/module/network?showFullscreen
-- Icon: dashboard
+- Url: dependency_plugin/module/hierarchy?showFullscreen
+- Icon: sitemap
 
-Fix the permissions of the module directories:
+## Fix the permissions of the module directories:
 
 ```
 chown -R www-data:icingaweb2 /usr/share/icingaweb2/modules/dependency_plugin
 chown -R www-data:icingaweb2 /etc/icingaweb2/modules/dependency_plugin
 chown -R nagios:nagios /etc/icinga2/conf.d/
 ```
+
+## DB Resource
 
 mysql
 
@@ -86,6 +71,8 @@ GRANT ALL ON dependencies.* TO dependencies@localhost IDENTIFIED BY 'Admin.123';
 ```
 mysql -U dependencies -D dependencies < /usr/share/icingaweb2/modules/dependency_plugin/application/schema/init.sql
 ```
+
+## API
 
 ```
 echo -n 'object ApiUser "dependencies" {
@@ -133,7 +120,16 @@ Add a new Data Field
 - Caption: Parent Hosts
 - Data Type: Array
 
-## Add Custom Field to Host Template
+## Add Custom Service Template
+
+Icinga Director > Service > Service Templates: Add
+
+- Name: rs485_dependency
+- Check command: dummy
+
+_Every DMU Port should use this template to render detected RDUs_
+
+## Add Custom Field to Host Template (Optional)
 
 Icinga Director > Hosts > Host Templates -> Fields
 

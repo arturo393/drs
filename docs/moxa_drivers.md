@@ -33,3 +33,10 @@ mxu11x0               114688  0
 usbserial              61440  1 mxu11x0
 usbcore               323584  4 usbserial,mxu11x0,ehci_hcd,uhci_hcd
 ```
+
+## Add sigmadev to dialout group
+
+```
+usermod -a -G dialout sigmadev
+
+```
