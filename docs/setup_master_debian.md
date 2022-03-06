@@ -61,7 +61,7 @@ open `http://<host-ip>/icingaweb2`
 ## Install and Configure Extra Dependencies
 
 - [Director WebUI Module](/docs/director_module.md)
-- [Dependency WebUI Module](/docs/dependency_module.md)
+- [Network Maps WebUI Module](/docs/network_maps_module.md)
 - [RS485 Write WebUI Module](/docs/rs485_write_module.md)
 - [Graphite WebUI Module](/docs/graphite_module.md)
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
