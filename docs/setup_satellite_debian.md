@@ -1,10 +1,6 @@
-![Sigma Telecom](/docs/logo-sigma.svg)
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
-
----
+| ![Sigma Telecom](/docs/logo-sigma.svg)                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
 # Satellite Node
 
@@ -65,8 +61,6 @@ usermod -a -G dialout nagios
 
 _Do not add Director module to satellite node_
 
----
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
+|                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |

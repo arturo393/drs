@@ -1,10 +1,6 @@
-![Sigma Telecom](/docs/logo-sigma.svg)
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
-
----
+| ![Sigma Telecom](/docs/logo-sigma.svg)                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
 # Install Dependency WebUI Module (Only Master)
 
@@ -130,8 +126,6 @@ Icinga Director > Hosts > Host Templates -> Fields
 - Field: parents
 - Mandatory: No
 
----
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
+|                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |

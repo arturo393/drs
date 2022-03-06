@@ -1,10 +1,6 @@
-![Sigma Telecom](/docs/logo-sigma.svg)
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
-
----
+| ![Sigma Telecom](/docs/logo-sigma.svg)                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
 # Master: Graphite Module
 
@@ -137,8 +133,6 @@ rs485 = "alias(color($metric$, '#EC5707'), ' Value')"
 ensure file permissions are correct:
 `chown www-data:icingaweb2 /usr/share/icingaweb2/modules/graphite/templates/rs485.ini`
 
----
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
+|                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
