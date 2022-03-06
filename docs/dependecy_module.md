@@ -23,13 +23,15 @@ echo -n 'apply Dependency "Parent" for (parent in host.vars.parents) to Host {
 
 ``` -->
 
-## Patch IcingaWeb2 IndexController
+## Patch default URL
 
-Edit `/usr/share/icingaweb2/application/controllers/IndexController.php` and change the following line:
+Edit `/usr/share/icingaweb2/application/forms/Authentication/LoginForm.php` and change `line 24`:
+
+from:
 
 ```
 ...
-$this->redirectNow(Url::fromRequest()->setPath('dashboard'));
+ const REDIRECT_URL = 'dasboard';
 ...
 ```
 
@@ -37,19 +39,9 @@ to:
 
 ```
 ...
-$this->redirectNow(Url::fromRequest()->setPath('dependency_plugin/module/hierarchy'));
+ const REDIRECT_URL = 'dependency_plugin/module/hierarchy';
 ...
 ```
-
-## Navigation Item
-
-In Icinga Web 2, add new Navigation item:
-Admin->My Account->Navigation->Add
-
-- Name \*: Network Dashboard
-- Target: Single Column
-- Url: dependency_plugin/module/hierarchy?showFullscreen
-- Icon: sitemap
 
 ## Fix the permissions of the module directories:
 
@@ -127,7 +119,7 @@ Icinga Director > Service > Service Templates: Add
 - Name: rs485_dependency
 - Check command: dummy
 
-_Every DMU Port should use this template to render detected RDUs_
+_Every DMU Port Service should use this template to render detected RDUs_
 
 ## Add Custom Field to Host Template (Optional)
 
