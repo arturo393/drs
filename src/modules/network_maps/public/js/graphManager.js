@@ -122,11 +122,24 @@ function formatDependencies(
       child_host_name: serviceData.results[i].attrs.name,
     });
 
+    // Add parent Services
+    if (
+      typeof serviceData.results[i].attrs.vars?.parents !== 'undefined' &&
+      serviceData.results[i].attrs.vars?.parents !== null
+    ) {
+      for (j = 0; j < serviceData.results[i].attrs.vars?.parents.length; j++) {
+        Hosts.addDependency({
+          parent_host_name: serviceData.results[i].attrs.vars?.parents[j],
+          child_host_name: serviceData.results[i].attrs.name,
+        });
+      }
+    }
+
     // Add RDUs
-       //For each MDU Port add RDUs
-       // if service template contains MDU and is RDU Port
-       // get rdus connected from attrs.vars.performance_data value (output of check_rs485)
-       // Add each as Host and dependency
+    //For each MDU Port add RDUs
+    // if service template contains MDU and is RDU Port
+    // get rdus connected from attrs.vars.performance_data value (output of check_rs485)
+    // Add each as Host and dependency
     try {
       var serviceVars = serviceData.results[i].attrs.vars;
       if (serviceVars) {
@@ -165,7 +178,6 @@ function formatDependencies(
     } catch (e) {
       console.log(e);
     }
-
   }
   console.log('End Patch');
   // END Patch
