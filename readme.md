@@ -1,3 +1,5 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
 # Sigma Telecom - RDS
 
 Distributed monitoring platform
