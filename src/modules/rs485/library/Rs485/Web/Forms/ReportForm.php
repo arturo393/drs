@@ -1,0 +1,168 @@
+<?php
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
+
+namespace Icinga\Module\Rs485\Web\Forms;
+
+use Icinga\Authentication\Auth;
+use Icinga\Module\Rs485\Database;
+use Icinga\Module\Rs485\ProvidedReports;
+use Icinga\Module\Rs485\Web\Forms\Decorator\CompatDecorator;
+use ipl\Html\Contract\FormSubmitElement;
+use ipl\Html\Form;
+use ipl\Web\Compat\CompatForm;
+
+class ReportForm extends CompatForm
+{
+    use Database;
+    use ProvidedReports;
+
+    /** @var bool Hack to disable the {@link onSuccess()} code upon deletion of the report */
+    protected $callOnSuccess;
+
+    protected $id;
+
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    protected function assemble()
+    {
+        $this->setDefaultElementDecorator(new CompatDecorator());
+
+        $this->addElement('text', 'name', [
+            'required'  => true,
+            'label'     => 'Name'
+        ]);
+
+        $this->addElement('select', 'timeframe', [
+            'required'  => true,
+            'label'     => 'Timeframe',
+            'options'   => [null => 'Please choose'] + $this->listTimeframes(),
+            'class'     => 'autosubmit'
+        ]);
+
+        $this->addElement('select', 'template', [
+            'label'     => 'Template',
+            'options'   => [null => 'Please choose'] + $this->listTemplates()
+        ]);
+
+        $this->addElement('select', 'reportlet', [
+            'required'  => true,
+            'label'     => 'Report',
+            'options'   => [null => 'Please choose'] + $this->listReports(),
+            'class'     => 'autosubmit'
+        ]);
+
+        $values = $this->getValues();
+
+        if (isset($values['reportlet'])) {
+            $config = new Form();
+//            $config->populate($this->getValues());
+
+            /** @var \Icinga\Module\Reporting\Hook\ReportHook $reportlet */
+            $reportlet = new $values['reportlet'];
+
+            $reportlet->initConfigForm($config);
+
+            foreach ($config->getElements() as $element) {
+                $this->addElement($element);
+            }
+        }
+
+        $this->addElement('submit', 'submit', [
+            'label' => $this->id === null ? 'Create Report' : 'Update Report'
+        ]);
+
+        if ($this->id !== null) {
+            /** @var FormSubmitElement $removeButton */
+            $removeButton = $this->createElement('submit', 'remove', [
+                'label'          => 'Remove Report',
+                'class'          => 'btn-remove',
+                'formnovalidate' => true
+            ]);
+            $this->registerElement($removeButton);
+            $this->getElement('submit')->getWrapper()->prepend($removeButton);
+
+            if ($removeButton->hasBeenPressed()) {
+                $this->getDb()->delete('report', ['id = ?' => $this->id]);
+
+                // Stupid cheat because ipl/html is not capable of multiple submit buttons
+                $this->getSubmitButton()->setValue($this->getSubmitButton()->getButtonLabel());
+                $this->callOnSuccess = false;
+                $this->valid = true;
+
+                return;
+            }
+        }
+    }
+
+    public function onSuccess()
+    {
+        if ($this->callOnSuccess === false) {
+            return;
+        }
+
+        $db = $this->getDb();
+
+        $values = $this->getValues();
+
+        $now = time() * 1000;
+
+        $db->beginTransaction();
+
+        if ($this->id === null) {
+            $db->insert('report', [
+                'name'         => $values['name'],
+                'author'       => Auth::getInstance()->getUser()->getUsername(),
+                'timeframe_id' => $values['timeframe'],
+                'template_id'  => $values['template'],
+                'ctime'        => $now,
+                'mtime'        => $now
+            ]);
+
+            $reportId = $db->lastInsertId();
+        } else {
+            $db->update('report', [
+                'name'         => $values['name'],
+                'timeframe_id' => $values['timeframe'],
+                'template_id'  => $values['template'],
+                'mtime'        => $now
+            ], ['id = ?' => $this->id]);
+
+            $reportId = $this->id;
+        }
+
+        unset($values['name']);
+        unset($values['timeframe']);
+
+        if ($this->id !== null) {
+            $db->delete('reportlet', ['report_id = ?' => $reportId]);
+        }
+
+        $db->insert('reportlet', [
+            'report_id' => $reportId,
+            'class'     => $values['reportlet'],
+            'ctime'     => $now,
+            'mtime'     => $now
+        ]);
+
+        $reportletId = $db->lastInsertId();
+
+        unset($values['reportlet']);
+
+        foreach ($values as $name => $value) {
+            $db->insert('config', [
+                'reportlet_id'  => $reportletId,
+                'name'          => $name,
+                'value'         => $value,
+                'ctime'         => $now,
+                'mtime'         => $now
+            ]);
+        }
+
+        $db->commitTransaction();
+    }
+}

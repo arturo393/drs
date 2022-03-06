@@ -56,7 +56,7 @@ def open_serial_port(port='/dev/ttyUSB0'):
 # Close serial port
 
 
-def __main__():
+def main():
     deviceId, command, value = read_arguments()
     ser = open_serial_port()
     if command == 'status':
@@ -72,6 +72,9 @@ def __main__():
     ser.close()
     exit(0)
 
+
+if __name__ == "__main__":
+    main()
 # Nagios Exit Codes
 # Exit Code	Status
 # 0	OK

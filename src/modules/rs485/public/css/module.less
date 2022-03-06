@@ -1,0 +1,215 @@
+// Icinga Rs485 | (c) 2018 Icinga GmbH | GPLv2
+
+.flatpickr-calendar {
+  position: fixed;
+}
+
+.flatpickr-day {
+  &.selected,
+  &.selected:hover {
+    border-color: @icinga-blue;
+    background: @icinga-blue;
+  }
+}
+
+.sla-column {
+  border-radius: 0.5em;
+  color: @text-color-on-icinga-blue;
+  text-align: center;
+  width: 10em;
+
+  &.ok {
+    background-color: @color-ok;
+  }
+
+  &.nok {
+    background-color: @color-critical;
+  }
+}
+
+.sla-table {
+  td:nth-child(1),
+  td:nth-child(2) {
+    word-break: break-word;
+  }
+
+  td:nth-child(3) {
+    white-space: nowrap;
+  }
+}
+
+.sla-table > tbody::before {
+  content: "\200C";
+  display: block;
+  line-height: 0.5em;
+}
+
+/* Stuff that's missing in ipl <= 0.8 START */
+
+.dropdown {
+  display: inline-block;
+  position: relative;
+
+  .dropdown-toggle::after {
+    content: "";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: .255em;
+    vertical-align: .255em;
+    border-top: .3em solid;
+    border-right: .3em solid transparent;
+    border-bottom: 0;
+    border-left: .3em solid transparent;
+  }
+
+  .dropdown-menu {
+    display: none;
+    min-width: 10em;
+    border: 1px solid @gray-light;
+    background: @body-bg-color;
+    margin: -.25em;
+    border-radius: .25em;
+    padding: .25em;
+    position: absolute;
+  }
+
+  &:hover > .dropdown-menu {
+    display: block;
+    box-shadow: 0 0 2em 0 rgba(0,0,0,.2);
+  }
+
+  .dropdown-item {
+    display: block;
+    padding: .5em;
+    margin: -.25em;
+
+    &.action-link:hover {
+      padding: .5em;
+      background: @tr-hover-color;
+      .rounded-corners(0)
+    }
+  }
+}
+
+.action-bar .dropdown:first-child:hover .dropdown-menu {
+  left: .25em;
+}
+
+.action-bar .dropdown:last-child:hover .dropdown-menu {
+  right: .25em;
+}
+
+.action-bar > *:not(:last-child) {
+  margin-right: .5em;
+}
+
+/* Stuff that's missing in ipl <= 0.8 END */
+
+@font-family-print: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+
+.page-size-a4 {
+  background-color: white;
+  box-shadow: 0 0 0.25cm rgba(0,0,0,0.5);
+  display: block;
+  margin: 0 auto 0.5cm;
+  font-family: @font-family-print;
+  page-break-after: always;
+  height: 29.7cm;
+  width: 21cm;
+}
+
+.page-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.cover-page {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.cover-page-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  height: 100%;
+  width: 100%;
+
+  h2 {
+    text-align: center;
+  }
+}
+
+@gutter: 0.5em;
+
+.grid {
+  display: flex;
+  justify-content: space-between;
+
+  &.with-gutters {
+    margin-left: -0.5 * @gutter;
+    margin-right: -0.5 * @gutter;
+
+    > * {
+      margin-left: 0.5 * @gutter;
+      margin-right: 0.5 * @gutter;
+    }
+  }
+}
+
+.main {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.preview .main {
+  background-image: url(../static/img?file=graph-dummy.svg&module_name=reporting);;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.header,
+.footer {
+  .grid();
+}
+
+@media print {
+  font-family: @font-family-print;
+}
+
+.preview .page {
+  .page-size-a4();
+}
+
+/* Form fallback styles, remove once <=2.9.5 support is dropped */
+
+.icinga-controls {
+  input[type="file"] {
+    background-color: @low-sat-blue;
+  }
+
+  button[type="button"] {
+    background-color: @low-sat-blue;
+  }
+}
+
+form.icinga-form {
+  input[type="file"] {
+    flex: 1 1 auto;
+    width: 0;
+  }
+
+  button[type="button"] {
+    line-height: normal;
+  }
+}
+
+/* Form fallback styles end */
