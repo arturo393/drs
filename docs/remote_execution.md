@@ -1,3 +1,11 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
 # Remote command execution to Satellite
 
 ## Prepare Master Node
@@ -79,8 +87,6 @@ Linux drs 5.15.24-0-lts #1-Alpine SMP Thu, 17 Feb 2022 19:01:03 +0000 x86_64 Lin
 ```
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)

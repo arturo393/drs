@@ -1,4 +1,12 @@
-# Install Dependency Module (Only Master)
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
+# Install Dependency WebUI Module (Only Master)
 
 Use the module provided by this repository:
 
@@ -123,8 +131,6 @@ Icinga Director > Hosts > Host Templates -> Fields
 - Mandatory: No
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)

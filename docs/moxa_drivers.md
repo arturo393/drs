@@ -1,3 +1,11 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
 # Moxa Driver
 
 Install kernel sources and compilation tools
@@ -42,8 +50,6 @@ usermod -a -G dialout sigmadev
 ```
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)

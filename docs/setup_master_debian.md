@@ -1,4 +1,12 @@
-# Master Node
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
+s# Master Node
 
 ## Icinga2 Monitor
 
@@ -63,8 +71,6 @@ open `http://<host-ip>/icingaweb2`
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)

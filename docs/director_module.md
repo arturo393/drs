@@ -1,3 +1,11 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
 # Master: Director Module
 
 ```
@@ -26,8 +34,6 @@ Charset: utf8
 Go to menu "Icinga Director" -> "[Create Schema]"
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)

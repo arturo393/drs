@@ -1,3 +1,11 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
 # IcingaWeb2 Sigma Theme
 
 ## Sigma Colors:
@@ -34,8 +42,6 @@ Configuration -> Application -> General:
 
 ---
 
-# Index
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
+| ![Sigma Telecom](/docs/logo-sigma.svg) |                      a                      | b                                                 |
+| :------------------------------------: | :-----------------------------------------: | ------------------------------------------------- |
+|          [Readme](/readme.md)          | [Master Node](/docs/setup_master_debian.md) | [Satellite Node](/docs/setup_satellite_debian.md) |

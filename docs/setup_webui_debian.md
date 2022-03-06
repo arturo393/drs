@@ -1,3 +1,11 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
 # Dependencies
 
 - Install Icinga2 monitor
@@ -39,8 +47,6 @@ Use previous token to login to Icinga Web 2:
 open `http://<host-ip>/icingaweb2`
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)

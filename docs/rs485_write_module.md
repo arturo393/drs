@@ -1,3 +1,11 @@
+![Sigma Telecom](/docs/logo-sigma.svg)
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
+
+---
+
 # RS485 Write WebUI Module
 
 console
@@ -30,8 +38,6 @@ To allow master node `RS485 write module` to execute commands on satellite node,
 - [Remote Execution](/docs/remote_execution.md)
 
 ---
-
-# Index
 
 - [Readme](/readme.md)
 - [Master Node](/docs/setup_master_debian.md)
