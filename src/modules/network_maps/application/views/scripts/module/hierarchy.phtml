@@ -1,0 +1,28 @@
+<div class="controls">
+<?= $this->tabs ?>
+</div>
+
+<head>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+</head>
+
+<body>
+
+<div class="column" id="dependency-network">
+</div>
+
+</body>
+<script>
+if (document.readyState === "complete") {
+
+    getData();
+
+} else {
+    window.onload = function () {
+
+        getData();
+
+    }
+}
+</script>

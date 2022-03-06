@@ -2,21 +2,21 @@
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
-# Install Dependency WebUI Module (Only Master)
+# Install Network Map WebUI Module (Only Master)
 
 Use the module provided by this repository:
 
 ```
 cd /usr/share/icingaweb2/modules/
-cp -r /tmp/sigma_rds/src/modules/dependency_plugin/ /usr/share/icingaweb2/modules/
-cd dependency_plugin
+cp -r /tmp/sigma_rds/src/modules/network_maps/ /usr/share/icingaweb2/modules/
+cd network_maps
 
-mkdir -p /etc/icingaweb2/modules/dependency_plugin
+mkdir -p /etc/icingaweb2/modules/network_maps
 ```
 
 ```
 echo -n '[db]
-resource = "dependencies"' > /etc/icingaweb2/modules/dependency_plugin/config.ini
+resource = "dependencies"' > /etc/icingaweb2/modules/network_maps/config.ini
 ```
 
 ## Patch WebUI default URL
@@ -35,15 +35,15 @@ to:
 
 ```
 ...
- const REDIRECT_URL = 'dependency_plugin/module/hierarchy';
+ const REDIRECT_URL = 'network_maps/module/hierarchy';
 ...
 ```
 
 ## Fix the permissions of the module directories:
 
 ```
-chown -R www-data:icingaweb2 /usr/share/icingaweb2/modules/dependency_plugin
-chown -R www-data:icingaweb2 /etc/icingaweb2/modules/dependency_plugin
+chown -R www-data:icingaweb2 /usr/share/icingaweb2/modules/network_maps
+chown -R www-data:icingaweb2 /etc/icingaweb2/modules/network_maps
 chown -R nagios:nagios /etc/icinga2/conf.d/
 ```
 
@@ -57,7 +57,7 @@ GRANT ALL ON dependencies.* TO dependencies@localhost IDENTIFIED BY 'Admin.123';
 ```
 
 ```
-mysql -U dependencies -D dependencies < /usr/share/icingaweb2/modules/dependency_plugin/application/schema/init.sql
+mysql -U dependencies -D dependencies < /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
 ```
 
 ## Add API user
@@ -87,11 +87,11 @@ Configuration -> Application -> Resources -> Add -> Create a New Resource
 
 ### Enable Module
 
-Configuration -> Modules -> Dependency_plugin -> Enable
+Configuration -> Modules -> Network_Maps -> Enable
 
 ### Configure Dependency Module
 
-Dependencies -> Settings ->Module Settings
+Network_Maps -> Settings ->Module Settings
 
 - Database Resource: dependencies
   API Login Information
