@@ -121,37 +121,51 @@ function formatDependencies(
       parent_host_name: serviceData.results[i].attrs.host_name,
       child_host_name: serviceData.results[i].attrs.name,
     });
-    for (j = 0; j < serviceData.results[i].attrs.templates.length; j++) {
-      console.log('checking service templates');
-      if (serviceData.results[i].attrs.templates[j] === 'rs485_dependency') {
-        // find detected RDUs
-        // let idx = serviceData.results[i].attrs.last_check_result.performance_data.findIndex(val => val.startsWith('value'))
-        // let { label, rdus} = serviceData.results[i].attrs.last_check_result.performance_data[idx].split("=")
-        // console.log(label)
-        let rdus = Math.floor(Math.random() * 8);
 
-        for (k = 0; k < rdus; k++) {
-          let parentItem =
-            k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k - 1);
-          let currentItem = i + '-' + k;
-          Hosts.addHost({
-            display_name: currentItem,
-            name: currentItem,
-            state: 1,
-            zone: serviceData.results[i].attrs.zone,
-            type: 'None',
-          });
-          Hosts.addDependency({
-            parent_host_name: parentItem,
-            child_host_name: currentItem,
-          });
+    // Add RDUs
+       //For each MDU Port add RDUs
+       // if service template contains MDU and is RDU Port
+       // get rdus connected from attrs.vars.performance_data value (output of check_rs485)
+       // Add each as Host and dependency
+    try {
+      var serviceVars = serviceData.results[i].attrs.vars;
+      if (serviceVars) {
+        if (
+          'isDMUPort' in serviceVars &&
+          serviceData.results[i].attrs.vars.isDMUPort === true
+        ) {
+          var servicePData =
+            serviceData.results[i].attrs.last_check_result.performance_data;
+          var performance_data = servicePData
+            .find((val) => val.startsWith('value='))
+            .split('=');
+          var values = performance_data[1].split(';');
+          var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1);
+
+          // Add RDUs as Hosts
+          console.log('Add rdus as hosts');
+          for (k = 0; k < rdus; k++) {
+            let parentItem =
+              k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k - 1);
+            let currentItem = i + '-' + k;
+            Hosts.addHost({
+              display_name: currentItem,
+              name: currentItem,
+              state: 1,
+              zone: serviceData.results[i].attrs.zone,
+              type: 'None',
+            });
+            Hosts.addDependency({
+              parent_host_name: parentItem,
+              child_host_name: currentItem,
+            });
+          }
         }
       }
+    } catch (e) {
+      console.log(e);
     }
-    //For each MDU Port add RDUs
-    // if service template contains MDU and is RDU Port
-    // get rdus connected from attrs.vars.Performance data.value (output of check_rs485)
-    // Add each as Host and dependency
+
   }
   console.log('End Patch');
   // END Patch
@@ -189,6 +203,9 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
 
   for (i = 0; i < Hosts.length; i++) {
     currHost = Object.keys(Hosts.hostObject)[i]; //gets name of current host based on key iter
+    if (typeof currHost === 'undefined') {
+      continue;
+    }
 
     node_type = Hosts.hostObject[currHost].type;
     node_parent = Hosts.hostObject[currHost].parents[0];

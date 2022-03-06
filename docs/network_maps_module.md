@@ -7,10 +7,7 @@
 Use the module provided by this repository:
 
 ```
-cd /usr/share/icingaweb2/modules/
-cp -r /tmp/sigma_rds/src/modules/network_maps/ /usr/share/icingaweb2/modules/
-cd network_maps
-
+cp -r /tmp/sigma-rds/src/modules/network_maps/ /usr/share/icingaweb2/modules/
 mkdir -p /etc/icingaweb2/modules/network_maps
 ```
 
@@ -100,7 +97,7 @@ Network_Maps -> Settings ->Module Settings
   - API User: dependencies
   - Password: Admin.123
 
-### Add Custom Data Field
+### Add Custom Data Fields
 
 Icinga Director > Define Data Fields
 
@@ -110,21 +107,26 @@ Add a new Data Field
 - Caption: Parent Hosts
 - Data Type: Array
 
-### Add Custom Service Template
+Add a second Data Field
 
-Icinga Director > Service > Service Templates: Add
+- Field Name: isDMUPort
+- Caption: If is a DMU Port That Connects RDUs
+- Data Type: Boolean
 
-- Name: `rs485_dependency`
-- Check command: `dummy`
+### Add Data Field to a Service Template
 
-_Every DMU Port Service should use this template to render detected RDUs_
+Icinga Director > Service > Service Templates > Fields
 
-## Add Custom Field to Host Template (Optional)
+- Field: `isDMUPort`
+- Mandatory: `Optional`
 
-Icinga Director > Hosts > Host Templates -> Fields
+_Every DMU Port Service should use this Data Field to render detected RDUs_
 
-- Field: parents
-- Mandatory: No
+## Enable Custom Data Field to DMU Port Service (Optional)
+
+Icinga Director > Seervices > Service -> Custom Properties
+
+- isDMUPort: Yes
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
