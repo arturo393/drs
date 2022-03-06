@@ -69,3 +69,11 @@ Darwin Jinks.local 21.4.0 Darwin Kernel Version 21.4.0: Tue Jan 18 13:02:01 PST 
 /home/masterUser $❯ ssh sigmadev@192.168.60.78 'uname -a'
 Linux drs 5.15.24-0-lts #1-Alpine SMP Thu, 17 Feb 2022 19:01:03 +0000 x86_64 Linux
 ```
+
+---
+
+# Index
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)

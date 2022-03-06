@@ -1,6 +1,6 @@
-# Master
+# Master: Graphite Module
 
-## Graphite (Only Master)
+## Graphite
 
 ### Install Graphite
 
@@ -50,14 +50,16 @@ docker ps -a|grep Up
 
 ```
 
-http://<MASTER-host-ip>:8080/admin/auth/user/1
-http://<MASTER-host-ip>:8080/admin/auth/user/1/password/
+### Change graphite default user/pass = (root/root)
 
-`systemctl restart docker-composes`
+- http://MASTER-host-ip:8080/admin/auth/user/1
+- http://MASTER-host-ip:8080/admin/auth/user/1/password/
 
-References:
-https://graphite.readthedocs.io/en/latest/install.html#post-install-tasks
-https://computingforgeeks.com/install-graphite-graphite-web-on-centos-rhel/
+`systemctl restart docker-composer`
+
+#### References:
+
+- https://computingforgeeks.com/install-graphite-graphite-web-on-centos-rhel/
 
 ### Enable Icinga2 Feature
 
@@ -80,7 +82,7 @@ cd graphite
 chown -R apache: .
 ```
 
-# Satellite
+# Configure Satellite
 
 Only if icinganweb2 is installed on satellite
 
@@ -126,3 +128,11 @@ rs485 = "alias(color($metric$, '#EC5707'), ' Value')"
 
 ensure file permissions are correct:
 `chown www-data:icingaweb2 /usr/share/icingaweb2/modules/graphite/templates/rs485.ini`
+
+---
+
+# Index
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)

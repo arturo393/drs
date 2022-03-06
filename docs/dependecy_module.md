@@ -127,3 +127,11 @@ Icinga Director > Hosts > Host Templates -> Fields
 
 - Field: parents
 - Mandatory: No
+
+---
+
+# Index
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)

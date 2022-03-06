@@ -1,4 +1,6 @@
-# Monitor
+# Master Node
+
+## Icinga2 Monitor
 
 ```
 apt update && apt upgrade
@@ -19,7 +21,7 @@ You can verify that the CA public and private keys are stored in the `/var/lib/i
 Restart `icinga2`:
 `systemctl restart icinga2`
 
-# Web
+## WebUI
 
 ```
 apt install -y apache2 libapache2-mod-php icingacli icingaweb2 icingaweb2-module-director icingaweb2-module-ipl
@@ -42,7 +44,7 @@ chown -R www-data:icingaweb2 /usr/share/icingaweb2/
 systemctl restart apache2
 ```
 
-## Setup token
+### Setup token
 
 ```
 icingacli setup token create
@@ -52,9 +54,19 @@ icingacli setup token show
 Finish setup:
 open `http://<host-ip>/icingaweb2`
 
-# Configure Extra Dependencies
+## Install and Configure Extra Dependencies
 
-- [Director](director_module.md)
-- [Dependency](dependency_module.md)
-- [Remote Execution](remote_execution.md)
-- [Sigma Theme](sigma_theme.md)
+- [Director](/docs/director_module.md)
+- [Dependency](/docs/dependency_module.md)
+- [Remote Execution](/docs/remote_execution.md)
+- [RS485 Write Module](/docs/rs485_write_module.md)
+- [Graphite Module](/docs/graphite_module.md)
+- [Sigma Theme](/docs/sigma_theme.md)
+
+---
+
+# Index
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)

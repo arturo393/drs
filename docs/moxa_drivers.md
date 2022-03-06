@@ -40,3 +40,11 @@ usbcore               323584  4 usbserial,mxu11x0,ehci_hcd,uhci_hcd
 usermod -a -G dialout sigmadev
 
 ```
+
+---
+
+# Index
+
+- [Readme](/readme.md)
+- [Master Node](/docs/setup_master_debian.md)
+- [Satellite Node](/docs/setup_satellite_debian.md)
