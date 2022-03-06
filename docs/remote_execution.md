@@ -24,6 +24,14 @@ If you get an error like `“Could not open a connection to your authentication 
 eval `ssh-agent`
 ```
 
+Save remote satellite host as known host
+
+```
+ssh sigadev@satellite-host_ip
+# Press Yes to continue
+
+```
+
 ### Allow www-data to run as sigmadev
 
 Add the flollowing to sudoers file using `visudo`command:
@@ -36,7 +44,7 @@ Copy content of master user public key `id_rsa.pub` to Satellite:
 
 `user@masterhost:~/.ssh$ scp id_rsa.pub remoteuser@remotehost.com:~/.ssh/`
 
-## Configure Satellite Host
+## Setup Satellite Node
 
 ```
 cd ~/.ssh
@@ -46,14 +54,6 @@ cat id_rsa.pub >> authorized_keys   # Add public key to authorized_keys
 Optional: Ensure permissions on remote host
 
 `chmod 600 $HOME/.ssh/authorized_keys`
-
-## On Master node save remote satellite host as known host
-
-```
-ssh sigadev@satellite-host_ip
-# Press Yes to continue
-
-```
 
 # Example execution from master to satellite node
 
