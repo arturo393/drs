@@ -94,6 +94,15 @@ def analizar_argumentos():
                     help="cmdData es requerido", default="")
     ap.add_argument("-i", "--druId", required=False,
                     help="druId es requerido", default="")
+    ap.add_argument("-lw", "--lowLevelWarning", required=False,
+                    help="lowLevelWarning es requerido", default=0)
+    ap.add_argument("-hw", "--highLevelWarning", required=False,
+                    help="highLevelWarning es requerido", default=0)
+    ap.add_argument("-lc", "--lowLevelCritical", required=False,
+                    help="lowLevelCritical es requerido", default=0)
+    ap.add_argument("-hc", "--highLevelCritical", required=False,
+                    help="highLevelCritical es requerido", default=0)
+                                                    
 
     try:
         args = vars(ap.parse_args())
@@ -112,6 +121,10 @@ def analizar_argumentos():
     CmdBodyLenght = str(args['cmdBodyLenght'])
     CmdData = str(args['cmdData'])
     DruId = str(args['druId'])
+    LowLevelWarning = args['lowLevelWarning']
+    HighLevelWarning = args['highLevelWarning']
+    LowLevelCritical = args['lowLevelCritical']
+    HighLevelCritical = args['highLevelCritical']
 
     # validamos los argumentos pasados
     if Port == "":
@@ -315,7 +328,7 @@ def validar_trama_respuesta(hexResponse, Device):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId = analizar_argumentos()
+    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
 
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
@@ -405,9 +418,17 @@ def main():
             a_bytearray = bytearray(data)
 
             hex_string = a_bytearray.hex()
-            print("RS485 OK - result = " + hex_string +
-                  " hex|value="+str(int(hex_string, 16)))
-            sys.exit(0)
+            resultOK =  int(hex_string, 16)
+
+            if (resultOK > HighLevelCritical or resultOK < LowLevelCritical):
+                print("RS485 CRITICAL - result = " + hex_string + " hex|value="+str(resultOK))
+                sys.exit(2)
+            elif (resultOK > HighLevelWarning or resultOK < LowLevelWarning):
+                print("RS485 WARNING - result = " + hex_string + " hex|value="+str(resultOK))
+                sys.exit(1)
+            else:
+                print("RS485 OK - result = " + hex_string + " hex|value="+str(resultOK))
+                sys.exit(0)
         s.close()
     else:
         sys.stderr.write(
