@@ -2,7 +2,7 @@
 | -------------------------------------- |
 |                                        |
 
-# Sigma Telecom - RDS
+# RDS: Remote Diagnostic System
 
 _Distributed monitoring platform_
 
