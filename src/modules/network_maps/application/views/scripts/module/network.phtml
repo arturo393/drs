@@ -1,0 +1,103 @@
+<div class="controls">
+    <?= $this->tabs ?>
+</div>
+
+<head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- <ul  id="dependency-menu"> -->
+    <!-- </ul> -->
+
+    <div id="hud">
+        <div class='hud-box' id='hud-down'></div>
+        <div class='hud-box' id='hud-unreachable'></div>
+        <div class='hud-box' id='hud-up'></div>
+        <div class='hud-box' id='hud-title'></div>
+    </div>
+    <div class="column" id="dependency-network">
+    </div>
+
+    <div id="loadingBar">
+        <div class="outerBorder">
+            <div id="text">0%</div>
+            <!-- <div id="border"> -->
+            <div id="bar"></div>
+            <!-- </div> -->
+        </div>
+    </div>
+
+    <div class="fabs" id="dependency-fabs">
+        <!-- <a class="zoom-fab fab-btn-large" id="dependency-btn">
+            <i class="material-icons">timeline</i>
+        </a> -->
+
+        <ul class="fab-menu" id='dependency-fabs-menu'>
+            <li>
+                <a class="zoom-fab fab-btn-sm dependency-fab fab-btn-delete scale-transition scale-out" id = 'dependency-btn-undo'>
+                    <i class="material-icons">undo</i>
+                </a>
+            </li>
+            <li>
+                <a class="zoom-fab fab-btn-sm dependency-fab scale-transition scale-out" id='dependency-btn-save'>
+                    <i class="material-icons">save</i>
+                </a>
+            </li>
+
+            <!-- <li>
+                <a class="zoom-fab fab-btn-sm dependency-fab scale-transition scale-out" id='dependency-btn-delete'>
+                    <i class="material-icons">clear</i>
+                </a>
+
+            </li> -->
+
+        </ul>
+    </div>
+
+    <div class="fabs" id="edit-fabs">
+        <a class="zoom-fab fab-btn-large" id="edit-btn">
+            <i class="material-icons">mode_edit</i>
+        </a>
+
+        <ul class="fab-menu" id='edit-fabs-menu'>
+
+            <li>
+                <a class="zoom-fab fab-btn-sm edit-fab scale-transition scale-out" id='edit-btn-delete'>
+                    <i class="material-icons">delete_forever</i>
+                </a>
+            </li>
+            <li>
+                <a class="zoom-fab fab-btn-sm edit-fab scale-transition scale-out" id = 'edit-btn-save'>
+                    <i class="material-icons">save</i>
+                </a>
+            </li>
+
+            <li>
+                <a class="zoom-fab fab-btn-sm edit-fab scale-transition scale-out" id = 'edit-btn-fullscreen'>
+                    <i class="material-icons">fullscreen</i>
+                </a>
+
+            </li>
+
+        </ul>
+    </div>
+
+    
+
+
+</body>
+<script>
+    if (document.readyState === "complete") {
+
+        getData();
+
+    } else {
+        window.onload = function () {
+
+            getData();
+
+        }
+    }
+</script>
