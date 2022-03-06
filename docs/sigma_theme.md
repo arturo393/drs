@@ -1,10 +1,8 @@
 ![Sigma Telecom](/docs/logo-sigma.svg)
-
-- [Readme](/readme.md)
-- [Master Node](/docs/setup_master_debian.md)
-- [Satellite Node](/docs/setup_satellite_debian.md)
-
----
+| | | |
+| -------------------------------------- | ------------------------------------------- | ------------------------------------------------- |
+| [[Readme]](/readme.md) | [[Master Node]](/docs/setup_master_debian.md) | [[Satellite Node]](/docs/setup_satellite_debian.md) |
+| | |
 
 # IcingaWeb2 Sigma Theme
 
@@ -40,8 +38,6 @@ Configuration -> Application -> General:
 - Change footer information
 - Remove social media links
 
----
-
-| ![Sigma Telecom](/docs/logo-sigma.svg) |                      a                      | b                                                 |
-| :------------------------------------: | :-----------------------------------------: | ------------------------------------------------- |
-|          [Readme](/readme.md)          | [Master Node](/docs/setup_master_debian.md) | [Satellite Node](/docs/setup_satellite_debian.md) |
+|                        |                                               |                                                     |
+| ---------------------- | --------------------------------------------- | --------------------------------------------------- |
+| [[Readme]](/readme.md) | [[Master Node]](/docs/setup_master_debian.md) | [[Satellite Node]](/docs/setup_satellite_debian.md) |
