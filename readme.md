@@ -4,16 +4,9 @@
 
 # Sigma Telecom - RDS
 
-Distributed monitoring platform
+_Distributed monitoring platform_
 
-Name nodes as following syntax
-
-- Master: rds-m-x
-- Satellites: rds-s-y
-
-Satellite MDU port are Services
-
-See [docs](/docs) folder for more information
+## Example Deploy Diagram
 
 ```mermaid
 graph LR;
@@ -55,7 +48,21 @@ graph LR;
 
 ---
 
-## Node Installation
+## Definitions
+
+- `Masters Nodes` controls Satellite Nodes
+- `Satellite Nodes` connects MDUs
+- Each `MDU` has 4 ports where `RDUs` are connected in series
+
+## Naming convention:
+
+- `Master` node hostname (FQDN): rds-m-[1-..]
+- `Satellite` node hostname (FQDN):: rds-s-[1-..]
+- `MDU` ports are Services of `Satellite` host: (e.g. mdu1_p1)
+
+See [docs](/docs) folder for more information
+
+# Nodes Installation
 
 On every node clone this repository and follow specific node type instructions.
 
@@ -65,14 +72,16 @@ cd /tmp/sigma-rds
 git checkout development
 ```
 
-### Specific instructions for:
+## Specific instructions for node type:
 
-- [Master Nodes](docs/setup_master_debian.md)
-- [Satellite Nodes](docs/setup_satellite_debian.md)
+- [Install Master Node](docs/setup_master_debian.md)
+- [Install Satellite Node](docs/setup_satellite_debian.md)
 
 ---
 
-## Usage
+# Master WebUI Usage
+
+Open `http://<master_hostname>/icingaweb2` in your browser.
 
 Go to Master WebUI -> Director Module Menu:
 
