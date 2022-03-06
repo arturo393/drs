@@ -1,13 +1,11 @@
-# Module RS485
+# RS485 Write WebUI Module
 
 console
 
 ```
 apt install icingaweb2-module-ipl
 mysql -p -u root director < /tmp/sigma-rds/src/modules/rs485/schema/mysql.sql
-
 cp -R /tmp/sigma-rds/src/modules/rs485 /usr/share/webapps/icingaweb2/modules
-
 chown -R apache:icingaweb2 /tmp/sigma-rds/src/modules/
 ```
 
@@ -21,7 +19,7 @@ Configuration -> Applications -> Resources -> Create a New Resource
 
 - Resource Name: `rs485_db`
 
-## set datasource module
+## Set datasource
 
 Configuration -> Modules -> rs485 -> Backend
 

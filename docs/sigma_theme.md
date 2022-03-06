@@ -1,23 +1,16 @@
 # IcingaWeb2 Sigma Theme
 
-## Colors:
+## Sigma Colors:
 
-Edward
-#B1B2B2
-
-Deep Cerulean
-#0980AA
-
-Bahama Blue
-#046C94
-
-Trinidad
-#EC5707
+- Edward: #B1B2B2
+- Deep Cerulean: #0980AA
+- Bahama Blue: #046C94
+- Trinidad: #EC5707
 
 ## Copy theme module
 
 ```
-cp -R icingaweb2-theme-sigma /usr/share/icingaweb2/modules/sigma-theme
+cp -R /tmp/sigma-rds/src/modules/icingaweb2-theme-sigma /usr/share/icingaweb2/modules/sigma-theme
 chown www-data:icingaweb2 /usr/share/icingaweb2/modules/sigma-theme
 ```
 
@@ -29,8 +22,8 @@ Configuration -> Modules -> Sigma-theme -> Enable
 
 Configuration -> Application -> General:
 
-- Default Theme: sigma-theme
-- Users Can't Change Theme: yes
+- Default Theme: `sigma-theme`
+- Users Can't Change Theme: `yes`
 
 ## Patch login footer
 
