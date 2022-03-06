@@ -69,7 +69,6 @@ On every node clone this repository and follow specific node type instructions.
 ```
 git clone https://gitlab.com/itaum/sigma-rds /tmp/sigma-rds
 cd /tmp/sigma-rds
-git checkout development
 ```
 
 ## Specific instructions for node type:
