@@ -2,7 +2,7 @@
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
-s# Master Node
+# Master Node
 
 ## Icinga2 Monitor
 
