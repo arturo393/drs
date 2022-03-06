@@ -47,11 +47,19 @@ Optional: Ensure permissions on remote host
 
 `chmod 600 $HOME/.ssh/authorized_keys`
 
-# Execution from Master Node
+## On Master node save remote satellite host as known host
+
+```
+ssh sigadev@satellite-host_ip
+# Press Yes to continue
+
+```
+
+# Example execution from master to satellite node
 
 `ssh remoteuser@<satellite-host_ip> 'check_command'`
 
-## PHP Example
+## PHP code Example
 
 ```php
 <?php
@@ -60,7 +68,7 @@ system("sudo -u sigmadev ssh remoteuser@<satellite-host_ip> 'check_command'");
 ...
 ```
 
-## Shell Example
+## Shell command example
 
 ```
 /home/masterUser $❯ uname -a

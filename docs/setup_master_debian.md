@@ -56,12 +56,11 @@ open `http://<host-ip>/icingaweb2`
 
 ## Install and Configure Extra Dependencies
 
-- [Director](/docs/director_module.md)
-- [Dependency](/docs/dependency_module.md)
-- [Remote Execution](/docs/remote_execution.md)
-- [RS485 Write Module](/docs/rs485_write_module.md)
-- [Graphite Module](/docs/graphite_module.md)
-- [Sigma Theme](/docs/sigma_theme.md)
+- [Director WebUI Module](/docs/director_module.md)
+- [Dependency WebUI Module](/docs/dependency_module.md)
+- [RS485 Write WebUI Module](/docs/rs485_write_module.md)
+- [Graphite WebUI Module](/docs/graphite_module.md)
+- [Sigma WebUI Theme](/docs/sigma_theme.md)
 
 ---
 

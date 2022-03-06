@@ -1,8 +1,9 @@
-# Install Dependency Módule (Master)
+# Install Dependency Module (Only Master)
+
+Use the module provided by this repository:
 
 ```
 cd /usr/share/icingaweb2/modules/
-<!-- git clone https://github.com/visgence/icinga2-dependency-module dependency_plugin -->
 cp -r /tmp/sigma_rds/src/modules/dependency_plugin/ /usr/share/icingaweb2/modules/
 cd dependency_plugin
 
@@ -14,16 +15,7 @@ echo -n '[db]
 resource = "dependencies"' > /etc/icingaweb2/modules/dependency_plugin/config.ini
 ```
 
-<!--
-```
-echo -n 'apply Dependency "Parent" for (parent in host.vars.parents) to Host {
-      parent_host_name = parent
-      assign where host.address && host.vars.parents
-} ' > /var/lib/icinga2/api/zones/director-global/director/dependency_apply.conf
-
-``` -->
-
-## Patch default URL
+## Patch WebUI default URL
 
 Edit `/usr/share/icingaweb2/application/forms/Authentication/LoginForm.php` and change `line 24`:
 
@@ -51,7 +43,7 @@ chown -R www-data:icingaweb2 /etc/icingaweb2/modules/dependency_plugin
 chown -R nagios:nagios /etc/icinga2/conf.d/
 ```
 
-## DB Resource
+## Add new DB Resource
 
 mysql
 
@@ -64,7 +56,7 @@ GRANT ALL ON dependencies.* TO dependencies@localhost IDENTIFIED BY 'Admin.123';
 mysql -U dependencies -D dependencies < /usr/share/icingaweb2/modules/dependency_plugin/application/schema/init.sql
 ```
 
-## API
+## Add API user
 
 ```
 echo -n 'object ApiUser "dependencies" {
@@ -73,7 +65,9 @@ echo -n 'object ApiUser "dependencies" {
     }'>> /etc/icinga2/conf.d/api-users.conf
 ```
 
-systemctl restart icinga2
+## Restart monitor process:
+
+`systemctl restart icinga2`
 
 ## Icingaweb2 Dependency Module
 
@@ -102,7 +96,7 @@ Dependencies -> Settings ->Module Settings
   - API User: dependencies
   - Password: Admin.123
 
-## Add Custom Data Field
+### Add Custom Data Field
 
 Icinga Director > Define Data Fields
 
@@ -112,12 +106,12 @@ Add a new Data Field
 - Caption: Parent Hosts
 - Data Type: Array
 
-## Add Custom Service Template
+### Add Custom Service Template
 
 Icinga Director > Service > Service Templates: Add
 
-- Name: rs485_dependency
-- Check command: dummy
+- Name: `rs485_dependency`
+- Check command: `dummy`
 
 _Every DMU Port Service should use this template to render detected RDUs_
 
