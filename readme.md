@@ -1,4 +1,6 @@
-![Sigma Telecom](/docs/logo-sigma.svg)
+| ![Sigma Telecom](/docs/logo-sigma.svg) |
+| -------------------------------------- |
+|                                        |
 
 # Sigma Telecom - RDS
 
