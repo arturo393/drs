@@ -6,7 +6,7 @@
 
 _Distributed monitoring platform_
 
-## Example Deploy Diagram
+## Example Deployment Diagram
 
 ```mermaid
 graph LR;
