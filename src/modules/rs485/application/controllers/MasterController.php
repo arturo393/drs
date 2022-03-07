@@ -5,7 +5,7 @@ namespace Icinga\Module\Rs485\Controllers;
 use GuzzleHttp\Psr7\ServerRequest;
 use Icinga\Module\Rs485\Database;
 use Icinga\Application\Config;
-use Icinga\Module\Rs485\Forms\GeneralForm;
+use Icinga\Module\Rs485\Forms\MasterForm;
 use Icinga\Web\Controller;
 use ipl\Html\Html;
 use ipl\Sql\Select;
@@ -15,7 +15,7 @@ use ipl\Web\Widget\Icon;
 use ipl\Web\Widget\Link;
 
 
-class GeneralController extends Controller
+class MasterController extends Controller
 {
     use Database;
 
@@ -28,30 +28,28 @@ class GeneralController extends Controller
 
     public function editAction()
     {
-        $form = (new GeneralForm())
+        $form = (new MasterForm())
             ->setIniConfig(Config::module('rs485'));
 
         
-        if ($this->_hasParam('id')){
-            $id = $this->_getParam('id');
+        if ($this->_hasParam('id_trama')){
+            $idTrama = $this->_getParam('id_trama');
         } else {
-            $id = 0;
+            $idTrama = 0;
         }
         $select = (new Select())
         ->from('rs485_dmu_trama r')
         ->columns(['r.*'])
-        ->where(['r.id = ?' => $id]);
+        ->where(['r.id = ?' => $idTrama]);
 
         $row  = $this->getDb()->select($select)->fetch();
         if ($row) {
             $this->view->assign('descripcion', $row->name);
-	    $trama = $this->armaTrama($row);
+	        $trama = $this->armaTrama($row);
             $this->view->assign('trama', $trama);
 			  
 	    $values = [
-		        'id' => $row->id,
-		        'dmu_cmdlength'  => $row->cmd_body_lenght,
-			'dmu_cmddata'  => $row->cmd_data,
+		        'id_trama' => $row->id
             // TODO(el): Must cast to string here because ipl/html does not
             //           support integer return values for attribute callbacks
             ];
@@ -64,7 +62,7 @@ class GeneralController extends Controller
 
         $this->view->form = $form;
 
-        $this->view->assign('id', $id);
+        $this->view->assign('id_trama', $idTrama);
        }
 
 
@@ -78,8 +76,8 @@ class GeneralController extends Controller
        // Check if user has submitted the form
        if($this->getRequest()->isPost()) {
 
-	    if ($this->_hasParam('id')){
-		    $id = $this->_getParam('id');
+	    if ($this->_hasParam('id_trama')){
+		    $idTrama = $this->_getParam('id_trama');
 	    }
 
 	    if ($this->_hasParam('dmu_cmdlength')){
@@ -103,7 +101,7 @@ class GeneralController extends Controller
 	$select = (new Select())
         ->from('rs485_dmu_trama r')
         ->columns(['r.*'])
-        ->where(['r.id = ?' => $id]);
+        ->where(['r.id = ?' => $idTrama]);
 
         $row  = $this->getDb()->select($select)->fetch();
 	if ($row) {

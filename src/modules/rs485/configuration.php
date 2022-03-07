@@ -11,16 +11,20 @@ use Icinga\Application\Version;
         $this->provideCssFile('vendor/flatpickr.min.css');
     }
 
-    $this->menuSection(N_('Rs485'))->add(N_('Config DRU'), array(
+    $this->menuSection(N_('Configurar Device'))->add(N_('Config DRU'), array(
         'url' => 'rs485/setdru/list',
     ));
 
-    $this->menuSection(N_('Rs485'))->add(N_('Config DMU'), array(
+    $this->menuSection(N_('Configurar Device'))->add(N_('Config DMU'), array(
         'url' => 'rs485/setdmu/list',
     ));
 
-    $this->menuSection(N_('Rs485'))->add(N_('Formulario General'), array(
+    $this->menuSection(N_('Configurar Device'))->add(N_('Formulario General'), array(
         'url' => 'rs485/general/edit',
+    ));
+
+    $this->menuSection(N_('Configurar Device'))->add(N_('Config Master'), array(
+        'url' => 'rs485/master/edit',
     ));
 
    $this->provideConfigTab('form', array(
