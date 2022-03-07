@@ -28,7 +28,7 @@ class SetdruController extends Controller
     public function listAction()
     {
         $select = (new Select())
-            ->from('dru_trama r')
+            ->from('rs485_dru_trama r')
             ->columns(['r.*'])            
             ->orderBy('r.id', SORT_ASC);
 
@@ -119,7 +119,7 @@ class SetdruController extends Controller
             $id = 0;
         }
         $select = (new Select())
-        ->from('dru_trama r')
+        ->from('rs485_dru_trama r')
         ->columns(['r.*'])
         ->where(['r.id = ?' => $id]);
 
@@ -192,7 +192,7 @@ class SetdruController extends Controller
        }
 
 	$select = (new Select())
-        ->from('dru_trama r')
+        ->from('rs485_dru_trama r')
         ->columns(['r.*'])
         ->where(['r.id = ?' => $id]);
 
