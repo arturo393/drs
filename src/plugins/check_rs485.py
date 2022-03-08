@@ -110,8 +110,6 @@ def analizar_argumentos():
                     help="lowLevelCritical es requerido", default=0)
     ap.add_argument("-hc", "--highLevelCritical", required=False,
                     help="highLevelCritical es requerido", default=0)
-    ap.add_argument("-s", "--serviceName", required=False,
-                    help="ServiceName es requerido", default="")
                                                     
 
     try:
@@ -135,7 +133,6 @@ def analizar_argumentos():
     HighLevelWarning = args['highLevelWarning']
     LowLevelCritical = args['lowLevelCritical']
     HighLevelCritical = args['highLevelCritical']
-    ServiceName = args['serviceName']
 
     # validamos los argumentos pasados
     if Port == "":
@@ -173,7 +170,7 @@ def analizar_argumentos():
         sys.stderr.write("RS485 CRITICAL - DruId es obligatorio")
         sys.exit(2)
 
-    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical, ServiceName
+    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical
 
 
 def getChecksum(cmd):
@@ -350,7 +347,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical, ServiceName  = analizar_argumentos()
+    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
 
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
@@ -444,13 +441,13 @@ def main():
             hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
             if (resultOK > HighLevelCritical or resultOK < LowLevelCritical):
-                print("RS485 CRITICAL - result = " + hex_string + " hex|value="+str(resultOK) + ";serviceName="+ServiceName)
+                print("RS485 CRITICAL - result = " + hex_string + "|value="+str(resultOK) )
                 sys.exit(2)
             elif (resultOK > HighLevelWarning or resultOK < LowLevelWarning):
-                print("RS485 WARNING - result = " + hex_string + " hex|value="+str(resultOK) + ";serviceName="+ServiceName)
+                print("RS485 WARNING - result = " + hex_string + "|value="+str(resultOK) )
                 sys.exit(1)
             else:
-                print("RS485 OK - result = " + hex_string + " hex|value="+str(resultOK) + ";serviceName="+ServiceName)
+                print("RS485 OK - result = " + hex_string + "|value="+str(resultOK))
                 sys.exit(0)
         s.close()
     else:
