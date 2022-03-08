@@ -14,12 +14,13 @@ class MasterForm extends ConfigForm
     public function init()
     {
         $this->setName('form_master');
-            $this->setSubmitLabel($this->translate('Enviar'));
+        $this->setSubmitLabel($this->translate('Enviar'));
         $this->setAction('rs485/master/edit');
     }
 
     public function createElements(array $formData)
     {
+        $this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
         $listHost = $this->cargarHost();
         $listTrama = $this->tramasDMU();
 
@@ -159,12 +160,11 @@ class MasterForm extends ConfigForm
 
                     $this->addElement('checkbox', "opt{$input}_4", [
                         'label'       => $this->translate("{$descripcion} - Port 4")
-                    ]); 
+                    ]);                     
                 }
             }   
 
-       }
-       
+       }       
     }
 
     private function cargarHost(){

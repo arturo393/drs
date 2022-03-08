@@ -38,7 +38,15 @@ C_TYPE_SET = '03'
 C_RETURN = '0d'
 C_SITE_NUMBER = '00000000'
 
-
+dataDMU = {
+    "F8" : "Digital Remote Units",
+    "F9" : "Digital Remote Units",
+    "FA" : "Digital Remote Units",
+    "FB" : "Digital Remote Units",
+    "9A" : ['Connected','Disconnected','Transsmision normal','Transsmision failure'],
+    "F3" : "[dBm]",
+    "42" : ['ON', 'OFF']
+}
 # --------------------------------
 # -- Imprimir mensaje de ayuda
 # --------------------------------
@@ -102,6 +110,8 @@ def analizar_argumentos():
                     help="lowLevelCritical es requerido", default=0)
     ap.add_argument("-hc", "--highLevelCritical", required=False,
                     help="highLevelCritical es requerido", default=0)
+    ap.add_argument("-s", "--serviceName", required=False,
+                    help="ServiceName es requerido", default="")
                                                     
 
     try:
@@ -125,44 +135,45 @@ def analizar_argumentos():
     HighLevelWarning = args['highLevelWarning']
     LowLevelCritical = args['lowLevelCritical']
     HighLevelCritical = args['highLevelCritical']
+    ServiceName = args['serviceName']
 
     # validamos los argumentos pasados
     if Port == "":
-        sys.stderr.write("RS485 CRITICAL - error = El puerto es obligatorio\n")
+        sys.stderr.write("RS485 CRITICAL - El puerto es obligatorio\n")
         sys.exit(2)
 
     if Device == "":
-        sys.stderr.write("RS485 CRITICAL - error = El device es obligatorio\n")
+        sys.stderr.write("RS485 CRITICAL - El device es obligatorio\n")
         sys.exit(2)
 
     if DmuDevice1 == "" and Device == 'dmu':
         sys.stderr.write(
-            "RS485 CRITICAL - error = El dmuDevice1 es obligatorio\n")
+            "RS485 CRITICAL - El dmuDevice1 es obligatorio\n")
         sys.exit(2)
 
     if DmuDevice2 == "" and Device == 'dmu':
         sys.stderr.write(
-            "RS485 CRITICAL - error = El dmuDevice2 es obligatorio\n")
+            "RS485 CRITICAL - El dmuDevice2 es obligatorio\n")
         sys.exit(2)
 
     if CmdNumber == "":
-        sys.stderr.write("RS485 CRITICAL - error = cmdNumber es obligatorio\n")
+        sys.stderr.write("RS485 CRITICAL - cmdNumber es obligatorio\n")
         sys.exit(2)
 
     if (CmdBodyLenght == "" and Action == 'set') or (CmdBodyLenght == "" and Device == 'dru'):
         sys.stderr.write(
-            "RS485 CRITICAL - error = cmdBodyLenght es obligatorio")
+            "RS485 CRITICAL - cmdBodyLenght es obligatorio")
         sys.exit(2)
 
     if (CmdData == "" and Action == 'set') or (CmdData == "" and Device == 'dru'):
-        sys.stderr.write("RS485 CRITICAL - error = cmdData es obligatorio")
+        sys.stderr.write("RS485 CRITICAL - cmdData es obligatorio")
         sys.exit(2)
 
     if (DruId == "" and Device == 'dru'):
-        sys.stderr.write("RS485 CRITICAL - error = DruId es obligatorio")
+        sys.stderr.write("RS485 CRITICAL - DruId es obligatorio")
         sys.exit(2)
 
-    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId
+    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical, ServiceName
 
 
 def getChecksum(cmd):
@@ -233,7 +244,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
             #print('cant_bytes: %s' % cant_bytes)
         except ValueError:
             sys.stderr.write(
-                "RS485 CRITICAL - error = CmdBodyLenght no tiene formato hexadecimal")
+                "RS485 CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
             sys.exit(2)
         tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
         #print('tramaLengthCodeData: %s' % tramaLengthCodeData)
@@ -241,7 +252,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)
         if lenTramaLengthCodeData != cant_bytes:
             sys.stderr.write(
-                "RS485 CRITICAL - error = CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
+                "RS485 CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
             sys.exit(2)
         if (Action == 'set'):
             MessageType = C_TYPE_SET
@@ -292,7 +303,7 @@ def validar_trama_respuesta(hexResponse, Device):
             or hexResponse[0] != 126
         ):
             sys.stderr.write(
-                "RS485 CRITICAL - error = Error trama de salida invalida\n")
+                "RS485 CRITICAL - Error trama de salida invalida\n")
             sys.exit(2)
         if Device == 'dru':
             #print('Entro aqui')
@@ -317,8 +328,19 @@ def validar_trama_respuesta(hexResponse, Device):
         return data
     except ValueError:
         sys.stderr.write(
-            "RS485 CRITICAL - error = Error al leer trama de salida\n")
+            "RS485 CRITICAL - Error al leer trama de salida\n")
         sys.exit(2)
+
+# ----------------------
+#   MAIN
+# ----------------------
+def convertirRespuesta(Result, Device, CmdNumber):
+    CmdNumber = CmdNumber.upper()
+    if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
+        Result = str(int(Result, 16)) + " " + dataDMU[CmdNumber]
+    
+    return Result
+
 
 # ----------------------
 #   MAIN
@@ -328,7 +350,7 @@ def validar_trama_respuesta(hexResponse, Device):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
+    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical, ServiceName  = analizar_argumentos()
 
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
@@ -351,8 +373,8 @@ def main():
     except serial.SerialException:
         # -- Error al abrir el puerto serie
         sys.stderr.write(
-            "RS485 CRITICAL - error = Error al abrir puerto %s \n" % str(Port))
-        sys.exit(1)
+            "RS485 CRITICAL - Error al abrir puerto %s " % str(Port))
+        sys.exit(2)
 
     # -- Mostrar el nombre del dispositivo
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
@@ -377,7 +399,7 @@ def main():
             if(rcvHex == ''):
                 isDataReady = True
                 sys.stderr.write(
-                    "RS485 CRITICAL - error = al leer el puerto de salida %s \n" % str(Port))
+                    "RS485 CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
                 sys.exit(2)
             elif(rcvcount == 0 and rcvHex == '7e'):
                 rcvHexArray.append(rcvHex)
@@ -402,11 +424,11 @@ def main():
         if Action == 'set':
             if len(data) != 0 and Device == 'dmu':
                 sys.stderr.write(
-                    "RS485 CRITICAL - error = al escribir puerto dmu %s \n" % str(Port))
+                    "RS485 CRITICAL - error al escribir puerto dmu %s \n" % str(Port))
                 sys.exit(2)
             elif len(data) == 0 and Device == 'dru':
                 sys.stderr.write(
-                    "RS485 CRITICAL - error = al escribir puerto dru %s \n" % str(Port))
+                    "RS485 CRITICAL - error al escribir puerto dru %s \n" % str(Port))
                 sys.exit(2)
             else:
                 if Device == 'dru':
@@ -416,23 +438,24 @@ def main():
                 sys.stderr.write("RS485 OK")
         else:
             a_bytearray = bytearray(data)
-
-            hex_string = a_bytearray.hex()
-            resultOK =  int(hex_string, 16)
+            resultHEX = a_bytearray.hex()
+            resultOK =  int(resultHEX, 16)
+           
+            hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
             if (resultOK > HighLevelCritical or resultOK < LowLevelCritical):
-                print("RS485 CRITICAL - result = " + hex_string + " hex|value="+str(resultOK))
+                print("RS485 CRITICAL - result = " + hex_string + " hex|value="+str(resultOK) + ";serviceName="+ServiceName)
                 sys.exit(2)
             elif (resultOK > HighLevelWarning or resultOK < LowLevelWarning):
-                print("RS485 WARNING - result = " + hex_string + " hex|value="+str(resultOK))
+                print("RS485 WARNING - result = " + hex_string + " hex|value="+str(resultOK) + ";serviceName="+ServiceName)
                 sys.exit(1)
             else:
-                print("RS485 OK - result = " + hex_string + " hex|value="+str(resultOK))
+                print("RS485 OK - result = " + hex_string + " hex|value="+str(resultOK) + ";serviceName="+ServiceName)
                 sys.exit(0)
         s.close()
     else:
         sys.stderr.write(
-            "RS485 WARNING - error = Accion invalida:  %s \n" % Action)
+            "RS485 WARNING - Accion invalida:  %s \n" % Action)
         sys.exit(1)
 
 

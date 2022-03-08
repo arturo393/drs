@@ -68,6 +68,7 @@ class MasterController extends Controller
             }
             
         }
+      
         $form->handleRequest();
 
         $this->view->form = $form;
@@ -82,7 +83,7 @@ class MasterController extends Controller
         $dmuDevice2 = -1;
         $dmuCmdLength = -1;    
         $dmuCmdData = -1;
-        $host_remote = $this->_getParam('host_remote');
+        $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
 
         if ($this->_hasParam('opt1_hidden')){
             $trama = $this->tramasDMU($this->_getParam('opt1_hidden'));            
@@ -188,7 +189,7 @@ class MasterController extends Controller
     }
 
     private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData){
-        $paramFijos = '--port /dev/ttyUSB0 --action set --device dmu ';
+        $paramFijos = '--port /dev/ttyS0 --action set --device dmu ';
         $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
         $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
@@ -264,6 +265,14 @@ class MasterController extends Controller
         return $row;
     }
 
+    private function buscarIpHost($id){
+        $select = (new Select())
+        ->from('icinga_host r')
+        ->columns(['r.*'])
+        ->where(['r.id = ?' => $id]);
+        $row  = $this->getDb()->select($select)->fetch();
+        return $row->address;
+}
 
 }
 
