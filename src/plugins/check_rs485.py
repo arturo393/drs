@@ -45,7 +45,8 @@ dataDMU = {
     "FB" : "Digital Remote Units",
     "9A" : ['Connected','Disconnected','Transsmision normal','Transsmision failure'],
     "F3" : "[dBm]",
-    "42" : ['ON', 'OFF']
+    "42" : ['ON', 'OFF'],
+    "81" : ["Channel Mode", "WideBand Mode"]
 }
 # --------------------------------
 # -- Imprimir mensaje de ayuda
@@ -327,38 +328,116 @@ def validar_trama_respuesta(hexResponse, Device):
         sys.stderr.write(
             "RS485 CRITICAL - Error al leer trama de salida\n")
         sys.exit(2)
+# -----------------------------------------
+#   convertir hex a decimal con signo
+# ----------------------------------------
+def s16(value):
+    return -(value & 0x8000) | (value & 0x7fff)
 
-# ----------------------
-#   MAIN
-# ----------------------
+# ----------------------------------------------------------------
+#   convierte la salida en hex a un valor representacion humana
+# ---------------------------------------------------------------
 def convertirRespuesta(Result, Device, CmdNumber):
     CmdNumber = CmdNumber.upper()
     if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
         Result = str(int(Result, 16)) + " " + dataDMU[CmdNumber]
+    
     elif  Device=='dmu' and CmdNumber=='91':
         if (Result[0:2] == '00'):
-            opt1 = 'OPT1 ON\n'
+            opt1 = '<br>OPT1: <b>ON</b> '
         else: 
-           opt1 = 'OPT1 OFF\n'  
+           opt1 = '<br>OPT1: <b>OFF</b> '  
 
         if (Result[2:4] == '00'):
-            opt2 = 'OPT2 ON\n'
+            opt2 = '<br>OPT2: <b>ON</b> '
         else: 
-            opt2 = 'OPT2 OFF\n'
+            opt2 = '<br>OPT2: <b>OFF</b> '
 
         if (Result[4:6] == '00'):
-            opt3 = 'OPT3 ON\n'
+            opt3 = '<br>OPT3: <b>ON</b> '
         else: 
-           opt3 = 'OPT3 OFF\n' 
+           opt3 = '<br>OPT3: <b>OFF</b> ' 
         
         if (Result[6:8] == '00'):
-            opt4 = 'OPT4 ON\n'
+            opt4 = '<br>OPT4: <b>ON</b> '
         else: 
-           opt4 = 'OPT4 OFF\n'               
+           opt4 = '<br>OPT4 <b>OFF</b> '               
         Result =  opt1 + opt2 + opt3 + opt4
+    
+    elif (Device=='dmu' and CmdNumber=='9A'):
+        hex_as_int = int(Result, 16)
+        hex_as_binary = bin(hex_as_int)
+        padded_binary = hex_as_binary[2:].zfill(8)
+        opt=1
+        temp = []
+        for bit in reversed(padded_binary):  
+            if (bit=='0' and opt<=4):
+                temp.append('Connected, ') 
+            elif (bit=='1' and opt<=4):
+                temp.append('Disconnected, ')
+            elif (bit=='0' and opt>4):
+                temp.append('Transsmision normal')
+            elif (bit=='1' and opt>4):
+                temp.append('Transsmision failure')
+            opt=opt+1          
+        opt1 = "<br>OPT1: " + temp[0] + temp[4] 
+        opt2 = "<br>OPT2: " + temp[1] + temp[5]
+        opt3 = "<br>OPT2: " + temp[2] + temp[6]
+        opt4 = "<br>OPT2: " + temp[3] + temp[7] 
+        Result = opt1 + opt2 + opt3 + opt4
+
+    elif (Device=='dmu' and CmdNumber=='F3'):    
+        hexInvertido = Result[2:4] + Result[0:2]
+        hex_as_int = int(hexInvertido, 16)
+        decSigned = s16(hex_as_int)
+        rbm = decSigned / 256
+        Result = "power: " + str(round(rbm,2)) + " [dBm] "
+
+    elif (Device=='dmu' and CmdNumber=='42'):    
+        i = 0
+        tmp = ''
+        channel = 1
+        while channel <= 16 and i < len(Result):
+            hex_as_int = int(hex[i:i+2], 16)
+            if hex_as_int == 1:
+               tmp += "<br> CH " + str(channel).zfill(2) + " ON "
+            else:
+               tmp += "<br> CH " + str(channel).zfill(2) + " OFF "
+            i += 2
+            channel += 1
+        Result = tmp
+
+    elif (Device=='dmu' and CmdNumber=='36'): 
+        channel = 1
+        i = 0
+        tmp = ''
+        while channel <= 16:
+            byte = Result[i:i+8]
+            byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
+            hex_as_int = int(byteInvertido, 16)
+            r = hex_as_int / 10000
+            valor1 = '{:,.4f}'.format(r-10).replace(",", "@").replace(".", ",").replace("@", ".")
+            valor2 = '{:,.4f}'.format(r).replace(",", "@").replace(".", ",").replace("@", ".")
+            tmp += "<br> CH " + str(channel).zfill(3) + ":  "+  valor1 + " MHz UL - " + valor2 + " MHz DL " 
+            channel += 1
+            i += 8
+        Result = tmp
+    elif (Device=='dmu' and CmdNumber=='81'):
+        tmp = ''
+        if Result == '01':
+            tmp = 'Channel Mode ' 
+        elif Result == '02':
+            tmp = 'W ideBand Mode '
+        else:
+           tmp = 'Unknown '
+        Result = tmp     
+    elif (Device=='dmu' and CmdNumber=='EF'):
+        byte01toInt = int(Result[0:2], 16)/4
+        byte02toInt = int(Result[2:4], 16)/4
+        valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+        valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+        Result = valor1 + " Uplink ATT [dB] - " + valor2 + " Downlink ATT [dB] "       
     return Result
-
-
 # ----------------------
 #   MAIN
 # ----------------------
