@@ -129,10 +129,10 @@ def analizar_argumentos():
     CmdBodyLenght = str(args['cmdBodyLenght'])
     CmdData = str(args['cmdData'])
     DruId = str(args['druId'])
-    LowLevelWarning = args['lowLevelWarning']
-    HighLevelWarning = args['highLevelWarning']
-    LowLevelCritical = args['lowLevelCritical']
-    HighLevelCritical = args['highLevelCritical']
+    LowLevelWarning = int(args['lowLevelWarning'])
+    HighLevelWarning = int(args['highLevelWarning'])
+    LowLevelCritical = int(args['lowLevelCritical'])
+    HighLevelCritical = int(args['highLevelCritical'])
 
     # validamos los argumentos pasados
     if Port == "":
@@ -335,7 +335,27 @@ def convertirRespuesta(Result, Device, CmdNumber):
     CmdNumber = CmdNumber.upper()
     if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
         Result = str(int(Result, 16)) + " " + dataDMU[CmdNumber]
-    
+    elif  Device=='dmu' and CmdNumber=='91':
+        if (Result[0:2] == '00'):
+            opt1 = 'OPT1 ON\n'
+        else: 
+           opt1 = 'OPT1 OFF\n'  
+
+        if (Result[2:4] == '00'):
+            opt2 = 'OPT2 ON\n'
+        else: 
+            opt2 = 'OPT2 OFF\n'
+
+        if (Result[4:6] == '00'):
+            opt3 = 'OPT3 ON\n'
+        else: 
+           opt3 = 'OPT3 OFF\n' 
+        
+        if (Result[6:8] == '00'):
+            opt4 = 'OPT4 ON\n'
+        else: 
+           opt4 = 'OPT4 OFF\n'               
+        Result =  opt1 + opt2 + opt3 + opt4
     return Result
 
 
@@ -440,10 +460,10 @@ def main():
            
             hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
-            if (resultOK > HighLevelCritical or resultOK < LowLevelCritical):
+            if ( resultOK  in range (LowLevelCritical, HighLevelCritical) ):
                 print("RS485 CRITICAL - result = " + hex_string + "|value="+str(resultOK) )
                 sys.exit(2)
-            elif (resultOK > HighLevelWarning or resultOK < LowLevelWarning):
+            elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
                 print("RS485 WARNING - result = " + hex_string + "|value="+str(resultOK) )
                 sys.exit(1)
             else:
