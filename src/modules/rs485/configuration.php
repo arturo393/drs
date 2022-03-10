@@ -27,6 +27,10 @@ use Icinga\Application\Version;
         'url' => 'rs485/master/edit',
     ));
 
+    $this->menuSection(N_('Device configuration'))->add(N_('Config Remote'), array(
+        'url' => 'rs485/remote/edit',
+    ));
+
    /*$this->provideConfigTab('form', array(
         'title' => $this->translate('Formulario para ingresar datos dmu'),
         'label' => $this->translate('Formulario DMU'),
@@ -45,4 +49,4 @@ use Icinga\Application\Version;
         'label' => $this->translate('Backend'),
         'url'   => 'config/backend'
     ));
-
+    
