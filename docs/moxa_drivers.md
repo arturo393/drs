@@ -1,3 +1,7 @@
+| ![Sigma Telecom](/docs/logo-sigma.svg)                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
+
 # Moxa Driver
 
 Install kernel sources and compilation tools
@@ -33,3 +37,14 @@ mxu11x0               114688  0
 usbserial              61440  1 mxu11x0
 usbcore               323584  4 usbserial,mxu11x0,ehci_hcd,uhci_hcd
 ```
+
+## Add sigmadev to dialout group
+
+```
+usermod -a -G dialout sigmadev
+
+```
+
+|                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |

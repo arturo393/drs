@@ -1,6 +1,12 @@
-# Master
+| ![Sigma Telecom](/docs/logo-sigma.svg)                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
-## Director
+# Master: Director Module
+
+```
+apt install -y icingaweb2-module-director
+```
 
 mysql
 
@@ -22,3 +28,7 @@ Charset: utf8
 ```
 
 Go to menu "Icinga Director" -> "[Create Schema]"
+
+|                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
