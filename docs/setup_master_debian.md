@@ -65,6 +65,7 @@ open `http://<host-ip>/icingaweb2`
 - [RS485 Write WebUI Module](/docs/rs485_write_module.md)
 - [Graphite WebUI Module](/docs/graphite_module.md)
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
+- [Cube WebUI Module](/docs/cube_module.md)
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
