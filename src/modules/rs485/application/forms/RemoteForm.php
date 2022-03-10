@@ -7,22 +7,22 @@ use Icinga\Forms\ConfigForm;
 use Icinga\Module\Rs485\Database;
 use ipl\Sql\Select;
 
-class MasterForm extends ConfigForm
+class RemoteForm extends ConfigForm
 {
     use Database;
 
     public function init()
     {
-        $this->setName('form_master');
+        $this->setName('form_remote');
         $this->setSubmitLabel($this->translate('Enviar'));
-        $this->setAction('rs485/master/edit');
+        $this->setAction('rs485/remote/edit');
     }
 
     public function createElements(array $formData)
     {
         
         $listHost = $this->cargarHost();
-        $listTrama = $this->tramasDMU();
+        $listTrama = $this->tramasDRU();
         #$this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
 
         $this->addElement(
@@ -180,20 +180,6 @@ class MasterForm extends ConfigForm
         return $list;
     }
 
-    private function tramasDMU(){
-        $select = (new Select())
-            ->from('rs485_dmu_trama r')
-            ->columns(['r.*'])
-            //->where(['r.id not in (?)' => $excluir])
-            ->orderBy('r.name', SORT_ASC);
-        $list[''] = '(select comando)';
-
-        foreach ($this->getDb()->select($select) as $row) {
-            $list[$row->id] = $row->name;
-        }
-        return $list;
-    }
-
     private function tramasDRU(){
         $select = (new Select())
             ->from('rs485_dru_trama r')
@@ -210,7 +196,7 @@ class MasterForm extends ConfigForm
 
     private function getDescripcion($id){
         $select = (new Select())
-            ->from('rs485_dmu_trama r')
+            ->from('rs485_dru_trama r')
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
       

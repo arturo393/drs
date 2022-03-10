@@ -106,21 +106,6 @@ print(r)
 #print("rbm: " + str(rbm))
 #print("rbm redondeado: " + str(round(rbm,2)))
 
-hex= '00010101010101010101010101000101'
-i = 0
-result = ''
-channel = 1
-while channel <= 16:
-    hex_as_int = int(hex[i:i+2], 16)
-    if hex_as_int == 1:
-        result += "<br> CH " + str(channel).zfill(2) + " ON\n"
-    else:
-        result += "<br> CH " + str(channel).zfill(2) + " OFF\n"
-    i += 2
-    channel += 1
-    print(hex_as_int)
-print(result)    
-
 
 Result = 'b0274100862e410027294100a4294100212a41009e2a41001b2b4100982b4100152c4100922c41000f2d41008c2d4100092e4100862e4100032f4100802f4100|value=9225898788974403130110845956364562120997112066723351610997596041335379875634024178232190495388798004273667055590894356927412519834984712995268791695786240'
 channel = 1
@@ -151,3 +136,21 @@ valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").repla
 valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
 print("Byte01: " + str(valor1))
 print("Byte02: " + str(valor2))
+
+
+
+
+hex= '01010101010101010101010101010101'
+i = 0
+result = ''
+channel = 1
+while channel <= 16:
+    hex_as_int = int(hex[i:i+2], 16)
+    if hex_as_int == 1:
+        result += "<br> CH " + str(channel).zfill(2) + " ON\n"
+    else:
+        result += "<br> CH " + str(channel).zfill(2) + " OFF\n"
+    i += 2
+    channel += 1
+    print(hex_as_int)
+print(result)    

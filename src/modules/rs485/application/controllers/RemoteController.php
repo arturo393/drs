@@ -5,7 +5,7 @@ namespace Icinga\Module\Rs485\Controllers;
 use GuzzleHttp\Psr7\ServerRequest;
 use Icinga\Module\Rs485\Database;
 use Icinga\Application\Config;
-use Icinga\Module\Rs485\Forms\MasterForm;
+use Icinga\Module\Rs485\Forms\RemoteForm;
 use Icinga\Web\Controller;
 use ipl\Html\Html;
 use ipl\Sql\Select;
@@ -15,7 +15,7 @@ use ipl\Web\Widget\Icon;
 use ipl\Web\Widget\Link;
 
 
-class MasterController extends Controller
+class RemoteController extends Controller
 {
     use Database;
 
@@ -28,7 +28,7 @@ class MasterController extends Controller
 
     public function editAction()
     {
-        $form = (new MasterForm())
+        $form = (new RemoteForm())
             ->setIniConfig(Config::module('rs485'));
 
         $btnSubmit = $this->_hasParam('btn_submit') ?  $this->_getParam('btn_submit') : '';
@@ -61,7 +61,7 @@ class MasterController extends Controller
             if (!$error) {                
                 $params = $this->getRequest()->getParams();
                 $module = 'rs485';
-                $controller = 'master';
+                $controller = 'remote';
                 $action = 'save';    
                 
                 $this->_helper->redirector($action,  $controller, $module , $params);
@@ -189,7 +189,7 @@ class MasterController extends Controller
     }
 
     private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData){
-        $paramFijos = '--port /dev/ttyS0 --action set --device dmu ';
+        $paramFijos = '--port /dev/ttyS1 --action set --device dru ';
         $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
         $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
