@@ -28,7 +28,7 @@ class SetdmuController extends Controller
     public function listAction()
     {
         $select = (new Select())
-            ->from('dmu_trama r')
+            ->from('rs485_dmu_trama r')
             ->columns(['r.*'])            
             ->orderBy('r.id', SORT_ASC);
 
@@ -112,7 +112,7 @@ class SetdmuController extends Controller
             $id = 0;
         }
         $select = (new Select())
-        ->from('dmu_trama r')
+        ->from('rs485_dmu_trama r')
         ->columns(['r.*'])
         ->where(['r.id = ?' => $id]);
 
@@ -175,7 +175,7 @@ class SetdmuController extends Controller
        }
 
 	$select = (new Select())
-        ->from('dmu_trama r')
+        ->from('rs485_dmu_trama r')
         ->columns(['r.*'])
         ->where(['r.id = ?' => $id]);
 

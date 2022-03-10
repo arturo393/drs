@@ -38,7 +38,7 @@ class GeneralController extends Controller
             $id = 0;
         }
         $select = (new Select())
-        ->from('dmu_trama r')
+        ->from('rs485_dmu_trama r')
         ->columns(['r.*'])
         ->where(['r.id = ?' => $id]);
 
@@ -101,7 +101,7 @@ class GeneralController extends Controller
        }
 
 	$select = (new Select())
-        ->from('dmu_trama r')
+        ->from('rs485_dmu_trama r')
         ->columns(['r.*'])
         ->where(['r.id = ?' => $id]);
 
