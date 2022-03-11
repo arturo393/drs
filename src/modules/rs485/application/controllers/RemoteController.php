@@ -34,29 +34,24 @@ class RemoteController extends Controller
         $btnSubmit = $this->_hasParam('btn_submit') ?  $this->_getParam('btn_submit') : '';
         if($btnSubmit == 'Enviar' ) {
             $error = false;
-            $validaRepetidos =  $this->_hasParam('opt4_hidden') ? true : false;     
-            if ($validaRepetidos) {
-                $errorRepetidos = $this->validaRepetidos();
-                if ($errorRepetidos > 0){                    
-                    $form->addError("El canal {$errorRepetidos} tiene una frecuencia repetida");
-                    $error = true;
-                }
-            }
-            
-            $validaRango =   $this->_hasParam('opt2_hidden') ? true : false;   
+            #22: Uplink ATT [dB]
+            $validaRango =   $this->_hasParam('opt22_hidden') ? true : false;   
             if ($validaRango) {
-                if (!$this->validaRango($this->_getParam('opt2_1'))) {
-                    $desc = $this->getDescripcion($this->_getParam('opt2_hidden'));
-                    $form->addError("{$desc} Uplink ATT [dB]: El valor {$this->_getParam('opt2_1')} esta fuera de rango [0 - 40]");
+                if (!$this->validaRango($this->_getParam('opt22'))) {
+                    $desc = $this->getDescripcion($this->_getParam('opt22_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt22')} esta fuera de rango [0 - 40]");
                     $error = true;
-                }
-
-                if (!$this->validaRango($this->_getParam('opt2_2'))) {
-                    $desc = $this->getDescripcion($this->_getParam('opt2_hidden'));
-                    $form->addError("{$desc} Downlink ATT [dB]: El valor {$this->_getParam('opt2_2')} esta fuera de rango [0 - 40]");
+                }                
+            }  
+            #23: Downlink ATT [dB]
+            $validaRango =   $this->_hasParam('opt23_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt23'))) {
+                    $desc = $this->getDescripcion($this->_getParam('opt23_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt23')} esta fuera de rango [0 - 40]");
                     $error = true;
-                }
-            }    
+                }                
+            }  
             
             if (!$error) {                
                 $params = $this->getRequest()->getParams();
@@ -79,118 +74,45 @@ class RemoteController extends Controller
     public function saveAction()
     {
         $result = [];
-        $dmuDevice1 = -1;
-        $dmuDevice2 = -1;
-        $dmuCmdLength = -1;    
-        $dmuCmdData = -1;
+        $ejecutar = "";
         $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
-        #1: Working mode 
-        if ($this->_hasParam('opt1_hidden')){
-            $trama = $this->tramasDMU($this->_getParam('opt1_hidden'));            
-		    $dmuDevice1 = $trama->dmu_device1;
-		    $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght; 
-            $dmuCmdCode = $trama->cmd_number;
-            $dmuCmdData = $this->_getParam('opt1');
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
+        #22: Uplink ATT [dB] 
+        if ($this->_hasParam('opt22_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));   
+            $druId =  $trama->dru_id;        
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;            
+            $byte1 = dechex(4 * (int) $this->_getParam('opt22'));
+            $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
             //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
-            usleep(100000);
-        }
-        #2: Gain power control ATT
-        if ($this->_hasParam('opt2_hidden')){
-            $trama = $this->tramasDMU($this->_getParam('opt2_hidden'));            
-		    $dmuDevice1 = $trama->dmu_device1;
-		    $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght; 
-            $dmuCmdCode = $trama->cmd_number;
-            $byte1 = dechex(4 * (int) $this->_getParam('opt2_1'));
-            $byte2 = dechex(4* (int) $this->_getParam('opt2_2'));
-            $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT); 
-            $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT); 
-            $dmuCmdData = "{$byte1}{$byte2}";
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
-            usleep(100000);
-        }
-        #3: Channel Activation Status           
-        if ($this->_hasParam('opt3_hidden')){
-            $trama = $this->tramasDMU($this->_getParam('opt3_hidden'));            
-		    $dmuDevice1 = $trama->dmu_device1;
-		    $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght; 
-            $dmuCmdCode = $trama->cmd_number;
-            $byte = "";
-            for ($i=1; $i<=16; $i++){
-                $input = $this->_getParam("opt3_{$i}");
-                if ($input == 1){
-                    $byte = "{$byte}00";
-                }else{
-                    $byte = "{$byte}01";
-                }                
-                
-            }
-            $dmuCmdData = $byte;
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
-            usleep(100000);
-        }
-        #4: Channel Frecuency Point Configuration
-        if ($this->_hasParam('opt4_hidden')){
-            $trama = $this->tramasDMU($this->_getParam('opt4_hidden'));            
-		    $dmuDevice1 = $trama->dmu_device1;
-		    $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght; 
-            $dmuCmdCode = $trama->cmd_number;
-            $byte = "";
-            for ($i=1; $i<=16; $i++){
-                $input = $this->_getParam("opt4_{$i}");                
-                $byte = "{$byte}{$input}";
-            }
-            $dmuCmdData = $byte;
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
-            usleep(100000);
-        }
-        #5: Optical PortState
-        if ($this->_hasParam('opt5_hidden')){
-            $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));            
-		    $dmuDevice1 = $trama->dmu_device1;
-		    $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght; 
-            $dmuCmdCode = $trama->cmd_number;
-            $byte = "";
-            for ($i=1; $i<=4; $i++){
-                $input = $this->_getParam("opt5_{$i}");  
-                if ($input == 1){
-                    $byte = "{$byte}00";
-                } else {
-                    $byte = "{$byte}01";
-                }           
-                    
-            }
-            $dmuCmdData = $byte;
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
         }
 
+        #23: Downlink ATT [dB]
+        if ($this->_hasParam('opt23_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));   
+            $druId =  $trama->dru_id;        
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;            
+            $byte1 = dechex(4 * (int) $this->_getParam('opt23'));
+            $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+        
         $this->view->assign('salida', $result);
-        $this->view->assign('cmd', $ejecutar);	
+        	
     }
 
-    private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData){
+    private function comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData){
         $paramFijos = '--port /dev/ttyS1 --action set --device dru ';
-        $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
+        $paramVariables = "--druId {$druId} --cmdBodyLenght {$druCmdLength} --cmdNumber {$druCmdCode} --cmdData {$druCmdData}";
         $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
         $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
@@ -236,7 +158,7 @@ class RemoteController extends Controller
 
     private function getDescripcion($id){
         $select = (new Select())
-            ->from('rs485_dmu_trama r')
+            ->from('rs485_dru_trama r')
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
       
@@ -255,9 +177,9 @@ class RemoteController extends Controller
         return $row;
     }
 
-    private function tramasDMU($id){
+    private function tramasDRU($id){
         $select = (new Select())
-            ->from('rs485_dmu_trama r')
+            ->from('rs485_dru_trama r')
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
            
