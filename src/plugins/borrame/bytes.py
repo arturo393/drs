@@ -154,3 +154,7 @@ while channel <= 16:
     channel += 1
     print(hex_as_int)
 print(result)    
+
+
+print(chr(167) + "C")
+print(ord(""))
