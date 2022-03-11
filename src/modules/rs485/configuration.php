@@ -23,11 +23,11 @@ use Icinga\Application\Version;
         'url' => 'rs485/general/edit',
     ));*/
 
-    $this->menuSection(N_('Device configuration'))->add(N_('Config Master'), array(
+    $this->menuSection(N_('Device configuration'))->add(N_('Configure Master'), array(
         'url' => 'rs485/master/edit',
     ));
 
-    $this->menuSection(N_('Device configuration'))->add(N_('Config Remote'), array(
+    $this->menuSection(N_('Device configuration'))->add(N_('Configure Remote'), array(
         'url' => 'rs485/remote/edit',
     ));
 
@@ -49,4 +49,3 @@ use Icinga\Application\Version;
         'label' => $this->translate('Backend'),
         'url'   => 'config/backend'
     ));
-    
