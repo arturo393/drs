@@ -115,19 +115,20 @@ create a new template file `/usr/share/icingaweb2/modules/graphite/templates/rs4
 check_command = "check_rs485"
 
 [rs485.metrics_filters]
-rs485 = "$service_name_template$.perfdata.value.value"
+rs485 = "$service_name_template$.perfdata.$perfdata_label$.value"
 
 [rs485.urlparams]
 areaAlpha = "0.5"
-areaMode = "all"
+areaMode = "none"
 lineWidth = "2"
-min = "0"
+title = $perfdata_label$
+#min = "0"
 yUnitSystem = "none"
 bgcolor = "white"
 fgcolor = "black"
 
 [rs485.functions]
-rs485 = "alias(color($metric$, '#EC5707'), ' Value')"
+rs485 = "alias(color($metric$, '#EC5707'), ' $metric$')"
 ```
 
 ensure file permissions are correct:
