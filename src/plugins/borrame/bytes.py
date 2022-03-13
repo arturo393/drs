@@ -3,6 +3,7 @@
 
 
 
+from operator import index
 from unicodedata import decimal
 
 
@@ -156,5 +157,22 @@ while channel <= 16:
 print(result)    
 
 
-print(chr(167) + "C")
-print(ord(""))
+
+hex = "6666"
+byte1 = hex[0:2]
+byte2 = hex[2:4]
+
+# Code to convert hex to binary
+res1 = "{0:08b}".format(int(byte1, 16))
+print(res1)
+
+res2 = "{0:08b}".format(int(byte2, 16))
+print(res2)
+binario = res1 + res2
+index = 0
+for i,  in binario:
+    index += 1
+    if (i == '1' ):
+        print('CH ' +  str(index) + ' ON') 
+    else:
+        print('CH ' + str(index) + ' OFF') 

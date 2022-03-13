@@ -61,7 +61,42 @@ dataDRU = {
     "2505" : { "unidad": " [dBm]", "variable" : "dBm" },
     "0104" : { "default" : "Unknown", 0: "RF Power OFF" , 1: "RF Power On" },
     "4004" : " [dB]",
-    "4104" : " [dB]"
+    "4104" : " [dB]",
+    "EF0B" : { "default": "Unknown", 2: "WideBand Mode", 3: "Channel Mode"},
+    "180A" : " MHz",
+    "190A" : " MHz",
+    "1A0A" : " MHz",
+    "1B0A" : " MHz",
+    "0102" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "0602" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "0F02" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "1002" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "1102" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "1202" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "1302" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "1402" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
+    "0103" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "0603" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "0E03" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "0F03" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "1003" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "1103" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "1203" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "1303" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
+    "1403" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},  
+    "5004" : " V",
+    "5104" : " &ordm;C",
+    "5304" : " [dBm]",
+    "5404" : " [dBm]",
+    "5504" : " [dBm]",
+    "5604" : " [dBm]",
+    "270A" : { "default": "Unknown", 1: "180 [s]", 3: "60 [s]", 9: "20 [s]"},
+    "E00B" : " [dBm]",
+    "E10B" : " [dBm]",
+    "E20B" : " [dBm]",
+    "E30B" : " [dBm]",
+    "E40B" : " [dBm]",
+    "E50B" : " [dBm]",
 }
 
 frequencyDictionary = {
@@ -714,7 +749,12 @@ def convertirRespuesta(Result, Device, CmdNumber):
             valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
             Result = valor1 + " Uplink ATT [dB] - " + valor2 + " Downlink ATT [dB] "
         #convirtiendo hex to decimal
-        elif (Device=='dru' and (CmdNumber=='0300' or CmdNumber=='0104')):
+
+        elif (Device=='dru' and (CmdNumber=='0300' or CmdNumber=='0104' or CmdNumber=='EF0B' or CmdNumber=='0102'
+             or CmdNumber=='0602' or CmdNumber=="0F02" or CmdNumber=="1002" or CmdNumber=="1102" or CmdNumber=="1202" 
+             or CmdNumber=="1302"  or CmdNumber=="1402" or CmdNumber=="0103" or CmdNumber=="0603" or CmdNumber=="0E03"
+             or CmdNumber=="0F03" or CmdNumber=="1003" or CmdNumber=="1103" or CmdNumber=="1203" or CmdNumber=="1303" 
+             or CmdNumber=="1403" or CmdNumber=="270A")):
              try:
                   list = dataDRU[CmdNumber]
                   tmp = list[int(Result, 16)]
@@ -724,10 +764,12 @@ def convertirRespuesta(Result, Device, CmdNumber):
         
         
         #convirtiendo hex to decimal
-        elif (Device=='dru' and (CmdNumber=='0600' or CmdNumber=='210B' or CmdNumber=='4004' or CmdNumber=='4104')):
-             
-             tmp =  str(int(Result, 16)) + dataDRU[CmdNumber]
-             Result = tmp
+        elif (Device=='dru' and (CmdNumber=='0600' or CmdNumber=='210B' or CmdNumber=='4004' or CmdNumber=='4104'
+              or CmdNumber=='5004'  or CmdNumber=='5104'  or CmdNumber=='5304'  or CmdNumber=='5404'  or CmdNumber=='5504'
+              or CmdNumber=='5604' or CmdNumber=='E00B' or CmdNumber=='E10B' or CmdNumber=='E20B' or CmdNumber=='E30B'
+              or CmdNumber=='E40B'  or CmdNumber=='E50B')):                
+            tmp =  str(int(Result, 16)) + dataDRU[CmdNumber]
+            Result = tmp
         
         #convirtiendo hex to Ascii  
         elif (Device=='dru' and (CmdNumber=='0400' or CmdNumber=='0500'  or CmdNumber=="0A00") ):
@@ -752,7 +794,43 @@ def convertirRespuesta(Result, Device, CmdNumber):
              decSigned = s16(int(Result, 16))/10
              formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
              tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
-             Result = tmp    
+             Result = tmp 
+        
+        elif (Device=='dru' and (CmdNumber=='160A' )):
+            hex = Result
+            byte1 = hex[0:2]
+            byte2 = hex[2:4]
+
+            # Code to convert hex to binary
+            res1 = "{0:08b}".format(int(byte1, 16))
+            res2 = "{0:08b}".format(int(byte2, 16))
+            binario = res1 + res2
+            channel = 0
+            tmp = ''
+            for i  in binario:
+                channel += 1
+                if (i == '1' ):
+                    tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' ON '                  
+                else:
+                    tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' OFF '
+            Result = tmp
+        
+        elif (Device=='dru' and (CmdNumber=='180A' or CmdNumber=='190A' or CmdNumber=='1A0A' or CmdNumber=='1B0A')):   
+            byte = Result
+            byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
+            hex_as_int = int(byteInvertido, 16)            
+            frecuency = hex_as_int / 10000
+            formato = '{:,.4f}'.format(frecuency).replace(",", "@").replace(".", ",").replace("@", ".")
+            Result = str(formato) + dataDRU[CmdNumber]         
+        
+        elif (Device=='dru' and (CmdNumber=='1004' or CmdNumber=='1104' or CmdNumber=='1204' or CmdNumber=='1304'
+             or CmdNumber=='1404' or CmdNumber=='1504' or CmdNumber=='1604' or CmdNumber=='1704' or CmdNumber=='1804'
+             or CmdNumber=='1904' or CmdNumber=='1A04' or CmdNumber=='1B04' or CmdNumber=='1C04' or CmdNumber=='1D04'
+             or CmdNumber=='1E04' or CmdNumber=='1F04')):                                      
+            byte0 = int(Result[0:2], 16)            
+            channel = 4270000 + (125 * byte0)
+            Result = 'CH ' + frequencyDictionary[channel]         
+        
         return Result
     except :
         sys.stderr.write("RS485 CRITICAL - Error al convertir dato de salida: " + Result)
