@@ -137,7 +137,6 @@ class MasterForm extends ConfigForm
                         ); 
                     }
                 }
-
             }
             #5: Optical PortState
             if ($option == 5 ||  isset($formData['opt5_hidden'])) {

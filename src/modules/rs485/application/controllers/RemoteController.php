@@ -34,10 +34,70 @@ class RemoteController extends Controller
         $btnSubmit = $this->_hasParam('btn_submit') ?  $this->_getParam('btn_submit') : '';
         if($btnSubmit == 'Enviar' ) {
             $error = false;
+            #15: Upstream noise switch
+            $validaRango =   $this->_hasParam('opt15_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt15'), 0,255)) {
+                    $desc = $this->getDescripcion($this->_getParam('opt15_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt15')} esta fuera de rango [0 - 255]");
+                    $error = true;
+                }               
+            }
+
+            #16: High threshold of upstream soise
+            $validaRango =   $this->_hasParam('opt16_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt16'), 0,255)) {
+                    $desc = $this->getDescripcion($this->_getParam('opt16_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt16')} esta fuera de rango [0 - 255]");
+                    $error = true;
+                }               
+            }
+
+            #17: Low threshold of upstream noise
+            $validaRango =   $this->_hasParam('opt17_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt17'), 0,255)) {
+                    $desc = $this->getDescripcion($this->_getParam('opt17_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt17')} esta fuera de rango [0 - 255]");
+                    $error = true;
+                }               
+            }
+
+            #18: Uplink noise correction value
+            $validaRango =   $this->_hasParam('opt18_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt18'), 0,255)) {
+                    $desc = $this->getDescripcion($this->_getParam('opt18_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt18')} esta fuera de rango [0 - 255]");
+                    $error = true;
+                }               
+            }
+
+            #19: Uplink noise Detection parameter 1
+            $validaRango =   $this->_hasParam('opt19_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt19'), 0,255)) {
+                    $desc = $this->getDescripcion($this->_getParam('opt19_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt19')} esta fuera de rango [0 - 255]");
+                    $error = true;
+                }               
+            }
+
+            #20: Uplink noise Detection parameter 2
+            $validaRango =   $this->_hasParam('opt20_hidden') ? true : false;   
+            if ($validaRango) {
+                if (!$this->validaRango($this->_getParam('opt20'), 0,255)) {
+                    $desc = $this->getDescripcion($this->_getParam('opt20_hidden'));
+                    $form->addError("{$desc} : El valor {$this->_getParam('opt20')} esta fuera de rango [0 - 255]");
+                    $error = true;
+                }               
+            }
+            
             #22: Uplink ATT [dB]
             $validaRango =   $this->_hasParam('opt22_hidden') ? true : false;   
             if ($validaRango) {
-                if (!$this->validaRango($this->_getParam('opt22'))) {
+                if (!$this->validaRango($this->_getParam('opt22'), 0, 40)) {
                     $desc = $this->getDescripcion($this->_getParam('opt22_hidden'));
                     $form->addError("{$desc} : El valor {$this->_getParam('opt22')} esta fuera de rango [0 - 40]");
                     $error = true;
@@ -46,7 +106,7 @@ class RemoteController extends Controller
             #23: Downlink ATT [dB]
             $validaRango =   $this->_hasParam('opt23_hidden') ? true : false;   
             if ($validaRango) {
-                if (!$this->validaRango($this->_getParam('opt23'))) {
+                if (!$this->validaRango($this->_getParam('opt23'), 0, 40)) {
                     $desc = $this->getDescripcion($this->_getParam('opt23_hidden'));
                     $form->addError("{$desc} : El valor {$this->_getParam('opt23')} esta fuera de rango [0 - 40]");
                     $error = true;
@@ -76,10 +136,94 @@ class RemoteController extends Controller
         $result = [];
         $ejecutar = "";
         $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
+        $druId =  $this->_getParam('dru_id');
+        #15: Upstream noise switch
+        if ($this->_hasParam('opt15_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt15_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $hex = dechex($this->_getParam('opt15'));
+            $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+        #16: High threshold of upstream soise
+        if ($this->_hasParam('opt16_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt16_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $hex = dechex($this->_getParam('opt16'));
+            $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+        #17: Low threshold of upstream noise
+        if ($this->_hasParam('opt17_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt17_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $hex = dechex($this->_getParam('opt17'));
+            $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }        
+        
+        #18: Uplink noise correction value
+        if ($this->_hasParam('opt18_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt18_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $hex = dechex($this->_getParam('opt18'));
+            $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+        
+        #19: Uplink noise Detection parameter 1
+        if ($this->_hasParam('opt19_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt19_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $hex = dechex($this->_getParam('opt19'));
+            $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+        #20: Uplink noise Detection parameter 2
+        if ($this->_hasParam('opt20_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt20_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $hex = dechex($this->_getParam('opt20'));
+            $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+        
         #22: Uplink ATT [dB] 
         if ($this->_hasParam('opt22_hidden')){
-            $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));   
-            $druId =  $trama->dru_id;        
+            $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));                    
 		    $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
             $byte1 = dechex(4 * (int) $this->_getParam('opt22'));
@@ -93,12 +237,64 @@ class RemoteController extends Controller
 
         #23: Downlink ATT [dB]
         if ($this->_hasParam('opt23_hidden')){
-            $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));   
-            $druId =  $trama->dru_id;        
+            $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));                   
 		    $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
             $byte1 = dechex(4 * (int) $this->_getParam('opt23'));
             $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+        #25: Choice of working mode
+        if ($this->_hasParam('opt25_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt25_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $druCmdData = $this->_getParam('opt25');           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+        #26: Uplinkg Start Frequency
+        if ($this->_hasParam('opt26_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt26_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $druCmdData = $this->_getParam('opt26');           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+        #27: Downlink Start Frequency
+        if ($this->_hasParam('opt27_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt27_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $druCmdData = $this->_getParam('opt27');           
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $salida = system($ejecutar . " 2>&1");  
+            //$salida = "OK";   
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
+            usleep(100000);
+        }
+
+
+        #30: Master/Slave Link Alarm Control
+        if ($this->_hasParam('opt30_hidden')){
+            $trama = $this->tramasDRU($this->_getParam('opt30_hidden'));                   
+		    $druCmdLength = $trama->cmd_length; 
+            $druCmdCode = $trama->cmd_code;             
+            $druCmdData = $this->_getParam('opt30');           
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
             //$salida = "OK";   
@@ -142,14 +338,14 @@ class RemoteController extends Controller
         return $exits;   
     }
 
-    private function validaRango($value){
+    private function validaRango($value, $min, $max){
         
         if (!is_numeric($value)) 
             return false;
         
         $intValue = (int) $value;
 
-        if ($intValue < 0 || $intValue >40)
+        if ($intValue < $min || $intValue > $max)
             return false;
         
         return true;
