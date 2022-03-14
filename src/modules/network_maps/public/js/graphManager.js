@@ -122,19 +122,6 @@ function formatDependencies(
       child_host_name: serviceData.results[i].attrs.name,
     });
 
-    // Add parent Services
-    if (
-      typeof serviceData.results[i].attrs.vars?.parents !== 'undefined' &&
-      serviceData.results[i].attrs.vars?.parents !== null
-    ) {
-      for (j = 0; j < serviceData.results[i].attrs.vars?.parents.length; j++) {
-        Hosts.addDependency({
-          parent_host_name: serviceData.results[i].attrs.vars?.parents[j],
-          child_host_name: serviceData.results[i].attrs.name,
-        });
-      }
-    }
-
     // Add RDUs
     //For each MDU Port add RDUs
     // if service template contains MDU and is RDU Port
@@ -144,20 +131,32 @@ function formatDependencies(
       var serviceVars = serviceData.results[i].attrs.vars;
       if (serviceVars) {
         if (
-          'isDMUPort' in serviceVars &&
-          serviceData.results[i].attrs.vars.isDMUPort === true
+          'isOPTPort' in serviceVars &&
+          serviceData.results[i].attrs.vars.isOPTPort === true
         ) {
-          var servicePData =
-            serviceData.results[i].attrs.last_check_result.performance_data;
-          var performance_data = servicePData
-            .find((val) => val.startsWith('value='))
-            .split('=');
-          var values = performance_data[1].split(';');
-          var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1);
+
+          try {
+            var servicePData =
+              serviceData.results[i].attrs.last_check_result.performance_data;
+            var performance_data = servicePData
+              .find((val) => val.startsWith('value='))
+              .split('=');
+            var values = performance_data[1].split(';');
+            var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1);
+          } catch (error) {
+            console.log(error);
+          }         
 
           // Add RDUs as Hosts
           console.log('Add rdus as hosts');
           for (k = 0; k < rdus; k++) {
+            // Calculate ServiceGroup Link
+            // Format: dmu1-opt1-dru1
+            // dmu1 part from host of this service
+            // opt1 part from the name of this service
+            // dru1 part from this index (i)
+            var druGroup = serviceData.results[i].attrs.host_name+"-"+serviceData.results[i].attrs.name+"-dru"+eval(k+1)
+
             let parentItem =
               k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k - 1);
             let currentItem = i + '-' + k;
@@ -166,6 +165,9 @@ function formatDependencies(
               name: currentItem,
               state: 1,
               zone: serviceData.results[i].attrs.zone,
+              druHost: serviceData.results[i].attrs.host_name,
+              druService: serviceData.results[i].attrs.name,
+              druGroup: druGroup,
               type: 'None',
             });
             Hosts.addDependency({
@@ -221,6 +223,7 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
 
     node_type = Hosts.hostObject[currHost].type;
     node_parent = Hosts.hostObject[currHost].parents[0];
+    node_drugroup = Hosts.hostObject[currHost].druGroup;
 
     if (
       settings.display_only_dependencies &&
@@ -284,6 +287,7 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
         type: node_type,
         parent: node_parent,
         label: hostLabel,
+        drugroup: node_drugroup,
         mass: Hosts.hostObject[currHost].children.length / 4 + 1,
         color: {
           border: color_border,
@@ -309,6 +313,7 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
         type: node_type,
         parent: node_parent,
         label: hostLabel,
+        drugroup: node_drugroup,
         mass: Hosts.hostObject[currHost].children.length / 4 + 1,
         color: {
           border: color_border,
@@ -539,6 +544,8 @@ function startEventListeners(
   network.on('doubleClick', function (params) {
     thisNode = nodes_defs[params.nodes[0]];
 
+    
+
     //double click on node listener
     if (params.nodes[0] != undefined) {
       $('.fabs').hide();
@@ -573,6 +580,24 @@ function startEventListeners(
           thisNode.parent +
           '&service=' +
           params.nodes[0]; //redirect to host info page.
+      } else if (thisNode.type === 'None') {
+       
+
+        ///icingaweb2/monitoring/list/services?sort=service_severity&servicegroup_name=dmu1-opt1-dru1
+        if (location.href.indexOf('/icingaweb2') > 1) {
+          hostMonitoringAddress = '/icingaweb2/monitoring/list/services?servicegroup_name=';
+        } else {
+          hostMonitoringAddress = '/monitoring/list/services?servicegroup_name=';
+        }
+
+        location.href =
+          './network_maps/module/' +
+          draw_type +
+          '#!' +
+          hostMonitoringAddress +
+          thisNode.drugroup +
+          '&sort=service_severity'
+        
       }
     }
   });
@@ -928,6 +953,9 @@ function Host(hostData) {
   this.name = '' || hostData.name;
   this.status = determineStatus(hostData.state, hostData.last_reachable);
   this.description = '' || hostData.display_name;
+  this.druHost = '' || hostData.druHost;
+  this.druService = '' || hostData.druService;
+  this.druGroup = '' || hostData.druGroup;
   this.type = '' || hostData.type;
   this.hasDependencies = false;
   this.parents = [];
