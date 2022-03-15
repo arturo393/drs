@@ -650,26 +650,38 @@ def convertirRespuesta(Result, Device, CmdNumber):
             Result = str(int(Result, 16)) + " " + dataDMU[CmdNumber]
         
         elif  Device=='dmu' and CmdNumber=='91':
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             if (Result[0:2] == '00'):
-                opt1 = '<br>OPT1: <b>ON</b> '
-            else: 
-                opt1 = '<br>OPT1: <b>OFF</b> '  
+                Table += "<tr><td>1</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt1 = '<br>OPT1: <b>ON</b> '
+            else:
+                Table += "<tr><td>1</td><td>OFF</td><td>&nbsp;</td></tr>" 
+                #opt1 = '<br>OPT1: <b>OFF</b> '  
 
             if (Result[2:4] == '00'):
-                opt2 = '<br>OPT2: <b>ON</b> '
-            else: 
-                opt2 = '<br>OPT2: <b>OFF</b> '
+                Table += "<tr><td>2</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt2 = '<br>OPT2: <b>ON</b> '
+            else:
+                Table += "<tr><td>2</td><td>OFF</td><td>&nbsp;</td></tr>" 
+                #opt2 = '<br>OPT2: <b>OFF</b> '
 
             if (Result[4:6] == '00'):
-                opt3 = '<br>OPT3: <b>ON</b> '
+                Table += "<tr><td>3</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt3 = '<br>OPT3: <b>ON</b> '
             else: 
-                opt3 = '<br>OPT3: <b>OFF</b> ' 
+                Table += "<tr><td>3</td><td>OFF</td><td>&nbsp;</td></tr>"
+                #opt3 = '<br>OPT3: <b>OFF</b> '
             
             if (Result[6:8] == '00'):
-                opt4 = '<br>OPT4: <b>ON</b> '
+                Table += "<tr><td>4</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt4 = '<br>OPT4: <b>ON</b> '
             else: 
-                opt4 = '<br>OPT4: <b>OFF</b> '               
-            Result =  opt1 + opt2 + opt3 + opt4
+                #opt4 = '<br>OPT4: <b>OFF</b> ' 
+                Table += "<tr><td>4</td><td>OFF</td><td>&nbsp;</td></tr>"   
+            Table +=   "</tbody></table>"             
+            #Result =  opt1 + opt2 + opt3 + opt4
+            Result = Table
         
         elif (Device=='dmu' and CmdNumber=='9A'):
             hex_as_int = int(Result, 16)
@@ -679,19 +691,27 @@ def convertirRespuesta(Result, Device, CmdNumber):
             temp = []
             for bit in reversed(padded_binary):  
                 if (bit=='0' and opt<=4):
-                    temp.append('Connected, ') 
+                    temp.append('Connected ') 
                 elif (bit=='1' and opt<=4):
-                    temp.append('Disconnected, ')
+                    temp.append('Disconnected ')
                 elif (bit=='0' and opt>4):
                     temp.append('Transsmision normal')
                 elif (bit=='1' and opt>4):
                     temp.append('Transsmision failure')
                 opt=opt+1          
-            opt1 = "<br>OPT1: " + temp[0] + temp[4] 
-            opt2 = "<br>OPT2: " + temp[1] + temp[5]
-            opt3 = "<br>OPT3: " + temp[2] + temp[6]
-            opt4 = "<br>OPT4: " + temp[3] + temp[7] 
-            Result = opt1 + opt2 + opt3 + opt4
+            #opt1 = "<br>OPT1: " + temp[0] + temp[4] 
+            #opt2 = "<br>OPT2: " + temp[1] + temp[5]
+            #opt3 = "<br>OPT3: " + temp[2] + temp[6]
+            #opt4 = "<br>OPT4: " + temp[3] + temp[7] 
+            #Result = opt1 + opt2 + opt3 + opt4
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>OPT</th><th width='20%'>STATUS</th><th width='20%'>TRANSMISSION</th><th>&nbsp;</th></tr></thead><tbody>"
+            Table += "<tr><td>1</td><td>" + temp[0]  + "</td><td>" + temp[4] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>2</td><td>" + temp[1]  + "</td><td>" + temp[5] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>3</td><td>" + temp[2]  + "</td><td>" + temp[6] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>4</td><td>" + temp[3]  + "</td><td>" + temp[7] + "</td><td>&nbsp;</td></tr>"
+            Table += "</tbody></table>" 
+            Result = Table
 
         elif (Device=='dmu' and CmdNumber=='F3'):    
             hexInvertido = Result[2:4] + Result[0:2]
@@ -705,32 +725,40 @@ def convertirRespuesta(Result, Device, CmdNumber):
             i = 0
             tmp = ''
             channel = 1
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>CHANNEL</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             while channel <= 16 and i < len(Result):
                 hex_as_int = int(Result[i:i+2], 16)
                 if hex_as_int == 0:
-                    tmp += "<br> CH " + str(channel).zfill(2) + " ON "
+                    #tmp += "<br> CH " + str(channel).zfill(2) + " ON "
+                    Table += "<tr><td>"+ str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"
                 else:
-                    tmp += "<br> CH " + str(channel).zfill(2) + " OFF "
+                    #tmp += "<br> CH " + str(channel).zfill(2) + " OFF "
+                    Table += "<tr><td>"+ str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"
                 i += 2
                 channel += 1
-            Result = tmp
+            Table +=   "</tbody></table>"
+            #Result = tmp
+            Result = Table
 
         elif (Device=='dmu' and CmdNumber=='36'): 
             channel = 1
             i = 0
             tmp = ''
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='25%'>CHANNEL - SUBCHANNEL</th><th width='25%'>UPLINK FRECUENCY MHZ</th><th width='50%'>DOWNLINK FRECUENCY MHZ</th></tr></thead><tbody>"
             while channel <= 16:
                 byte = Result[i:i+8]
                 byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
                 hex_as_int = int(byteInvertido, 16)
-                #r = hex_as_int / 10000
-                #valor1 = '{:,.4f}'.format(r-10).replace(",", "@").replace(".", ",").replace("@", ".")
-                #valor2 = '{:,.4f}'.format(r).replace(",", "@").replace(".", ",").replace("@", ".")
-                #tmp += "<br> CH " + str(channel).zfill(3) + ":  "+  valor1 + " MHz UL - " + valor2 + " MHz DL " 
-                tmp += "<br> CH " + str(channel).zfill(2) + "-" + frequencyDictionary[hex_as_int]
+                #tmp += "<br> CH " + str(channel).zfill(2) + "-" + frequencyDictionary[hex_as_int]
+                texto = frequencyDictionary[hex_as_int]
+                Table += "<tr><td>" + str(channel).zfill(2) + "-" +  texto[0:3] + "</td><td>" + texto[4:22]  + "</td><td>" + texto[23:40] + "</td></tr>"
                 channel += 1
                 i += 8
-            Result = tmp
+            Table +=   "</tbody></table>"    
+            #Result = tmp
+            Result = Table
         
         elif (Device=='dmu' and CmdNumber=='81'):
             tmp = ''
