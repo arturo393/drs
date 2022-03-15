@@ -483,8 +483,10 @@ def getChecksum(cmd):
         checksum = crc[3:5] + '0' + crc[2:3]
     else:
         checksum = crc[4:6] + crc[2:4]
-    #print("checksum: %s" % checksum)
-    return checksum
+    
+    checksum = checksum.upper()
+    checksum_new = checksum.replace('7E','5E7D')      
+    return checksum_new
 
 # ----------------------------------------------------
 # -- Buscan un elemento dentro de una array
@@ -924,8 +926,10 @@ def main():
         while not isDataReady and rcvcount < 200:
             Response = s.read()
             rcvHex = Response.hex()
+            #print('rcvHex: [' + rcvHex + ']')
             if(rcvHex == ''):
                 isDataReady = True
+                s.write(b'\x7e')
                 sys.stderr.write(
                     "RS485 CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
                 sys.exit(2)
