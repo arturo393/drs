@@ -647,7 +647,8 @@ def convertirRespuesta(Result, Device, CmdNumber):
         CmdNumber = CmdNumber.upper()
         Device = Device.lower()
         if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
-            Result = str(int(Result, 16)) + " " + dataDMU[CmdNumber]
+            Value =  int(Result, 16)
+            Result = str(Value) + " " + dataDMU[CmdNumber] + "|value=" + str(Value) 
         
         elif  Device=='dmu' and CmdNumber=='91':
             Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
@@ -834,14 +835,20 @@ def convertirRespuesta(Result, Device, CmdNumber):
             res2 = "{0:08b}".format(int(byte2, 16))
             binario = res1 + res2
             channel = 0
-            tmp = ''
+            #tmp = ''
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             for i  in binario:
                 channel += 1
                 if (i == '1' ):
-                    tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' ON '                  
+                    #tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' ON ' 
+                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"                             
                 else:
-                    tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' OFF '
-            Result = tmp
+                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"
+                    #tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' OFF '
+            #Result = tmp
+            Table +=   "</tbody></table>"
+            Result = Table
         
         elif (Device=='dru' and (CmdNumber=='180A' or CmdNumber=='190A' or CmdNumber=='1A0A' or CmdNumber=='1B0A')):   
             byte = Result
