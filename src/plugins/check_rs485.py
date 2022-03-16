@@ -2,6 +2,9 @@
 # -*- coding: iso-8859-15 -*-
 
 # ----------------------------------------------------------------------------
+from tkinter import W
+
+
 # check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la
 # libreria multiplataforma pyserial.py (http://pyserial.sf.net)
 #
@@ -656,34 +659,34 @@ def convertirRespuesta(Result, Device, CmdNumber):
         
         elif  Device=='dmu' and CmdNumber=='91':
             Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
+            Table += "<thead><tr><th width='15%'>Port</th><th width='15%'>Status</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             if (Result[0:2] == '00'):
-                Table += "<tr><td>1</td><td>ON</td><td>&nbsp;</td></tr>"
+                Table += "<tr><td>OPT1</td><td>ON</td><td>&nbsp;</td></tr>"
                 #opt1 = '<br>OPT1: <b>ON</b> '
             else:
-                Table += "<tr><td>1</td><td>OFF</td><td>&nbsp;</td></tr>" 
+                Table += "<tr><td>OPT1</td><td>OFF</td><td>&nbsp;</td></tr>" 
                 #opt1 = '<br>OPT1: <b>OFF</b> '  
 
             if (Result[2:4] == '00'):
-                Table += "<tr><td>2</td><td>ON</td><td>&nbsp;</td></tr>"
+                Table += "<tr><td>OPT2</td><td>ON</td><td>&nbsp;</td></tr>"
                 #opt2 = '<br>OPT2: <b>ON</b> '
             else:
-                Table += "<tr><td>2</td><td>OFF</td><td>&nbsp;</td></tr>" 
+                Table += "<tr><td>OPT2</td><td>OFF</td><td>&nbsp;</td></tr>" 
                 #opt2 = '<br>OPT2: <b>OFF</b> '
 
             if (Result[4:6] == '00'):
-                Table += "<tr><td>3</td><td>ON</td><td>&nbsp;</td></tr>"
+                Table += "<tr><td>OPT3</td><td>ON</td><td>&nbsp;</td></tr>"
                 #opt3 = '<br>OPT3: <b>ON</b> '
             else: 
-                Table += "<tr><td>3</td><td>OFF</td><td>&nbsp;</td></tr>"
+                Table += "<tr><td>OPT3</td><td>OFF</td><td>&nbsp;</td></tr>"
                 #opt3 = '<br>OPT3: <b>OFF</b> '
             
             if (Result[6:8] == '00'):
-                Table += "<tr><td>4</td><td>ON</td><td>&nbsp;</td></tr>"
+                Table += "<tr><td>OPT4</td><td>ON</td><td>&nbsp;</td></tr>"
                 #opt4 = '<br>OPT4: <b>ON</b> '
             else: 
                 #opt4 = '<br>OPT4: <b>OFF</b> ' 
-                Table += "<tr><td>4</td><td>OFF</td><td>&nbsp;</td></tr>"   
+                Table += "<tr><td>OPT4</td><td>OFF</td><td>&nbsp;</td></tr>"   
             Table +=   "</tbody></table>"             
             #Result =  opt1 + opt2 + opt3 + opt4
             Result = Table
@@ -700,9 +703,9 @@ def convertirRespuesta(Result, Device, CmdNumber):
                 elif (bit=='1' and opt<=4):
                     temp.append('Disconnected ')
                 elif (bit=='0' and opt>4):
-                    temp.append('Transsmision normal')
+                    temp.append('Normal')
                 elif (bit=='1' and opt>4):
-                    temp.append('Transsmision failure')
+                    temp.append('Failure')
                 opt=opt+1          
             #opt1 = "<br>OPT1: " + temp[0] + temp[4] 
             #opt2 = "<br>OPT2: " + temp[1] + temp[5]
@@ -710,11 +713,11 @@ def convertirRespuesta(Result, Device, CmdNumber):
             #opt4 = "<br>OPT4: " + temp[3] + temp[7] 
             #Result = opt1 + opt2 + opt3 + opt4
             Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>OPT</th><th width='20%'>STATUS</th><th width='20%'>TRANSMISSION</th><th>&nbsp;</th></tr></thead><tbody>"
-            Table += "<tr><td>1</td><td>" + temp[0]  + "</td><td>" + temp[4] + "</td><td>&nbsp;</td></tr>"
-            Table += "<tr><td>2</td><td>" + temp[1]  + "</td><td>" + temp[5] + "</td><td>&nbsp;</td></tr>"
-            Table += "<tr><td>3</td><td>" + temp[2]  + "</td><td>" + temp[6] + "</td><td>&nbsp;</td></tr>"
-            Table += "<tr><td>4</td><td>" + temp[3]  + "</td><td>" + temp[7] + "</td><td>&nbsp;</td></tr>"
+            Table += "<thead><tr><th width='15%'>Port</th><th width='20%'>Status</th><th width='20%'>Transmission</th><th>&nbsp;</th></tr></thead><tbody>"
+            Table += "<tr><td>OPT1</td><td>" + temp[0]  + "</td><td>" + temp[4] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>OPT2</td><td>" + temp[1]  + "</td><td>" + temp[5] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>OPT3</td><td>" + temp[2]  + "</td><td>" + temp[6] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>OPT4</td><td>" + temp[3]  + "</td><td>" + temp[7] + "</td><td>&nbsp;</td></tr>"
             Table += "</tbody></table>" 
             Result = Table
 
