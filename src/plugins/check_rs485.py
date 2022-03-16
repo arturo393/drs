@@ -632,9 +632,11 @@ def validar_trama_respuesta(hexResponse, Device):
         # print(data)
         return data
     except ValueError:
-        sys.stderr.write(
-            "RS485 CRITICAL - Error al leer trama de salida\n")
+        sys.stderr.write("RS485 CRITICAL - Error al leer trama de salida")
         sys.exit(2)
+    except:
+        sys.stderr.write("RS485 CRITICAL - Error al validar trama de salida")
+        sys.exit(2)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
@@ -971,11 +973,15 @@ def main():
         else:
             a_bytearray = bytearray(data)
             resultHEX = a_bytearray.hex()
-            resultOK =  int(resultHEX, 16)
+            try:
+                resultOK =  int(resultHEX, 16)
+            except:
+                print("RS485 CRITICAL - Dato recibido es desconocido")
+                sys.exit(2)    
            
             hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
-            if ( resultOK  in range (LowLevelCritical, HighLevelCritical) ):
+            if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
                 print("RS485 CRITICAL - " + hex_string )
                 sys.exit(2)
             elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
