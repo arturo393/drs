@@ -158,10 +158,10 @@ function formatDependencies(
             var druGroup = serviceData.results[i].attrs.host_name+"-"+serviceData.results[i].attrs.name+"-dru"+eval(k+1)
 
             let parentItem =
-              k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k - 1);
-            let currentItem = i + '-' + k;
+              k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k);
+            let currentItem = i + '-' + eval(k+1);
             Hosts.addHost({
-              display_name: currentItem,
+              display_name: "rdu "+currentItem,
               name: currentItem,
               state: 1,
               zone: serviceData.results[i].attrs.zone,
