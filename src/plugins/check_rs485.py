@@ -752,14 +752,14 @@ def convertirRespuesta(Result, Device, CmdNumber):
             i = 0
             tmp = ''
             Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='25%'>CHANNEL - SUBCHANNEL</th><th width='25%'>UPLINK FRECUENCY MHZ</th><th width='50%'>DOWNLINK FRECUENCY MHZ</th></tr></thead><tbody>"
+            Table += "<thead><tr><th width='12%'>Channel<th width='13%'>Subchannel</th><th width='25%'>Uplink Frecuency</th><th width='50%'>Downlink Frecuency</th></tr></thead><tbody>"
             while channel <= 16:
                 byte = Result[i:i+8]
                 byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
                 hex_as_int = int(byteInvertido, 16)
                 #tmp += "<br> CH " + str(channel).zfill(2) + "-" + frequencyDictionary[hex_as_int]
                 texto = frequencyDictionary[hex_as_int]
-                Table += "<tr><td>" + str(channel).zfill(2) + "-" +  texto[0:3] + "</td><td>" + texto[4:22]  + "</td><td>" + texto[23:40] + "</td></tr>"
+                Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>" +  texto[0:3] + "</td><td>" + texto[4:22-4]  + "</td><td>" + texto[23:40-4] + "</td></tr>"
                 channel += 1
                 i += 8
             Table +=   "</tbody></table>"    
