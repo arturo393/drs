@@ -2,6 +2,9 @@
 # -*- coding: iso-8859-15 -*-
 
 # ----------------------------------------------------------------------------
+from tkinter import W
+
+
 # check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la
 # libreria multiplataforma pyserial.py (http://pyserial.sf.net)
 #
@@ -483,8 +486,10 @@ def getChecksum(cmd):
         checksum = crc[3:5] + '0' + crc[2:3]
     else:
         checksum = crc[4:6] + crc[2:4]
-    #print("checksum: %s" % checksum)
-    return checksum
+    
+    checksum = checksum.upper()
+    checksum_new = checksum.replace('7E','5E7D')      
+    return checksum_new
 
 # ----------------------------------------------------
 # -- Buscan un elemento dentro de una array
@@ -630,9 +635,11 @@ def validar_trama_respuesta(hexResponse, Device):
         # print(data)
         return data
     except ValueError:
-        sys.stderr.write(
-            "RS485 CRITICAL - Error al leer trama de salida\n")
+        sys.stderr.write("RS485 CRITICAL - Error al leer trama de salida")
         sys.exit(2)
+    except:
+        sys.stderr.write("RS485 CRITICAL - Error al validar trama de salida")
+        sys.exit(2)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
@@ -647,29 +654,42 @@ def convertirRespuesta(Result, Device, CmdNumber):
         CmdNumber = CmdNumber.upper()
         Device = Device.lower()
         if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
-            Result = str(int(Result, 16)) + " " + dataDMU[CmdNumber]
+            Value =  int(Result, 16)
+            Result = str(Value) + " " + dataDMU[CmdNumber] + "|value=" + str(Value) 
         
         elif  Device=='dmu' and CmdNumber=='91':
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>Port</th><th width='15%'>Status</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             if (Result[0:2] == '00'):
-                opt1 = '<br>OPT1: <b>ON</b> '
-            else: 
-                opt1 = '<br>OPT1: <b>OFF</b> '  
+                Table += "<tr><td>OPT1</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt1 = '<br>OPT1: <b>ON</b> '
+            else:
+                Table += "<tr><td>OPT1</td><td>OFF</td><td>&nbsp;</td></tr>" 
+                #opt1 = '<br>OPT1: <b>OFF</b> '  
 
             if (Result[2:4] == '00'):
-                opt2 = '<br>OPT2: <b>ON</b> '
-            else: 
-                opt2 = '<br>OPT2: <b>OFF</b> '
+                Table += "<tr><td>OPT2</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt2 = '<br>OPT2: <b>ON</b> '
+            else:
+                Table += "<tr><td>OPT2</td><td>OFF</td><td>&nbsp;</td></tr>" 
+                #opt2 = '<br>OPT2: <b>OFF</b> '
 
             if (Result[4:6] == '00'):
-                opt3 = '<br>OPT3: <b>ON</b> '
+                Table += "<tr><td>OPT3</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt3 = '<br>OPT3: <b>ON</b> '
             else: 
-                opt3 = '<br>OPT3: <b>OFF</b> ' 
+                Table += "<tr><td>OPT3</td><td>OFF</td><td>&nbsp;</td></tr>"
+                #opt3 = '<br>OPT3: <b>OFF</b> '
             
             if (Result[6:8] == '00'):
-                opt4 = '<br>OPT4: <b>ON</b> '
+                Table += "<tr><td>OPT4</td><td>ON</td><td>&nbsp;</td></tr>"
+                #opt4 = '<br>OPT4: <b>ON</b> '
             else: 
-                opt4 = '<br>OPT4: <b>OFF</b> '               
-            Result =  opt1 + opt2 + opt3 + opt4
+                #opt4 = '<br>OPT4: <b>OFF</b> ' 
+                Table += "<tr><td>OPT4</td><td>OFF</td><td>&nbsp;</td></tr>"   
+            Table +=   "</tbody></table>"             
+            #Result =  opt1 + opt2 + opt3 + opt4
+            Result = Table
         
         elif (Device=='dmu' and CmdNumber=='9A'):
             hex_as_int = int(Result, 16)
@@ -679,19 +699,27 @@ def convertirRespuesta(Result, Device, CmdNumber):
             temp = []
             for bit in reversed(padded_binary):  
                 if (bit=='0' and opt<=4):
-                    temp.append('Connected, ') 
+                    temp.append('Connected ') 
                 elif (bit=='1' and opt<=4):
-                    temp.append('Disconnected, ')
+                    temp.append('Disconnected ')
                 elif (bit=='0' and opt>4):
-                    temp.append('Transsmision normal')
+                    temp.append('Normal')
                 elif (bit=='1' and opt>4):
-                    temp.append('Transsmision failure')
+                    temp.append('Failure')
                 opt=opt+1          
-            opt1 = "<br>OPT1: " + temp[0] + temp[4] 
-            opt2 = "<br>OPT2: " + temp[1] + temp[5]
-            opt3 = "<br>OPT3: " + temp[2] + temp[6]
-            opt4 = "<br>OPT4: " + temp[3] + temp[7] 
-            Result = opt1 + opt2 + opt3 + opt4
+            #opt1 = "<br>OPT1: " + temp[0] + temp[4] 
+            #opt2 = "<br>OPT2: " + temp[1] + temp[5]
+            #opt3 = "<br>OPT3: " + temp[2] + temp[6]
+            #opt4 = "<br>OPT4: " + temp[3] + temp[7] 
+            #Result = opt1 + opt2 + opt3 + opt4
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>Port</th><th width='20%'>Status</th><th width='20%'>Transmission</th><th>&nbsp;</th></tr></thead><tbody>"
+            Table += "<tr><td>OPT1</td><td>" + temp[0]  + "</td><td>" + temp[4] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>OPT2</td><td>" + temp[1]  + "</td><td>" + temp[5] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>OPT3</td><td>" + temp[2]  + "</td><td>" + temp[6] + "</td><td>&nbsp;</td></tr>"
+            Table += "<tr><td>OPT4</td><td>" + temp[3]  + "</td><td>" + temp[7] + "</td><td>&nbsp;</td></tr>"
+            Table += "</tbody></table>" 
+            Result = Table
 
         elif (Device=='dmu' and CmdNumber=='F3'):    
             hexInvertido = Result[2:4] + Result[0:2]
@@ -705,32 +733,40 @@ def convertirRespuesta(Result, Device, CmdNumber):
             i = 0
             tmp = ''
             channel = 1
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>CHANNEL</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             while channel <= 16 and i < len(Result):
                 hex_as_int = int(Result[i:i+2], 16)
                 if hex_as_int == 0:
-                    tmp += "<br> CH " + str(channel).zfill(2) + " ON "
+                    #tmp += "<br> CH " + str(channel).zfill(2) + " ON "
+                    Table += "<tr><td>"+ str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"
                 else:
-                    tmp += "<br> CH " + str(channel).zfill(2) + " OFF "
+                    #tmp += "<br> CH " + str(channel).zfill(2) + " OFF "
+                    Table += "<tr><td>"+ str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"
                 i += 2
                 channel += 1
-            Result = tmp
+            Table +=   "</tbody></table>"
+            #Result = tmp
+            Result = Table
 
         elif (Device=='dmu' and CmdNumber=='36'): 
             channel = 1
             i = 0
             tmp = ''
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='12%'>Channel<th width='13%'>Subchannel</th><th width='25%'>Uplink Frecuency</th><th width='50%'>Downlink Frecuency</th></tr></thead><tbody>"
             while channel <= 16:
                 byte = Result[i:i+8]
                 byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
                 hex_as_int = int(byteInvertido, 16)
-                #r = hex_as_int / 10000
-                #valor1 = '{:,.4f}'.format(r-10).replace(",", "@").replace(".", ",").replace("@", ".")
-                #valor2 = '{:,.4f}'.format(r).replace(",", "@").replace(".", ",").replace("@", ".")
-                #tmp += "<br> CH " + str(channel).zfill(3) + ":  "+  valor1 + " MHz UL - " + valor2 + " MHz DL " 
-                tmp += "<br> CH " + str(channel).zfill(2) + "-" + frequencyDictionary[hex_as_int]
+                #tmp += "<br> CH " + str(channel).zfill(2) + "-" + frequencyDictionary[hex_as_int]
+                texto = frequencyDictionary[hex_as_int]
+                Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>" +  texto[0:3] + "</td><td>" + texto[4:22-4]  + "</td><td>" + texto[23:40-4] + "</td></tr>"
                 channel += 1
                 i += 8
-            Result = tmp
+            Table +=   "</tbody></table>"    
+            #Result = tmp
+            Result = Table
         
         elif (Device=='dmu' and CmdNumber=='81'):
             tmp = ''
@@ -806,14 +842,20 @@ def convertirRespuesta(Result, Device, CmdNumber):
             res2 = "{0:08b}".format(int(byte2, 16))
             binario = res1 + res2
             channel = 0
-            tmp = ''
+            #tmp = ''
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             for i  in binario:
                 channel += 1
                 if (i == '1' ):
-                    tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' ON '                  
+                    #tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' ON ' 
+                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"                             
                 else:
-                    tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' OFF '
-            Result = tmp
+                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"
+                    #tmp +=  '<br>CH ' +  str(channel).zfill(2) + ' OFF '
+            #Result = tmp
+            Table +=   "</tbody></table>"
+            Result = Table
         
         elif (Device=='dru' and (CmdNumber=='180A' or CmdNumber=='190A' or CmdNumber=='1A0A' or CmdNumber=='1B0A')):   
             byte = Result
@@ -889,8 +931,10 @@ def main():
         while not isDataReady and rcvcount < 200:
             Response = s.read()
             rcvHex = Response.hex()
+            #print('rcvHex: [' + rcvHex + ']')
             if(rcvHex == ''):
                 isDataReady = True
+                s.write(b'\x7e')
                 sys.stderr.write(
                     "RS485 CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
                 sys.exit(2)
@@ -932,11 +976,15 @@ def main():
         else:
             a_bytearray = bytearray(data)
             resultHEX = a_bytearray.hex()
-            resultOK =  int(resultHEX, 16)
+            try:
+                resultOK =  int(resultHEX, 16)
+            except:
+                print("RS485 CRITICAL - Dato recibido es desconocido")
+                sys.exit(2)    
            
             hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
-            if ( resultOK  in range (LowLevelCritical, HighLevelCritical) ):
+            if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
                 print("RS485 CRITICAL - " + hex_string )
                 sys.exit(2)
             elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
