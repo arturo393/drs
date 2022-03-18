@@ -120,6 +120,8 @@ function formatDependencies(
   for (i = 0; i < serviceData.results.length; i++) {
     if (serviceData.results[i].attrs.vars?.addToMap === false) continue;
 
+    var hostname = serviceData.results[i].attrs.host_name;
+
     Hosts.addHost({ ...serviceData.results[i].attrs, type: 'Service' });
     Hosts.addDependency({
       parent_host_name: serviceData.results[i].attrs.host_name,
@@ -165,9 +167,10 @@ function formatDependencies(
               k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k);
             let currentItem = i + '-' + eval(k+1);
             Hosts.addHost({
-              display_name: "rdu "+currentItem,
+              display_name: druGroup,
               name: currentItem,
               state: 1,
+              hostname: hostname,
               zone: serviceData.results[i].attrs.zone,
               druHost: serviceData.results[i].attrs.host_name,
               druService: serviceData.results[i].attrs.name,
@@ -228,6 +231,8 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
     node_type = Hosts.hostObject[currHost].type;
     node_parent = Hosts.hostObject[currHost].parents[0];
     node_drugroup = Hosts.hostObject[currHost].druGroup;
+    node_hostname = Hosts.hostObject[currHost].hostname;
+    node_servicename = Hosts.hostObject[currHost].druService;
 
     if (
       settings.display_only_dependencies &&
@@ -292,6 +297,8 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
         parent: node_parent,
         label: hostLabel,
         drugroup: node_drugroup,
+	hostname: node_hostname,
+        servicename: node_servicename,
         mass: Hosts.hostObject[currHost].children.length / 4 + 1,
         color: {
           border: color_border,
@@ -548,7 +555,6 @@ function startEventListeners(
   network.on('doubleClick', function (params) {
     thisNode = nodes_defs[params.nodes[0]];
 
-    
 
     //double click on node listener
     if (params.nodes[0] != undefined) {
@@ -587,8 +593,7 @@ function startEventListeners(
       } else if (thisNode.type === 'None') {
        
 
-        ///icingaweb2/monitoring/list/services?sort=service_severity&servicegroup_name=dmu1-opt1-dru1
-        // /icingaweb2/monitoring/host/services?host=rds-s-2
+	 ///monitoring/host/services?host=dmu1&service=OPT3
         if (location.href.indexOf('/icingaweb2') > 1) {
           hostMonitoringAddress = '/icingaweb2/monitoring/host/services?host=';
         } else {
@@ -600,7 +605,8 @@ function startEventListeners(
           draw_type +
           '#!' +
           hostMonitoringAddress +
-          params.nodes[0];
+          thisNode.drugroup;
+
         
       }
     }
@@ -958,6 +964,7 @@ function Host(hostData) {
   this.status = determineStatus(hostData.state, hostData.last_reachable);
   this.description = '' || hostData.display_name;
   this.druHost = '' || hostData.druHost;
+  this.hostname = '' || hostData.hostname;
   this.druService = '' || hostData.druService;
   this.druGroup = '' || hostData.druGroup;
   this.type = '' || hostData.type;
@@ -1034,3 +1041,4 @@ function HostArray() {
     return this.hostObject[name] != undefined;
   };
 }
+
