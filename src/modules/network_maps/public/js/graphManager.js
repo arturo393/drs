@@ -100,6 +100,8 @@ function formatDependencies(
 
   // Add hosts and dependencies only from host data, not from dependencyData
   for (i = 0; i < hostData.results.length; i++) {
+    if (hostData.results[i].attrs.vars?.addToMap === false) continue;
+
     Hosts.addHost(hostData.results[i].attrs);
     if (
       typeof hostData.results[i].attrs.vars?.parents !== 'undefined' &&
@@ -116,6 +118,8 @@ function formatDependencies(
   // Add services as hosts
   console.log('Add services as hosts');
   for (i = 0; i < serviceData.results.length; i++) {
+    if (serviceData.results[i].attrs.vars?.addToMap === false) continue;
+
     Hosts.addHost({ ...serviceData.results[i].attrs, type: 'Service' });
     Hosts.addDependency({
       parent_host_name: serviceData.results[i].attrs.host_name,
@@ -584,10 +588,11 @@ function startEventListeners(
        
 
         ///icingaweb2/monitoring/list/services?sort=service_severity&servicegroup_name=dmu1-opt1-dru1
+        // /icingaweb2/monitoring/host/services?host=rds-s-2
         if (location.href.indexOf('/icingaweb2') > 1) {
-          hostMonitoringAddress = '/icingaweb2/monitoring/list/services?servicegroup_name=';
+          hostMonitoringAddress = '/icingaweb2/monitoring/host/services?host=';
         } else {
-          hostMonitoringAddress = '/monitoring/list/services?servicegroup_name=';
+          hostMonitoringAddress = '/monitoring/host/services?host=';
         }
 
         location.href =
@@ -595,8 +600,7 @@ function startEventListeners(
           draw_type +
           '#!' +
           hostMonitoringAddress +
-          thisNode.drugroup +
-          '&sort=service_severity'
+          params.nodes[0];
         
       }
     }
