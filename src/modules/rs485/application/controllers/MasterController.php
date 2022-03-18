@@ -57,6 +57,19 @@ class MasterController extends Controller
                     $error = true;
                 }
             }    
+
+            $i = 1;
+            while (!$error && $i<=5){
+                $existe = $this->_hasParam("opt{$i}_hidden") ? true : false;
+                if ($existe) {
+                    $i=100;
+                }
+                if ($i==5){
+                    $form->addError("Debe seleccionar al menos un comando");
+                    $error = true;  
+                }   
+                $i++;
+            }
             
             if (!$error) {                
                 $params = $this->getRequest()->getParams();

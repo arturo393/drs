@@ -111,7 +111,21 @@ class RemoteController extends Controller
                     $form->addError("{$desc} : El valor {$this->_getParam('opt23')} esta fuera de rango [0 - 40]");
                     $error = true;
                 }                
-            }  
+            }
+            
+            
+            $i = 1;
+            while (!$error && $i<=30){
+                $existe = $this->_hasParam("opt{$i}_hidden") ? true : false;
+                if ($existe) {
+                    $i=100;
+                }
+                if ($i==30){
+                    $form->addError("Debe seleccionar al menos un comando");
+                    $error = true;  
+                }   
+                $i++;
+            }
             
             if (!$error) {                
                 $params = $this->getRequest()->getParams();

@@ -26,3 +26,5 @@ python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 
 python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=0105 --cmdData=00
 python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=0305 --cmdData=00
 python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=160A --cmdData=00
+
+python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=1904 --cmdData=00
