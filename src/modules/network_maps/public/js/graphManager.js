@@ -163,13 +163,20 @@ function formatDependencies(
             // dru1 part from this index (i)
             var druGroup = serviceData.results[i].attrs.host_name+"-"+serviceData.results[i].attrs.name+"-dru"+eval(k+1)
 
+	   var state = 2;
+           for (l = 0; l < hostData.results.length; l++) {
+              if (druGroup === hostData.results[l].attrs.name) {
+		   state = hostData.results[l].attrs.last_check_result.state;
+			}
+            } 
+
             let parentItem =
               k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k);
             let currentItem = i + '-' + eval(k+1);
             Hosts.addHost({
               display_name: druGroup,
               name: currentItem,
-              state: 1,
+              state: state,
               hostname: hostname,
               zone: serviceData.results[i].attrs.zone,
               druHost: serviceData.results[i].attrs.host_name,
