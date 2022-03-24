@@ -14,6 +14,7 @@
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
+from asyncio.windows_events import NULL
 from pickle import FALSE, TRUE
 import sys
 import getopt
@@ -404,8 +405,6 @@ def analizar_argumentos():
                     help="lowLevelCritical es requerido", default=0)
     ap.add_argument("-hc", "--highLevelCritical", required=False,
                     help="highLevelCritical es requerido", default=0)
-    ap.add_argument("-s", "--serviceName", required=False,
-                    help="ServiceName es requerido", default="")
                                                     
 
     try:
@@ -429,46 +428,63 @@ def analizar_argumentos():
     HighLevelWarning = int(args['highLevelWarning'])
     LowLevelCritical = int(args['lowLevelCritical'])
     HighLevelCritical = int(args['highLevelCritical'])
-    ServiceName = args['serviceName']
 
     # validamos los argumentos pasados
     if Port == "":
-        sys.stderr.write("RS485 CRITICAL - El puerto es obligatorio\n")
+        sys.stderr.write("CRITICAL - El puerto es obligatorio\n")
         sys.exit(2)
 
     if Device == "":
-        sys.stderr.write("RS485 CRITICAL - El device es obligatorio\n")
+        sys.stderr.write("CRITICAL - El device es obligatorio\n")
         sys.exit(2)
 
     if DmuDevice1 == "" and Device == 'dmu':
         sys.stderr.write(
-            "RS485 CRITICAL - El dmuDevice1 es obligatorio\n")
+            "CRITICAL - El dmuDevice1 es obligatorio\n")
         sys.exit(2)
 
     if DmuDevice2 == "" and Device == 'dmu':
         sys.stderr.write(
-            "RS485 CRITICAL - El dmuDevice2 es obligatorio\n")
+            "CRITICAL - El dmuDevice2 es obligatorio\n")
         sys.exit(2)
 
     if CmdNumber == "":
-        sys.stderr.write("RS485 CRITICAL - cmdNumber es obligatorio\n")
+        sys.stderr.write("  CRITICAL - cmdNumber es obligatorio\n")
         sys.exit(2)
 
     if (CmdBodyLenght == "" and Action == 'set') or (CmdBodyLenght == "" and Device == 'dru'):
         sys.stderr.write(
-            "RS485 CRITICAL - cmdBodyLenght es obligatorio")
+            "CRITICAL - cmdBodyLenght es obligatorio")
         sys.exit(2)
 
     if (CmdData == "" and Action == 'set') or (CmdData == "" and Device == 'dru'):
-        sys.stderr.write("RS485 CRITICAL - cmdData es obligatorio")
+        sys.stderr.write(" CRITICAL - cmdData es obligatorio")
         sys.exit(2)
 
     if (DruId == "" and Device == 'dru'):
-        sys.stderr.write("RS485 CRITICAL - DruId es obligatorio")
+        sys.stderr.write(" CRITICAL - DruId es obligatorio")
         sys.exit(2)
 
-    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical, ServiceName
+    return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical
 
+def getChecksumSimple(cmd):
+    """
+    -Description: this fuction calculate the checksum for a given comand
+    -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
+    -return: cheksum for the given command
+    """
+    data = bytearray.fromhex(cmd)
+
+    crc = hex(Crc16Xmodem.calc(data))
+    #print("crc: %s" % crc)
+
+    if (len(crc) == 5):
+        checksum = crc[3:5] + '0' + crc[2:3]
+    else:
+        checksum = crc[4:6] + crc[2:4]
+    
+    checksum = checksum.upper()
+    return checksum
 
 def getChecksum(cmd):
     """
@@ -488,6 +504,7 @@ def getChecksum(cmd):
     
     checksum = checksum.upper()
     checksum_new = checksum.replace('7E','5E7D')      
+    checksum_new = checksum.replace('5E','5E5D')      
     return checksum_new
 
 # ----------------------------------------------------
@@ -551,7 +568,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
             #print('cant_bytes: %s' % cant_bytes)
         except ValueError:
             sys.stderr.write(
-                "RS485 CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
+                " CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
             sys.exit(2)
         tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
         #print('tramaLengthCodeData: %s' % tramaLengthCodeData)
@@ -559,7 +576,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)
         if lenTramaLengthCodeData != cant_bytes:
             sys.stderr.write(
-                "RS485 CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
+                " CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
             sys.exit(2)
         if (Action == 'set'):
             MessageType = C_TYPE_SET
@@ -585,20 +602,28 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + \
             C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + \
             CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
+    elif(DmuDevice1_hex == '08'):
+        cmd_string = DmuDevice1_hex + DmuDevice2_hex + \
+            CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
+        print('La trama corta: %s' % cmd_string)
+        checksum = getChecksumSimple(cmd_string)  # calcula CRC
+        trama = C_HEADER + cmd_string + checksum + '7F' + Retunr_hex
+        print('Query: %s' % trama)
+        return str(trama)
     else:
         cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + \
             CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
 
-    #print('La trama corta: %s' % cmd_string)
+    print('La trama corta: %s' % cmd_string)
     checksum = getChecksum(cmd_string)  # calcula CRC
 
     trama = C_HEADER + cmd_string + checksum + C_END + Retunr_hex
 
-    #print('Query: %s' % trama)
+    print('Query: %s' % trama)
     return str(trama)
 
 
-def validar_trama_respuesta(hexResponse, Device):
+def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
     try:
         data = list()
 
@@ -610,14 +635,18 @@ def validar_trama_respuesta(hexResponse, Device):
             or hexResponse[0] != 126
         ):
             sys.stderr.write(
-                "RS485 WARNING - Error trama de salida invalida\n")
-            sys.exit(1)
+                "CRITICAL - Error trama de salida invalida\n")
+            sys.exit(2)
         if Device == 'dru':
             #print('Entro aqui')
             byte_respuesta = 14  # Para equipos remotos  de la trama
             cant_bytes_resp = int(hexResponse[byte_respuesta])
-            rango_i = byte_respuesta + 3
-            rango_n = rango_i + cant_bytes_resp - 3
+            if(cmdNumberlen > 4):
+                rango_i =  byte_respuesta+1
+                rango_n = rango_i + cant_bytes_resp - 1
+            else: 
+                rango_i = byte_respuesta + 3
+                rango_n = rango_i + cant_bytes_resp - 3
         else:
             byte_respuesta = 6
             cant_bytes_resp = int(hexResponse[byte_respuesta])
@@ -631,13 +660,13 @@ def validar_trama_respuesta(hexResponse, Device):
         for i in range(rango_i, rango_n):
             data.append(hexResponse[i])
         #print("Resultado de la Query es:")
-        # print(data)
+        print(data)
         return data
     except ValueError:
-        sys.stderr.write("RS485 CRITICAL - Error al leer trama de salida")
+        sys.stderr.write(" CRITICAL - Error al leer trama de salida")
         sys.exit(2)
     except:
-        sys.stderr.write("RS485 CRITICAL - Error al validar trama de salida")
+        sys.stderr.write(" CRITICAL - Error al validar trama de salida")
         sys.exit(2)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
@@ -713,7 +742,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
             hex_as_int = int(hexInvertido, 16)
             decSigned = s16(hex_as_int)
             rbm = decSigned/256
-            formato = '{:,.2f}'.format(rbm).replace(",", "@").replace(".", ",").replace("@", ".")
+            formato = Result+'{:,.2f}'.format(rbm).replace(",", "@").replace(".", ",").replace("@", ".")
             Result = formato + " [dBm] |power=" + str(rbm)
 
         elif (Device=='dmu' and CmdNumber=='42'):    
@@ -848,12 +877,63 @@ def convertirRespuesta(Result, Device, CmdNumber):
              or CmdNumber=='1E04' or CmdNumber=='1F04')):                                      
             byte0 = int(Result[0:2], 16)            
             channel = 4270000 + (125 * byte0)
-            Result = 'CH ' + frequencyDictionary[channel]         
+            Result = 'CH ' + frequencyDictionary[channel]          
         
         return Result
     except :
-        sys.stderr.write("RS485 CRITICAL - Error al convertir dato de salida: " + Result)
+        sys.stderr.write(" CRITICAL - Error al convertir dato de salida: " + Result)
         sys.exit(2)    
+        
+def  convertirMultipleRespuesta(data):
+    i = 0
+    j = 0
+    temp = list()
+    dataResult = list()
+    isWriting = False
+    for i in range(len(data)):
+        
+        if isWriting == False:
+            dataLen = data[i]
+            isWriting = True
+    
+        if j<dataLen-1:
+            temp.append(data[i+1])    
+            j = j+1
+        else:
+            isWriting = False
+            j = 0
+            a_bytearray = bytearray(temp)
+            resultHEX = a_bytearray.hex()
+            dataResult.append(resultHEX)
+            temp.clear() 
+              
+    paTemp = 0
+    dlOutputPw = 0
+    dlVswr = 0
+    ulInputPw = 0            
+    for data in dataResult:
+        if ("0105" in data ):
+            paTemp = '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".")
+        elif ("0305" in data):
+            dlOutputPw = '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".")
+        elif ("0605" in data):
+            dlVswr = '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".")    
+        elif ("2505" in data):
+            ulInputPw =  '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".") 
+       
+    Result = "temp "+paTemp+" dloutput " +dlOutputPw+" dlvswr "+dlVswr+" ulInput "+ulInputPw
+    
+    Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+    Table += "<thead><tr><th width='15%'>Parameter</th><th width='20%'>Value</th></tr></thead><tbody>"
+    Table += "<tr><td>PA Temperature</td><td>" + paTemp  + "\°C</td></tr>"
+    Table += "<tr><td>Downlink Output Power</td><td>" + dlOutputPw  + " dBm</td></tr>"
+    Table += "<tr><td>Downlink VSWR</td><td>" + dlVswr +  "</td></tr>"
+    Table += "<tr><td>Uplink Input Power</td><td>" + ulInputPw  + " dBm</td></tr>"
+    Table += "</tbody></table>" 
+    return Table
+
+
+        
 # ----------------------
 #   MAIN
 # ----------------------
@@ -862,7 +942,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical, ServiceName  = analizar_argumentos()
+    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
 
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
@@ -885,7 +965,7 @@ def main():
     except serial.SerialException:
         # -- Error al abrir el puerto serie
         sys.stderr.write(
-            "RS485 CRITICAL - Error al abrir puerto %s " % str(Port))
+            " CRITICAL - Error al abrir puerto %s " % str(Port))
         sys.exit(2)
 
     # -- Mostrar el nombre del dispositivo
@@ -893,7 +973,7 @@ def main():
 
     if Action == "query" or Action == "set":
         cmd_bytes = bytearray.fromhex(Trama)
-        # print(cmd_bytes)
+        #print(cmd_bytes)
         hex_byte = ''
         for cmd_byte in cmd_bytes:
             hex_byte = ("{0:02x}".format(cmd_byte))
@@ -914,7 +994,7 @@ def main():
                     isDataReady = True
                     s.write(b'\x7e')
                     sys.stderr.write(
-                        "RS485 CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
+                        " CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
                     sys.exit(2)
                 elif(rcvcount == 0 and rcvHex == '7e'):
                     rcvHexArray.append(rcvHex)
@@ -928,56 +1008,59 @@ def main():
                         isDataReady = True
 
         except serial.SerialException:
-            sys.stderr.write("RS485 CRITICAL - conexión ocupada, intentar más tarde ")
+            sys.stderr.write(" CRITICAL - conexión ocupada, intentar más tarde ")
             sys.exit(2)
         hexResponse = bytearray.fromhex(hexadecimal_string)
         #print("Answer byte: ")
         # print(hexResponse)
-        #print("Answer Hex: ")
-        # print(rcvHexArray)
+        print("Answer Hex: ")
+        print(rcvHexArray)
 
         # Aqui se realiza la validacion de la respuesta
-        data = validar_trama_respuesta(hexResponse, Device)
+        data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
 
         if Action == 'set':
             if len(data) != 0 and Device == 'dmu':
                 sys.stderr.write(
-                    "RS485 CRITICAL - error al escribir puerto dmu %s \n" % str(Port))
+                    " CRITICAL - error al escribir puerto dmu %s \n" % str(Port))
                 sys.exit(2)
             elif len(data) == 0 and Device == 'dru':
                 sys.stderr.write(
-                    "RS485 CRITICAL - error al escribir puerto dru %s \n" % str(Port))
+                    " CRITICAL - error al escribir puerto dru %s \n" % str(Port))
                 sys.exit(2)
             else:
                 if Device == 'dru':
                     a_bytearray = bytearray(data)
                     hex_string = a_bytearray.hex()
                     sys.stderr.write(hex_string + '\n')
-                sys.stderr.write("RS485 OK")
+                sys.stderr.write(" OK")
         else:
             a_bytearray = bytearray(data)
             resultHEX = a_bytearray.hex()
             try:
                 resultOK =  int(resultHEX, 16)
             except:
-                print("RS485 CRITICAL - Dato recibido es desconocido")
+                print(" CRITICAL - Dato recibido es desconocido")
                 sys.exit(2)    
-           
-            hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
+            
+            if len(CmdNumber) > 4:
+                hex_string = convertirMultipleRespuesta(data)
+            else:   
+                hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
             if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
-                print("RS485 CRITICAL - " + hex_string )
+                print(" CRITICAL - " + hex_string )
                 sys.exit(2)
             elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
-                print("RS485 WARNING - " + hex_string  )
+                print(" WARNING - " + hex_string  )
                 sys.exit(1)
             else:
-                print("RS485 OK - " + hex_string )
+                print(" OK - " + hex_string )
                 sys.exit(0)
         s.close()
     else:
         sys.stderr.write(
-            "RS485 WARNING - Accion invalida:  %s \n" % Action)
+            " WARNING - Accion invalida:  %s \n" % Action)
         sys.exit(1)
 
 
@@ -990,3 +1073,4 @@ if __name__ == "__main__":
 # 1	WARNING
 # 2	CRITICAL
 # 3	UNKNOWN
+
