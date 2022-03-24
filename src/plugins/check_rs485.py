@@ -458,11 +458,11 @@ def analizar_argumentos():
         sys.exit(2)
 
     if (CmdData == "" and Action == 'set') or (CmdData == "" and Device == 'dru'):
-        sys.stderr.write(" CRITICAL - cmdData es obligatorio")
+        sys.stderr.write("CRITICAL - cmdData es obligatorio")
         sys.exit(2)
 
     if (DruId == "" and Device == 'dru'):
-        sys.stderr.write(" CRITICAL - DruId es obligatorio")
+        sys.stderr.write("CRITICAL - DruId es obligatorio")
         sys.exit(2)
 
     return Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical
@@ -568,7 +568,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
             #print('cant_bytes: %s' % cant_bytes)
         except ValueError:
             sys.stderr.write(
-                " CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
+                "CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
             sys.exit(2)
         tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
         #print('tramaLengthCodeData: %s' % tramaLengthCodeData)
@@ -576,7 +576,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)
         if lenTramaLengthCodeData != cant_bytes:
             sys.stderr.write(
-                " CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
+                "CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
             sys.exit(2)
         if (Action == 'set'):
             MessageType = C_TYPE_SET
@@ -663,10 +663,10 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         print(data)
         return data
     except ValueError:
-        sys.stderr.write(" CRITICAL - Error al leer trama de salida")
+        sys.stderr.write("CRITICAL - Error al leer trama de salida")
         sys.exit(2)
     except:
-        sys.stderr.write(" CRITICAL - Error al validar trama de salida")
+        sys.stderr.write("CRITICAL - Error al validar trama de salida")
         sys.exit(2)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
@@ -881,7 +881,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
         
         return Result
     except :
-        sys.stderr.write(" CRITICAL - Error al convertir dato de salida: " + Result)
+        sys.stderr.write("CRITICAL - Error al convertir dato de salida: " + Result)
         sys.exit(2)    
         
 def  convertirMultipleRespuesta(data):
@@ -965,7 +965,7 @@ def main():
     except serial.SerialException:
         # -- Error al abrir el puerto serie
         sys.stderr.write(
-            " CRITICAL - Error al abrir puerto %s " % str(Port))
+            "CRITICAL - Error al abrir puerto %s " % str(Port))
         sys.exit(2)
 
     # -- Mostrar el nombre del dispositivo
@@ -994,7 +994,7 @@ def main():
                     isDataReady = True
                     s.write(b'\x7e')
                     sys.stderr.write(
-                        " CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
+                        "CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
                     sys.exit(2)
                 elif(rcvcount == 0 and rcvHex == '7e'):
                     rcvHexArray.append(rcvHex)
@@ -1008,7 +1008,7 @@ def main():
                         isDataReady = True
 
         except serial.SerialException:
-            sys.stderr.write(" CRITICAL - conexión ocupada, intentar más tarde ")
+            sys.stderr.write("CRITICAL - conexión ocupada, intentar más tarde ")
             sys.exit(2)
         hexResponse = bytearray.fromhex(hexadecimal_string)
         #print("Answer byte: ")
@@ -1022,25 +1022,25 @@ def main():
         if Action == 'set':
             if len(data) != 0 and Device == 'dmu':
                 sys.stderr.write(
-                    " CRITICAL - error al escribir puerto dmu %s \n" % str(Port))
+                    "CRITICAL - error al escribir puerto dmu %s \n" % str(Port))
                 sys.exit(2)
             elif len(data) == 0 and Device == 'dru':
                 sys.stderr.write(
-                    " CRITICAL - error al escribir puerto dru %s \n" % str(Port))
+                    "CRITICAL - error al escribir puerto dru %s \n" % str(Port))
                 sys.exit(2)
             else:
                 if Device == 'dru':
                     a_bytearray = bytearray(data)
                     hex_string = a_bytearray.hex()
                     sys.stderr.write(hex_string + '\n')
-                sys.stderr.write(" OK")
+                sys.stderr.write("OK")
         else:
             a_bytearray = bytearray(data)
             resultHEX = a_bytearray.hex()
             try:
                 resultOK =  int(resultHEX, 16)
             except:
-                print(" CRITICAL - Dato recibido es desconocido")
+                print("CRITICAL - Dato recibido es desconocido")
                 sys.exit(2)    
             
             if len(CmdNumber) > 4:
@@ -1049,18 +1049,18 @@ def main():
                 hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
             if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
-                print(" CRITICAL - " + hex_string )
+                print("CRITICAL - " + hex_string )
                 sys.exit(2)
             elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
-                print(" WARNING - " + hex_string  )
+                print("WARNING - " + hex_string  )
                 sys.exit(1)
             else:
-                print(" OK - " + hex_string )
+                print("OK - " + hex_string )
                 sys.exit(0)
         s.close()
     else:
         sys.stderr.write(
-            " WARNING - Accion invalida:  %s \n" % Action)
+            "WARNING - Accion invalida:  %s \n" % Action)
         sys.exit(1)
 
 
