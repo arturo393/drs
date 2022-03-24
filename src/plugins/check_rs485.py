@@ -14,7 +14,6 @@
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
-from asyncio.windows_events import NULL
 from pickle import FALSE, TRUE
 import sys
 import getopt
@@ -55,10 +54,10 @@ dataDRU = {
     "0600" : " Device Channel number",
     "210B" : " RU ID",
     "0201" : "Remote ",
-    "0105" : { "unidad": " &ordm;C", "variable" : "temprature"},
-    "0305" : { "unidad": " [dBm]", "variable" : "dBm" }, 
-    "0605" : { "unidad": " ", "variable" : "voltage" },
-    "2505" : { "unidad": " [dBm]", "variable" : "dBm" },
+    "0105" : { "unidad": " [°C]", "variable" : "Pa Temperature", "name" : "Power Amplifier Temperature"},
+    "0305" : { "unidad": " [dBm]", "variable" : "DL Ouput Power", "name" : "Downlink Output Power" }, 
+    "0605" : { "unidad": " ", "variable" : "VSWR", "name" : "Downlink VSWR" },
+    "2505" : { "unidad": " [dBm]", "variable" : "Uplink Input Power", "name" : "Uplink Input Power" },
     "0104" : { "default" : "Unknown", 0: "RF Power OFF" , 1: "RF Power On" },
     "4004" : " [dB]",
     "4104" : " [dB]",
@@ -605,21 +604,21 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
     elif(DmuDevice1_hex == '08'):
         cmd_string = DmuDevice1_hex + DmuDevice2_hex + \
             CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
-        print('La trama corta: %s' % cmd_string)
+        #print('La trama corta: %s' % cmd_string)
         checksum = getChecksumSimple(cmd_string)  # calcula CRC
         trama = C_HEADER + cmd_string + checksum + '7F' + Retunr_hex
-        print('Query: %s' % trama)
+        #print('Query: %s' % trama)
         return str(trama)
     else:
         cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + \
             CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
 
-    print('La trama corta: %s' % cmd_string)
+    #print('La trama corta: %s' % cmd_string)
     checksum = getChecksum(cmd_string)  # calcula CRC
 
     trama = C_HEADER + cmd_string + checksum + C_END + Retunr_hex
 
-    print('Query: %s' % trama)
+    #print('Query: %s' % trama)
     return str(trama)
 
 
@@ -660,7 +659,7 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         for i in range(rango_i, rango_n):
             data.append(hexResponse[i])
         #print("Resultado de la Query es:")
-        print(data)
+        #print(data)
         return data
     except ValueError:
         sys.stderr.write("CRITICAL - Error al leer trama de salida")
@@ -910,26 +909,30 @@ def  convertirMultipleRespuesta(data):
     paTemp = 0
     dlOutputPw = 0
     dlVswr = 0
-    ulInputPw = 0            
+    ulInputPw = 0      
+    graphite = ""
+    table =""      
     for data in dataResult:
-        if ("0105" in data ):
-            paTemp = '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".")
-        elif ("0305" in data):
-            dlOutputPw = '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".")
-        elif ("0605" in data):
-            dlVswr = '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".")    
-        elif ("2505" in data):
-            ulInputPw =  '{:,.2f}'.format(s16(int(data[4:], 16))).replace(",", "@").replace(".", ",").replace("@", ".") 
-       
-    Result = "temp "+paTemp+" dloutput " +dlOutputPw+" dlvswr "+dlVswr+" ulInput "+ulInputPw
+        cmdNumber = data[:4]
+        cmdValue = data[4:]
+        if(cmdNumber =='0105' or cmdNumber =='0305' or cmdNumber =='2505' or cmdNumber =='0605'):
+             parameter = dataDRU[cmdNumber]
+             if cmdNumber == '0605':
+                 decSigned = s16(int(cmdValue,16))/10
+             else: 
+                 decSigned = s16(int(cmdValue, 16))
+             value = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
+             name = parameter['name']
+             unit = parameter['unidad']
+             variable = parameter['variable']
+             graphite = graphite +variable+unit+ "=" + str(decSigned)+";"
+             table = table + "<tr style=font-size:15px><td>"+name+"</td><td>"+value+unit+"</td></tr>"
     
     Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-    Table += "<thead><tr><th width='15%'>Parameter</th><th width='20%'>Value</th></tr></thead><tbody>"
-    Table += "<tr><td>PA Temperature</td><td>" + paTemp  + "\°C</td></tr>"
-    Table += "<tr><td>Downlink Output Power</td><td>" + dlOutputPw  + " dBm</td></tr>"
-    Table += "<tr><td>Downlink VSWR</td><td>" + dlVswr +  "</td></tr>"
-    Table += "<tr><td>Uplink Input Power</td><td>" + ulInputPw  + " dBm</td></tr>"
+    Table += "<thead><tr><th width='15%'></th><th width='20%'></th></tr></thead><tbody>"
+    Table +=  table
     Table += "</tbody></table>" 
+    Table += "|" + graphite
     return Table
 
 
@@ -1013,8 +1016,8 @@ def main():
         hexResponse = bytearray.fromhex(hexadecimal_string)
         #print("Answer byte: ")
         # print(hexResponse)
-        print("Answer Hex: ")
-        print(rcvHexArray)
+        #print("Answer Hex: ")
+        #print(rcvHexArray)
 
         # Aqui se realiza la validacion de la respuesta
         data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
