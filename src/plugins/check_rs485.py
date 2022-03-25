@@ -634,7 +634,7 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
             or hexResponse[0] != 126
         ):
             sys.stderr.write(
-                "CRITICAL - Error trama de salida invalida\n")
+                "WARNING - Error trama de entrada invalida\n")
             sys.exit(2)
         if Device == 'dru':
             #print('Entro aqui')
@@ -662,10 +662,10 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         #print(data)
         return data
     except ValueError:
-        sys.stderr.write("CRITICAL - Error al leer trama de salida")
+        sys.stderr.write("WARNING - Error al leer trama de entrada")
         sys.exit(2)
     except:
-        sys.stderr.write("CRITICAL - Error al validar trama de salida")
+        sys.stderr.write("WARNING - Error al validar trama de entrada")
         sys.exit(2)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
@@ -880,7 +880,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
         
         return Result
     except :
-        sys.stderr.write("CRITICAL - Error al convertir dato de salida: " + Result)
+        sys.stderr.write("WARNING - Error al convertir dato recibido: " + Result)
         sys.exit(2)    
         
 def  convertirMultipleRespuesta(data):
@@ -1011,7 +1011,7 @@ def main():
                         isDataReady = True
 
         except serial.SerialException:
-            sys.stderr.write("CRITICAL - conexión ocupada, intentar más tarde ")
+            sys.stderr.write("WARNING - conexión ocupada, intentar más tarde ")
             sys.exit(2)
         hexResponse = bytearray.fromhex(hexadecimal_string)
         #print("Answer byte: ")
@@ -1043,7 +1043,7 @@ def main():
             try:
                 resultOK =  int(resultHEX, 16)
             except:
-                print("CRITICAL - Dato recibido es desconocido")
+                print("WARNING - Dato recibido es desconocido")
                 sys.exit(2)    
             
             if len(CmdNumber) > 4:
