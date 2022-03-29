@@ -558,126 +558,9 @@ def main():
         except:
             print("WARNING - Dato recibido es desconocido")
             sys.exit(1)    
-            
-            
+        
         cmdNumber = frame[8:10]        
-            
-        if cmdNumber=='f8':
-            value =  int(hex_validated_frame, 16)
-            parameter_dict['opt1ConnectedRemotes'] = str(value)          
-            
-        elif cmdNumber=='f9':
-            Value =  int(hex_validated_frame, 16)
-            parameter_dict['opt2ConnectedRemotes'] = str(Value)
-            
-        elif cmdNumber=='fa':
-            Value =  int(hex_validated_frame, 16)
-            parameter_dict['opt3ConnectedRemotes'] = str(Value)      
-                 
-        elif cmdNumber=='fb':
-            Value =  int(hex_validated_frame, 16)
-            parameter_dict['opt4ConnectedRemotes'] = str(Value)
-                        
-        elif cmdNumber=='91':
-            if (hex_validated_frame[0:2] == '00'):
-                parameter_dict['opt1ActivationStatus'] = 'ON'         
-            else:
-                parameter_dict['opt1ActivationStatus'] = 'OFF'           
-
-            if (hex_validated_frame[2:4] == '00'):
-                parameter_dict['opt2ActivationStatus'] = 'ON'                                 
-            else:
-                parameter_dict['opt2ActivationStatus'] = 'OFF'              
-
-            if (hex_validated_frame[4:6] == '00'):
-                parameter_dict['opt3ActivationStatus'] = 'ON'                                
-            else: 
-                parameter_dict['opt3ActivationStatus'] = 'OFF'               
-            
-            if (hex_validated_frame[6:8] == '00'):
-                parameter_dict['opt4ActivationStatus'] = 'ON'                                  
-            else:                 
-                parameter_dict['opt4ActivationStatus'] = 'OFF' 
-        
-        
-        elif cmdNumber=='9a':
-            hex_as_int = int(hex_validated_frame, 16)
-            hex_as_binary = bin(hex_as_int)
-            padded_binary = hex_as_binary[2:].zfill(8)
-            opt=1
-            temp = []
-            for bit in reversed(padded_binary):  
-                if (bit=='0' and opt<=4):
-                    temp.append('Connected ') 
-                elif (bit=='1' and opt<=4):
-                    temp.append('Disconnected ')
-                elif (bit=='0' and opt>4):
-                    temp.append('Normal')
-                elif (bit=='1' and opt>4):
-                    temp.append('Failure')
-                opt=opt+1          
-            
-            parameter_dict['opt1ConnectionStatus'] = temp[0]
-            parameter_dict['opt2ConnectionStatus'] = temp[1]
-            parameter_dict['opt3ConnectionStatus'] = temp[2]
-            parameter_dict['opt4ConnectionStatus'] = temp[3]
-            parameter_dict['opt1TransmissionStatus'] = temp[4]
-            parameter_dict['opt2TransmissionStatus'] = temp[5]
-            parameter_dict['opt3TransmissionStatus'] = temp[6]
-            parameter_dict['opt4TransmissionStatus'] = temp[7]
-            
-        elif cmdNumber=='f3':    
-            hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
-            hex_as_int = int(hexInvertido, 16)
-            dlPower = s16(hex_as_int)/256
-            parameter_dict['dlOutputPower'] = str(dlPower)
-            
-            hexInvertido = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]          
-            hex_as_int = int(hexInvertido, 16)
-            ulPower = s16(hex_as_int)/256
-            parameter_dict['ulInputPower'] = str(ulPower)
-            
-            
-        elif cmdNumber=='42':    
-            i = 0            
-            channel = 1
-            while channel <= 16 and i < len(hex_validated_frame):
-                hex_as_int = int(hex_validated_frame[i:i+2], 16)
-                if hex_as_int == 0:                 
-                    parameter_dict["channel"+str(channel)+"Status"] = "ON"   
-                else:                    
-                    parameter_dict["channel"+str(channel)+"Status"] = "OFF"   
-                i += 2
-                channel += 1
-       
-        elif cmdNumber=='36': 
-            channel = 1
-            i = 0            
-            while channel <= 16:
-                byte = hex_validated_frame[i:i+8]
-                byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
-                hex_as_int = int(byteInvertido, 16)                
-                texto = frequencyDictionary[hex_as_int]
-                parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]    
-                parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]   
-                channel += 1
-                i += 8
-        
-        elif cmdNumber=='81':
-            if hex_validated_frame == '01':
-                parameter_dict['workingMode'] = 'Channel Mode'
-            elif hex_validated_frame == '02':
-                parameter_dict['workingMode'] = 'WideBand Mode'  
-        
-        elif cmdNumber=='ef':
-            byte01toInt = int(hex_validated_frame[0:2], 16)/4
-            byte02toInt = int(hex_validated_frame[2:4], 16)/4
-            valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-            valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-            parameter_dict['ulAtt'] = valor1
-            parameter_dict['dlAtt'] = valor2
-           
-       
+        set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
 
        # if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
        #     print("CRITICAL - " + hex_string )
@@ -690,12 +573,127 @@ def main():
        #     sys.exit(0)
         
     s.close()
-        
     Table = create_table(parameter_dict)
     
   
     print(Table)
     sys.exit(0)
+
+def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber):
+    if cmdNumber=='f8':
+        value =  int(hex_validated_frame, 16)
+        parameter_dict['opt1ConnectedRemotes'] = str(value)          
+            
+    elif cmdNumber=='f9':
+        value =  int(hex_validated_frame, 16)
+        parameter_dict['opt2ConnectedRemotes'] = str(value)
+            
+    elif cmdNumber=='fa':
+        value =  int(hex_validated_frame, 16)
+        parameter_dict['opt3ConnectedRemotes'] = str(value)      
+                 
+    elif cmdNumber=='fb':
+        value =  int(hex_validated_frame, 16)
+        parameter_dict['opt4ConnectedRemotes'] = str(value)
+                        
+    elif cmdNumber=='91':
+        if (hex_validated_frame[0:2] == '00'):
+            parameter_dict['opt1ActivationStatus'] = 'ON'         
+        else:
+            parameter_dict['opt1ActivationStatus'] = 'OFF'           
+
+        if (hex_validated_frame[2:4] == '00'):
+            parameter_dict['opt2ActivationStatus'] = 'ON'                                 
+        else:
+            parameter_dict['opt2ActivationStatus'] = 'OFF'              
+
+        if (hex_validated_frame[4:6] == '00'):
+            parameter_dict['opt3ActivationStatus'] = 'ON'                                
+        else: 
+            parameter_dict['opt3ActivationStatus'] = 'OFF'               
+            
+        if (hex_validated_frame[6:8] == '00'):
+            parameter_dict['opt4ActivationStatus'] = 'ON'                                  
+        else:                 
+            parameter_dict['opt4ActivationStatus'] = 'OFF' 
+        
+        
+    elif cmdNumber=='9a':
+        hex_as_int = int(hex_validated_frame, 16)
+        hex_as_binary = bin(hex_as_int)
+        padded_binary = hex_as_binary[2:].zfill(8)
+        opt=1
+        temp = []
+        for bit in reversed(padded_binary):  
+            if (bit=='0' and opt<=4):
+                temp.append('Connected ') 
+            elif (bit=='1' and opt<=4):
+                temp.append('Disconnected ')
+            elif (bit=='0' and opt>4):
+                temp.append('Normal')
+            elif (bit=='1' and opt>4):
+                temp.append('Failure')
+            opt=opt+1          
+            
+        parameter_dict['opt1ConnectionStatus'] = temp[0]
+        parameter_dict['opt2ConnectionStatus'] = temp[1]
+        parameter_dict['opt3ConnectionStatus'] = temp[2]
+        parameter_dict['opt4ConnectionStatus'] = temp[3]
+        parameter_dict['opt1TransmissionStatus'] = temp[4]
+        parameter_dict['opt2TransmissionStatus'] = temp[5]
+        parameter_dict['opt3TransmissionStatus'] = temp[6]
+        parameter_dict['opt4TransmissionStatus'] = temp[7]
+            
+    elif cmdNumber=='f3':    
+        hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
+        hex_as_int = int(hexInvertido, 16)
+        dlPower = s16(hex_as_int)/256
+        parameter_dict['dlOutputPower'] = str(dlPower)
+            
+        hexInvertido = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]          
+        hex_as_int = int(hexInvertido, 16)
+        ulPower = s16(hex_as_int)/256
+        parameter_dict['ulInputPower'] = str(ulPower)
+            
+            
+    elif cmdNumber=='42':    
+        i = 0            
+        channel = 1
+        while channel <= 16 and i < len(hex_validated_frame):
+            hex_as_int = int(hex_validated_frame[i:i+2], 16)
+            if hex_as_int == 0:                 
+                parameter_dict["channel"+str(channel)+"Status"] = "ON"   
+            else:                    
+                parameter_dict["channel"+str(channel)+"Status"] = "OFF"   
+            i += 2
+            channel += 1
+       
+    elif cmdNumber=='36': 
+        channel = 1
+        i = 0            
+        while channel <= 16:
+            byte = hex_validated_frame[i:i+8]
+            byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
+            hex_as_int = int(byteInvertido, 16)                
+            texto = frequencyDictionary[hex_as_int]
+            parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]    
+            parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]   
+            channel += 1
+            i += 8
+        
+    elif cmdNumber=='81':
+        if hex_validated_frame == '01':
+            parameter_dict['workingMode'] = 'Channel Mode'
+        elif hex_validated_frame == '02':
+            parameter_dict['workingMode'] = 'WideBand Mode'  
+        
+    elif cmdNumber=='ef':
+        byte01toInt = int(hex_validated_frame[0:2], 16)/4
+        byte02toInt = int(hex_validated_frame[2:4], 16)/4
+        valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+        valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+        parameter_dict['ulAtt'] = valor1
+        parameter_dict['dlAtt'] = valor2
 
 def create_table(responseDict):
     Table = "<div style=\"float: left;margin-right:5px\">"
@@ -707,7 +705,6 @@ def create_table(responseDict):
     for i in range(1,5):
         opt = str(i)
         Table +="<tr style=font-size:14px><td>OPT"+opt+"</td><td>"+responseDict['opt'+opt+'ActivationStatus']+"</td><td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td><td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td><td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td></tr>"
- 
 
     Table += "<thead><tr><th width='15%'>Link</th><th width='15%'>Power [dBm] </th><th width='15%'>Attenuation [dB]</th></tr></thead><tbody>"
     Table +="<tr style=font-size:14px><td>Uplink</td><td>"+responseDict['ulInputPower']+"</td><td>"+responseDict['ulAtt']+"</td></tr>"
@@ -728,19 +725,12 @@ def create_table(responseDict):
             channel = str(i)
             Table +="<tr style=font-size:10px><td>"+channel+"</td><td>"+responseDict["channel"+str(channel)+"Status"]+"</td><td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td><td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td></tr>"
 
-    
-
         Table+="</tbody></table>"
 
         Table+="</div>"
     return Table
 
         
-        
-    
-
-
-
 if __name__ == "__main__":
     main()
 

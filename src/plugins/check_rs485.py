@@ -660,6 +660,8 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
             data.append(hexResponse[i])
         #print("Resultado de la Query es:")
         #print(data)
+        
+        
         return data
     except ValueError:
         sys.stderr.write("WARNING - Error al leer trama de entrada")
