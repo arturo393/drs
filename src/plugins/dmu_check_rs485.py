@@ -648,12 +648,12 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
         hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
         hex_as_int = int(hexInvertido, 16)
         dlPower = s16(hex_as_int)/256
-        parameter_dict['dlOutputPower'] = str(dlPower)
+        parameter_dict['dlOutputPower'] = str(round(dlPower,2))
             
         hexInvertido = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]          
         hex_as_int = int(hexInvertido, 16)
         ulPower = s16(hex_as_int)/256
-        parameter_dict['ulInputPower'] = str(ulPower)
+        parameter_dict['ulInputPower'] = str(round(ulPower,2))
             
             
     elif cmdNumber=='42':    
