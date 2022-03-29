@@ -494,409 +494,12 @@ def formatearHex(dato):
 # -- Crc: Byte de control
 # ---------------------------------------------------
 
-
-def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
-
-    DmuDevice1_hex = formatearHex(DmuDevice1)
-    #print('DmuDevice1_hex: %s' % DmuDevice1_hex)
-
-    DmuDevice2_hex = formatearHex(DmuDevice2)
-    #print('DmuDevice2_hex: %s' % DmuDevice2_hex)
-
-    CmdNumber_hex = formatearHex(CmdNumber)
-    #print('CmdNumber_hex: %s' % CmdNumber_hex)
-
-    #print('CmdBodyLenght: %s' % CmdBodyLenght)
-    if (Device == 'dru'):
-        CmdBodyLenght_hex = formatearHex(CmdBodyLenght)
-
-        CmdData_hex = formatearHex(CmdData)
-        #print('CmdData_hex: %s' % CmdData_hex)
-
-        DruId_hex = formatearHex(DruId)
-        #print('DruId_hex: %s' % DruId_hex)
-
-        try:
-            cant_bytes = int(CmdBodyLenght_hex, 16)
-            #print('cant_bytes: %s' % cant_bytes)
-        except ValueError:
-            sys.stderr.write(
-                "CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
-            sys.exit(2)
-        tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
-        #print('tramaLengthCodeData: %s' % tramaLengthCodeData)
-        lenTramaLengthCodeData = int(len(tramaLengthCodeData)/2)
-        #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)
-        if lenTramaLengthCodeData != cant_bytes:
-            sys.stderr.write(
-                "CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
-            sys.exit(2)
-        if (Action == 'set'):
-            MessageType = C_TYPE_SET
-        else:
-            MessageType = C_TYPE_QUERY
-
-        Retunr_hex = C_RETURN
-
-    else:
-
-        Retunr_hex = ''
-        if (Action == 'set'):
-            CmdData_hex = formatearHex(CmdData)
-            #print('CmdData_hex: %s' % CmdData_hex)
-            CmdBodyLenght_hex = formatearHex(CmdBodyLenght)
-        else:
-            CmdData_hex = ''
-            CmdBodyLenght_hex = '00'
-    #print('CmdNumber_hex: %s' % CmdNumber_hex)
-
-    #print('Device: %s' % Device)
-    if Device == 'dru':
-        cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + \
-            C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + \
-            CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
-    elif(DmuDevice1_hex == '08'):
-        cmd_string = DmuDevice1_hex + DmuDevice2_hex + \
-            CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
-        #print('La trama corta: %s' % cmd_string)
-        checksum = getChecksumSimple(cmd_string)  # calcula CRC
-        trama = C_HEADER + cmd_string + checksum + '7F' + Retunr_hex
-        #print('Query: %s' % trama)
-        return str(trama)
-    else:
-        cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + \
-            CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
-
-    #print('La trama corta: %s' % cmd_string)
-    checksum = getChecksum(cmd_string)  # calcula CRC
-
-    trama = C_HEADER + cmd_string + checksum + C_END + Retunr_hex
-
-    #print('Query: %s' % trama)
-    return str(trama)
-
-
-def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
-    try:
-        data = list()
-
-        if (
-            hexResponse == None
-            or hexResponse == ""
-            or hexResponse == " "
-            or len(hexResponse) == 0
-            or hexResponse[0] != 126
-        ):
-            sys.stderr.write(
-                "WARNING - Error trama de entrada invalida\n")
-            sys.exit(1)
-        if Device == 'dru':
-            #print('Entro aqui')
-            byte_respuesta = 14  # Para equipos remotos  de la trama
-            cant_bytes_resp = int(hexResponse[byte_respuesta])
-            if(cmdNumberlen > 4):
-                rango_i =  byte_respuesta+1
-                rango_n = rango_i + cant_bytes_resp - 1
-            else: 
-                rango_i = byte_respuesta + 3
-                rango_n = rango_i + cant_bytes_resp - 3
-        else:
-            byte_respuesta = 6
-            cant_bytes_resp = int(hexResponse[byte_respuesta])
-            rango_i = byte_respuesta + 1
-            rango_n = rango_i + cant_bytes_resp
-
-        #print('Cant Byte respuesta: %d' % cant_bytes_resp)
-        #print('longitud trama: %d' % len(hexResponse))
-        #print('Rango i: %d' % rango_i)
-        #print('Rango n: %d' % rango_n)
-        for i in range(rango_i, rango_n):
-            data.append(hexResponse[i])
-        #print("Resultado de la Query es:")
-        #print(data)
-        return data
-    except ValueError:
-        sys.stderr.write("WARNING - Error al leer trama de entrada")
-        sys.exit(1)
-    except:
-        sys.stderr.write("WARNING - Error al validar trama de entrada")
-        sys.exit(1)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
 
 def s16(value):
     return -(value & 0x8000) | (value & 0x7fff)
-# ----------------------------------------------------------------
-#   convierte la salida en hex a un valor representacion humana
-# ---------------------------------------------------------------
-def convertirRespuesta(Result, Device, CmdNumber):
-    response = Response()
-    try:
-        CmdNumber = CmdNumber.upper()
-        Device = Device.lower()
-        
-        if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
-            Value =  int(Result, 16)
-            Result = str(Value)
-           
-        
-        elif  Device=='dmu' and CmdNumber=='91':
-
-            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>Port</th><th width='15%'>Status</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
-            if (Result[0:2] == '00'):
-                Table += "<tr><td>OPT1</td><td>ON</td><td>&nbsp;</td></tr>"                
-            else:
-                Table += "<tr><td>OPT1</td><td>OFF</td><td>&nbsp;</td></tr>"                 
-
-            if (Result[2:4] == '00'):
-                Table += "<tr><td>OPT2</td><td>ON</td><td>&nbsp;</td></tr>"                
-            else:
-                Table += "<tr><td>OPT2</td><td>OFF</td><td>&nbsp;</td></tr>"                 
-
-            if (Result[4:6] == '00'):
-                Table += "<tr><td>OPT3</td><td>ON</td><td>&nbsp;</td></tr>"                
-            else: 
-                Table += "<tr><td>OPT3</td><td>OFF</td><td>&nbsp;</td></tr>"                
-            
-            if (Result[6:8] == '00'):
-                Table += "<tr><td>OPT4</td><td>ON</td><td>&nbsp;</td></tr>"                
-            else:                 
-                Table += "<tr><td>OPT4</td><td>OFF</td><td>&nbsp;</td></tr>"   
-            
-            Table +=   "</tbody></table>" 
-            Result = Table
-        
-        elif (Device=='dmu' and CmdNumber=='9A'):
-            hex_as_int = int(Result, 16)
-            hex_as_binary = bin(hex_as_int)
-            padded_binary = hex_as_binary[2:].zfill(8)
-            opt=1
-            temp = []
-            for bit in reversed(padded_binary):  
-                if (bit=='0' and opt<=4):
-                    temp.append('Connected ') 
-                elif (bit=='1' and opt<=4):
-                    temp.append('Disconnected ')
-                elif (bit=='0' and opt>4):
-                    temp.append('Normal')
-                elif (bit=='1' and opt>4):
-                    temp.append('Failure')
-                opt=opt+1          
-            
-            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>Port</th><th width='20%'>Status</th><th width='20%'>Transmission</th><th>&nbsp;</th></tr></thead><tbody>"
-            Table += "<tr><td>OPT1</td><td>" + temp[0]  + "</td><td>" + temp[4] + "</td><td>&nbsp;</td></tr>"
-            Table += "<tr><td>OPT2</td><td>" + temp[1]  + "</td><td>" + temp[5] + "</td><td>&nbsp;</td></tr>"
-            Table += "<tr><td>OPT3</td><td>" + temp[2]  + "</td><td>" + temp[6] + "</td><td>&nbsp;</td></tr>"
-            Table += "<tr><td>OPT4</td><td>" + temp[3]  + "</td><td>" + temp[7] + "</td><td>&nbsp;</td></tr>"
-            Table += "</tbody></table>" 
-            Result = Table
-
-        elif (Device=='dmu' and CmdNumber=='F3'):    
-            hexInvertido = Result[2:4] + Result[0:2]
-            hex_as_int = int(hexInvertido, 16)
-            decSigned = s16(hex_as_int)
-            rbm = decSigned/256
-            formato = Result+'{:,.2f}'.format(rbm).replace(",", "@").replace(".", ",").replace("@", ".")
-            Result = formato + " [dBm] |power=" + str(rbm)
-
-        elif (Device=='dmu' and CmdNumber=='42'):    
-            i = 0            
-            channel = 1
-            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>CHANNEL</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
-            while channel <= 16 and i < len(Result):
-                hex_as_int = int(Result[i:i+2], 16)
-                if hex_as_int == 0:                    
-                    Table += "<tr><td>"+ str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"
-                else:                    
-                    Table += "<tr><td>"+ str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"
-                i += 2
-                channel += 1
-            Table +=   "</tbody></table>"            
-            Result = Table
-
-        elif (Device=='dmu' and CmdNumber=='36'): 
-            channel = 1
-            i = 0            
-            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='12%'>Channel</th><th width='13%'>Subchannel<th width='25%'>Uplink Frecuency</th><th width='50%'>Downlink Frecuency</th></tr></thead><tbody>"
-            while channel <= 16:
-                byte = Result[i:i+8]
-                byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
-                hex_as_int = int(byteInvertido, 16)                
-                texto = frequencyDictionary[hex_as_int]
-                Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>" +  texto[0:3] + "</td><td>" + texto[4:22-6+2]  + "</td><td>" + texto[23:40-6+2] + "</td></tr>"
-                channel += 1
-                i += 8
-            Table +=   "</tbody></table>"                
-            Result = Table
-        
-        elif (Device=='dmu' and CmdNumber=='81'):
-            tmp = ''
-            if Result == '01':
-                tmp = 'Channel Mode ' 
-            elif Result == '02':
-                tmp = 'W ideBand Mode '
-            else:
-                tmp = 'Unknown '
-            Result = tmp     
-        
-        elif (Device=='dmu' and CmdNumber=='EF'):
-            byte01toInt = int(Result[0:2], 16)/4
-            byte02toInt = int(Result[2:4], 16)/4
-            valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-            valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-            Result = valor1 + " Uplink ATT [dB] - " + valor2 + " Downlink ATT [dB] "
-        #convirtiendo hex to decimal
-
-        elif (Device=='dru' and (CmdNumber=='0300' or CmdNumber=='0104' or CmdNumber=='EF0B' or CmdNumber=='0102'
-             or CmdNumber=='0602' or CmdNumber=="0F02" or CmdNumber=="1002" or CmdNumber=="1102" or CmdNumber=="1202" 
-             or CmdNumber=="1302"  or CmdNumber=="1402" or CmdNumber=="0103" or CmdNumber=="0603" or CmdNumber=="0E03"
-             or CmdNumber=="0F03" or CmdNumber=="1003" or CmdNumber=="1103" or CmdNumber=="1203" or CmdNumber=="1303" 
-             or CmdNumber=="1403" or CmdNumber=="270A")):
-             try:
-                  list = dataDRU[CmdNumber]
-                  tmp = list[int(Result, 16)]
-             except:    
-                  tmp = list['default']
-             Result = tmp
-        
-        
-        #convirtiendo hex to decimal
-        elif (Device=='dru' and (CmdNumber=='0600' or CmdNumber=='210B' or CmdNumber=='4004' or CmdNumber=='4104'
-              or CmdNumber=='5004'  or CmdNumber=='5104'  or CmdNumber=='5304'  or CmdNumber=='5404'  or CmdNumber=='5504'
-              or CmdNumber=='5604' or CmdNumber=='E00B' or CmdNumber=='E10B' or CmdNumber=='E20B' or CmdNumber=='E30B'
-              or CmdNumber=='E40B'  or CmdNumber=='E50B')):                
-            tmp =  str(int(Result, 16)) + dataDRU[CmdNumber]
-            Result = tmp
-        
-        #convirtiendo hex to Ascii  
-        elif (Device=='dru' and (CmdNumber=='0400' or CmdNumber=='0500'  or CmdNumber=="0A00") ):
-             tmp =  bytearray.fromhex(Result).decode()
-             Result = tmp
-        
-        #mostrar en hexadecimal  
-        elif (Device=='dru' and (CmdNumber=='0201' ) ):
-             tmp =  dataDRU[CmdNumber] + Result 
-             Result = tmp
-
-        #convirtiendo hex to decimal con signo
-        elif (Device=='dru' and (CmdNumber=='0105' or CmdNumber=='0305' or CmdNumber=='2505')):
-             list = dataDRU[CmdNumber]
-             decSigned = s16(int(Result, 16))
-             formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
-             tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
-             Result = tmp 
-
-        elif (Device=='dru' and (CmdNumber=='0605' )):
-             list = dataDRU[CmdNumber]
-             decSigned = s16(int(Result, 16))/10
-             formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
-             tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
-             Result = tmp 
-        
-        elif (Device=='dru' and (CmdNumber=='160A' )):
-            hex = Result
-            byte1 = hex[0:2]
-            byte2 = hex[2:4]
-
-            # Code to convert hex to binary
-            res1 = "{0:08b}".format(int(byte1, 16))
-            res2 = "{0:08b}".format(int(byte2, 16))
-            binario = res1 + res2
-            channel = 0            
-            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
-            for i  in binario:
-                channel += 1
-                if (i == '1' ):                    
-                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"                             
-                else:
-                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"                    
-            
-            Table +=   "</tbody></table>"
-            Result = hex+" "+Table
-
-        elif (Device=='dru' and (CmdNumber=='180A' or CmdNumber=='190A' or CmdNumber=='1A0A' or CmdNumber=='1B0A')):  
-            byte = Result
-            byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
-            hex_as_int = int(byteInvertido, 16)            
-            frecuency = hex_as_int / 10000
-            formato = '{:,.4f}'.format(frecuency).replace(",", "@").replace(".", ",").replace("@", ".")
-            Result = str(formato) + dataDRU[CmdNumber]         
-        
-        elif (Device=='dru' and (CmdNumber=='1004' or CmdNumber=='1104' or CmdNumber=='1204' or CmdNumber=='1304'
-             or CmdNumber=='1404' or CmdNumber=='1504' or CmdNumber=='1604' or CmdNumber=='1704' or CmdNumber=='1804'
-             or CmdNumber=='1904' or CmdNumber=='1A04' or CmdNumber=='1B04' or CmdNumber=='1C04' or CmdNumber=='1D04'
-             or CmdNumber=='1E04' or CmdNumber=='1F04')):                                      
-            byte0 = int(Result[0:2], 16)            
-            channel = 4270000 + (125 * byte0)
-            Result = 'CH ' + frequencyDictionary[channel]          
-        
-        return Result
-    except :
-        sys.stderr.write("WARNING - Error al convertir dato recibido: " + Result)
-        sys.exit(1)    
-        
-def  convertirMultipleRespuesta(data):
-    i = 0
-    j = 0
-    temp = list()
-    dataResult = list()
-    isWriting = False
-    for i in range(len(data)):
-        
-        if isWriting == False:
-            dataLen = data[i]
-            isWriting = True
-    
-        if j<dataLen-1:
-            temp.append(data[i+1])    
-            j = j+1
-        else:
-            isWriting = False
-            j = 0
-            a_bytearray = bytearray(temp)
-            resultHEX = a_bytearray.hex()
-            dataResult.append(resultHEX)
-            temp.clear() 
-              
-    paTemp = 0
-    dlOutputPw = 0
-    dlVswr = 0
-    ulInputPw = 0      
-    graphite = ""
-    table =""      
-    for data in dataResult:
-        cmdNumber = data[:4]
-        cmdValue = data[4:]
-        if(cmdNumber =='0105' or cmdNumber =='0305' or cmdNumber =='2505' or cmdNumber =='0605'):
-             parameter = dataDRU[cmdNumber]
-             if cmdNumber == '0605':
-                 decSigned = s16(int(cmdValue,16))/10
-             else: 
-                 decSigned = s16(int(cmdValue, 16))
-             value = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
-             name = parameter['name']
-             unit = parameter['unidad']
-             variable = parameter['variable']
-             graphite = graphite +variable+unit+ "=" + str(decSigned)+";"
-             table = table + "<tr style=font-size:15px><td>"+name+"</td><td>"+value+unit+"</td></tr>"
-    
-    Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-    Table += "<thead><tr><th width='15%'></th><th width='20%'></th></tr></thead><tbody>"
-    Table +=  table
-    Table += "</tbody></table>" 
-    Table += "|" + graphite
-    return Table
-
-class Response:
-    value = 0
-    strValue = 0
-    cmdNumber = ""
     
 # ----------------------
 #   MAIN
@@ -905,36 +508,21 @@ class Response:
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    tramas  = list()
-    LowLevelWarningUL, HighLevelWarningUL, LowLevelCriticalUL, HighLevelCriticalUL, LowLevelWarningDL, HighLevelWarningDL, LowLevelCriticalDL, HighLevelCriticalDL  = analizar_argumentos()
-
-    opt1NumberTrama          = rs485.obtener_trama('query','dmu','07','00','f8','01','00','00')
-    opt2NumberTrama          = rs485.obtener_trama('query','dmu','07','00','f9','01','00','00')
-    opt3NumberTrama          = rs485.obtener_trama('query','dmu','07','00','fa','01','00','00')
-    opt4NumberTrama          = rs485.obtener_trama('query','dmu','07','00','fb','01','00','00')
-    powerNumberTrama         = rs485.obtener_trama('query','dmu','07','00','f3','00','00','00')
-    gainPowerNumberTrama     = rs485.obtener_trama('query','dmu','07','00','ef','00','00','00')
-    optWorkingStatusTrama    = rs485.obtener_trama('query','dmu','07','00','b9','00','00','00')
-    workingModeNumberTrama   = rs485.obtener_trama('query','dmu','07','00','81','00','00','00')
-    channelFreqNumberTrama   = rs485.obtener_trama('query','dmu','07','00','36','00','00','00')
-    channelStatusTrama       = rs485.obtener_trama('query','dmu','07','00','42','00','00','00')
-    optConnectionStatusTrama = rs485.obtener_trama('query','dmu','07','00','9a','00','00','00')
-    optActivationStatusTrama = rs485.obtener_trama('query','dmu','07','00','91','00','00','00')
+    frame_list  = list()
+    LowLevelWarningUL, HighLevelWarningUL, LowLevelCriticalUL, HighLevelCriticalUL, LowLevelWarningDL, HighLevelWarningDL, LowLevelCriticalDL, HighLevelCriticalDL  = analizar_argumentos() 
     
-    
-    tramas.append(opt1NumberTrama)
-    tramas.append(opt2NumberTrama)
-    tramas.append(opt3NumberTrama)
-    tramas.append(opt4NumberTrama)
-    tramas.append(powerNumberTrama)
-    tramas.append(gainPowerNumberTrama)
-    tramas.append(optWorkingStatusTrama)
-    tramas.append(workingModeNumberTrama)
-    tramas.append(channelFreqNumberTrama)
-    tramas.append(channelStatusTrama)
-    tramas.append(optActivationStatusTrama)
-    tramas.append(optConnectionStatusTrama)
-    
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fa','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fb','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f3','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','ef','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','b9','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','81','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','36','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','42','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','9a','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','91','00','00','00'))
 
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -943,7 +531,6 @@ def main():
         Port = '/dev/ttyS0'
         baudrate = 19200
         s = serial.Serial(Port, baudrate)
-
         # -- Timeout: 1 seg
         s.timeout = 1
 
@@ -955,108 +542,66 @@ def main():
 
     # -- Mostrar el nombre del dispositivo
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
-
-    hexStringList = list()
-    responseDict = dict()
+    parameter_dict = dict()
     
-    for Trama in tramas:
-        cmd_bytes = bytearray.fromhex(Trama)
-        #print(cmd_bytes)
-        hex_byte = ''
-        for cmd_byte in cmd_bytes:
-            hex_byte = ("{0:02x}".format(cmd_byte))
-            s.write(bytes.fromhex(hex_byte))
-        s.flush()
-        #hexResponse = s.readline()
-
-        hexadecimal_string = ''
-        rcvHexArray = list()
-        isDataReady = False
-        rcvcount = 0
+    for frame in frame_list:
+        rs485.write_serial_frame(s, frame)
+        
+        hex_data_frame = rs485.read_serial_frame(Port, s)
+        
+        data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)     
+        a_bytearray = bytearray(data)     
+        hex_validated_frame = a_bytearray.hex()
+        
         try:
-            while not isDataReady and rcvcount < 200:
-                Response = s.read()
-                rcvHex = Response.hex()
-                #print('rcvHex: [' + rcvHex + ']')
-                if(rcvHex == ''):
-                    isDataReady = True
-                    s.write(b'\x7e')
-                    sys.stderr.write(
-                        "CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
-                    sys.exit(2)
-                elif(rcvcount == 0 and rcvHex == '7e'):
-                    rcvHexArray.append(rcvHex)
-                    hexadecimal_string = hexadecimal_string + rcvHex
-                    rcvcount = rcvcount + 1
-                elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
-                    rcvHexArray.append(rcvHex)
-                    hexadecimal_string = hexadecimal_string + rcvHex
-                    rcvcount = rcvcount + 1
-                    if(rcvHex == '7e' or rcvHex == '7f'):
-                        isDataReady = True
-
-        except serial.SerialException:
-            sys.stderr.write("WARNING - conexión ocupada, intentar más tarde ")
-            sys.exit(1)
-        hexResponse = bytearray.fromhex(hexadecimal_string)
-        #print("Answer byte: ")
-        # print(hexResponse)
-        #print("Answer Hex: ")
-        #print(rcvHexArray)
-
-        # Aqui se realiza la validacion de la respuesta
-        data = rs485.validar_trama_respuesta(hexResponse,'dmu',0)
-
-        a_bytearray = bytearray(data)
-        resultHEX = a_bytearray.hex()
-        try:
-            resultOK =  int(resultHEX, 16)
+            resultOK =  int(hex_validated_frame, 16)
         except:
             print("WARNING - Dato recibido es desconocido")
             sys.exit(1)    
-        cmdNumber = Trama[8:10]  
             
+            
+        cmdNumber = frame[8:10]        
             
         if cmdNumber=='f8':
-            value =  int(resultHEX, 16)
-            responseDict['opt1ConnectedRemotes'] = str(value)          
+            value =  int(hex_validated_frame, 16)
+            parameter_dict['opt1ConnectedRemotes'] = str(value)          
             
         elif cmdNumber=='f9':
-            Value =  int(resultHEX, 16)
-            responseDict['opt2ConnectedRemotes'] = str(Value)
+            Value =  int(hex_validated_frame, 16)
+            parameter_dict['opt2ConnectedRemotes'] = str(Value)
             
         elif cmdNumber=='fa':
-            Value =  int(resultHEX, 16)
-            responseDict['opt3ConnectedRemotes'] = str(Value)      
+            Value =  int(hex_validated_frame, 16)
+            parameter_dict['opt3ConnectedRemotes'] = str(Value)      
                  
         elif cmdNumber=='fb':
-            Value =  int(resultHEX, 16)
-            responseDict['opt4ConnectedRemotes'] = str(Value)
+            Value =  int(hex_validated_frame, 16)
+            parameter_dict['opt4ConnectedRemotes'] = str(Value)
                         
         elif cmdNumber=='91':
-            if (resultHEX[0:2] == '00'):
-                responseDict['opt1ActivationStatus'] = 'ON'         
+            if (hex_validated_frame[0:2] == '00'):
+                parameter_dict['opt1ActivationStatus'] = 'ON'         
             else:
-                responseDict['opt1ActivationStatus'] = 'OFF'           
+                parameter_dict['opt1ActivationStatus'] = 'OFF'           
 
-            if (resultHEX[2:4] == '00'):
-                responseDict['opt2ActivationStatus'] = 'ON'                                 
+            if (hex_validated_frame[2:4] == '00'):
+                parameter_dict['opt2ActivationStatus'] = 'ON'                                 
             else:
-                responseDict['opt2ActivationStatus'] = 'OFF'              
+                parameter_dict['opt2ActivationStatus'] = 'OFF'              
 
-            if (resultHEX[4:6] == '00'):
-                responseDict['opt3ActivationStatus'] = 'ON'                                
+            if (hex_validated_frame[4:6] == '00'):
+                parameter_dict['opt3ActivationStatus'] = 'ON'                                
             else: 
-                responseDict['opt3ActivationStatus'] = 'OFF'               
+                parameter_dict['opt3ActivationStatus'] = 'OFF'               
             
-            if (resultHEX[6:8] == '00'):
-                responseDict['opt4ActivationStatus'] = 'ON'                                  
+            if (hex_validated_frame[6:8] == '00'):
+                parameter_dict['opt4ActivationStatus'] = 'ON'                                  
             else:                 
-                responseDict['opt4ActivationStatus'] = 'OFF' 
+                parameter_dict['opt4ActivationStatus'] = 'OFF' 
         
         
         elif cmdNumber=='9a':
-            hex_as_int = int(resultHEX, 16)
+            hex_as_int = int(hex_validated_frame, 16)
             hex_as_binary = bin(hex_as_int)
             padded_binary = hex_as_binary[2:].zfill(8)
             opt=1
@@ -1072,36 +617,36 @@ def main():
                     temp.append('Failure')
                 opt=opt+1          
             
-            responseDict['opt1ConnectionStatus'] = temp[0]
-            responseDict['opt2ConnectionStatus'] = temp[1]
-            responseDict['opt3ConnectionStatus'] = temp[2]
-            responseDict['opt4ConnectionStatus'] = temp[3]
-            responseDict['opt1TransmissionStatus'] = temp[4]
-            responseDict['opt2TransmissionStatus'] = temp[5]
-            responseDict['opt3TransmissionStatus'] = temp[6]
-            responseDict['opt4TransmissionStatus'] = temp[7]
+            parameter_dict['opt1ConnectionStatus'] = temp[0]
+            parameter_dict['opt2ConnectionStatus'] = temp[1]
+            parameter_dict['opt3ConnectionStatus'] = temp[2]
+            parameter_dict['opt4ConnectionStatus'] = temp[3]
+            parameter_dict['opt1TransmissionStatus'] = temp[4]
+            parameter_dict['opt2TransmissionStatus'] = temp[5]
+            parameter_dict['opt3TransmissionStatus'] = temp[6]
+            parameter_dict['opt4TransmissionStatus'] = temp[7]
             
         elif cmdNumber=='f3':    
-            hexInvertido = resultHEX[2:4] + resultHEX[0:2]
+            hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
             hex_as_int = int(hexInvertido, 16)
             dlPower = s16(hex_as_int)/256
-            responseDict['dlOutputPower'] = str(dlPower)
+            parameter_dict['dlOutputPower'] = str(dlPower)
             
-            hexInvertido = resultHEX[2+4:4+4] + resultHEX[0+4:2+4]          
+            hexInvertido = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]          
             hex_as_int = int(hexInvertido, 16)
             ulPower = s16(hex_as_int)/256
-            responseDict['ulInputPower'] = str(ulPower)
+            parameter_dict['ulInputPower'] = str(ulPower)
             
             
         elif cmdNumber=='42':    
             i = 0            
             channel = 1
-            while channel <= 16 and i < len(resultHEX):
-                hex_as_int = int(resultHEX[i:i+2], 16)
+            while channel <= 16 and i < len(hex_validated_frame):
+                hex_as_int = int(hex_validated_frame[i:i+2], 16)
                 if hex_as_int == 0:                 
-                    responseDict["channel"+str(channel)+"Status"] = "ON"   
+                    parameter_dict["channel"+str(channel)+"Status"] = "ON"   
                 else:                    
-                    responseDict["channel"+str(channel)+"Status"] = "OFF"   
+                    parameter_dict["channel"+str(channel)+"Status"] = "OFF"   
                 i += 2
                 channel += 1
        
@@ -1109,28 +654,28 @@ def main():
             channel = 1
             i = 0            
             while channel <= 16:
-                byte = resultHEX[i:i+8]
+                byte = hex_validated_frame[i:i+8]
                 byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]             
                 hex_as_int = int(byteInvertido, 16)                
                 texto = frequencyDictionary[hex_as_int]
-                responseDict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]    
-                responseDict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]   
+                parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]    
+                parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]   
                 channel += 1
                 i += 8
         
         elif cmdNumber=='81':
-            if resultHEX == '01':
-                responseDict['workingMode'] = 'Channel Mode'
-            elif resultHEX == '02':
-                responseDict['workingMode'] = 'WideBand Mode'  
+            if hex_validated_frame == '01':
+                parameter_dict['workingMode'] = 'Channel Mode'
+            elif hex_validated_frame == '02':
+                parameter_dict['workingMode'] = 'WideBand Mode'  
         
         elif cmdNumber=='ef':
-            byte01toInt = int(resultHEX[0:2], 16)/4
-            byte02toInt = int(resultHEX[2:4], 16)/4
+            byte01toInt = int(hex_validated_frame[0:2], 16)/4
+            byte02toInt = int(hex_validated_frame[2:4], 16)/4
             valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
             valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-            responseDict['ulAtt'] = valor1
-            responseDict['dlAtt'] = valor2
+            parameter_dict['ulAtt'] = valor1
+            parameter_dict['dlAtt'] = valor2
            
        
 
@@ -1145,11 +690,16 @@ def main():
        #     sys.exit(0)
         
     s.close()
-    
-    for data in responseDict:
-        print(data+" : "+ responseDict[data])
         
-    Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+    Table = create_table(parameter_dict)
+    
+  
+    print(Table)
+    sys.exit(0)
+
+def create_table(responseDict):
+    Table = "<div style=\"float: left;margin-right:5px\">"
+    Table += "<table class='common-table table-row-selectable' data-base-target='_next'>"
     
     Table += "<tr>"
     Table += "<thead><tr><th width='15%'>Port</th><th width='15%'>Activation Status</th><th width='15%'>Connected Remotes</th><th width='15%'>Connection Status</th><th width='15%'>Transmission Status</th></tr></thead><tbody>"
@@ -1157,21 +707,18 @@ def main():
     for i in range(1,5):
         opt = str(i)
         Table +="<tr style=font-size:14px><td>OPT"+opt+"</td><td>"+responseDict['opt'+opt+'ActivationStatus']+"</td><td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td><td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td><td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td></tr>"
-
-    Table +="</tr>"
-    Table +="<tr>"
-    
  
 
     Table += "<thead><tr><th width='15%'>Link</th><th width='15%'>Power [dBm] </th><th width='15%'>Attenuation [dB]</th></tr></thead><tbody>"
     Table +="<tr style=font-size:14px><td>Uplink</td><td>"+responseDict['ulInputPower']+"</td><td>"+responseDict['ulAtt']+"</td></tr>"
     Table +="<tr style=font-size:14px><td>Downlink</td><td>"+responseDict['dlOutputPower']+"</td><td>"+responseDict['dlAtt']+"</td></tr>"
         
-    Table +="</tr>"
+
     Table+="</tbody></table>"
+    Table+="</div>"
     
     if (responseDict['workingMode'] == 'Channel Mode'):
-    
+        Table +="<div style=\"float: left;margin-right:0px\">"
         Table += "<table class='common-table table-row-selectable' data-base-target='_next'>"
     
         Table += "<tr>"
@@ -1179,15 +726,14 @@ def main():
     
         for i in range(1,17):
             channel = str(i)
-            Table +="<tr style=font-size:14px><td>"+channel+"</td><td>"+responseDict["channel"+str(channel)+"Status"]+"</td><td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td><td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td></tr>"
+            Table +="<tr style=font-size:10px><td>"+channel+"</td><td>"+responseDict["channel"+str(channel)+"Status"]+"</td><td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td><td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td></tr>"
 
     
 
         Table+="</tbody></table>"
-    
-  
-    print(Table)
-    sys.exit(0)
+
+        Table+="</div>"
+    return Table
 
         
         

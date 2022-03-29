@@ -635,7 +635,7 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         ):
             sys.stderr.write(
                 "WARNING - Error trama de entrada invalida\n")
-            sys.exit(2)
+            sys.exit(1)
         if Device == 'dru':
             #print('Entro aqui')
             byte_respuesta = 14  # Para equipos remotos  de la trama
@@ -663,16 +663,16 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         return data
     except ValueError:
         sys.stderr.write("WARNING - Error al leer trama de entrada")
-        sys.exit(2)
+        sys.exit(1)
     except:
         sys.stderr.write("WARNING - Error al validar trama de entrada")
-        sys.exit(2)    
+        sys.exit(1)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
+
 def s16(value):
     return -(value & 0x8000) | (value & 0x7fff)
-
 # ----------------------------------------------------------------
 #   convierte la salida en hex a un valor representacion humana
 # ---------------------------------------------------------------
@@ -881,7 +881,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
         return Result
     except :
         sys.stderr.write("WARNING - Error al convertir dato recibido: " + Result)
-        sys.exit(2)    
+        sys.exit(1)    
         
 def  convertirMultipleRespuesta(data):
     i = 0
@@ -934,14 +934,12 @@ def  convertirMultipleRespuesta(data):
     Table += "</tbody></table>" 
     Table += "|" + graphite
     return Table
-
-
-        
+       
 # ----------------------
 #   MAIN
 # ----------------------
 
-
+    
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
@@ -975,45 +973,10 @@ def main():
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
 
     if Action == "query" or Action == "set":
-        cmd_bytes = bytearray.fromhex(Trama)
-        #print(cmd_bytes)
-        hex_byte = ''
-        for cmd_byte in cmd_bytes:
-            hex_byte = ("{0:02x}".format(cmd_byte))
-            s.write(bytes.fromhex(hex_byte))
-        s.flush()
+        write_serial_frame(Trama, s)
         #hexResponse = s.readline()
 
-        hexadecimal_string = ''
-        rcvHexArray = list()
-        isDataReady = False
-        rcvcount = 0
-        try:
-            while not isDataReady and rcvcount < 200:
-                Response = s.read()
-                rcvHex = Response.hex()
-                #print('rcvHex: [' + rcvHex + ']')
-                if(rcvHex == ''):
-                    isDataReady = True
-                    s.write(b'\x7e')
-                    sys.stderr.write(
-                        "CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
-                    sys.exit(2)
-                elif(rcvcount == 0 and rcvHex == '7e'):
-                    rcvHexArray.append(rcvHex)
-                    hexadecimal_string = hexadecimal_string + rcvHex
-                    rcvcount = rcvcount + 1
-                elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
-                    rcvHexArray.append(rcvHex)
-                    hexadecimal_string = hexadecimal_string + rcvHex
-                    rcvcount = rcvcount + 1
-                    if(rcvHex == '7e' or rcvHex == '7f'):
-                        isDataReady = True
-
-        except serial.SerialException:
-            sys.stderr.write("WARNING - conexión ocupada, intentar más tarde ")
-            sys.exit(2)
-        hexResponse = bytearray.fromhex(hexadecimal_string)
+        hexResponse = read_serial_frame(Port, s)
         #print("Answer byte: ")
         # print(hexResponse)
         #print("Answer Hex: ")
@@ -1044,7 +1007,7 @@ def main():
                 resultOK =  int(resultHEX, 16)
             except:
                 print("WARNING - Dato recibido es desconocido")
-                sys.exit(2)    
+                sys.exit(1)    
             
             if len(CmdNumber) > 4:
                 hex_string = convertirMultipleRespuesta(data)
@@ -1065,6 +1028,48 @@ def main():
         sys.stderr.write(
             "WARNING - Accion invalida:  %s \n" % Action)
         sys.exit(1)
+
+def read_serial_frame(Port, s):
+    hexadecimal_string = ''
+    rcvHexArray = list()
+    isDataReady = False
+    rcvcount = 0
+    try:
+        while not isDataReady and rcvcount < 200:
+            Response = s.read()
+            rcvHex = Response.hex()
+                #print('rcvHex: [' + rcvHex + ']')
+            if(rcvHex == ''):
+                isDataReady = True
+                s.write(b'\x7e')
+                sys.stderr.write(
+                        "CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
+                sys.exit(2)
+            elif(rcvcount == 0 and rcvHex == '7e'):
+                rcvHexArray.append(rcvHex)
+                hexadecimal_string = hexadecimal_string + rcvHex
+                rcvcount = rcvcount + 1
+            elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
+                rcvHexArray.append(rcvHex)
+                hexadecimal_string = hexadecimal_string + rcvHex
+                rcvcount = rcvcount + 1
+                if(rcvHex == '7e' or rcvHex == '7f'):
+                    isDataReady = True
+
+    except serial.SerialException:
+        sys.stderr.write("WARNING - conexión ocupada, intentar más tarde ")
+        sys.exit(1)
+    hexResponse = bytearray.fromhex(hexadecimal_string)
+    return hexResponse
+
+def write_serial_frame(Trama, s):
+    cmd_bytes = bytearray.fromhex(Trama)
+        #print(cmd_bytes)
+    hex_byte = ''
+    for cmd_byte in cmd_bytes:
+        hex_byte = ("{0:02x}".format(cmd_byte))
+        s.write(bytes.fromhex(hex_byte))
+    s.flush()
 
 
 if __name__ == "__main__":
