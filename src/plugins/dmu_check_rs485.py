@@ -545,7 +545,7 @@ def main():
     parameter_dict = dict()
     
     for frame in frame_list:
-        rs485.write_serial_frame(s, frame)
+        rs485.write_serial_frame(frame,s)
         
         hex_data_frame = rs485.read_serial_frame(Port, s)
         
