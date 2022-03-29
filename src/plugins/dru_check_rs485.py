@@ -584,7 +584,6 @@ def  convertirMultipleRespuesta(data):
     isWriting = False
 
     for i in range(0,len(data)-1):
-        print("i"+str(i))
         if isWriting == False:
             dataLen = data[i]
             isWriting = True
@@ -600,33 +599,58 @@ def  convertirMultipleRespuesta(data):
             dataResult.append(resultHEX)
             temp.clear()
 
-
-    graphite = ""
     table =""
+    graphite = ""
+    parameter_dic = dict()
     for data in dataResult:
         cmdNumber = data[:4]
         cmdValue = data[4:]
+        if cmdNumber =='0105':
+            temperature = s16(int(cmdValue,16))
+            parameter_dic['paTemperature'] = str(temperature)
+        elif cmdNumber == '0305':
+            dl_power = s16(int(cmdValue, 16))
+            parameter_dic['dlOutputPower'] = str(dl_power)
+        elif cmdNumber == '2505':
+            ul_power = s16(int(cmdValue, 16))
+            parameter_dic['ulInputPower'] = str(ul_power)
+        elif cmdNumber == '0605':
+            vswr = s16(int(cmdValue, 16))/10
+            parameter_dic['vswr'] = str(round(vswr,2))
+        elif cmdNumber == '4004':
+            ul_att = (int(cmdValue, 16))
+            parameter_dic['ulAtt'] = str(ul_att)                          
+        elif cmdNumber == '4104':
+            dl_att = (int(cmdValue, 16))
+            parameter_dic['dlAtt'] = str(dl_att)  
+            
+    
+    for data in parameter_dic:
+        print(data + " "+parameter_dic[data] )
+        
+        
+    table = "<table border=\"1\">"
+    table += "<thead>"
+    table += "<tr>"
+    table += "<th width='15%'>Link</th>"
+    table += "<th width='15%'>Power [dBm] </th>"
+    table += "<th width='20%'>Attenuation [dB]</th>"
+    table += "</tr>"
+    table += "</thead>"
+    table += "<tbody>"
+    table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+"</td><td>"+parameter_dic['ulAtt']+"</td></tr>"
+    table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+"</td><td>"+parameter_dic['dlAtt']+"</td></tr>"   
+    table +="</tbody></table>"
+    
+    graphite ="Pa Temperature [C]="+parameter_dic['paTemperature']
+    graphite +=";DL Ouput Power [dBm]="+parameter_dic['dlOutputPower']
+    graphite +=";VSWR ="+parameter_dic['vswr']
+    graphite +=";Uplink Input Power [dBm]="+parameter_dic['ulInputPower']
+    
+    table += "|" + graphite 
 
-        print("data: "+data+" cmdNumber "+cmdNumber+" : "+cmdValue)
-        if(cmdNumber =='0105' or cmdNumber =='0305' or cmdNumber =='2505' or cmdNumber =='0605'):
-             parameter = dataDRU[cmdNumber]
-
-             if cmdNumber == '0605':
-                 decSigned = s16(int(cmdValue,16))/10
-             else:
-                 decSigned = s16(int(cmdValue, 16))
-             value = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
-             name = parameter['name']
-             unit = parameter['unidad']
-             variable = parameter['variable']
-             graphite = graphite +variable+unit+ "=" + str(decSigned)+";"
-             table = table + "<tr style=font-size:12px><td>"+name+"</td><td>"+value+unit+"</td></tr>"
-
-    Table = "<table border=\"1\">"
-    Table +=  table
-    Table += "</tbody></table>"
-    Table += "|" + graphite
-    return Table
+    return table
+    
 
 # ----------------------
 #   MAIN
@@ -684,7 +708,6 @@ def main():
         print("WARNING - Dato recibido es desconocido")
         sys.exit(1)
 
-    print("data: "+resultHEX)
     hex_string = convertirMultipleRespuesta(data)
 
     if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
