@@ -12,7 +12,8 @@ Para DMU y action:Query
  python3 check_rs485.py --port /dev/ttyS0 --action query --device dmu --dmuDevice1 07 --dmuDevice2 00 --cmdNumber 36
  python3 check_rs485.py --port /dev/ttyS0 --action query --device dmu --dmuDevice1 07 --dmuDevice2 00 --cmdNumber F3
 
- 
+ python3 check_rs485.py --port /dev/ttyS0 --action set --device dmu --dmuDevice1 07 --dmuDevice2 00 --cmdBodyLenght 01 --cmdNumber 80 --cmdData 02 
+ python3 check_rs485.py --port /dev/ttyS0 --action query --device dmu --dmuDevice1 07 --dmuDevice2 00 --cmdBodyLenght 01 --cmdNumber 80 --cmdData 02
 
 Para DRU y action:Query
 =======================
@@ -28,3 +29,5 @@ python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 
 python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=160A --cmdData=00
 
 python3 check_rs485.py --port=/dev/ttyS1 --action=query --device=dru --druId=11 --cmdBodyLenght=04 --cmdNumber=1904 --cmdData=00
+
+
