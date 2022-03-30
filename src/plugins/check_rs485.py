@@ -673,7 +673,9 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
 #   convertir hex a decimal con signo
 # ----------------------------------------
 
-def s16(byte):
+def s16(value):
+    return -(value & 0x8000) | (value & 0x7fff)
+def s8(byte):
     if byte > 127:
         return (256-byte) * (-1)
     else:
@@ -833,14 +835,14 @@ def convertirRespuesta(Result, Device, CmdNumber):
         #convirtiendo hex to decimal con signo
         elif (Device=='dru' and (CmdNumber=='0105' or CmdNumber=='0305' or CmdNumber=='2505')):
              list = dataDRU[CmdNumber]
-             decSigned = s16(int(Result, 16))
+             decSigned = s8(int(Result, 16))
              formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
              tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
              Result = tmp 
 
         elif (Device=='dru' and (CmdNumber=='0605' )):
              list = dataDRU[CmdNumber]
-             decSigned = s16(int(Result, 16))/10
+             decSigned = s8(int(Result, 16))/10
              formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
              tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
              Result = tmp 
