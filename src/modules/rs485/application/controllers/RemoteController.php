@@ -240,7 +240,7 @@ class RemoteController extends Controller
             $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));                    
 		    $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
-            $byte1 = dechex(4 * (int) $this->_getParam('opt22'));
+            $byte1 = dechex((int) $this->_getParam('opt22'));
             $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
@@ -254,7 +254,7 @@ class RemoteController extends Controller
             $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));                   
 		    $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
-            $byte1 = dechex(4 * (int) $this->_getParam('opt23'));
+            $byte1 = dechex((int) $this->_getParam('opt23'));
             $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
