@@ -741,7 +741,7 @@ def create_table(responseDict):
 
 
     Table+="</tbody></table>"
-
+    print(responseDict['workingMode'])
     if (responseDict['workingMode'] == 'Channel Mode'):
         Table += "<br>"
         Table += "<table border=\"1\">"
