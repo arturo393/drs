@@ -574,9 +574,12 @@ def main():
 
     s.close()
     Table = create_table(parameter_dict)
+    
+    graphite ="UL Output Power [dBm]="+parameter_dict['ulInputPower']
+    graphite +=";DL Input Power [dBm]="+parameter_dict['dlOutputPower']
 
 
-    print(Table)
+    print(Table+"|"+graphite)
     sys.exit(0)
 
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber):
@@ -650,7 +653,7 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
         dlPower = s16(hex_as_int)/256
         parameter_dict['dlOutputPower'] = str(round(dlPower,2))
 
-        hexInvertido = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]
+        hexInvertido = hex_validated_frame[0+4:2+4]+ hex_validated_frame[2+4:4+4]
         hex_as_int = int(hexInvertido, 16)
         ulPower = s16(hex_as_int)/256
         parameter_dict['ulInputPower'] = str(round(ulPower,2))
