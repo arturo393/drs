@@ -503,7 +503,7 @@ def getChecksum(cmd):
     
     checksum = checksum.upper()
     checksum_new = checksum.replace('7E','5E7D')      
-    checksum_new = checksum.replace('5E','5E5D')      
+    #checksum_new = checksum.replace('5E','5E5D')      
     return checksum_new
 
 # ----------------------------------------------------
@@ -673,8 +673,11 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
 #   convertir hex a decimal con signo
 # ----------------------------------------
 
-def s16(value):
-    return -(value & 0x8000) | (value & 0x7fff)
+def s16(byte):
+    if byte > 127:
+        return (256-byte) * (-1)
+    else:
+        return byte
 # ----------------------------------------------------------------
 #   convierte la salida en hex a un valor representacion humana
 # ---------------------------------------------------------------
