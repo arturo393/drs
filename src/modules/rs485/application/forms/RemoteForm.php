@@ -304,6 +304,7 @@ class RemoteForm extends ConfigForm
             ->from('icinga_host r')
             ->columns(['r.*'])
             ->where(['r.object_type = ?' => 'object'])
+            ->where("object_name not like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
           $list[''] = '(select Host - IP )';
          foreach ($this->getDb()->select($select) as $row) {

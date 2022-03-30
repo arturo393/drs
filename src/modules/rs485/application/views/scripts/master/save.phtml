@@ -6,7 +6,12 @@
 <?php foreach ($this->salida as $result) { ?>
 <h1><?= $result['comando']  ?></h1>
 <pre>
- <?= $result['resultado'] ?>
+Resultado: <?= $result['resultado']  ?>
+</pre>
+
+<pre>
+Plugin Output. <br>
+   <?= $result['query'] ?>
 </pre>
 <br><br>
 <?php } ?>

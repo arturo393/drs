@@ -105,11 +105,24 @@ class MasterController extends Controller
             $dmuCmdLength = $trama->cmd_body_lenght; 
             $dmuCmdCode = $trama->cmd_number;
             $dmuCmdData = $this->_getParam('opt1');
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
+            $salidaArray = [];
+            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
+            //$salida = system($ejecutar . " 2>&1");
+            exec($ejecutar . " 2>&1", $salidaArray);    
+            usleep(50000);
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
             //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
-            usleep(100000);
+            //$query =  $dmuCmdData == '01' ? 'Channel' : 'WideBand';
+            $queryArray = [];
+            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '81', $dmuCmdData, 'query');
+            //$query = system($ejecutarQuery . " 2>&1");
+            exec($ejecutarQuery . " 2>&1", $queryArray);  
+            usleep(50000);
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            
+
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query ]);      
+            
         }
         #2: Gain power control ATT
         if ($this->_hasParam('opt2_hidden')){
@@ -123,11 +136,20 @@ class MasterController extends Controller
             $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT); 
             $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT); 
             $dmuCmdData = "{$byte1}{$byte2}";
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
-            usleep(100000);
+            $salidaArray = [];
+            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
+            exec($ejecutar . " 2>&1", $salidaArray);    
+            usleep(50000);
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            //$salida = "OK";
+            $queryArray = [];   
+            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, 'EF', $dmuCmdData, 'query');
+            exec($ejecutarQuery . " 2>&1", $queryArray);  
+            usleep(50000);
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
+            
         }
         #3: Channel Activation Status           
         if ($this->_hasParam('opt3_hidden')){
@@ -147,11 +169,21 @@ class MasterController extends Controller
                 
             }
             $dmuCmdData = $byte;
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
+            $salidaArray = [];
+            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
+            exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(100000);
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+                       
+            //$salida = "OK";
+            $queryArray = [];   
+            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '42', $dmuCmdData, 'query');
+            exec($ejecutarQuery . " 2>&1", $queryArray);  
+            usleep(100000);
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
+            
         }
         #4: Channel Frecuency Point Configuration
         if ($this->_hasParam('opt4_hidden')){
@@ -166,14 +198,24 @@ class MasterController extends Controller
                 $byte = "{$byte}{$input}";
             }
             $dmuCmdData = $byte;
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
+            $salidaArray = [];
+            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
+            exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(100000);
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            //$salida = "OK";   
+            $queryArray = [];
+            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '36', $dmuCmdData, 'query');
+            exec($ejecutarQuery . " 2>&1", $queryArray);  
+            usleep(100000);
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
+            system("clear  2>&1");
         }
         #5: Optical PortState
         if ($this->_hasParam('opt5_hidden')){
+                        
             $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));            
 		    $dmuDevice1 = $trama->dmu_device1;
 		    $dmuDevice2 = $trama->dmu_device2;
@@ -190,19 +232,28 @@ class MasterController extends Controller
                     
             }
             $dmuCmdData = $byte;
-            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);     
-            $salida = system($ejecutar . " 2>&1");  
-            //$salida = "OK";   
-            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida ]);      
+            $salidaArray = [];
+            $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
+            exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(100000);
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            //$salida = "OK";   
+            $queryArray = [];
+            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
+            exec($ejecutarQuery . " 2>&1", $queryArray);  
+            usleep(100000);
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            
+            array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
+            
         }
 
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);	
     }
 
-    private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData){
-        $paramFijos = '--port /dev/ttyS0 --action set --device dmu ';
+    private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, $action){
+        $paramFijos = "--port /dev/ttyS0 --action {$action} --device dmu ";
         $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
         $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
