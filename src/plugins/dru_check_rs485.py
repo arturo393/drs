@@ -340,7 +340,10 @@ frequencyDictionary = {
 4299625  : '237:  419,9625 MHz UL - 429,9625 MHz DL',
 4299750  : '238:  419,9750 MHz UL - 429,9750 MHz DL',
 4299875  : '239:  419,9875 MHz UL - 429,9875 MHz DL',
-4300000  : '240:  420,0000 MHz UL - 430,0000 MHz DL'
+4300000  : '240:  420,0000 MHz UL - 430,0000 MHz DL',
+4300125  : '240:  420,0125 MHz UL - 430,0125 MHz DL',
+4301875  : '240:  420,1875 MHz UL - 430,1875 MHz DL'
+
 }
 # --------------------------------
 # -- Imprimir mensaje de ayuda
@@ -573,8 +576,11 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
 #   convertir hex a decimal con signo
 # ----------------------------------------
 
-def s16(value):
-    return -(value & 0x8000) | (value & 0x7fff)
+def s16(byte):
+    if byte > 127:
+        return (256-byte) * (-1)
+    else:
+        return byte
 
 def  convertirMultipleRespuesta(data):
     i = 0
@@ -624,11 +630,7 @@ def  convertirMultipleRespuesta(data):
             dl_att = (int(cmdValue, 16))
             parameter_dic['dlAtt'] = str(dl_att)  
             
-    
-    for data in parameter_dic:
-        print(data + " "+parameter_dic[data] )
-        
-        
+                    
     table = "<table border=\"1\">"
     table += "<thead>"
     table += "<tr>"
@@ -640,6 +642,19 @@ def  convertirMultipleRespuesta(data):
     table += "<tbody>"
     table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+"</td><td>"+parameter_dic['ulAtt']+"</td></tr>"
     table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+"</td><td>"+parameter_dic['dlAtt']+"</td></tr>"   
+    table +="</tbody></table>"
+    
+    table += "<br>"
+    
+    table += "<table border=\"1\">"
+    table += "<thead>"
+    table += "<tr>"
+    table += "<th width='15%'>Temperature [°C] </th>"
+    table += "<th width='20%'>VSWR </th>"
+    table += "</tr>"
+    table += "</thead>"
+    table += "<tbody>"
+    table += "<tr align=\"center\" style=font-size:13px><td>"+parameter_dic['paTemperature']+"</td><td>"+parameter_dic['vswr']+"</td></tr>"
     table +="</tbody></table>"
     
     graphite ="Pa Temperature [C]="+parameter_dic['paTemperature']
@@ -662,9 +677,12 @@ def main():
     # -- Analizar los argumentos pasados por el usuario
     DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
 
-    # -- Armando la trama
-    frame = rs485.obtener_trama('query', 'dru', '00','00','040105000403050004060500042505000440040004410400','1a','00', DruId)
+    frame_list = list()
 
+    # -- Armando la trama
+    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', DruId))
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',DruId))
+    
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
     # --------------------------------------------------------
@@ -685,42 +703,187 @@ def main():
 
     # -- Mostrar el nombre del dispositivo
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
+    
+    parameter_dic = dict()
+    table =""
+    graphite=""
+    for frame in frame_list:
+        rs485.write_serial_frame(frame, s)
+        hexResponse = rs485.read_serial_frame(port, s)
+        
+        data = rs485.validar_trama_respuesta(hexResponse,'dru',5)
+        a_bytearray = bytearray(data)
+        resultHEX = a_bytearray.hex()
+        
+        try:
+            resultOK =  int(resultHEX, 16)
+        except:
+            print("WARNING - Dato recibido es desconocido")
+            sys.exit(1)
+        
+        data_result = get_data_result_list_from_validated_frame(data)
+        set_paramter_dic_from_data_result(parameter_dic, data_result)        
+        
+        # if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
+        #     print("CRITICAL - " + hex_string )
+        #     sys.exit(2)
+        # elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
+        #     print("WARNING - " + hex_string  )
+        #     sys.exit(1)
 
+        
+    table = create_table(parameter_dic)
+    
+    graphite ="Pa Temperature [C]="+parameter_dic['paTemperature']
+    graphite +=";DL Ouput Power [dBm]="+parameter_dic['dlOutputPower']
+    graphite +=";VSWR ="+parameter_dic['vswr']
+    graphite +=";Uplink Input Power [dBm]="+parameter_dic['ulInputPower']
+    
+    print(table+"|"+graphite)
+    sys.exit(0)
+    
 
-    rs485.write_serial_frame(frame, s)
-    #hexResponse = s.readline()
+def create_table(parameter_dic):
+    table = "<table border=\"1\">"
+    table += "<thead>"
+    table += "<tr>"
+    table += "<th width='15%'>Link</th>"
+    table += "<th width='15%'>Power [dBm] </th>"
+    table += "<th width='20%'>Attenuation [dB]</th>"
+    table += "</tr>"
+    table += "</thead>"
+    table += "<tbody>"
+    table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+"</td><td>"+parameter_dic['ulAtt']+"</td></tr>"
+    table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+"</td><td>"+parameter_dic['dlAtt']+"</td></tr>"   
+    table +="</tbody></table>"
+        
+    table += "<br>"
+        
+    table += "<table border=\"1\">"
+    table += "<thead>"
+    table += "<tr>"
+    table += "<th width='15%'>Temperature [°C] </th>"
+    table += "<th width='20%'>VSWR </th>"
+    table += "</tr>"
+    table += "</thead>"
+    table += "<tbody>"
+    table += "<tr align=\"center\" style=font-size:13px><td>"+parameter_dic['paTemperature']+"</td><td>"+parameter_dic['vswr']+"</td></tr>"
+    table +="</tbody></table>"
+    
+    print(parameter_dic['workingMode'])
+    if (parameter_dic['workingMode'] == 'Channel Mode'):
+        table += "<br>"
+        table += "<table border=\"1\">"
 
-    hexResponse = rs485.read_serial_frame(port, s)
-    s.close()
-    #print("Answer byte: ")
-    # print(hexResponse)
-    #print("Answer Hex: ")
-    #print(rcvHexArray)
+        table += "<thead><tr><th width='5%'>Channel</th><th width='9%'>Status</th><th width='25%'>UpLink Frequency [MHz]</th><th width='25%'>Downlink Frequency [MHz]</th></tr></thead><tbody>"
 
-    # Aqui se realiza la validacion de la respuesta
-    data = rs485.validar_trama_respuesta(hexResponse,'dru',5)
+        for i in range(1,17):
+            channel = str(i)
+            table +="<tr align=\"center\" style=font-size:10px><td>"+channel+"</td><td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td><td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td><td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td></tr>"
 
-    a_bytearray = bytearray(data)
-    resultHEX = a_bytearray.hex()
-    try:
-        resultOK =  int(resultHEX, 16)
-    except:
-        print("WARNING - Dato recibido es desconocido")
-        sys.exit(1)
+        table+="</tbody></table>"
+    return table
 
-    hex_string = convertirMultipleRespuesta(data)
+def set_paramter_dic_from_data_result(parameter_dic, data_result):
+    for data in data_result:
+        cmd_number = data[:4]
+        cmd_value = data[4:]
+        
+        if cmd_number =='0105':
+            temperature = s16(int(cmd_value,16))
+            parameter_dic['paTemperature'] = str(temperature)
+            
+        elif cmd_number == '0305':
+            dl_power = s16(int(cmd_value, 16))
+            parameter_dic['dlOutputPower'] = str(dl_power)
+            
+        elif cmd_number == '2505':
+            ul_power = s16(int(cmd_value, 16))
+            parameter_dic['ulInputPower'] = str(ul_power)
+            
+        elif cmd_number == '0605':
+            vswr = s16(int(cmd_value, 16))/10
+            parameter_dic['vswr'] = str(round(vswr,2))
+            
+        elif cmd_number == '4004':
+            ul_att = (int(cmd_value, 16))
+            parameter_dic['ulAtt'] = str(ul_att)  
+                                    
+        elif cmd_number == '4104':
+            dl_att = (int(cmd_value, 16))
+            parameter_dic['dlAtt'] = str(dl_att)
+            
+        elif cmd_number == 'ef0b':
+            working_mode = (int(cmd_value, 16))
 
-    if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
-        print("CRITICAL - " + hex_string )
-        sys.exit(2)
-    elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
-        print("WARNING - " + hex_string  )
-        sys.exit(1)
-    else:
-        print("OK - " + hex_string )
-        sys.exit(0)
+            if working_mode == 2:
+                parameter_dic['workingMode'] = "WideBand Mode"
+            elif working_mode == 3:
+                parameter_dic['workingMode'] = "Channel Mode"
+            else:
+                parameter_dic['workingMode'] = "Unknown"
+                
+        elif (cmd_number == '1004' or cmd_number == '1104' or cmd_number == '1204'
+            or cmd_number == '1304' or cmd_number == '1404' or cmd_number == '1504'
+            or cmd_number == '1604' or cmd_number == '1704' or cmd_number == '1804'
+            or cmd_number == '1904' or cmd_number == '1a04' or cmd_number == '1b04'
+            or cmd_number == '1c04' or cmd_number == '1d04' or cmd_number == '1e04'
+            or cmd_number == '1f04'):
+            
+            byte0 = int(cmd_value[0:2], 16)   
+            ch_number = int(cmd_number[1],16)+1
+            channel = 4270000 + (125 * byte0)   
+            text = frequencyDictionary[channel] 
+            parameter_dic["channel"+str(ch_number)+"ulFreq"] = text[4:22-6+2]
+            parameter_dic["channel"+str(ch_number)+"dlFreq"] = text[23:40-6+2]
+        
+        elif cmd_number == '160a':
+            byte1 = cmd_value[0:2]
+            byte2 = cmd_value[2:4]
 
+            # Code to convert hex to binary
+            res1 = "{0:08b}".format(int(byte1, 16))
+            res2 = "{0:08b}".format(int(byte2, 16))
+            binario = res1 + res2
+            channel = 0            
+            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
+            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
+            for i  in binario:
+                channel += 1                
+                if (i == '1' ):  
+                    parameter_dic["channel"+str(channel)+"Status"] = "ON"                   
+                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"                             
+                else:
+                    parameter_dic["channel"+str(channel)+"Status"] = "OFF" 
+                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"                    
+            
+            Table +=   "</tbody></table>"
 
+def get_data_result_list_from_validated_frame(data):
+    i = 0
+    j = 0
+    temp = list()
+    dataResult = list()
+    isWriting = False
+
+    for i in range(0,len(data)-1):
+        if isWriting == False:
+            dataLen = data[i]
+            isWriting = True
+
+        if j<dataLen-1:
+            temp.append(data[i+1])
+            j = j+1
+        else:
+            isWriting = False
+            j = 0
+            a_bytearray = bytearray(temp)
+            resultHEX = a_bytearray.hex()
+            dataResult.append(resultHEX)
+            temp.clear()
+    return dataResult
+
+        
 
 
 if __name__ == "__main__":
