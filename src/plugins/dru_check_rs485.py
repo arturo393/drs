@@ -576,7 +576,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
 #   convertir hex a decimal con signo
 # ----------------------------------------
 
-def s16(byte):
+def s8(byte):
     if byte > 127:
         return (256-byte) * (-1)
     else:
@@ -612,16 +612,16 @@ def  convertirMultipleRespuesta(data):
         cmdNumber = data[:4]
         cmdValue = data[4:]
         if cmdNumber =='0105':
-            temperature = s16(int(cmdValue,16))
+            temperature = s8(int(cmdValue,16))
             parameter_dic['paTemperature'] = str(temperature)
         elif cmdNumber == '0305':
-            dl_power = s16(int(cmdValue, 16))
+            dl_power = s8(int(cmdValue, 16))
             parameter_dic['dlOutputPower'] = str(dl_power)
         elif cmdNumber == '2505':
-            ul_power = s16(int(cmdValue, 16))
+            ul_power = s8(int(cmdValue, 16))
             parameter_dic['ulInputPower'] = str(ul_power)
         elif cmdNumber == '0605':
-            vswr = s16(int(cmdValue, 16))/10
+            vswr = s8(int(cmdValue, 16))/10
             parameter_dic['vswr'] = str(round(vswr,2))
         elif cmdNumber == '4004':
             ul_att = (int(cmdValue, 16))
@@ -790,19 +790,19 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
         cmd_value = data[4:]
         
         if cmd_number =='0105':
-            temperature = s16(int(cmd_value,16))
+            temperature = s8(int(cmd_value,16))
             parameter_dic['paTemperature'] = str(temperature)
             
         elif cmd_number == '0305':
-            dl_power = s16(int(cmd_value, 16))
+            dl_power = s8(int(cmd_value, 16))
             parameter_dic['dlOutputPower'] = str(dl_power)
             
         elif cmd_number == '2505':
-            ul_power = s16(int(cmd_value, 16))
+            ul_power = s8(int(cmd_value, 16))
             parameter_dic['ulInputPower'] = str(ul_power)
             
         elif cmd_number == '0605':
-            vswr = s16(int(cmd_value, 16))/10
+            vswr = s8(int(cmd_value, 16))/10
             parameter_dic['vswr'] = str(round(vswr,2))
             
         elif cmd_number == '4004':
