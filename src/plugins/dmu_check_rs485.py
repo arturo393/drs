@@ -698,69 +698,75 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
         parameter_dict['ulAtt'] = valor1
         parameter_dict['dlAtt'] = valor2
 
+
 def create_table(responseDict):
 
-    Table = "<table border=\"1\">"
+    table =  "<h3><font color=\"#046c94\">"+ responseDict['workingMode']+"</font></h3>"
+    table += "<table width=450>"
+    table += "<thead>"
+    table += "<tr align=\"center\" style=font-size:12px>"
+    table += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
+    table += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
+    table += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
+    table += "<th width='22%'><font color=\"#046c94\">Connection Status</font></th>"
+    table += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
+    table += "</tr>"
+    table += "</thead>"
 
-    Table += "<thead>"
-    Table += "<tr>"
-    Table += "<th width='15%'>Port</th>"
-    Table += "<th width='15%'>Activation Status</th>"
-    Table += "<th width='15%'>Connected Remotes</th>"
-    Table += "<th width='15%'>Connection Status</th>"
-    Table += "<th width='15%'>Transmission Status</th>"
-    Table += "</tr>"
-    Table += "</thead>"
-
-    Table +="<tbody>"
+    table +="<tbody>"
 
     for i in range(1,5):
         opt = str(i)
-        Table +="<tr align=\"center\" style=font-size:12px>"
-        Table +="<td>opt"+opt+"</td>"
-        Table +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
-        Table +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
-        Table +="<td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td>"
-        Table +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
-        Table +="</tr>"
+        table +="<tr align=\"center\" style=font-size:12px>"
+        table +="<td>opt"+opt+"</td>"
+        table +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
+        table +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
+        table +="<td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td>"
+        table +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
+        table +="</tr>"
 
-    Table +="</tbody>"
-    Table +="</table>"
-
-
-    Table +="<br>"
-
-    Table += "<table border=\"1\">"
-    Table += "<thead>"
-    Table += "<tr>"
-    Table += "<th width='15%'>Link</th>"
-    Table += "<th width='15%'>Power [dBm] </th>"
-    Table += "<th width='20%'>Attenuation [dB]</th>"
-    Table += "</tr>"
-    Table += "</thead>"
-    Table += "<tbody>"
-    Table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+responseDict['ulInputPower']+"</td><td>"+responseDict['ulAtt']+"</td></tr>"
-    Table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+responseDict['dlOutputPower']+"</td><td>"+responseDict['dlAtt']+"</td></tr>"
+    table +="</tbody>"
+    table +="</table>"
 
 
-    Table+="</tbody></table>"
-    print(responseDict['workingMode'])
+    table +="<br>"
+
+    table += "<table width=250>"
+    table += "<thead>"
+    table += "<tr  align=\"center\" style=font-size:12px>"
+    table += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+    table += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+    table += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
+    table += "</tr>"
+    table += "</thead>"
+    table += "<tbody>"
+    table += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
+    table+="</tbody></table>"
+    
+
+    
     if (responseDict['workingMode'] == 'Channel Mode'):
-        Table += "<br>"
-        Table += "<table border=\"1\">"
-
-        Table += "<thead><tr><th width='5%'>Channel</th><th width='9%'>Status</th><th width='25%'>UpLink Frequency [MHz]</th><th width='25%'>Downlink Frequency [MHz]</th></tr></thead><tbody>"
+        table += "<br>"
+        table += "<table width=250>"
+        table += "<thead><tr style=font-size:11px>"
+        table += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+        table += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+        table += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table += "</tr></thead><tbody>"
 
         for i in range(1,17):
             channel = str(i)
-            Table +="<tr align=\"center\" style=font-size:10px><td>"+channel+"</td><td>"+responseDict["channel"+str(channel)+"Status"]+"</td><td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td><td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td></tr>"
+            table +="<tr align=\"center\" style=font-size:11px>"
+            table +="<td>"+channel+"</td>"
+            table +="<td>"+responseDict["channel"+str(channel)+"Status"]+"</td>"
+            table +="<td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td>"
+            table +="<td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td>"
+            table +="</tr>"
 
-        Table+="</tbody></table>"
-
-
-
-
-    return Table
+        table+="</tbody></table>"
+    return table
 
 
 if __name__ == "__main__":

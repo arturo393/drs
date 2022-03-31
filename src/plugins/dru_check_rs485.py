@@ -491,87 +491,6 @@ def formatearHex(dato):
 # -- Crc: Byte de control
 # ---------------------------------------------------
 
-
-def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
-
-    DmuDevice1_hex = formatearHex(DmuDevice1)
-    #print('DmuDevice1_hex: %s' % DmuDevice1_hex)
-
-    DmuDevice2_hex = formatearHex(DmuDevice2)
-    #print('DmuDevice2_hex: %s' % DmuDevice2_hex)
-
-    CmdNumber_hex = formatearHex(CmdNumber)
-    #print('CmdNumber_hex: %s' % CmdNumber_hex)
-
-    #print('CmdBodyLenght: %s' % CmdBodyLenght)
-    if (Device == 'dru'):
-        CmdBodyLenght_hex = formatearHex(CmdBodyLenght)
-
-        CmdData_hex = formatearHex(CmdData)
-        #print('CmdData_hex: %s' % CmdData_hex)
-
-        DruId_hex = formatearHex(DruId)
-        #print('DruId_hex: %s' % DruId_hex)
-
-        try:
-            cant_bytes = int(CmdBodyLenght_hex, 16)
-            #print('cant_bytes: %s' % cant_bytes)
-        except ValueError:
-            sys.stderr.write(
-                "CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
-            sys.exit(2)
-        tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
-        #print('tramaLengthCodeData: %s' % tramaLengthCodeData)
-        lenTramaLengthCodeData = int(len(tramaLengthCodeData)/2)
-        #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)
-        if lenTramaLengthCodeData != cant_bytes:
-            sys.stderr.write(
-                "CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
-            sys.exit(2)
-        if (Action == 'set'):
-            MessageType = C_TYPE_SET
-        else:
-            MessageType = C_TYPE_QUERY
-
-        Retunr_hex = C_RETURN
-
-    else:
-
-        Retunr_hex = ''
-        if (Action == 'set'):
-            CmdData_hex = formatearHex(CmdData)
-            #print('CmdData_hex: %s' % CmdData_hex)
-            CmdBodyLenght_hex = formatearHex(CmdBodyLenght)
-        else:
-            CmdData_hex = ''
-            CmdBodyLenght_hex = '00'
-    #print('CmdNumber_hex: %s' % CmdNumber_hex)
-
-    #print('Device: %s' % Device)
-    if Device == 'dru':
-        cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + \
-            C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + \
-            CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
-    elif(DmuDevice1_hex == '08'):
-        cmd_string = DmuDevice1_hex + DmuDevice2_hex + \
-            CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
-        #print('La trama corta: %s' % cmd_string)
-        checksum = getChecksumSimple(cmd_string)  # calcula CRC
-        trama = C_HEADER + cmd_string + checksum + '7F' + Retunr_hex
-        #print('Query: %s' % trama)
-        return str(trama)
-    else:
-        cmd_string = DmuDevice1_hex + DmuDevice2_hex + C_DATA_TYPE + \
-            CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
-
-    print('La trama corta: %s' % cmd_string)
-    checksum = getChecksum(cmd_string)  # calcula CRC
-
-    trama = C_HEADER + cmd_string + checksum + C_END + Retunr_hex
-
-    print('Query: %s' % trama)
-    return str(trama)
-
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
@@ -581,92 +500,6 @@ def s8(byte):
         return (256-byte) * (-1)
     else:
         return byte
-
-def  convertirMultipleRespuesta(data):
-    i = 0
-    j = 0
-    temp = list()
-    dataResult = list()
-    isWriting = False
-
-    for i in range(0,len(data)-1):
-        if isWriting == False:
-            dataLen = data[i]
-            isWriting = True
-
-        if j<dataLen-1:
-            temp.append(data[i+1])
-            j = j+1
-        else:
-            isWriting = False
-            j = 0
-            a_bytearray = bytearray(temp)
-            resultHEX = a_bytearray.hex()
-            dataResult.append(resultHEX)
-            temp.clear()
-
-    table =""
-    graphite = ""
-    parameter_dic = dict()
-    for data in dataResult:
-        cmdNumber = data[:4]
-        cmdValue = data[4:]
-        if cmdNumber =='0105':
-            temperature = s8(int(cmdValue,16))
-            parameter_dic['paTemperature'] = str(temperature)
-        elif cmdNumber == '0305':
-            dl_power = s8(int(cmdValue, 16))
-            parameter_dic['dlOutputPower'] = str(dl_power)
-        elif cmdNumber == '2505':
-            ul_power = s8(int(cmdValue, 16))
-            parameter_dic['ulInputPower'] = str(ul_power)
-        elif cmdNumber == '0605':
-            vswr = s8(int(cmdValue, 16))/10
-            parameter_dic['vswr'] = str(round(vswr,2))
-        elif cmdNumber == '4004':
-            ul_att = (int(cmdValue, 16))
-            parameter_dic['ulAtt'] = str(ul_att)                          
-        elif cmdNumber == '4104':
-            dl_att = (int(cmdValue, 16))
-            parameter_dic['dlAtt'] = str(dl_att)  
-            
-                    
-    table = "<table border=\"1\">"
-    table += "<thead>"
-    table += "<tr>"
-    table += "<th width='15%'>Link</th>"
-    table += "<th width='15%'>Power [dBm] </th>"
-    table += "<th width='20%'>Attenuation [dB]</th>"
-    table += "</tr>"
-    table += "</thead>"
-    table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+"</td><td>"+parameter_dic['ulAtt']+"</td></tr>"
-    table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+"</td><td>"+parameter_dic['dlAtt']+"</td></tr>"   
-    table +="</tbody></table>"
-    
-    table += "<br>"
-    
-    table += "<table border=\"1\">"
-    table += "<thead>"
-    table += "<tr>"
-    table += "<th width='15%'>Temperature [°C] </th>"
-    table += "<th width='20%'>VSWR </th>"
-    table += "</tr>"
-    table += "</thead>"
-    table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:13px><td>"+parameter_dic['paTemperature']+"</td><td>"+parameter_dic['vswr']+"</td></tr>"
-    table +="</tbody></table>"
-    
-    graphite ="Pa Temperature [C]="+parameter_dic['paTemperature']
-    graphite +=";DL Ouput Power [dBm]="+parameter_dic['dlOutputPower']
-    graphite +=";VSWR ="+parameter_dic['vswr']
-    graphite +=";Uplink Input Power [dBm]="+parameter_dic['ulInputPower']
-    
-    table += "|" + graphite 
-
-    return table
-    
-
 # ----------------------
 #   MAIN
 # ----------------------
@@ -722,6 +555,7 @@ def main():
             sys.exit(1)
         
         data_result = get_data_result_list_from_validated_frame(data)
+        
         set_paramter_dic_from_data_result(parameter_dic, data_result)        
         
         # if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
@@ -744,42 +578,51 @@ def main():
     
 
 def create_table(parameter_dic):
-    table = "<table border=\"1\">"
+    table =  "<h3><font color=\"#046c94\">"+parameter_dic['workingMode']+"</font></h3>"
+    table += "<table width=250>"
     table += "<thead>"
-    table += "<tr>"
-    table += "<th width='15%'>Link</th>"
-    table += "<th width='15%'>Power [dBm] </th>"
-    table += "<th width='20%'>Attenuation [dB]</th>"
+    table += "<tr  align=\"center\" style=font-size:12px>"
+    table += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+    table += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+    table += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
     table += "</tr>"
     table += "</thead>"
     table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+"</td><td>"+parameter_dic['ulAtt']+"</td></tr>"
-    table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+"</td><td>"+parameter_dic['dlAtt']+"</td></tr>"   
+    table += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
+    table += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"   
     table +="</tbody></table>"
         
     table += "<br>"
         
-    table += "<table border=\"1\">"
+    table += "<table width=100>"
     table += "<thead>"
-    table += "<tr>"
-    table += "<th width='15%'>Temperature [°C] </th>"
-    table += "<th width='20%'>VSWR </th>"
+    table += "<tr  style=font-size:12px>"
+    table += "<th width='70%'><font color=\"#046c94\">Temperature</font></th>"
+    table += "<th width='30%'><font color=\"#046c94\">VSWR</font></th>"
     table += "</tr>"
     table += "</thead>"
     table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:13px><td>"+parameter_dic['paTemperature']+"</td><td>"+parameter_dic['vswr']+"</td></tr>"
+    table += "<tr align=\"center\" style=font-size:12px><td>"+parameter_dic['paTemperature']+" [°C]</td><td>"+parameter_dic['vswr']+"</td></tr>"
     table +="</tbody></table>"
     
-    print(parameter_dic['workingMode'])
     if (parameter_dic['workingMode'] == 'Channel Mode'):
         table += "<br>"
-        table += "<table border=\"1\">"
-
-        table += "<thead><tr><th width='5%'>Channel</th><th width='9%'>Status</th><th width='25%'>UpLink Frequency [MHz]</th><th width='25%'>Downlink Frequency [MHz]</th></tr></thead><tbody>"
+        table += "<table width=250>"
+        table += "<thead><tr style=font-size:11px>"
+        table += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+        table += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+        table += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table += "</tr></thead><tbody>"
 
         for i in range(1,17):
             channel = str(i)
-            table +="<tr align=\"center\" style=font-size:10px><td>"+channel+"</td><td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td><td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td><td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td></tr>"
+            table +="<tr align=\"center\" style=font-size:11px>"
+            table +="<td>"+channel+"</td>"
+            table +="<td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td>"
+            table +="<td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td>"
+            table +="<td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td>"
+            table +="</tr>"
 
         table+="</tbody></table>"
     return table
@@ -840,24 +683,16 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
         elif cmd_number == '160a':
             byte1 = cmd_value[0:2]
             byte2 = cmd_value[2:4]
-
-            # Code to convert hex to binary
             res1 = "{0:08b}".format(int(byte1, 16))
             res2 = "{0:08b}".format(int(byte2, 16))
             binario = res1 + res2
             channel = 0            
-            Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
-            Table += "<thead><tr><th width='15%'>OPT</th><th width='15%'>VALUE</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
             for i  in binario:
                 channel += 1                
                 if (i == '1' ):  
-                    parameter_dic["channel"+str(channel)+"Status"] = "ON"                   
-                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"                             
+                    parameter_dic["channel"+str(channel)+"Status"] = "ON"                      
                 else:
-                    parameter_dic["channel"+str(channel)+"Status"] = "OFF" 
-                    Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"                    
-            
-            Table +=   "</tbody></table>"
+                    parameter_dic["channel"+str(channel)+"Status"] = "OFF"            
 
 def get_data_result_list_from_validated_frame(data):
     i = 0
@@ -882,9 +717,6 @@ def get_data_result_list_from_validated_frame(data):
             dataResult.append(resultHEX)
             temp.clear()
     return dataResult
-
-        
-
 
 if __name__ == "__main__":
     main()
