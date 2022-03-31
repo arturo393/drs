@@ -578,42 +578,51 @@ def main():
     
 
 def create_table(parameter_dic):
-    table = "<table border=\"1\">"
+    table =  "<h3><font color=\"#046c94\">"+parameter_dic['workingMode']+"</font></h3>"
+    table += "<table width=250>"
     table += "<thead>"
-    table += "<tr>"
-    table += "<th width='15%'>Link</th>"
-    table += "<th width='15%'>Power [dBm] </th>"
-    table += "<th width='20%'>Attenuation [dB]</th>"
+    table += "<tr  align=\"center\" style=font-size:12px>"
+    table += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+    table += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+    table += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
     table += "</tr>"
     table += "</thead>"
     table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:13px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+"</td><td>"+parameter_dic['ulAtt']+"</td></tr>"
-    table += "<tr align=\"center\" style=font-size:13px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+"</td><td>"+parameter_dic['dlAtt']+"</td></tr>"   
+    table += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
+    table += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"   
     table +="</tbody></table>"
         
     table += "<br>"
         
-    table += "<table border=\"1\">"
+    table += "<table width=100>"
     table += "<thead>"
-    table += "<tr>"
-    table += "<th width='15%'>Temperature [°C] </th>"
-    table += "<th width='20%'>VSWR </th>"
+    table += "<tr  style=font-size:12px>"
+    table += "<th width='70%'><font color=\"#046c94\">Temperature</font></th>"
+    table += "<th width='30%'><font color=\"#046c94\">VSWR</font></th>"
     table += "</tr>"
     table += "</thead>"
     table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:13px><td>"+parameter_dic['paTemperature']+"</td><td>"+parameter_dic['vswr']+"</td></tr>"
+    table += "<tr align=\"center\" style=font-size:12px><td>"+parameter_dic['paTemperature']+" [°C]</td><td>"+parameter_dic['vswr']+"</td></tr>"
     table +="</tbody></table>"
     
-    print(parameter_dic['workingMode'])
     if (parameter_dic['workingMode'] == 'Channel Mode'):
         table += "<br>"
-        table += "<table border=\"1\">"
-
-        table += "<thead><tr><th width='5%'>Channel</th><th width='9%'>Status</th><th width='25%'>UpLink Frequency [MHz]</th><th width='25%'>Downlink Frequency [MHz]</th></tr></thead><tbody>"
+        table += "<table width=250>"
+        table += "<thead><tr style=font-size:11px>"
+        table += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+        table += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+        table += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table += "</tr></thead><tbody>"
 
         for i in range(1,17):
             channel = str(i)
-            table +="<tr align=\"center\" style=font-size:10px><td>"+channel+"</td><td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td><td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td><td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td></tr>"
+            table +="<tr align=\"center\" style=font-size:11px>"
+            table +="<td>"+channel+"</td>"
+            table +="<td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td>"
+            table +="<td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td>"
+            table +="<td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td>"
+            table +="</tr>"
 
         table+="</tbody></table>"
     return table
