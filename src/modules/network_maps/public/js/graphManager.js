@@ -498,7 +498,7 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
         blockShifting: true,
         edgeMinimization: true,
         parentCentralization: true,
-        direction: 'LR',
+        direction: 'UD',
         sortMethod: 'directed',
       },
     },
