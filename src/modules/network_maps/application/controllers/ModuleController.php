@@ -52,11 +52,11 @@ class ModuleController extends Controller{
 
     public function hierarchyAction() {
 
-        $this->getTabs()->add('Network', array(
-            'active'    => false,
-            'label'     => $this->translate('Network Map'),
-            'url'       => 'network_maps/module/network'
-        ));
+        // $this->getTabs()->add('Network', array(
+        //     'active'    => false,
+        //     'label'     => $this->translate('Network Map'),
+        //     'url'       => 'network_maps/module/network'
+        // ));
 
         $this->getTabs()->add('Hierarchy', array(
             'active'    => true,
@@ -64,11 +64,11 @@ class ModuleController extends Controller{
             'url'       => 'network_maps/module/hierarchy'
         ));
 
-        $this->getTabs()->add('Grid', array(
-            'active'    => false,
-            'label'     => $this->translate('Grid Map'),
-            'url'       => 'network_maps/module/statusGrid'
-        ));
+        // $this->getTabs()->add('Grid', array(
+        //     'active'    => false,
+        //     'label'     => $this->translate('Grid Map'),
+        //     'url'       => 'network_maps/module/statusGrid'
+        // ));
 
     }
     

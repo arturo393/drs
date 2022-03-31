@@ -174,7 +174,7 @@ function formatDependencies(
               k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k);
             let currentItem = i + '-' + eval(k+1);
             Hosts.addHost({
-              display_name: druGroup,
+              display_name: "Remote "+eval(k+1),
               name: currentItem,
               state: state,
               hostname: hostname,
@@ -602,9 +602,9 @@ function startEventListeners(
 
 	 ///monitoring/host/services?host=dmu1&service=OPT3
         if (location.href.indexOf('/icingaweb2') > 1) {
-          hostMonitoringAddress = '/icingaweb2/monitoring/host/services?host=';
+          hostMonitoringAddress = '/icingaweb2/monitoring/host/show?host=';
         } else {
-          hostMonitoringAddress = '/monitoring/host/services?host=';
+          hostMonitoringAddress = '/monitoring/host/show?host=';
         }
 
         location.href =
