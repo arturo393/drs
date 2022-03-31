@@ -714,7 +714,6 @@ function startEventListeners(
           hostMonitoringAddress = '/monitoring/service/show?host=';
         }
 	
-	console.log(params.nodes[0].split('-')[1])
         location.href =
           './network_maps/module/' +
           draw_type +
