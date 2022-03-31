@@ -120,17 +120,25 @@ function formatDependencies(
             });
         if (service.attrs.vars?.isOPTPort === true) { 
           try {
-            // var servicePData = service.attrs.last_check_result.performance_data;
-            // var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
-            // var values = performance_data[1].split(';');
-            // var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
-            var rdus = Math.floor(Math.random() * 10);
+            var servicePData = service.attrs.last_check_result.performance_data;
+            var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
+            var values = performance_data[1].split(';');
+            var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
+            // var rdus = Math.floor(Math.random() * 10);
             for (k = 0; k < rdus; k++) {
+
               var hostname = service.attrs.host_name;
               var druGroup = service.attrs.host_name+"-"+service.attrs.name+"-dru"+eval(k+1)
               var state = 2;
               let parentItem = (k === 0)? service.attrs.name : service.attrs.name + '-' + (k);
               let currentItem = service.attrs.name + '-' + eval(k+1);
+
+              var state = 2;
+              for (l = 0; l < hostData.results.length; l++) {
+                if (druGroup === hostData.results[l].attrs.name) {
+                  state = hostData.results[l].attrs.last_check_result.state;
+                }
+              } 
               
               Hosts.addHost({
                 display_name: "Remote "+eval(k+1),
