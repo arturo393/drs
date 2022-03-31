@@ -113,7 +113,9 @@ function formatDependencies(
       }
     serviceData.results.map(service => {
       if (service.attrs.host_name === host.attrs.name) {
-        Hosts.addHost({ ...service.attrs, type: 'Service' });
+	const serviceId = service.attrs.name;
+        service.attrs.name = service.attrs.host_name+"-"+service.attrs.name;
+        Hosts.addHost({ ...service.attrs, id: serviceId, type: 'Service' });
         Hosts.addDependency({
               parent_host_name: service.attrs.host_name,
               child_host_name: service.attrs.name,
@@ -126,20 +128,19 @@ function formatDependencies(
             var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
             // var rdus = Math.floor(Math.random() * 10);
             for (k = 0; k < rdus; k++) {
-
               var hostname = service.attrs.host_name;
-              var druGroup = service.attrs.host_name+"-"+service.attrs.name+"-dru"+eval(k+1)
+              var druGroup = service.attrs.name+"-dru"+eval(k+1)
               var state = 2;
-              let parentItem = (k === 0)? service.attrs.name : service.attrs.name + '-' + (k);
-              let currentItem = service.attrs.name + '-' + eval(k+1);
+              let parentItem = (k === 0)? service.attrs.name : service.attrs.name + '-dru' + (k);
+              let currentItem = service.attrs.name + '-dru' + eval(k+1);
 
-              var state = 2;
+	      var state = 2;
               for (l = 0; l < hostData.results.length; l++) {
                 if (druGroup === hostData.results[l].attrs.name) {
                   state = hostData.results[l].attrs.last_check_result.state;
                 }
-              } 
-              
+              }  
+
               Hosts.addHost({
                 display_name: "Remote "+eval(k+1),
                 name: currentItem,
@@ -712,7 +713,8 @@ function startEventListeners(
         } else {
           hostMonitoringAddress = '/monitoring/service/show?host=';
         }
-
+	
+	console.log(params.nodes[0].split('-')[1])
         location.href =
           './network_maps/module/' +
           draw_type +
@@ -720,7 +722,8 @@ function startEventListeners(
           hostMonitoringAddress +
           thisNode.parent +
           '&service=' +
-          params.nodes[0]; //redirect to host info page.
+          params.nodes[0].split('-')[1];
+  //        params.nodes[0]; //redirect to host info page.
       } else if (thisNode.type === 'None') {
        
 
@@ -1172,4 +1175,5 @@ function HostArray() {
     return this.hostObject[name] != undefined;
   };
 }
+
 
