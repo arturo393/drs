@@ -1,7 +1,7 @@
 <?php
 $section = $this->menuSection(
     N_('Network Maps'),
-)->setUrl('network_maps/module/network')->setIcon('sitemap'
+)->setUrl('network_maps/module/hierarchy')->setIcon('sitemap'
 )->setRenderer(array(
     'SummaryNavigationItemRenderer',
     'state' => 'critical'
