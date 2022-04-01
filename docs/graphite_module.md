@@ -131,12 +131,15 @@ fgcolor = "black"
 rs485 = "alias(color($metric$, '#EC5707'), ' $metric$')"
 ```
 
-ensure file permissions are correct:
-`chown www-data:icingaweb2 /usr/share/icingaweb2/modules/graphite/templates/rs485.ini`
+
 
 
 # Copy Templates
 `cp REPO/modules/graphite/templates/*rs485.ini /usr/share/icingaweb2/modules/graphite/templates/`
+
+# File permissions
+ensure file permissions are correct:
+`chown -R www-data:icingaweb2 /usr/share/icingaweb2/modules/graphite/templates`
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
