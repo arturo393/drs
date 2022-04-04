@@ -11,24 +11,24 @@ class RemoteForm extends ConfigForm
 {
     use Database;
     private $listComando = [
-     15, #15: Upstream noise switch
-     16, #16: High threshold of upstream soise
-     17, #17: Low threshold of upstream noise
-     18, #18: Uplink noise correction value
-     19, #19: Uplink noise Detection parameter 1
-     20, #20: Uplink noise Detection parameter 2
+    # 15, #15: Upstream noise switch
+    # 16, #16: High threshold of upstream soise
+    # 17, #17: Low threshold of upstream noise
+    # 18, #18: Uplink noise correction value
+    # 19, #19: Uplink noise Detection parameter 1
+    # 20, #20: Uplink noise Detection parameter 2
      22, #22: Uplink ATT [dB]  - Cmd data 0x04004
      23, #23: Downlink ATT [dB] - Cmd data 0x04104
      25, #25: Choice of working mode - Cmd data 0xEF0B
-     26, #26: Uplinkg Start Frequency
-     27, #27: Downlink Start Frequency
-     30  #30: Master/Slave Link Alarm Control
+    # 26, #26: Uplinkg Start Frequency
+    # 27, #27: Downlink Start Frequency
+    # 30  #30: Master/Slave Link Alarm Control
     ];
 
     public function init()
     {
         $this->setName('form_remote');
-        $this->setSubmitLabel($this->translate('Enviar'));
+        $this->setSubmitLabel($this->translate('Submit Changes'));
         $this->setAction('rs485/remote/edit');
     }
 
@@ -44,7 +44,7 @@ class RemoteForm extends ConfigForm
               'select',
               'host_remote',
               array(
-                  'label' => $this->translate('Host'),
+                  #'label' => $this->translate('Device Master Unit'),
                   'multiOptions' => $listHost,
                   'required' => true,
                   // 'autosubmit' acts like an AJAX-Request
@@ -56,7 +56,7 @@ class RemoteForm extends ConfigForm
             'select',
             'dru_id',
             array(
-                'label' => $this->translate('Dru Id'),
+                #'label' => $this->translate('Device Remote Unit ID'),
                 'multiOptions' => $listIdDRU,
                 'required' => true,
                 // 'autosubmit' acts like an AJAX-Request
@@ -68,7 +68,7 @@ class RemoteForm extends ConfigForm
             'select',
             'trama',
             array(
-                 'label' => $this->translate('Comando'),
+                 #'label' => $this->translate('Parameter Selector'),
                  'multiOptions' => $listTrama,
                  'value' => '',
                  'required' => false,
@@ -179,8 +179,8 @@ class RemoteForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
-                        'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => 'numero entero entre 0 - 40',
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}")+ '     - values beteew 0[dB] - 40[dB]',
                         'required' => true,
                     ]);                     
                 }    
@@ -194,8 +194,8 @@ class RemoteForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
-                        'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => 'numero entero entre 0 - 40',
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}")+ '  - values beteew 0[dB] - 40[dB]',
                         'required' => true,
                     ]);                     
                 }    
@@ -212,7 +212,7 @@ class RemoteForm extends ConfigForm
                         'radio',
                         "opt{$input}",
                         array(
-                            'label' => $this->translate($descripcion),
+                            #'label' => $this->translate($descripcion),
                             'multiOptions' =>[
                             '02' => 'WideBand Mode',
                             '03' => 'Channel Mode'
