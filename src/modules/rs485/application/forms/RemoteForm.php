@@ -20,9 +20,9 @@ class RemoteForm extends ConfigForm
      22, #22: Uplink ATT [dB]  - Cmd data 0x04004
      23, #23: Downlink ATT [dB] - Cmd data 0x04104
      25, #25: Choice of working mode - Cmd data 0xEF0B
-    # 26, #26: Uplinkg Start Frequency
-    # 27, #27: Downlink Start Frequency
-    # 30  #30: Master/Slave Link Alarm Control
+   #  26, #26: Uplinkg Start Frequency
+   #  27, #27: Downlink Start Frequency
+   #  30  #30: Master/Slave Link Alarm Control
     ];
 
     public function init()
@@ -44,7 +44,7 @@ class RemoteForm extends ConfigForm
               'select',
               'host_remote',
               array(
-                  #'label' => $this->translate('Device Master Unit'),
+                  #'label' => $this->translate('Host'),
                   'multiOptions' => $listHost,
                   'required' => true,
                   // 'autosubmit' acts like an AJAX-Request
@@ -56,7 +56,7 @@ class RemoteForm extends ConfigForm
             'select',
             'dru_id',
             array(
-                #'label' => $this->translate('Device Remote Unit ID'),
+                #'label' => $this->translate('Dru Id'),
                 'multiOptions' => $listIdDRU,
                 'required' => true,
                 // 'autosubmit' acts like an AJAX-Request
@@ -68,7 +68,7 @@ class RemoteForm extends ConfigForm
             'select',
             'trama',
             array(
-                 #'label' => $this->translate('Parameter Selector'),
+                 #'label' => $this->translate('Comando'),
                  'multiOptions' => $listTrama,
                  'value' => '',
                  'required' => false,
@@ -180,7 +180,7 @@ class RemoteForm extends ConfigForm
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
                         #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}")+ '     - values beteew 0[dB] - 40[dB]',
+                        'placeholder' =>$this->translate("{$descripcion}"). '       - value between 0[dB] - 40[dB]',
                         'required' => true,
                     ]);                     
                 }    
@@ -195,7 +195,7 @@ class RemoteForm extends ConfigForm
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
                         #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}")+ '  - values beteew 0[dB] - 40[dB]',
+                        'placeholder' => $this->translate("{$descripcion}").'   - value between 0[dB] - 40[dB]',
                         'required' => true,
                     ]);                     
                 }    
@@ -212,7 +212,7 @@ class RemoteForm extends ConfigForm
                         'radio',
                         "opt{$input}",
                         array(
-                            #'label' => $this->translate($descripcion),
+                            'label' => $this->translate($descripcion),
                             'multiOptions' =>[
                             '02' => 'WideBand Mode',
                             '03' => 'Channel Mode'
@@ -306,7 +306,7 @@ class RemoteForm extends ConfigForm
             ->where(['r.object_type = ?' => 'object'])
             ->where("object_name not like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
-          $list[''] = '(select Host - IP )';
+          $list[''] = '(Masters - IP )';
          foreach ($this->getDb()->select($select) as $row) {
                 $list[$row->id] = "{$row->display_name} - {$row->address}";
          }
@@ -320,7 +320,7 @@ class RemoteForm extends ConfigForm
             ->where(['r.id  in (?)' => $this->listComando])            
             ->orderBy('r.name', SORT_ASC);
 
-        $list[''] = '(select comando)';
+        $list[''] = '(Parameters)';
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->id] = $row->name;
@@ -336,7 +336,7 @@ class RemoteForm extends ConfigForm
             ->where(['r.list_id  = ?' => $id])
             ->orderBy('r.entry_value', SORT_ASC);
 
-        $list[''] = '(select DRU)';
+        $list[''] = '(Remotes)';
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->entry_name] = $row->entry_value;
