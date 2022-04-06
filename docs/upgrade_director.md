@@ -3,9 +3,16 @@
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
 
-## Install Dependencies
+# Backup DB
 
-### Incubator
+```
+cd /opt
+mysqldump --host=localhost --user=root --port=3306 -p --all-databases > backup_all_databases.sql
+```
+
+# Install Dependencies
+
+## Incubator
 
 ```
 cd /usr/share/icinga2/modules
@@ -14,7 +21,7 @@ chown -R chown -R www-data:icingaweb2 incubator
 icingacli module enable incubator
 ```
 
-### React Bundle
+## React Bundle
 
 ```
 cd /usr/share/icinga2/modules
@@ -23,7 +30,7 @@ chown -R www-data:icingaweb2 reactbundle
 icingacli module enable reactbundle
 ```
 
-# Install 
+# Install  Upgrade
 
 ```
 cd /usr/share/icinga2/modules
