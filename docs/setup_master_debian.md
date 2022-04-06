@@ -43,8 +43,62 @@ object ApiUser "icingaweb2" {
 chown -R www-data:icingaweb2 /etc/icingaweb2/
 chown -R www-data:icingaweb2 /usr/share/icingaweb2/
 
+echo -e '
+<VirtualHost *:80>
+  ServerName localhost
+
+  ## Vhost docroot
+  # modified for Icinga Web 2
+  DocumentRoot "/usr/share/icingaweb2/public"
+
+  ## Rewrite rules
+  RewriteEngine On
+
+  <Directory "/usr/share/icingaweb2/public">
+      Options SymLinksIfOwnerMatch
+      AllowOverride None
+
+      <IfModule mod_authz_core.c>
+          # Apache 2.4
+          <RequireAll>
+              Require all granted
+          </RequireAll>
+      </IfModule>
+
+      <IfModule !mod_authz_core.c>
+          # Apache 2.2
+          Order allow,deny
+          Allow from all
+      </IfModule>
+
+      SetEnv ICINGAWEB_CONFIGDIR "/etc/icingaweb2"
+
+      EnableSendfile Off
+
+      <IfModule mod_rewrite.c>
+          RewriteEngine on
+          # modified base
+          RewriteBase /
+          RewriteCond %{REQUEST_FILENAME} -s [OR]
+          RewriteCond %{REQUEST_FILENAME} -l [OR]
+          RewriteCond %{REQUEST_FILENAME} -d
+          RewriteRule ^.*$ - [NC,L]
+          RewriteRule ^.*$ index.php [NC,L]
+      </IfModule>
+
+      <IfModule !mod_rewrite.c>
+          DirectoryIndex error_norewrite.html
+          ErrorDocument 404 /error_norewrite.html
+      </IfModule>
+  </Directory>
+</VirtualHost>
+' > /etc/apache2/sites-enabled/000-default.conf
 
 
+```
+
+Restart apache2:
+```
 systemctl restart apache2
 ```
 
@@ -66,6 +120,7 @@ open `http://<host-ip>/icingaweb2`
 - [Graphite WebUI Module](/docs/graphite_module.md)
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
 - [Cube WebUI Module](/docs/cube_module.md)
+- [Base Customizations](/docs/base_customizations.md)
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |

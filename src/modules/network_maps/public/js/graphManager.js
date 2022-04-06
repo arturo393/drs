@@ -98,103 +98,228 @@ function formatDependencies(
   // console.log('dependencyData:');
   // console.log(dependencyData.results);
 
-  // Add hosts and dependencies only from host data, not from dependencyData
-  for (i = 0; i < hostData.results.length; i++) {
-    if (hostData.results[i].attrs.vars?.addToMap === false) continue;
-
-    Hosts.addHost(hostData.results[i].attrs);
-    if (
-      typeof hostData.results[i].attrs.vars?.parents !== 'undefined' &&
-      hostData.results[i].attrs.vars?.parents !== null
-    ) {
-      for (j = 0; j < hostData.results[i].attrs.vars?.parents.length; j++) {
+  console.log("=====HOSTS======");
+  hostData.results.map(host => {
+    if (host.attrs.vars?.addToMap === false) return false;
+    Hosts.addHost(host.attrs);
+    // Parent Hosts
+    if (typeof host.attrs.vars?.parents !== 'undefined' && host.attrs.vars?.parents !== null) {
+      host.attrs.vars?.parents.map(parent => {
         Hosts.addDependency({
-          parent_host_name: hostData.results[i].attrs.vars?.parents[j],
-          child_host_name: hostData.results[i].attrs.name,
+          parent_host_name: parent,
+          child_host_name: host.attrs.name,
         });
+      })
       }
-    }
-  }
-  // Add services as hosts
-  console.log('Add services as hosts');
-  for (i = 0; i < serviceData.results.length; i++) {
-    if (serviceData.results[i].attrs.vars?.addToMap === false) continue;
-
-    var hostname = serviceData.results[i].attrs.host_name;
-
-    Hosts.addHost({ ...serviceData.results[i].attrs, type: 'Service' });
-    Hosts.addDependency({
-      parent_host_name: serviceData.results[i].attrs.host_name,
-      child_host_name: serviceData.results[i].attrs.name,
-    });
-
-    // Add RDUs
-    //For each MDU Port add RDUs
-    // if service template contains MDU and is RDU Port
-    // get rdus connected from attrs.vars.performance_data value (output of check_rs485)
-    // Add each as Host and dependency
-    try {
-      var serviceVars = serviceData.results[i].attrs.vars;
-      if (serviceVars) {
-        if (
-          'isOPTPort' in serviceVars &&
-          serviceData.results[i].attrs.vars.isOPTPort === true
-        ) {
-
+    serviceData.results.map(service => {
+      if (service.attrs.host_name === host.attrs.name) {
+	const serviceId = service.attrs.name;
+        service.attrs.name = service.attrs.host_name+"-"+service.attrs.name;
+        Hosts.addHost({ ...service.attrs, id: serviceId, type: 'Service' });
+        Hosts.addDependency({
+              parent_host_name: service.attrs.host_name,
+              child_host_name: service.attrs.name,
+            });
+        if (service.attrs.vars?.isOPTPort === true) { 
           try {
-            var servicePData =
-              serviceData.results[i].attrs.last_check_result.performance_data;
-            var performance_data = servicePData
-              .find((val) => val.startsWith('value='))
-              .split('=');
+            var servicePData = service.attrs.last_check_result.performance_data;
+            var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
             var values = performance_data[1].split(';');
-            var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1);
+            var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
+            // var rdus = Math.floor(Math.random() * 10);
+            for (k = 0; k < rdus; k++) {
+              var hostname = service.attrs.host_name;
+              var druGroup = service.attrs.name+"-dru"+eval(k+1)
+              var state = 2;
+              let parentItem = (k === 0)? service.attrs.name : service.attrs.name + '-dru' + (k);
+              let currentItem = service.attrs.name + '-dru' + eval(k+1);
+
+	      var state = 2;
+              for (l = 0; l < hostData.results.length; l++) {
+                if (druGroup === hostData.results[l].attrs.name) {
+                  state = hostData.results[l].attrs.last_check_result.state;
+                }
+              }  
+
+              Hosts.addHost({
+                display_name: "Remote "+eval(k+1),
+                name: currentItem,
+                state: state,
+                hostname: hostname,
+                zone: service.attrs.zone,
+                druHost: service.attrs.host_name,
+                druService: service.attrs.name,
+                druGroup: druGroup,
+                type: 'None',
+              });
+              Hosts.addDependency({
+                parent_host_name: parentItem,
+                child_host_name: currentItem,
+              });
+
+            }
           } catch (error) {
             console.log(error);
-          }         
-
-          // Add RDUs as Hosts
-          console.log('Add rdus as hosts');
-          for (k = 0; k < rdus; k++) {
-            // Calculate ServiceGroup Link
-            // Format: dmu1-opt1-dru1
-            // dmu1 part from host of this service
-            // opt1 part from the name of this service
-            // dru1 part from this index (i)
-            var druGroup = serviceData.results[i].attrs.host_name+"-"+serviceData.results[i].attrs.name+"-dru"+eval(k+1)
-
-	   var state = 2;
-           for (l = 0; l < hostData.results.length; l++) {
-              if (druGroup === hostData.results[l].attrs.name) {
-		   state = hostData.results[l].attrs.last_check_result.state;
-			}
-            } 
-
-            let parentItem =
-              k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k);
-            let currentItem = i + '-' + eval(k+1);
-            Hosts.addHost({
-              display_name: "Remote "+eval(k+1),
-              name: currentItem,
-              state: state,
-              hostname: hostname,
-              zone: serviceData.results[i].attrs.zone,
-              druHost: serviceData.results[i].attrs.host_name,
-              druService: serviceData.results[i].attrs.name,
-              druGroup: druGroup,
-              type: 'None',
-            });
-            Hosts.addDependency({
-              parent_host_name: parentItem,
-              child_host_name: currentItem,
-            });
           }
         }
       }
-    } catch (e) {
-      console.log(e);
-    }
-  }
+      
+      // if (service.attrs.vars?.isOPTPort === true) { 
+      //   //Obtiene la cantidad de DRUs conectados
+      //   try {
+      //     var servicePData = service.attrs.last_check_result.performance_data;
+      //     var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
+      //     var values = performance_data[1].split(';');
+      //     var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
+      //     rdus = Math.floor(Math.random() * 10);
+      //   } catch (error) {
+      //     console.log(error);
+      //   }
+      //   //Agrega tantos DRU como Host como cantidad encontrada en el servicio
+      //   console.log(k)
+      //   // for (k = 0; k < rdus; k++) {
+      //   //   var druGroup = serviceData.results[i].attrs.host_name+"-"+serviceData.results[i].attrs.name+"-dru"+eval(k+1)
+      //   //   var state = 2;
+      //   //   let parentItem = (k === 0)? serviceData.results[i].attrs.name : i + '-' + (k);
+      //   //   let currentItem = i + '-' + eval(k+1);
+      //   //   Hosts.addHost({
+      //   //     display_name: "Remote "+eval(k+1),
+      //   //     name: currentItem,
+      //   //     state: state,
+      //   //     hostname: hostname,
+      //   //     zone: serviceData.results[i].attrs.zone,
+      //   //     druHost: serviceData.results[i].attrs.host_name,
+      //   //     druService: serviceData.results[i].attrs.name,
+      //   //     druGroup: druGroup,
+      //   //     type: 'None',
+      //   //   });
+      //   // }
+
+      // }
+    })
+  })
+
+  // console.log("=====Services======")
+  // serviceData.results.map(service => {
+  //   if (service.attrs.vars?.addToMap === false) return false;
+  //   Hosts.addHost({ ...service.attrs, type: 'Service' });
+  //   Hosts.addDependency({
+  //     parent_host_name: service.attrs.host_name,
+  //     child_host_name: service.attrs.name,
+  //   });
+  //   // Find RDUs
+  //   var serviceVars = service.attrs.vars
+  //   if ('isOPTPort' in serviceVars && service.attrs.vars.isOPTPort === true) {
+  //     try {
+  //       var servicePData = service.attrs.last_check_result.performance_data;
+  //       var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
+  //       var values = performance_data[1].split(';');
+  //       var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
+  //     } catch (error) {
+  //       console.log(error);
+  //     } 
+  //   }
+
+  // })
+
+
+  // Add hosts and dependencies only from host data, not from dependencyData
+  // for (i = 0; i < hostData.results.length; i++) {
+  //   if (hostData.results[i].attrs.vars?.addToMap === false) continue;
+
+  //   Hosts.addHost(hostData.results[i].attrs);
+  //   if (
+  //     typeof hostData.results[i].attrs.vars?.parents !== 'undefined' &&
+  //     hostData.results[i].attrs.vars?.parents !== null
+  //   ) {
+  //     for (j = 0; j < hostData.results[i].attrs.vars?.parents.length; j++) {
+  //       Hosts.addDependency({
+  //         parent_host_name: hostData.results[i].attrs.vars?.parents[j],
+  //         child_host_name: hostData.results[i].attrs.name,
+  //       });
+  //     }
+  //   }
+  // }
+  // Add services as hosts
+  console.log('Add services as hosts');
+  // for (i = 0; i < serviceData.results.length; i++) {
+  //   if (serviceData.results[i].attrs.vars?.addToMap === false) continue;
+
+  //   var hostname = serviceData.results[i].attrs.host_name;
+
+  //   Hosts.addHost({ ...serviceData.results[i].attrs, type: 'Service' });
+  //   Hosts.addDependency({
+  //     parent_host_name: serviceData.results[i].attrs.host_name,
+  //     child_host_name: serviceData.results[i].attrs.name,
+  //   });
+
+  //   // Add RDUs
+  //   //For each MDU Port add RDUs
+  //   // if service template contains MDU and is RDU Port
+  //   // get rdus connected from attrs.vars.performance_data value (output of check_rs485)
+  //   // Add each as Host and dependency
+  //   try {
+  //     var serviceVars = serviceData.results[i].attrs.vars;
+  //     if (serviceVars) {
+  //       if (
+  //         'isOPTPort' in serviceVars &&
+  //         serviceData.results[i].attrs.vars.isOPTPort === true
+  //       ) {
+
+  //         try {
+  //           var servicePData =
+  //             serviceData.results[i].attrs.last_check_result.performance_data;
+  //           var performance_data = servicePData
+  //             .find((val) => val.startsWith('value='))
+  //             .split('=');
+  //           var values = performance_data[1].split(';');
+  //           var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1);
+  //         } catch (error) {
+  //           console.log(error);
+  //         }         
+
+  //         // Add RDUs as Hosts
+  //         console.log('Add rdus as hosts');
+  //         for (k = 0; k < rdus; k++) {
+  //           // Calculate ServiceGroup Link
+  //           // Format: dmu1-opt1-dru1
+  //           // dmu1 part from host of this service
+  //           // opt1 part from the name of this service
+  //           // dru1 part from this index (i)
+  //           var druGroup = serviceData.results[i].attrs.host_name+"-"+serviceData.results[i].attrs.name+"-dru"+eval(k+1)
+
+	//    var state = 2;
+  //          for (l = 0; l < hostData.results.length; l++) {
+  //             if (druGroup === hostData.results[l].attrs.name) {
+	// 	   state = hostData.results[l].attrs.last_check_result.state;
+	// 		}
+  //           } 
+
+  //           let parentItem =
+  //             k === 0 ? serviceData.results[i].attrs.name : i + '-' + (k);
+  //           let currentItem = i + '-' + eval(k+1);
+  //           Hosts.addHost({
+  //             display_name: "Remote "+eval(k+1),
+  //             name: currentItem,
+  //             state: state,
+  //             hostname: hostname,
+  //             zone: serviceData.results[i].attrs.zone,
+  //             druHost: serviceData.results[i].attrs.host_name,
+  //             druService: serviceData.results[i].attrs.name,
+  //             druGroup: druGroup,
+  //             type: 'None',
+  //           });
+  //           Hosts.addDependency({
+  //             parent_host_name: parentItem,
+  //             child_host_name: currentItem,
+  //           });
+  //         }
+  //       }
+  //     }
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // }
   console.log('End Patch');
   // END Patch
 
@@ -373,7 +498,7 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
         blockShifting: true,
         edgeMinimization: true,
         parentCentralization: true,
-        direction: 'LR',
+        direction: 'UD',
         sortMethod: 'directed',
       },
     },
@@ -588,7 +713,7 @@ function startEventListeners(
         } else {
           hostMonitoringAddress = '/monitoring/service/show?host=';
         }
-
+	
         location.href =
           './network_maps/module/' +
           draw_type +
@@ -596,7 +721,8 @@ function startEventListeners(
           hostMonitoringAddress +
           thisNode.parent +
           '&service=' +
-          params.nodes[0]; //redirect to host info page.
+          params.nodes[0].split('-')[1];
+  //        params.nodes[0]; //redirect to host info page.
       } else if (thisNode.type === 'None') {
        
 
@@ -1048,4 +1174,5 @@ function HostArray() {
     return this.hostObject[name] != undefined;
   };
 }
+
 
