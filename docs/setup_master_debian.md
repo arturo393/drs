@@ -120,6 +120,7 @@ open `http://<host-ip>/icingaweb2`
 - [Graphite WebUI Module](/docs/graphite_module.md)
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
 - [Cube WebUI Module](/docs/cube_module.md)
+- [Base Customizations](/docs/base_customizations.md)
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
