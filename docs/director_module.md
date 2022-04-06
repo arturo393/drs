@@ -29,6 +29,11 @@ Charset: utf8
 
 Go to menu "Icinga Director" -> "[Create Schema]"
 
+
+# Upgrade Director
+
+To upgrade director module, follow the steps following the steps in the [upgrade_director.md](/docs/upgrade_director.md) file.
+
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
