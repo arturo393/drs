@@ -21,6 +21,7 @@ import getopt
 import serial
 from crccheck.crc import Crc16Xmodem
 import argparse
+
 import check_rs485 as rs485
 # --------------------------------
 # -- Declaracion de constantes
@@ -352,7 +353,7 @@ def help():
     Ejemplo de uso del puerto serie en Python
 
     opciones:
-    -p, --port   Puerto serie a leer o escribir Ej. /dev/ttyS0
+    -lwul, --port   Puerto serie a leer o escribir Ej. /dev/ttyS0
     -a, --action  ACTION: query ; set
     -d, --device  dmu, dru
     -x, --dmuDevice1  INTERFACE: ID de PA o DSP, Ej. F8, F9, FA, etc
@@ -380,24 +381,17 @@ def analizar_argumentos():
     # Construct the argument parser
     ap = argparse.ArgumentParser()
 
+    
     # Add the arguments to the parser
     #ap.add_argument("-h", "--help", required=False,  help="help")
-    ap.add_argument("-lwul", "--lowLevelWarningUL", required=False,
-                    help="lowLevelWarning es requerido", default=0)
-    ap.add_argument("-hwul", "--highLevelWarningUL", required=False,
-                    help="highLevelWarning es requerido", default=0)
-    ap.add_argument("-lcul", "--lowLevelCriticalUL", required=False,
-                    help="lowLevelCritical es requerido", default=0)
-    ap.add_argument("-hcul", "--highLevelCriticalUL", required=False,
-                    help="highLevelCritical es requerido", default=0)
-    ap.add_argument("-lwdl", "--lowLevelWarningDL", required=False,
-                    help="lowLevelWarning es requerido", default=0)
-    ap.add_argument("-hwdl", "--highLevelWarningDL", required=False,
-                    help="highLevelWarning es requerido", default=0)
-    ap.add_argument("-lcdl", "--lowLevelCriticalDL", required=False,
-                    help="lowLevelCritical es requerido", default=0)
-    ap.add_argument("-hcdl", "--highLevelCriticalDL", required=False,
-                    help="highLevelCritical es requerido", default=0)
+    ap.add_argument("-lwul","--lowLevelWarningUL",   required=False,help="lowLevelWarning es requerido", default=-200)
+    ap.add_argument("-hwul","--highLevelWarningUL",  required=False,help="highLevelWarning es requerido", default=200)
+    ap.add_argument("-lcul","--lowLevelCriticalUL",  required=False,help="lowLevelCritical es requerido", default=-200)
+    ap.add_argument("-hcul","--highLevelCriticalUL", required=False,help="highLevelCritical es requerido", default=200)
+    ap.add_argument("-lwdl","--lowLevelWarningDL",   required=False,help="lowLevelWarningDL es requerido", default=-200)
+    ap.add_argument("-hwdl","--highLevelWarningDL",  required=False,help="highLevelWarning es requerido", default=200)
+    ap.add_argument("-lcdl","--lowLevelCriticalDL",  required=False,help="lowLevelCritical es requerido", default=-200)
+    ap.add_argument("-hcdl","--highLevelCriticalDL", required=False,help="highLevelCritical es requerido", default=200)
 
 
     try:
@@ -416,6 +410,7 @@ def analizar_argumentos():
     HighLevelWarningDL = int(args['highLevelWarningDL'])
     LowLevelCriticalDL = int(args['lowLevelCriticalDL'])
     HighLevelCriticalDL = int(args['highLevelCriticalDL'])
+    
 
 
     return LowLevelWarningUL, HighLevelWarningUL, LowLevelCriticalUL, HighLevelCriticalUL, LowLevelWarningDL, HighLevelWarningDL, LowLevelCriticalDL, HighLevelCriticalDL
@@ -509,7 +504,7 @@ def main():
 
     # -- Analizar los argumentos pasados por el usuario
     frame_list  = list()
-    LowLevelWarningUL, HighLevelWarningUL, LowLevelCriticalUL, HighLevelCriticalUL, LowLevelWarningDL, HighLevelWarningDL, LowLevelCriticalDL, HighLevelCriticalDL  = analizar_argumentos()
+    LowLevelWarningUL, high_level_warning_uplink, LowLevelCriticalUL, high_level_critical_uplink, LowLevelWarningDL, high_level_warning_downlink, LowLevelCriticalDL, high_level_critical_downlink  = analizar_argumentos()
 
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
@@ -523,6 +518,8 @@ def main():
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','42','00','00','00'))
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','9a','00','00','00'))
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','91','00','00','00'))
+    
+    
 
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -561,26 +558,36 @@ def main():
 
         cmdNumber = frame[8:10]
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
-
-       # if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
-       #     print("CRITICAL - " + hex_string )
-       #     sys.exit(2)
-       # elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
-       #     print("WARNING - " + hex_string  )
-       #     sys.exit(1)
-       # else:
-       #     print("OK - " + hex_string )
-       #     sys.exit(0)
-
+        
     s.close()
-    Table = create_table(parameter_dict)
     
-    graphite ="UL Output Power [dBm]="+parameter_dict['ulInputPower']
-    graphite +=";DL Input Power [dBm]="+parameter_dict['dlOutputPower']
+    dlPower = float(parameter_dict['dlOutputPower'])
+    ulPower = float(parameter_dict['ulInputPower'])
+    
+    alarm =""
+    exit_value = 0
+    if dlPower >= high_level_warning_downlink:
+        alarm ="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
+    if ulPower >= high_level_warning_uplink:
+        alarm ="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " +parameter_dict['dlOutputPower']+"[dBm]</font></h3>"
+    if ulPower >= high_level_critical_uplink:
 
+        alarm ="<h3><font color=\"#ff5566\">Uplink Power Level Critical " +parameter_dict['dlOutputPower']+"[dBm]!</font></h3>"  
+    if dlPower >= high_level_critical_downlink:
 
-    print(Table+"|"+graphite)
-    sys.exit(0)
+        alarm ="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
+            
+            
+    parameter_html_table = create_table(parameter_dict)  
+
+    
+    uplinkg_graphite  ="Uplink="+parameter_dict['ulInputPower']+";"+str(high_level_warning_uplink)+";"+str(high_level_critical_uplink)
+    downlink_graphite ="Downlink="+parameter_dict['dlOutputPower']+";"+str(high_level_warning_downlink)+";"+str(high_level_critical_downlink)
+    graphite = uplinkg_graphite+" "+downlink_graphite
+    
+    
+    print(alarm+parameter_html_table+"|"+graphite)
+    sys.exit(exit_value)
 
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber):
     if cmdNumber=='f8':
@@ -701,71 +708,80 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
 
 def create_table(responseDict):
 
-    table =  "<h3><font color=\"#046c94\">"+ responseDict['workingMode']+"</font></h3>"
-    table += "<table width=450>"
-    table += "<thead>"
-    table += "<tr align=\"center\" style=font-size:12px>"
-    table += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
-    table += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
-    table += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
-    table += "<th width='22%'><font color=\"#046c94\">Connection Status</font></th>"
-    table += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
-    table += "</tr>"
-    table += "</thead>"
-
-    table +="<tbody>"
+    
+    table1 = "<table width=400>"
+    table1 += "<thead>"
+    table1 += "<tr align=\"center\" style=font-size:12px>"
+    table1 += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Connection Status</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
+    table1 += "</tr>"
+    table1 += "</thead>"
+    table1 +="<tbody>"
 
     for i in range(1,5):
         opt = str(i)
-        table +="<tr align=\"center\" style=font-size:12px>"
-        table +="<td>opt"+opt+"</td>"
-        table +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
-        table +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
-        table +="<td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td>"
-        table +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
-        table +="</tr>"
+        table1 +="<tr align=\"center\" style=font-size:12px>"
+        table1 +="<td>opt"+opt+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
+        table1 +="</tr>"
 
-    table +="</tbody>"
-    table +="</table>"
+    table1 +="</tbody>"
+    table1 +="</table>"
 
-
-    table +="<br>"
-
-    table += "<table width=250>"
-    table += "<thead>"
-    table += "<tr  align=\"center\" style=font-size:12px>"
-    table += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
-    table += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
-    table += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
-    table += "</tr>"
-    table += "</thead>"
-    table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
-    table += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
-    table+="</tbody></table>"
+    table2 = "<table width=250>"
+    table2 += "<thead>"
+    table2 += "<tr  align=\"center\" style=font-size:12px>"
+    table2 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+    table2 += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+    table2 += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
+    table2 += "</tr>"
+    table2 += "</thead>"
+    table2 += "<tbody>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
+    table2+="</tbody></table>"
+    
     
 
+    table3 = "<table width=40%>"
+    table3 += "<thead><tr style=font-size:11px>"
+    table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+    table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+    table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+    table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+    table3 += "</tr></thead><tbody>"
     
     if (responseDict['workingMode'] == 'Channel Mode'):
-        table += "<br>"
-        table += "<table width=250>"
-        table += "<thead><tr style=font-size:11px>"
-        table += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
-        table += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-        table += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-        table += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
-        table += "</tr></thead><tbody>"
-
         for i in range(1,17):
             channel = str(i)
-            table +="<tr align=\"center\" style=font-size:11px>"
-            table +="<td>"+channel+"</td>"
-            table +="<td>"+responseDict["channel"+str(channel)+"Status"]+"</td>"
-            table +="<td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td>"
-            table +="<td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td>"
-            table +="</tr>"
-
-        table+="</tbody></table>"
+            table3 +="<tr align=\"center\" style=font-size:11px>"
+            table3 +="<td>"+channel+"</td>"
+            table3 +="<td>"+responseDict["channel"+str(channel)+"Status"]+"</td>"
+            table3 +="<td>"+responseDict["channel"+str(channel)+"ulFreq"]+"</td>"
+            table3 +="<td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td>"
+            table3 +="</tr>"
+    else:        
+        table3 +="<tr align=\"center\" style=font-size:11px>"    
+        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>&nbsp;</td>"
+        table3 +="</tr>"
+       
+    table3 +="</tbody></table>"
+    
+    
+    
+    table =  "<h3><font color=\"#046c94\">"+responseDict['workingMode']+"</font></h3>"
+    table += '<div class="sigma-container">'
+    table += table1+table2+table3
+    table += "</div>"
     return table
 
 

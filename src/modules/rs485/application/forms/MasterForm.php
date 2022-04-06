@@ -14,7 +14,7 @@ class MasterForm extends ConfigForm
     public function init()
     {
         $this->setName('form_master');
-        $this->setSubmitLabel($this->translate('Enviar'));
+        $this->setSubmitLabel($this->translate('Submit Changes'));
         $this->setAction('rs485/master/edit');
     }
 
@@ -29,7 +29,7 @@ class MasterForm extends ConfigForm
               'select',
               'host_remote',
               array(
-                  'label' => $this->translate('Host'),
+                  #'label' => $this->translate('Master List'),
                   'multiOptions' => $listHost,
                   'required' => true,
                   // 'autosubmit' acts like an AJAX-Request
@@ -41,7 +41,7 @@ class MasterForm extends ConfigForm
             'select',
             'trama',
             array(
-                 'label' => $this->translate('Comando'),
+                # 'label' => $this->translate('Parameter List'),
                  'multiOptions' => $listTrama,
                  'value' => '',
                  'required' => false,
@@ -62,19 +62,19 @@ class MasterForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('checkbox', "opt{$input}_1", [
-                        'label'       => $this->translate("{$descripcion} - Port 1")
+                        'label'       => "Enable - Port 1"
                     ]); 
                     
                     $this->addElement('checkbox', "opt{$input}_2", [
-                        'label'       => $this->translate("{$descripcion} - Port 2")
+                        'label'       => "Enable - Port 2"
                     ]); 
 
                     $this->addElement('checkbox', "opt{$input}_3", [
-                        'label'       => $this->translate("{$descripcion} - Port 3")
+                        'label'       => "Enable - Port 3"
                     ]); 
 
                     $this->addElement('checkbox', "opt{$input}_4", [
-                        'label'       => $this->translate("{$descripcion} - Port 4")
+                        'label'       => "Enable - Port 4"
                     ]);                     
                 }
             }
@@ -93,8 +93,8 @@ class MasterForm extends ConfigForm
                         array(
                             'label' => $this->translate($descripcion),
                             'multiOptions' =>[
-                            '01' => 'Channel',
-                            '02' => 'WideBand'
+                            '01' => 'Channel Mode',
+                            '02' => 'WideBand Mode'
                             ],
                             'required' => true,
                             // 'autosubmit' acts like an AJAX-Request
@@ -112,14 +112,14 @@ class MasterForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}_1", [
-                        'label'       => $this->translate("{$descripcion} - Uplink ATT [dB]"),
-                        'placeholder' => 'entero en 0 - 40',
+                        'label'       => "Uplink ATT [dB]",
+                        'placeholder' => 'between 0[dB] and 30[dB]',
                         'required' => true,
                     ]); 
                     
                     $this->addElement('text', "opt{$input}_2", [
-                        'label'       => $this->translate("{$descripcion} - Downlink ATT [dB]"),
-                        'placeholder' => 'entero en 0 - 40',
+                        'label'       =>'Downlink ATT [dB]',
+                        'placeholder' =>'between 0[dB] and 30[dB]',
                         'required' => true,                        
                          
                     ]);
@@ -138,10 +138,10 @@ class MasterForm extends ConfigForm
                             'radio',
                             "opt{$input}_{$i}",
                             array(
-                                'label' => $this->translate("Status - Channel {$i}"),
+                                'label' => $this->translate("Channel {$i}"),
                                 'multiOptions' =>[
-                                1 => 'On',
-                                0 => 'Off'
+                                1 => 'ON',
+                                0 => 'OFF'
                                 ],
                                 'required' => true,
                                 // 'autosubmit' acts like an AJAX-Request
@@ -169,7 +169,7 @@ class MasterForm extends ConfigForm
                             'select',
                             "opt{$input}_{$i}",
                             array(
-                                'label' => $this->translate("Frecuency - Channel {$i}"),
+                                'label' => $this->translate("Channel {$i}"),
                                 'multiOptions' => $listFrecuencia,
                                 'required' => true,
                                 // 'autosubmit' acts like an AJAX-Request
@@ -193,7 +193,7 @@ class MasterForm extends ConfigForm
             ->where(['r.object_type = ?' => 'object'])
             ->where("object_name not like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
-          $list[''] = '(select Host - IP )';
+          $list[''] = '(Master List - IP )';
          foreach ($this->getDb()->select($select) as $row) {
                 $list[$row->id] = "{$row->display_name} - {$row->address}";
          }
@@ -206,12 +206,12 @@ class MasterForm extends ConfigForm
             ->columns(['r.*'])
             //->where(['r.id not in (?)' => $excluir])
             ->orderBy('r.name', SORT_ASC);
-        $list[''] = '(select comando)';
+        $list[''] = '(Parameter List)';
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->id] = $row->name;
         }
-        $list[999] = 'Todos los camandos';
+        $list[999] = 'Setup All Parameters';
         return $list;
     }
 
@@ -233,7 +233,7 @@ class MasterForm extends ConfigForm
             ->columns(['r.*'])
             ->orderBy('r.channel', SORT_ASC);
 
-        $list[''] = '(select Frecuencia)';
+        $list[''] = '(Frequencies List)';
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->code_hex] = $row->description;

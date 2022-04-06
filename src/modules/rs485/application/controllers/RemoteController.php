@@ -32,7 +32,7 @@ class RemoteController extends Controller
             ->setIniConfig(Config::module('rs485'));
 
         $btnSubmit = $this->_hasParam('btn_submit') ?  $this->_getParam('btn_submit') : '';
-        if($btnSubmit == 'Enviar' ) {
+        if($btnSubmit == 'Submit Changes' ) {
             $error = false;
             #15: Upstream noise switch
             $validaRango =   $this->_hasParam('opt15_hidden') ? true : false;   
@@ -99,7 +99,7 @@ class RemoteController extends Controller
             if ($validaRango) {
                 if (!$this->validaRango($this->_getParam('opt22'), 0, 40)) {
                     $desc = $this->getDescripcion($this->_getParam('opt22_hidden'));
-                    $form->addError("{$desc} : El valor {$this->_getParam('opt22')} esta fuera de rango [0 - 40]");
+                    $form->addError("{$desc} : Value {$this->_getParam('opt22')} out of range [0 - 40]");
                     $error = true;
                 }                
             }  
@@ -108,7 +108,7 @@ class RemoteController extends Controller
             if ($validaRango) {
                 if (!$this->validaRango($this->_getParam('opt23'), 0, 40)) {
                     $desc = $this->getDescripcion($this->_getParam('opt23_hidden'));
-                    $form->addError("{$desc} : El valor {$this->_getParam('opt23')} esta fuera de rango [0 - 40]");
+                    $form->addError("{$desc} : Value {$this->_getParam('opt23')} out of range [0 - 40]");
                     $error = true;
                 }                
             }
@@ -121,7 +121,7 @@ class RemoteController extends Controller
                     $i=100;
                 }
                 if ($i==30){
-                    $form->addError("Debe seleccionar al menos un comando");
+                    $form->addError("Select a parameter from the list");
                     $error = true;  
                 }   
                 $i++;

@@ -32,13 +32,13 @@ class MasterController extends Controller
             ->setIniConfig(Config::module('rs485'));
 
         $btnSubmit = $this->_hasParam('btn_submit') ?  $this->_getParam('btn_submit') : '';
-        if($btnSubmit == 'Enviar' ) {
+        if($btnSubmit == 'Submit Changes' ) {
             $error = false;
             $validaRepetidos =  $this->_hasParam('opt4_hidden') ? true : false;     
             if ($validaRepetidos) {
                 $errorRepetidos = $this->validaRepetidos();
                 if ($errorRepetidos > 0){                    
-                    $form->addError("El canal {$errorRepetidos} tiene una frecuencia repetida");
+                    $form->addError("Channel {$errorRepetidos} is repeated");
                     $error = true;
                 }
             }
@@ -47,13 +47,13 @@ class MasterController extends Controller
             if ($validaRango) {
                 if (!$this->validaRango($this->_getParam('opt2_1'))) {
                     $desc = $this->getDescripcion($this->_getParam('opt2_hidden'));
-                    $form->addError("{$desc} Uplink ATT [dB]: El valor {$this->_getParam('opt2_1')} esta fuera de rango [0 - 40]");
+                    $form->addError("{$desc} Uplink ATT [dB]: Value {$this->_getParam('opt2_1')} out of range [0 - 30]");
                     $error = true;
                 }
 
                 if (!$this->validaRango($this->_getParam('opt2_2'))) {
                     $desc = $this->getDescripcion($this->_getParam('opt2_hidden'));
-                    $form->addError("{$desc} Downlink ATT [dB]: El valor {$this->_getParam('opt2_2')} esta fuera de rango [0 - 40]");
+                    $form->addError("{$desc} Downlink ATT [dB]: Value {$this->_getParam('opt2_2')} out of range [0 - 40]");
                     $error = true;
                 }
             }    
@@ -65,7 +65,7 @@ class MasterController extends Controller
                     $i=100;
                 }
                 if ($i==5){
-                    $form->addError("Debe seleccionar al menos un comando");
+                    $form->addError("Select a parameter");
                     $error = true;  
                 }   
                 $i++;
@@ -110,7 +110,7 @@ class MasterController extends Controller
             //$salida = system($ejecutar . " 2>&1");
             exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(50000);
-            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
             //$query =  $dmuCmdData == '01' ? 'Channel' : 'WideBand';
             $queryArray = [];
@@ -118,7 +118,7 @@ class MasterController extends Controller
             //$query = system($ejecutarQuery . " 2>&1");
             exec($ejecutarQuery . " 2>&1", $queryArray);  
             usleep(50000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
 
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query ]);      
@@ -140,13 +140,13 @@ class MasterController extends Controller
             $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
             exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(50000);
-            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";
             $queryArray = [];   
             $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, 'EF', $dmuCmdData, 'query');
             exec($ejecutarQuery . " 2>&1", $queryArray);  
             usleep(50000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             
@@ -173,14 +173,14 @@ class MasterController extends Controller
             $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
             exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(100000);
-            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
                        
             //$salida = "OK";
             $queryArray = [];   
             $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '42', $dmuCmdData, 'query');
             exec($ejecutarQuery . " 2>&1", $queryArray);  
             usleep(100000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             
@@ -202,13 +202,13 @@ class MasterController extends Controller
             $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
             exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(100000);
-            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
             $queryArray = [];
             $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '36', $dmuCmdData, 'query');
             exec($ejecutarQuery . " 2>&1", $queryArray);  
             usleep(100000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             system("clear  2>&1");
@@ -236,13 +236,13 @@ class MasterController extends Controller
             $ejecutar = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');     
             exec($ejecutar . " 2>&1", $salidaArray);    
             usleep(100000);
-            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Error al ejecutar comando set";
+            $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
             $queryArray = [];
             $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
             exec($ejecutarQuery . " 2>&1", $queryArray);  
             usleep(100000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Error al ejecutar comando set";          
+            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             
