@@ -518,6 +518,8 @@ def main():
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','42','00','00','00'))
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','9a','00','00','00'))
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','91','00','00','00'))
+    
+    
 
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -561,25 +563,30 @@ def main():
     
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
+    
+    alarm =""
     exit_value = 0
     if dlPower >= high_level_warning_downlink:
-        exit_value = 1  
+        alarm ="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
     if ulPower >= high_level_warning_uplink:
-        exit_value = 1
+        alarm ="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " +parameter_dict['dlOutputPower']+"[dBm]</font></h3>"
     if ulPower >= high_level_critical_uplink:
-        exit_value = 2     
+
+        alarm ="<h3><font color=\"#ff5566\">Uplink Power Level Critical " +parameter_dict['dlOutputPower']+"[dBm]!</font></h3>"  
     if dlPower >= high_level_critical_downlink:
-        exit_value = 2
+
+        alarm ="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
             
             
     parameter_html_table = create_table(parameter_dict)  
+
     
     uplinkg_graphite  ="Uplink="+parameter_dict['ulInputPower']+";"+str(high_level_warning_uplink)+";"+str(high_level_critical_uplink)
     downlink_graphite ="Downlink="+parameter_dict['dlOutputPower']+";"+str(high_level_warning_downlink)+";"+str(high_level_critical_downlink)
     graphite = uplinkg_graphite+" "+downlink_graphite
     
     
-    print(parameter_html_table+"|"+graphite)
+    print(alarm+parameter_html_table+"|"+graphite)
     sys.exit(exit_value)
 
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber):
