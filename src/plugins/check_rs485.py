@@ -54,10 +54,10 @@ dataDRU = {
     "0600" : " Device Channel number",
     "210B" : " RU ID",
     "0201" : "Remote ",
-    "0105" : { "unidad": " [°C]", "variable" : "Pa Temperature", "name" : "Power Amplifier Temperature"},
-    "0305" : { "unidad": " [dBm]", "variable" : "DL Ouput Power", "name" : "Downlink Output Power" }, 
+    "0105" : { "unidad": " [°C]", "variable" : "Temperature", "name" : "Power Amplifier Temperature"},
+    "0305" : { "unidad": " [dBm]", "variable" : "Power", "name" : "Downlink Output Power" }, 
     "0605" : { "unidad": " ", "variable" : "VSWR", "name" : "Downlink VSWR" },
-    "2505" : { "unidad": " [dBm]", "variable" : "Uplink Input Power", "name" : "Uplink Input Power" },
+    "2505" : { "unidad": " [dBm]", "variable" : "Power", "name" : "Uplink Input Power" },
     "0104" : { "default" : "Unknown", 0: "RF Power OFF" , 1: "RF Power On" },
     "4004" : " [dB]",
     "4104" : " [dB]",
@@ -683,7 +683,7 @@ def s8(byte):
 # ----------------------------------------------------------------
 #   convierte la salida en hex a un valor representacion humana
 # ---------------------------------------------------------------
-def convertirRespuesta(Result, Device, CmdNumber):
+def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_warning):
     try:
         CmdNumber = CmdNumber.upper()
         Device = Device.lower()
@@ -868,14 +868,14 @@ def convertirRespuesta(Result, Device, CmdNumber):
              list = dataDRU[CmdNumber]
              decSigned = s8(int(Result, 16))
              formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
-             tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
+             tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)+";"+str(high_level_warning)+";"+str(high_level_critical)
              Result = tmp 
 
         elif (Device=='dru' and (CmdNumber=='0605' )):
              list = dataDRU[CmdNumber]
              decSigned = s8(int(Result, 16))/10
              formato = '{:,.2f}'.format(decSigned).replace(",", "@").replace(".", ",").replace("@", ".")
-             tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)
+             tmp =  str(formato) +  list['unidad'] + "|" + list['variable'] + "=" + str(decSigned)+";"+str(high_level_warning)+";"+str(high_level_critical)
              Result = tmp 
         
         elif (Device=='dru' and (CmdNumber=='160A' )):
@@ -1050,7 +1050,7 @@ def main():
             if len(CmdNumber) > 4:
                 hex_string = convertirMultipleRespuesta(data)
             else:   
-                hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
+                hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
 
             if (resultOK  >= HighLevelCritical) :
                 print("CRITICAL Alert! - " + hex_string )
