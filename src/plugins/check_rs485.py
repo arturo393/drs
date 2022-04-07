@@ -399,11 +399,11 @@ def analizar_argumentos():
     ap.add_argument("-lw", "--lowLevelWarning", required=False,
                     help="lowLevelWarning es requerido", default=0)
     ap.add_argument("-hw", "--highLevelWarning", required=False,
-                    help="highLevelWarning es requerido", default=0)
+                    help="highLevelWarning es requerido", default=200)
     ap.add_argument("-lc", "--lowLevelCritical", required=False,
                     help="lowLevelCritical es requerido", default=0)
     ap.add_argument("-hc", "--highLevelCritical", required=False,
-                    help="highLevelCritical es requerido", default=0)
+                    help="highLevelCritical es requerido", default=200)
                                                     
 
     try:
@@ -634,8 +634,8 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
             or hexResponse[0] != 126
         ):
             sys.stderr.write(
-                "WARNING - Error trama de entrada invalida\n")
-            sys.exit(1)
+                "- Unknown Message\n")
+            sys.exit(3)
         if Device == 'dru':
             #print('Entro aqui')
             byte_respuesta = 14  # Para equipos remotos  de la trama
@@ -664,10 +664,10 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         
         return data
     except ValueError:
-        sys.stderr.write("WARNING - Error al leer trama de entrada")
-        sys.exit(1)
+        sys.stderr.write("- Unknown received message")
+        sys.exit(3)
     except:
-        sys.stderr.write("WARNING - Error al validar trama de entrada")
+        sys.stderr.write(" - Message not validated")
         sys.exit(1)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
@@ -918,7 +918,7 @@ def convertirRespuesta(Result, Device, CmdNumber):
         
         return Result
     except :
-        sys.stderr.write("WARNING - Error al convertir dato recibido: " + Result)
+        sys.stderr.write("- Failed to read message from device: " + Result)
         sys.exit(1)    
         
 def  convertirMultipleRespuesta(data):
@@ -1004,7 +1004,7 @@ def main():
     except serial.SerialException:
         # -- Error al abrir el puerto serie
         sys.stderr.write(
-            "CRITICAL - Error al abrir puerto %s " % str(Port))
+            " Can not open comunication with device")
         sys.exit(2)
 
     # -- Mostrar el nombre del dispositivo
@@ -1026,11 +1026,11 @@ def main():
         if Action == 'set':
             if len(data) != 0 and Device == 'dmu':
                 sys.stderr.write(
-                    "CRITICAL - error al escribir puerto dmu %s \n" % str(Port))
+                    "- Can't send a message to master device")
                 sys.exit(2)
             elif len(data) == 0 and Device == 'dru':
                 sys.stderr.write(
-                    "CRITICAL - error al escribir puerto dru %s \n" % str(Port))
+                    "- Can't send a message to remote device")
                 sys.exit(2)
             else:
                 if Device == 'dru':
@@ -1044,19 +1044,19 @@ def main():
             try:
                 resultOK =  int(resultHEX, 16)
             except:
-                print("WARNING - Dato recibido es desconocido")
-                sys.exit(1)    
+                print("- Unknown received message")
+                sys.exit(3)    
             
             if len(CmdNumber) > 4:
                 hex_string = convertirMultipleRespuesta(data)
             else:   
                 hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
-            if (resultOK  is not range (LowLevelCritical, HighLevelCritical) ):
-                print("CRITICAL - " + hex_string )
+            if (resultOK  >= HighLevelCritical) :
+                print("CRITICAL Alert! - " + hex_string )
                 sys.exit(2)
-            elif (resultOK is not range (LowLevelWarning, HighLevelWarning) ):
-                print("WARNING - " + hex_string  )
+            elif (resultOK >=  HighLevelWarning) :
+                print("WARNING Alert !- " + hex_string  )
                 sys.exit(1)
             else:
                 print("OK - " + hex_string )
@@ -1064,7 +1064,7 @@ def main():
         s.close()
     else:
         sys.stderr.write(
-            "WARNING - Accion invalida:  %s \n" % Action)
+            "- Invalid action  %s \n" % Action)
         sys.exit(1)
 
 def read_serial_frame(Port, s):
@@ -1081,7 +1081,7 @@ def read_serial_frame(Port, s):
                 isDataReady = True
                 s.write(b'\x7e')
                 sys.stderr.write(
-                        "CRITICAL - No hay respuesta en el puerto de salida %s \n" % str(Port))
+                        "- Device is not responding! ")
                 sys.exit(2)
             elif(rcvcount == 0 and rcvHex == '7e'):
                 rcvHexArray.append(rcvHex)
@@ -1095,7 +1095,7 @@ def read_serial_frame(Port, s):
                     isDataReady = True
 
     except serial.SerialException:
-        sys.stderr.write("WARNING - conexión ocupada, intentar más tarde ")
+        sys.stderr.write("- Connecting busy, retrying connection")
         sys.exit(1)
     hexResponse = bytearray.fromhex(hexadecimal_string)
     return hexResponse
