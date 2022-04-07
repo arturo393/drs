@@ -748,8 +748,39 @@ def convertirRespuesta(Result, Device, CmdNumber):
             hex_as_int = int(hexInvertido, 16)
             decSigned = s16(hex_as_int)
             rbm = decSigned/256
-            formato = Result+'{:,.2f}'.format(rbm).replace(",", "@").replace(".", ",").replace("@", ".")
-            Result = formato + " [dBm] |power=" + str(rbm)
+            formato ='{:,.2f}'.format(rbm).replace(",", "@").replace(".", ",").replace("@", ".")
+            #Result = formato + " [dBm] | power=" + str(rbm)
+            
+            hexInvertido = Result[0+4:2+4]+ Result[2+4:4+4]
+            print(Result,hexInvertido)
+            hex_as_int = int(hexInvertido, 16)
+            ulPower = s16(hex_as_int)/256
+            ulPowerStr = str(round(ulPower,2))
+            
+            hexInvertido = Result[2:4] + Result[0:2]
+            print(Result,hexInvertido)
+            hex_as_int = int(hexInvertido, 16)
+            dlPower = s16(hex_as_int)/256
+            dlPowerStr = str(round(dlPower,2))
+
+            
+            table = "<table width=250>"
+            table += "<thead>"
+            table += "<tr  align=\"center\" style=font-size:12px>"
+            table += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+            table += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+            table += "</tr>"
+            table += "</thead>"
+            table += "<tbody>"
+            table += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPowerStr+" [dBm]</td></tr>"
+            table += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+dlPowerStr+" [dBm]</td></tr>"
+            table +="</tbody></table>"
+            
+            uplinkg_graphite  ="Uplink="+ulPowerStr
+            downlink_graphite ="Downlink="+dlPowerStr
+            graphite = uplinkg_graphite+" "+downlink_graphite
+
+            Result = table+"|"+graphite
 
         elif (Device=='dmu' and CmdNumber=='42'):    
             i = 0            
@@ -1021,10 +1052,10 @@ def main():
             else:   
                 hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber)
 
-            if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
+            if (resultOK  is not range (LowLevelCritical, HighLevelCritical) ):
                 print("CRITICAL - " + hex_string )
                 sys.exit(2)
-            elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
+            elif (resultOK is not range (LowLevelWarning, HighLevelWarning) ):
                 print("WARNING - " + hex_string  )
                 sys.exit(1)
             else:
