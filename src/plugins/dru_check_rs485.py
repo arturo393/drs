@@ -583,7 +583,7 @@ def main():
 
     if temperature >= high_level_warning_downlink:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Warning "+ parameter_dict['paTemperature']+ " [°C]]!</font></h3>"
-    if temperature >= high_level_critical_downlink:
+    elif temperature >= high_level_critical_downlink:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "+ parameter_dict['paTemperature']+ " [°C]]!</font></h3>"
             
         
