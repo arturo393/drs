@@ -384,14 +384,10 @@ def analizar_argumentos():
     
     # Add the arguments to the parser
     #ap.add_argument("-h", "--help", required=False,  help="help")
-    ap.add_argument("-lwul","--lowLevelWarningUL",   required=False,help="lowLevelWarning es requerido", default=-200)
-    ap.add_argument("-hwul","--highLevelWarningUL",  required=False,help="highLevelWarning es requerido", default=200)
-    ap.add_argument("-lcul","--lowLevelCriticalUL",  required=False,help="lowLevelCritical es requerido", default=-200)
-    ap.add_argument("-hcul","--highLevelCriticalUL", required=False,help="highLevelCritical es requerido", default=200)
-    ap.add_argument("-lwdl","--lowLevelWarningDL",   required=False,help="lowLevelWarningDL es requerido", default=-200)
-    ap.add_argument("-hwdl","--highLevelWarningDL",  required=False,help="highLevelWarning es requerido", default=200)
-    ap.add_argument("-lcdl","--lowLevelCriticalDL",  required=False,help="lowLevelCritical es requerido", default=-200)
-    ap.add_argument("-hcdl","--highLevelCriticalDL", required=False,help="highLevelCritical es requerido", default=200)
+    ap.add_argument("-hlwu","--highLevelWarningUplink",  required=False,help="highLevelWarningUplink es requerido", default=200)
+    ap.add_argument("-hlcu","--highLevelCriticalUplink", required=False,help="highLevelCriticalUplink es requerido", default=200)
+    ap.add_argument("-hlwd","--highLevelWarningDownlink",  required=False,help="highLevelWarningDownlink es requerido", default=200)
+    ap.add_argument("-hlcd","--highLevelCriticalDownlink", required=False,help="highLevelCriticalDownlink es requerido", default=200)
 
 
     try:
@@ -402,18 +398,13 @@ def analizar_argumentos():
         help()
         sys.exit(1)
 
-    LowLevelWarningUL = int(args['lowLevelWarningUL'])
-    HighLevelWarningUL = int(args['highLevelWarningUL'])
-    LowLevelCriticalUL = int(args['lowLevelCriticalUL'])
-    HighLevelCriticalUL = int(args['highLevelCriticalUL'])
-    LowLevelWarningDL = int(args['lowLevelWarningDL'])
-    HighLevelWarningDL = int(args['highLevelWarningDL'])
-    LowLevelCriticalDL = int(args['lowLevelCriticalDL'])
-    HighLevelCriticalDL = int(args['highLevelCriticalDL'])
+
+    HighLevelWarningUL = int(args['highLevelWarningUplink'])
+    HighLevelCriticalUL = int(args['highLevelCriticalUplink'])
+    HighLevelWarningDL = int(args['highLevelWarningDownlink'])
+    HighLevelCriticalDL = int(args['highLevelCriticalDownlink'])
     
-
-
-    return LowLevelWarningUL, HighLevelWarningUL, LowLevelCriticalUL, HighLevelCriticalUL, LowLevelWarningDL, HighLevelWarningDL, LowLevelCriticalDL, HighLevelCriticalDL
+    return  HighLevelWarningUL,  HighLevelCriticalUL,  HighLevelWarningDL, HighLevelCriticalDL
 
 def getChecksumSimple(cmd):
     """
@@ -504,7 +495,7 @@ def main():
 
     # -- Analizar los argumentos pasados por el usuario
     frame_list  = list()
-    LowLevelWarningUL, high_level_warning_uplink, LowLevelCriticalUL, high_level_critical_uplink, LowLevelWarningDL, high_level_warning_downlink, LowLevelCriticalDL, high_level_critical_downlink  = analizar_argumentos()
+    high_level_warning_uplink, high_level_critical_uplink, high_level_warning_downlink, high_level_critical_downlink  = analizar_argumentos()
 
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
     frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
@@ -574,7 +565,6 @@ def main():
 
         alarm ="<h3><font color=\"#ff5566\">Uplink Power Level Critical " +parameter_dict['dlOutputPower']+"[dBm]!</font></h3>"  
     if dlPower >= high_level_critical_downlink:
-
         alarm ="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
             
             
@@ -586,7 +576,7 @@ def main():
     graphite = uplinkg_graphite+" "+downlink_graphite
     
     
-    print(alarm+parameter_html_table+"|"+graphite)
+    sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
     sys.exit(exit_value)
 
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber):
