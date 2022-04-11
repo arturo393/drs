@@ -689,7 +689,7 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
         Device = Device.lower()
         if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
             Value =  int(Result, 16)
-            Result = str(Value) + " " + dataDMU[CmdNumber] + "|value=" + str(Value) 
+            Result = str(Value) + " " + dataDMU[CmdNumber] + "|value=" + str(Value)         
         
         elif  Device=='dmu' and CmdNumber=='91':
             Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
@@ -1042,7 +1042,7 @@ def main():
             a_bytearray = bytearray(data)
             resultHEX = a_bytearray.hex()
             try:
-                resultOK =  int(resultHEX, 16)
+                resultOK =  s8(int(resultHEX, 16))
             except:
                 print("- Unknown received message")
                 sys.exit(3)    
