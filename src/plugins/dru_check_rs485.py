@@ -383,18 +383,18 @@ def analizar_argumentos():
 
     # Add the arguments to the parser
     #ap.add_argument("-h", "--help", required=False,  help="help")
-    ap.add_argument("-i", "--druId", required=True,
-                    help="druId es requerido", default="")
-    ap.add_argument("-lw", "--lowLevelWarning", required=False,
-                    help="lowLevelWarning es requerido", default=0)
-    ap.add_argument("-hw", "--highLevelWarning", required=False,
-                    help="highLevelWarning es requerido", default=0)
-    ap.add_argument("-lc", "--lowLevelCritical", required=False,
-                    help="lowLevelCritical es requerido", default=0)
-    ap.add_argument("-hc", "--highLevelCritical", required=False,
-                    help="highLevelCritical es requerido", default=0)
-
-
+    ap.add_argument("-d", "--dru", required=True,
+                    help="dru es requerido", default="")
+    ap.add_argument("-o", "--opt", required=True,
+                    help="opt es requerido", default="")
+    ap.add_argument("-hlwu","--highLevelWarningUL",  required=False,help="highLevelWarning es requerido", default=200)
+    ap.add_argument("-hlcu","--highLevelCriticalUL", required=False,help="highLevelCritical es requerido", default=200)
+    ap.add_argument("-hlwd","--highLevelWarningDL",  required=False,help="highLevelWarning es requerido", default=200)
+    ap.add_argument("-hlcd","--highLevelCriticalDL", required=False,help="highLevelCritical es requerido", default=200)
+    
+    ap.add_argument("-hltw","--highLevelWarningTemperature",  required=False,help="highLevelWarningTemperature es requerido", default=200)
+    ap.add_argument("-hltc","--highLevelCriticalTemperature", required=False,help="highLevelCriticalTemperature es requerido", default=200)
+    
     try:
         args = vars(ap.parse_args())
     except getopt.GetoptError as e:
@@ -403,19 +403,25 @@ def analizar_argumentos():
         help()
         sys.exit(1)
 
-    DruId = str(args['druId'])
-    LowLevelWarning = int(args['lowLevelWarning'])
-    HighLevelWarning = int(args['highLevelWarning'])
-    LowLevelCritical = int(args['lowLevelCritical'])
-    HighLevelCritical = int(args['highLevelCritical'])
+    dru = str(args['dru'])
+    opt = str(args['opt'])
+    high_level_warning_uplink = int(args['highLevelWarningUL'])
+    high_level_critical_uplink = int(args['highLevelCriticalUL'])
+    high_level_Warning_downlink = int(args['highLevelWarningDL'])
+    high_level_critical_downlink = int(args['highLevelCriticalDL'])
+    high_level_warning_temperature = int(args['highLevelWarningTemperature'])
+    high_level_critical_temperature = int(args['highLevelCriticalTemperature'])
 
 
 
-    if (DruId == "" and Device == 'dru'):
-        sys.stderr.write("CRITICAL - DruId es obligatorio")
+    if opt == "" :
+        sys.stderr.write("CRITICAL - opt es obligatorio")
+        sys.exit(2)
+    elif dru == "":
+        sys.stderr.write("CRITICAL - dru es obligatorio")
         sys.exit(2)
 
-    return DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical
+    return opt,dru,high_level_warning_uplink, high_level_critical_uplink, high_level_Warning_downlink, high_level_critical_downlink, high_level_warning_temperature,high_level_critical_temperature
 
 def getChecksumSimple(cmd):
     """
@@ -508,13 +514,13 @@ def s8(byte):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
+    opt,dru,high_level_warning_uplink, high_level_critical_uplink, high_level_warning_downlink, high_level_critical_downlink, high_level_warning_temperature,high_level_critical_temperature = analizar_argumentos()
 
     frame_list = list()
 
     # -- Armando la trama
-    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', DruId))
-    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',DruId))
+    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', opt+dru))
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',opt+dru))
     
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -537,7 +543,7 @@ def main():
     # -- Mostrar el nombre del dispositivo
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
     
-    parameter_dic = dict()
+    parameter_dict = dict()
     table =""
     graphite=""
     for frame in frame_list:
@@ -556,75 +562,110 @@ def main():
         
         data_result = get_data_result_list_from_validated_frame(data)
         
-        set_paramter_dic_from_data_result(parameter_dic, data_result)        
+        set_paramter_dic_from_data_result(parameter_dict, data_result)        
         
-        # if (resultOK  in range (LowLevelCritical, HighLevelCritical) ):
-        #     print("CRITICAL - " + hex_string )
-        #     sys.exit(2)
-        # elif (resultOK in range (LowLevelWarning, HighLevelWarning) ):
-        #     print("WARNING - " + hex_string  )
-        #     sys.exit(1)
 
+
+    dlPower = float(parameter_dict['dlOutputPower'])
+    ulPower = float(parameter_dict['ulInputPower'])
+    temperature = float(parameter_dict['paTemperature'])
+    
+    alarm =""
+    if dlPower >= high_level_warning_downlink:
+        alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
+    elif dlPower >= high_level_critical_downlink:
+        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
+            
+    if ulPower >= high_level_warning_uplink:
+        alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " +parameter_dict['dlOutputPower']+"[dBm]</font></h3>"
+    elif ulPower >= high_level_critical_uplink:
+        alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " +parameter_dict['dlOutputPower']+"[dBm]!</font></h3>"  
+
+    if temperature >= high_level_warning_downlink:
+        alarm +="<h3><font color=\"#ff5566\">Temperature Level Warning "+ parameter_dict['paTemperature']+ " [°C]]!</font></h3>"
+    if temperature >= high_level_critical_downlink:
+        alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "+ parameter_dict['paTemperature']+ " [°C]]!</font></h3>"
+            
         
-    table = create_table(parameter_dic)
+    table = create_table(parameter_dict)
     
-    graphite ="Pa Temperature [C]="+parameter_dic['paTemperature']
-    graphite +=";DL Ouput Power [dBm]="+parameter_dic['dlOutputPower']
-    graphite +=";VSWR ="+parameter_dic['vswr']
-    graphite +=";Uplink Input Power [dBm]="+parameter_dic['ulInputPower']
+    pa_temperature_graphite ="Temperature="+parameter_dict['paTemperature']+";"+str(high_level_warning_temperature)+";"+str(high_level_critical_temperature)
+    dlPower_graphite ="Downlink="+parameter_dict['dlOutputPower']+";"+str(high_level_warning_downlink)+";"+str(high_level_critical_downlink)
+    vswr_graphite  ="VSWR="+parameter_dict['vswr']
+    ulPower_graphite ="Uplink="+parameter_dict['ulInputPower']+";"+str(high_level_warning_uplink)+";"+str(high_level_critical_uplink)
     
-    print(table+"|"+graphite)
+    graphite = pa_temperature_graphite+" "+dlPower_graphite+" "+vswr_graphite+" "+ulPower_graphite
+    
+    
+    print(alarm+table+"|"+graphite)
     sys.exit(0)
+
+
+
     
 
 def create_table(parameter_dic):
-    table =  "<h3><font color=\"#046c94\">"+parameter_dic['workingMode']+"</font></h3>"
-    table += "<table width=250>"
-    table += "<thead>"
-    table += "<tr  align=\"center\" style=font-size:12px>"
-    table += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
-    table += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
-    table += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
-    table += "</tr>"
-    table += "</thead>"
-    table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
-    table += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"   
-    table +="</tbody></table>"
-        
-    table += "<br>"
-        
-    table += "<table width=100>"
-    table += "<thead>"
-    table += "<tr  style=font-size:12px>"
-    table += "<th width='70%'><font color=\"#046c94\">Temperature</font></th>"
-    table += "<th width='30%'><font color=\"#046c94\">VSWR</font></th>"
-    table += "</tr>"
-    table += "</thead>"
-    table += "<tbody>"
-    table += "<tr align=\"center\" style=font-size:12px><td>"+parameter_dic['paTemperature']+" [°C]</td><td>"+parameter_dic['vswr']+"</td></tr>"
-    table +="</tbody></table>"
     
-    if (parameter_dic['workingMode'] == 'Channel Mode'):
-        table += "<br>"
-        table += "<table width=250>"
-        table += "<thead><tr style=font-size:11px>"
-        table += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
-        table += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-        table += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-        table += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
-        table += "</tr></thead><tbody>"
+    table1  = "<table width=250>"
+    table1 += "<thead>"
+    table1 += "<tr  align=\"center\" style=font-size:12px>"
+    table1 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+    table1 += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+    table1 += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
+    table1 += "</tr>"
+    table1 += "</thead>"
+    table1 += "<tbody>"
+    table1 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
+    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
+    table1 +="</tbody></table>"
 
+    table2  = "<table width=100>"
+    table2 += "<thead>"
+    table2 += "<tr  style=font-size:12px>"
+    table2 += "<th width='70%'><font color=\"#046c94\">Temperature</font></th>"
+    table2 += "<th width='30%'><font color=\"#046c94\">VSWR</font></th>"
+    table2 += "</tr>"
+    table2 += "</thead>"
+    table2 += "<tbody>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>"+parameter_dic['paTemperature']+" [°C]</td><td>"+parameter_dic['vswr']+"</td></tr>"
+    table2 +="</tbody></table>"
+
+
+
+    table3 = "<table width=40%>"
+    table3 += "<thead><tr style=font-size:11px>"
+    table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+    table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+    table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+    table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+    table3 += "</tr></thead><tbody>"
+
+    if (parameter_dic['workingMode'] == 'Channel Mode'):
         for i in range(1,17):
             channel = str(i)
-            table +="<tr align=\"center\" style=font-size:11px>"
-            table +="<td>"+channel+"</td>"
-            table +="<td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td>"
-            table +="<td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td>"
-            table +="<td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td>"
-            table +="</tr>"
+            table3 +="<tr align=\"center\" style=font-size:11px>"
+            table3 +="<td>"+channel+"</td>"
+            table3 +="<td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td>"
+            table3 +="<td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td>"
+            table3 +="<td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td>"
+            table3 +="</tr>"
+    else:        
+        table3 +="<tr align=\"center\" style=font-size:11px>"    
+        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>&nbsp;</td>"
+        table3 +="</tr>"
+        
 
-        table+="</tbody></table>"
+    table3+="</tbody></table>"
+
+
+    table =  "<h3><font color=\"#046c94\">"+parameter_dic['workingMode']+"</font></h3>"
+    table += '<div class="sigma-container">'
+    table += table2+table1+table3
+    table += "</div>"
+
     return table
 
 def set_paramter_dic_from_data_result(parameter_dic, data_result):
@@ -635,7 +676,7 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
         if cmd_number =='0105':
             temperature = s8(int(cmd_value,16))
             parameter_dic['paTemperature'] = str(temperature)
-            
+                                                                                                                 
         elif cmd_number == '0305':
             dl_power = s8(int(cmd_value, 16))
             parameter_dic['dlOutputPower'] = str(dl_power)
