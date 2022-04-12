@@ -112,8 +112,9 @@ function formatDependencies(
       })
       }
     serviceData.results.map(service => {
+      if (service.attrs.vars?.addToMap === false) return false;
       if (service.attrs.host_name === host.attrs.name) {
-	const serviceId = service.attrs.name;
+	      const serviceId = service.attrs.name;
         service.attrs.name = service.attrs.host_name+"-"+service.attrs.name;
         Hosts.addHost({ ...service.attrs, id: serviceId, type: 'Service' });
         Hosts.addDependency({
