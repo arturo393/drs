@@ -23,6 +23,8 @@ import argparse
 # importing the requests library
 import requests,json
 import socket
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -129,7 +131,7 @@ def main():
             dru_list.append("dru"+str(remote+1))
 
     
-
+    remotes_created = 0
     for dru in dru_list:
         
         director_query = {
@@ -137,7 +139,7 @@ def main():
             "object_type": "object",
             "address": ip_addr ,
             "imports": ["dmu-"+opt+"-"+dru+"-host-template"],
-            "display_name": "Remote "+ dru,
+            "display_name": "Remote "+ dru[3:],
             "zone": hostname
             
         }
@@ -146,8 +148,31 @@ def main():
 
         resp_str=json.dumps(q.json(),indent=2)
         resp_dict = json.loads(resp_str)
-        print(resp_str)
-        print(resp_dict)
+        if 'address' in resp_dict:
+            remotes_created += 1
+            
+    if(remotes_created > 0):
+        http_post_deploy(master_host)
+        
+
+    sys.exit(0)
+            
+def http_post_deploy(master_host):
+    director_api_login = "admin"
+    director_api_password ="Admin.123"
+    
+    director_url = "http://"+master_host+"/director/config/deploy"
+    director_headers = {
+        'Accept':'application/json',
+        'X-HTTP-Method-Override': 'POST'
+        }
+    
+    q = requests.post(director_url,
+                         headers=director_headers,
+                         auth=(director_api_login,director_api_password),
+                         verify=False)
+                     
+    return q
 
 def http_post_director(master_host, director_query):
     director_api_login = "admin"
@@ -185,14 +210,17 @@ def http_get_query(master_host, icinga_query):
     return r
 
 def get_performance_data(r):
-    resp_str=json.dumps(r.json(),indent=2)
-    resp_dict = json.loads(resp_str)
-    results_array = resp_dict['results']
-    result = results_array[0]
-    data_list = result['attrs']['last_check_result']['performance_data']
-    data_str = data_list[0]
-    remotes = int(data_str[data_str.find("=")+1:])
-    return remotes
+    try:
+        resp_str=json.dumps(r.json(),indent=2)
+        resp_dict = json.loads(resp_str)
+        results_array = resp_dict['results']
+        result = results_array[0]
+        data_list = result['attrs']['last_check_result']['performance_data']
+        data_str = data_list[0]
+        remotes = int(data_str[data_str.find("=")+1:])
+        return remotes
+    except:
+        return 0
 
 def get_master_host():
     with open(ZONES_CONF) as f: 
@@ -201,17 +229,8 @@ def get_master_host():
             if 'host' in line:
                 line=(line[line.find("\"")+1:])
                 master_host=line[:line.find("\"")]
-                print(master_host)
     return master_host
 
             
 if __name__ == "__main__":
     main()
-
-# Nagios Exit Codes
-# Exit Code	Status
-# 0	OK
-# 1	WARNING
-# 2	CRITICAL
-# 3	UNKNOWN
-
