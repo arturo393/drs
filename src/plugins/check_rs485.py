@@ -20,6 +20,7 @@ import getopt
 import serial
 from crccheck.crc import Crc16Xmodem
 import argparse
+import os
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -38,10 +39,10 @@ C_RETURN = '0d'
 C_SITE_NUMBER = '00000000'
 
 dataDMU = {
-    "F8" : "Digital Remote Units",
-    "F9" : "Digital Remote Units",
-    "FA" : "Digital Remote Units",
-    "FB" : "Digital Remote Units",
+    "F8" : "opt1",
+    "F9" : "opt2",
+    "FA" : "opt3",
+    "FB" : "opt4",
     "9A" : ['Connected','Disconnected','Transsmision normal','Transsmision failure'],
     "F3" : "[dBm]",
     "42" : ['ON', 'OFF'],
@@ -675,6 +676,7 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
 
 def s16(value):
     return -(value & 0x8000) | (value & 0x7fff)
+
 def s8(byte):
     if byte > 127:
         return (256-byte) * (-1)
@@ -689,8 +691,11 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
         Device = Device.lower()
         if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
             Value =  int(Result, 16)
-            Result = str(Value) + " " + dataDMU[CmdNumber] + "|value=" + str(Value)         
-        
+            opt_str=dataDMU[CmdNumber]
+            os.system("/usr/lib/monitoring-plugins/dru_discovery.py -o "+opt_str)
+            Result = str(Value) + " Remotes Discovered | value=" + str(Value) 
+            
+                    
         elif  Device=='dmu' and CmdNumber=='91':
             Table = "<table class='common-table table-row-selectable' data-base-target='_next'>"
             Table += "<thead><tr><th width='15%'>Port</th><th width='15%'>Status</th><th width='70%'>&nbsp;</th></tr></thead><tbody>"
