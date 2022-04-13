@@ -691,9 +691,13 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
         Device = Device.lower()
         if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
             Value =  int(Result, 16)
-            opt_str=dataDMU[CmdNumber]
-            os.system("/usr/lib/monitoring-plugins/dru_discovery.py -o "+opt_str)
-            Result = str(Value) + " Remotes Discovered | value=" + str(Value) 
+            if(Value >8):
+                sys.stderr.write("- Wrong Remotes value: " + str(Value))
+                sys.exit(1)  
+            else :
+                opt_str=dataDMU[CmdNumber]
+                os.system("/usr/lib/monitoring-plugins/dru_discovery.py -o "+opt_str)
+                Result = str(Value) + " Remotes Discovered | value=" + str(Value) 
             
                     
         elif  Device=='dmu' and CmdNumber=='91':
