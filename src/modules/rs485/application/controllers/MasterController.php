@@ -91,7 +91,8 @@ class MasterController extends Controller
 
     public function saveAction()
     {
-	$query ="";
+	    $query ="";
+        $queryArray = [];
         $result = [];
         $dmuDevice1 = -1;
         $dmuDevice2 = -1;
@@ -205,7 +206,7 @@ class MasterController extends Controller
             usleep(100000);
             $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
-            $queryArray = [];
+           # $queryArray = [];
            # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '36', $dmuCmdData, 'query');
            # exec($ejecutarQuery . " 2>&1", $queryArray);  
            # usleep(100000);
@@ -249,11 +250,11 @@ class MasterController extends Controller
             
         }
 
-        $ejecutarQuery = $this->comando_test($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
+        $ejecutarQuery = $this->comando_dmu($host_remote);
         exec($ejecutarQuery . " 2>&1", $parameters);  
-
 	    $index = strpos($parameters[0],'|');
     	$params = substr($parameters[0],0,$index);
+
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);	
         $this->view->assign('params', $params);	
@@ -268,9 +269,7 @@ class MasterController extends Controller
         return $ejecutar;
     }
 
-    private function comando_test($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, $action){
-        $paramFijos = "--port /dev/ttyS0 --action {$action}";
-        $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
+    private function comando_dmu($host_remote){
         $comando = "/usr/lib/monitoring-plugins/dmu_check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
         $ejecutar =  $ssh . $comando;
