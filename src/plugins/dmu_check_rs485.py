@@ -701,13 +701,12 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
 def create_table(responseDict):
 
     
-    table1 = "<table width=400>"
+    table1 = "<table width=280>"
     table1 += "<thead>"
     table1 += "<tr align=\"center\" style=font-size:12px>"
     table1 += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
     table1 += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
     table1 += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Connection Status</font></th>"
     table1 += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
     table1 += "</tr>"
     table1 += "</thead>"
@@ -719,7 +718,6 @@ def create_table(responseDict):
         table1 +="<td>opt"+opt+"</td>"
         table1 +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
         table1 +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
-        table1 +="<td>"+responseDict['opt'+opt+'ConnectionStatus']+"</td>"
         table1 +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
         table1 +="</tr>"
 
