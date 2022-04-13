@@ -3,14 +3,20 @@
 </div>
 
 <div class="content">
-
 <?php foreach ($this->salida as $result) { ?>
-<!-- <h1>COMANDO.</h1>
- <pre>< $result['ssh']  ?></pre> -->
-<h1><?= $result['comando']  ?></h1>
-<pre>
- <?= $result['resultado'] ?>
+<h4><?= $result['comando']  ?>
+
+ change:  <?= $result['resultado']  ?>
+</h4>
+
+<!--- <pre>
+New Parameters <br>
+   <?= $result['resultado'] ?>
 </pre>
 <br><br>
-<?php } ?>
+-->
+<?php }  ?>
+<?php echo $this->params ?>
+
 </div>
+

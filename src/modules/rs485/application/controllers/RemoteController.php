@@ -151,6 +151,7 @@ class RemoteController extends Controller
         $ejecutar = "";
         $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
         $druId =  $this->_getParam('dru_id');
+        $query = "";
         #15: Upstream noise switch
         if ($this->_hasParam('opt15_hidden')){
             $trama = $this->tramasDRU($this->_getParam('opt15_hidden'));                   
@@ -315,7 +316,13 @@ class RemoteController extends Controller
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
         }
+
+        $ejecutarQuery = $this->comando_dru($host_remote, $druId);
+        exec($ejecutarQuery . " 2>&1", $parameters); 
+	    $index = strpos($parameters[0],'|');
+    	$params = substr($parameters[0],0,$index);
         
+        $this->view->assign('params',$params);
         $this->view->assign('salida', $result);
         	
     }
@@ -326,6 +333,13 @@ class RemoteController extends Controller
         $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
         $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
+        return $ejecutar;
+    }
+    private function comando_dru($host_remote, $druId){
+        $paramFijos = "-o {$druId[0]} -d {$druId[1]}";
+        $comando = "/usr/lib/monitoring-plugins/dru_check_rs485.py ";
+        $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
+        $ejecutar =  $ssh . $comando . $paramFijos;
         return $ejecutar;
     }
 
