@@ -4,15 +4,19 @@
 
 <div class="content">
 <?php foreach ($this->salida as $result) { ?>
-<h1><?= $result['comando']  ?></h1>
-<pre>
-Resultado: <?= $result['resultado']  ?>
-</pre>
+<h4><?= $result['comando']  ?>
 
-<pre>
-Plugin Output. <br>
+ change:  <?= $result['resultado']  ?>
+</h4>
+
+<!--- <pre>
+New Parameters <br>
    <?= $result['query'] ?>
 </pre>
 <br><br>
-<?php } ?>
+-->
+<?php }  ?>
+<?php echo $this->params ?>
+
 </div>
+

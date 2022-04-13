@@ -91,6 +91,7 @@ class MasterController extends Controller
 
     public function saveAction()
     {
+	$query ="";
         $result = [];
         $dmuDevice1 = -1;
         $dmuDevice2 = -1;
@@ -113,12 +114,12 @@ class MasterController extends Controller
             $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
             //$query =  $dmuCmdData == '01' ? 'Channel' : 'WideBand';
-            $queryArray = [];
-            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '81', $dmuCmdData, 'query');
+            #$queryArray = [];
+            #$ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '81', $dmuCmdData, 'query');
             //$query = system($ejecutarQuery . " 2>&1");
-            exec($ejecutarQuery . " 2>&1", $queryArray);  
-            usleep(50000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
+            #exec($ejecutarQuery . " 2>&1", $queryArray);  
+            #usleep(50000);
+            #$query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
 
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query ]);      
@@ -142,11 +143,11 @@ class MasterController extends Controller
             usleep(50000);
             $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";
-            $queryArray = [];   
-            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, 'EF', $dmuCmdData, 'query');
-            exec($ejecutarQuery . " 2>&1", $queryArray);  
-            usleep(50000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
+            #$queryArray = [];   
+            #$ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, 'EF', $dmuCmdData, 'query');
+            #exec($ejecutarQuery . " 2>&1", $queryArray);  
+            #usleep(50000);
+            #$query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             
@@ -176,11 +177,11 @@ class MasterController extends Controller
             $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
                        
             //$salida = "OK";
-            $queryArray = [];   
-            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '42', $dmuCmdData, 'query');
-            exec($ejecutarQuery . " 2>&1", $queryArray);  
-            usleep(100000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
+           # $queryArray = [];   
+           # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '42', $dmuCmdData, 'query');
+           # exec($ejecutarQuery . " 2>&1", $queryArray);  
+           # usleep(100000);
+           # $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             
@@ -205,16 +206,16 @@ class MasterController extends Controller
             $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
             $queryArray = [];
-            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '36', $dmuCmdData, 'query');
-            exec($ejecutarQuery . " 2>&1", $queryArray);  
-            usleep(100000);
-            $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
+           # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '36', $dmuCmdData, 'query');
+           # exec($ejecutarQuery . " 2>&1", $queryArray);  
+           # usleep(100000);
+           # $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             system("clear  2>&1");
         }
         #5: Optical PortState
-        if ($this->_hasParam('opt5_hidden')){
+	if ($this->_hasParam('opt5_hidden')){
                         
             $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));            
 		    $dmuDevice1 = $trama->dmu_device1;
@@ -238,18 +239,24 @@ class MasterController extends Controller
             usleep(100000);
             $salida =  count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
             //$salida = "OK";   
-            $queryArray = [];
-            $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
-            exec($ejecutarQuery . " 2>&1", $queryArray);  
-            usleep(100000);
+           # $queryArray = [];
+           # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
+           # exec($ejecutarQuery . " 2>&1", $queryArray);  
+           # usleep(100000);
             $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
             
         }
 
+        $ejecutarQuery = $this->comando_test($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
+        exec($ejecutarQuery . " 2>&1", $parameters);  
+
+	    $index = strpos($parameters[0],'|');
+    	$params = substr($parameters[0],0,$index);
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);	
+        $this->view->assign('params', $params);	
     }
 
     private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, $action){
@@ -258,6 +265,15 @@ class MasterController extends Controller
         $comando = "/usr/lib/monitoring-plugins/check_rs485.py ";
         $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
         $ejecutar =  $ssh . $comando . $paramFijos . $paramVariables;
+        return $ejecutar;
+    }
+
+    private function comando_test($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, $action){
+        $paramFijos = "--port /dev/ttyS0 --action {$action}";
+        $paramVariables = "--dmuDevice1 {$dmuDevice1} --dmuDevice2 {$dmuDevice2} --cmdBodyLenght {$dmuCmdLength} --cmdNumber {$dmuCmdCode} --cmdData {$dmuCmdData}";
+        $comando = "/usr/lib/monitoring-plugins/dmu_check_rs485.py ";
+        $ssh = "sudo -u sigmadev ssh sigmadev@{$host_remote} ";
+        $ejecutar =  $ssh . $comando;
         return $ejecutar;
     }
 
