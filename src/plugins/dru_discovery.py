@@ -28,22 +28,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
-C_HEADER = '7E'
-C_DATA_TYPE = '00'
-C_RESPONSE_FLAG = '00'
-C_END = '7E'
-C_UNKNOWN2BYTE01 = '0101'
-C_UNKNOWN2BYTE02 = '0100'
-C_UNKNOWN1BYTE = '01'
-C_TXRXS_80 = '80'
-C_TXRXS_FF = 'FF'
-C_TYPE_QUERY = '02'
-C_TYPE_SET = '03'
-C_RETURN = '0d'
-C_SITE_NUMBER = '00000000'
-
-
 ZONES_CONF = '/etc/icinga2/zones.conf'
+    
+director_api_login = "admin"
+director_api_password ="Admin.123"
+
+icinga_api_login = "root"
+icinga_api_password ="Admin.123"
 # --------------------------------
 # -- Imprimir mensaje de ayuda
 # --------------------------------
@@ -68,12 +59,6 @@ def help():
     check_portserial.py -p /dev/ttyS0 --> Especificar el dispositivo serie (Linux) 
     
     """)
-
-# -----------------------------------------------------
-# --  Analizar los argumentos pasados por el usuario
-# --  Devuelve el puerto y otros argumentos enviados como parametros
-# -----------------------------------------------------
-
 
 def analizar_argumentos():
 
@@ -108,25 +93,13 @@ def analizar_argumentos():
 def main():
     
     opt = analizar_argumentos()
-    master_host = get_master_host()
     
-    hostname = socket.gethostname()    
-    ip_addr=socket.gethostbyname(hostname)
+    r = icinga_get_service_last_check_result(opt)
 
-    servicename = hostname+'!'+opt
-    
-    icinga_query = {
-            'type': 'Service',
-            'service':servicename,
-            'filter': 'service.state == ServiceOK',
-            'attrs': ['last_check_result']
-            }
-
-    r = http_get_query(master_host, icinga_query)
-
+    dru_list = list()
     if (r.status_code == 200):
-        remotes = get_performance_data(r)
-        dru_list = list()
+        remotes = get_performance_data_from_json(r)
+
         for remote in range(remotes):
             dru_list.append("dru"+str(remote+1))
 
@@ -134,33 +107,22 @@ def main():
     remotes_created = 0
     for dru in dru_list:
         
-        director_query = {
-            'object_name':hostname+"-"+opt+"-"+dru, 
-            "object_type": "object",
-            "address": ip_addr ,
-            "imports": ["dmu-"+opt+"-"+dru+"-host-template"],
-            "display_name": "Remote "+ dru[3:],
-            "zone": hostname
-            
-        }
-        
-        q = http_post_director(master_host, director_query)
-
+        q = director_create_dru_host(opt,dru)
         resp_str=json.dumps(q.json(),indent=2)
         resp_dict = json.loads(resp_str)
+        
         if 'address' in resp_dict:
             remotes_created += 1
             
     if(remotes_created > 0):
-        http_post_deploy(master_host)
+        director_deploy()
         
-
     sys.exit(0)
             
-def http_post_deploy(master_host):
-    director_api_login = "admin"
-    director_api_password ="Admin.123"
+def director_deploy():
     
+    
+    master_host = get_master_host()  
     director_url = "http://"+master_host+"/director/config/deploy"
     director_headers = {
         'Accept':'application/json',
@@ -174,42 +136,65 @@ def http_post_deploy(master_host):
                      
     return q
 
-def http_post_director(master_host, director_query):
-    director_api_login = "admin"
-    director_api_password ="Admin.123"
+def director_create_dru_host(opt,dru):
     
-    director_url = "http://"+master_host+"/director/host"
-    director_headers = {
+    hostname = socket.gethostname()    
+    ip_addr=socket.gethostbyname(hostname)
+    master_host = get_master_host()
+    
+    director_query = {
+            'object_name':hostname+"-"+opt+"-"+dru, 
+            "object_type": "object",
+            "address": ip_addr ,
+            "imports": ["dmu-"+opt+"-"+dru+"-host-template"],
+            "display_name": "Remote "+ dru[3:],
+            "zone": hostname
+        }
+        
+   
+    request_url = "http://"+master_host+"/director/host"
+    headers = {
         'Accept':'application/json',
         'X-HTTP-Method-Override': 'POST'
         }
     
-    q = requests.post(director_url,
-                         headers=director_headers,
+    q = requests.post(request_url,
+                         headers=headers,
                          data=json.dumps(director_query),
                          auth=(director_api_login,director_api_password),
                          verify=False)
                      
     return q
 
-def http_get_query(master_host, icinga_query):
-    icinga_headers = {
+def icinga_get_service_last_check_result(opt):
+    
+    hostname = socket.gethostname()    
+    servicename = hostname+'!'+opt
+    master_host = get_master_host()
+    
+    query = {
+            'type': 'Service',
+            'service':servicename,
+            'filter': 'service.state == ServiceOK',
+            'attrs': ['last_check_result']
+            }
+        
+    headers = {
         'Accept':'application/json',
         'X-HTTP-Method-Override': 'GET'
     }
     
     request_url = "https://"+master_host+":5665/v1/objects/services"
-    api_login = "root"
-    api_password ="Admin.123"
+
     r = requests.get(request_url,
-                     headers=icinga_headers,
-                     data=json.dumps(icinga_query),
-                     auth=(api_login,api_password),
+                     headers=headers,
+                     data=json.dumps(query),
+                     auth=(icinga_api_login,icinga_api_password),
                      verify=False)
                      
     return r
 
-def get_performance_data(r):
+def get_performance_data_from_json(r):
     try:
         resp_str=json.dumps(r.json(),indent=2)
         resp_dict = json.loads(resp_str)
