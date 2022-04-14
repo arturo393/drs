@@ -117,6 +117,7 @@ def main():
     if(remotes_created > 0):
         director_deploy()
         
+    
     sys.exit(0)
             
 def director_deploy():
@@ -136,6 +137,7 @@ def director_deploy():
                      
     return q
 
+    
 def director_create_dru_host(opt,dru):
     
     hostname = socket.gethostname()    
@@ -146,9 +148,12 @@ def director_create_dru_host(opt,dru):
             'object_name':hostname+"-"+opt+"-"+dru, 
             "object_type": "object",
             "address": ip_addr ,
-            "imports": ["dmu-"+opt+"-"+dru+"-host-template"],
+            "imports": [hostname+"-opt-dru-host-template"],
             "display_name": "Remote "+ dru[3:],
-            "zone": hostname
+             "vars": {
+              "opt": opt[3:],
+              "dru": dru[3:]
+                }
         }
         
    
@@ -164,6 +169,7 @@ def director_create_dru_host(opt,dru):
                          auth=(director_api_login,director_api_password),
                          verify=False)
                      
+    #print(json.dumps(q.json(),indent=2))
     return q
 
 def icinga_get_service_last_check_result(opt):
