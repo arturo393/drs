@@ -574,7 +574,7 @@ def main():
     if dlPower >= high_level_warning_downlink:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
     elif dlPower >= high_level_critical_downlink:
-        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
+        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBm]!</font></h3>"
             
     if ulPower >= high_level_warning_uplink:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " +parameter_dict['dlOutputPower']+"[dBm]</font></h3>"
