@@ -419,7 +419,9 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
         alarm += parameter_dict['ulInputPower']
         alarm += "[dBm]</font></h3>"
         
-    if ulPower >= hl_critical_ul:
+    if ulPower > 0:
+        alarm +=""         
+    elif ulPower >= hl_critical_ul:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
         alarm += parameter_dict['dlOutputPower']
         alarm +="[dBm]!</font></h3>"      
@@ -427,17 +429,27 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
         alarm += parameter_dict['dlOutputPower']
         alarm += "[dBm]</font></h3>"
+        
+        
     return alarm
 
 def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
+    ulPower = float(parameter_dict['ulInputPower'])
+
+    if(ulPower > 0 or ulPower < -110):
+         ulPower_str = "-"
+    else:
+         ulPower_str = parameter_dict['ulInputPower']
     
-    ul_str  ="Uplink="+parameter_dict['ulInputPower']
+    ul_str  ="Uplink="+ulPower_str
     ul_str +=";"+str(hlwul)
     ul_str +=";"+str(hlcul)
     
+
+        
     dl_str ="Downlink="+parameter_dict['dlOutputPower']
     dl_str +=";"+str(hlwdl)
-    dl_str +";"+str(hlcdl)
+    dl_str +=";"+str(hlcdl)
     graphite = ul_str+" "+dl_str
     return graphite
 
@@ -622,6 +634,13 @@ def get_channel_table(responseDict):
     return table3
 
 def get_power_table(responseDict):
+    ulPower = float(responseDict['ulInputPower'])
+    
+    if ulPower > 0 or ulPower <-110:
+        ulPower = "-"
+    else:
+        ulPower = responseDict['ulInputPower']
+        
     table2 = "<table width=250>"
     table2 += "<thead>"
     table2 += "<tr  align=\"center\" style=font-size:12px>"
@@ -631,7 +650,7 @@ def get_power_table(responseDict):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPower+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
     table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
     table2+="</tbody></table>"
     return table2
