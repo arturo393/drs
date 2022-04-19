@@ -8,98 +8,18 @@
 #  Se puede especificar por la linea de comandos el puerto serie a
 #  a emplear
 #
-#  (C)2022 Guillermo Gonzalez (ggonzalez@itaum.com)
+#  (C)2022 Arturo Veras (arturo@sigma-telecom.com)
 #
 #
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
-from pickle import FALSE, TRUE
-from re import I
 import sys
 import getopt
 import serial
 from crccheck.crc import Crc16Xmodem
 import argparse
-
 import check_rs485 as rs485
-# --------------------------------
-# -- Declaracion de constantes
-# --------------------------------
-C_HEADER = '7E'
-C_DATA_TYPE = '00'
-C_RESPONSE_FLAG = '00'
-C_END = '7E'
-C_UNKNOWN2BYTE01 = '0101'
-C_UNKNOWN2BYTE02 = '0100'
-C_UNKNOWN1BYTE = '01'
-C_TXRXS_80 = '80'
-C_TXRXS_FF = 'FF'
-C_TYPE_QUERY = '02'
-C_TYPE_SET = '03'
-C_RETURN = '0d'
-C_SITE_NUMBER = '00000000'
-
-dataDMU = {
-    "F8" : "opt1ConnetedRemotes",
-    "F9" : "opt2ConnectedRemotes",
-    "FA" : "opt3ConnectedRemotes",
-    "FB" : "opt4ConnectedRemotes",
-    "9A" : ['Connected','Disconnected','Transsmision normal','Transsmision failure'],
-    "F3" : "[dBm]",
-    "42" : ['ON', 'OFF'],
-    "81" : ["Channel Mode", "WideBand Mode"]
-}
-
-dataDRU = {
-    "0300" : { "default": "Unknown Device", 4: "Fiber optic remote unit"},
-    "0400" : " Device Mode",
-    "0600" : " Device Channel number",
-    "210B" : " RU ID",
-    "0201" : "Remote ",
-    "0105" : { "unidad": " [°C]", "variable" : "Pa Temperature", "name" : "Power Amplifier Temperature"},
-    "0305" : { "unidad": " [dBm]", "variable" : "DL Ouput Power", "name" : "Downlink Output Power" },
-    "0605" : { "unidad": " ", "variable" : "VSWR", "name" : "Downlink VSWR" },
-    "2505" : { "unidad": " [dBm]", "variable" : "Uplink Input Power", "name" : "Uplink Input Power" },
-    "0104" : { "default" : "Unknown", 0: "RF Power OFF" , 1: "RF Power On" },
-    "4004" : " [dB]",
-    "4104" : " [dB]",
-    "EF0B" : { "default": "Unknown", 2: "WideBand Mode", 3: "Channel Mode"},
-    "180A" : " MHz",
-    "190A" : " MHz",
-    "1A0A" : " MHz",
-    "1B0A" : " MHz",
-    "0102" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "0602" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "0F02" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "1002" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "1102" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "1202" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "1302" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "1402" : { "default": "Unknown", 0: "Disable", 1: "Enable"},
-    "0103" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "0603" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "0E03" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "0F03" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "1003" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "1103" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "1203" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "1303" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "1403" : { "default": "Unknown", 0: "Alarm OFF", 1: "Alarm ON"},
-    "5004" : " V",
-    "5104" : " &ordm;C",
-    "5304" : " [dBm]",
-    "5404" : " [dBm]",
-    "5504" : " [dBm]",
-    "5604" : " [dBm]",
-    "270A" : { "default": "Unknown", 1: "180 [s]", 3: "60 [s]", 9: "20 [s]"},
-    "E00B" : " [dBm]",
-    "E10B" : " [dBm]",
-    "E20B" : " [dBm]",
-    "E30B" : " [dBm]",
-    "E40B" : " [dBm]",
-    "E50B" : " [dBm]",
-}
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -374,15 +294,12 @@ def analizar_argumentos():
 
     # Construct the argument parser
     ap = argparse.ArgumentParser()
-
-    
     # Add the arguments to the parser
     #ap.add_argument("-h", "--help", required=False,  help="help")
     ap.add_argument("-hlwu","--highLevelWarningUplink",  required=False,help="highLevelWarningUplink es requerido", default=200)
     ap.add_argument("-hlcu","--highLevelCriticalUplink", required=False,help="highLevelCriticalUplink es requerido", default=200)
     ap.add_argument("-hlwd","--highLevelWarningDownlink",  required=False,help="highLevelWarningDownlink es requerido", default=200)
     ap.add_argument("-hlcd","--highLevelCriticalDownlink", required=False,help="highLevelCriticalDownlink es requerido", default=200)
-
 
     try:
         args = vars(ap.parse_args())
@@ -392,78 +309,12 @@ def analizar_argumentos():
         help()
         sys.exit(1)
 
-
     HighLevelWarningUL = int(args['highLevelWarningUplink'])
     HighLevelCriticalUL = int(args['highLevelCriticalUplink'])
     HighLevelWarningDL = int(args['highLevelWarningDownlink'])
     HighLevelCriticalDL = int(args['highLevelCriticalDownlink'])
     
     return  HighLevelWarningUL,  HighLevelCriticalUL,  HighLevelWarningDL, HighLevelCriticalDL
-
-def getChecksumSimple(cmd):
-    """
-    -Description: this fuction calculate the checksum for a given comand
-    -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
-    -return: cheksum for the given command
-    """
-    data = bytearray.fromhex(cmd)
-
-    crc = hex(Crc16Xmodem.calc(data))
-    #print("crc: %s" % crc)
-
-    if (len(crc) == 5):
-        checksum = crc[3:5] + '0' + crc[2:3]
-    else:
-        checksum = crc[4:6] + crc[2:4]
-
-    checksum = checksum.upper()
-    return checksum
-
-def getChecksum(cmd):
-    """
-    -Description: this fuction calculate the checksum for a given comand
-    -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
-    -return: cheksum for the given command
-    """
-    data = bytearray.fromhex(cmd)
-
-    crc = hex(Crc16Xmodem.calc(data))
-    #print("crc: %s" % crc)
-
-    if (len(crc) == 5):
-        checksum = crc[3:5] + '0' + crc[2:3]
-    else:
-        checksum = crc[4:6] + crc[2:4]
-
-    checksum = checksum.upper()
-    checksum_new = checksum.replace('7E','5E7D')
-    checksum_new = checksum.replace('5E','5E5D')
-    return checksum_new
-
-# ----------------------------------------------------
-# -- Buscan un elemento dentro de una array
-# --------------------------------------------------
-def buscaArray(lst, value):
-
-    try:
-       ndx = lst.index(value)
-    except:
-      ndx = -1
-
-    return ndx
-# ----------------------------------------------------
-# -- Formateria formato cadena de byte a Hex
-# --------------------------------------------------
-
-
-def formatearHex(dato):
-
-    if dato[0:2] == '0x':
-        dato_hex = dato[2:]
-    else:
-        dato_hex = dato
-
-    return dato_hex
 # ----------------------------------------------------
 # -- Armar trama de escritura o lectura
 #-- (PARAMETROS)
@@ -488,23 +339,11 @@ def s16(value):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    frame_list  = list()
-    high_level_warning_uplink, high_level_critical_uplink, high_level_warning_downlink, high_level_critical_downlink  = analizar_argumentos()
+   
+    hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl  = analizar_argumentos()
 
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fa','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fb','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f3','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','ef','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','b9','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','81','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','36','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','42','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','9a','00','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','91','00','00','00'))
-    
-    
+    frame_list = get_frame_list()
+
 
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -522,19 +361,15 @@ def main():
             "CRITICAL - Error al abrir puerto %s " % str(Port))
         sys.exit(2)
 
-    # -- Mostrar el nombre del dispositivo
-    #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
     parameter_dict = dict()
 
     for frame in frame_list:
         rs485.write_serial_frame(frame,s)
-
         hex_data_frame = rs485.read_serial_frame(Port, s)
-
         data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
         a_bytearray = bytearray(data)
         hex_validated_frame = a_bytearray.hex()
-
+        
         try:
             resultOK =  int(hex_validated_frame, 16)
         except:
@@ -546,223 +381,218 @@ def main():
         
     s.close()
     
+    alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
+    parameter_html_table = create_table(parameter_dict)      
+    graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
+
+    sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
+    sys.exit(0)
+
+def get_frame_list():
+    frame_list  = list()
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fa','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fb','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f3','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','ef','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','b9','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','81','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','36','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','42','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','9a','00','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','91','00','00','00'))
+    return frame_list
+
+def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict):
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
 
     
     alarm =""
-    exit_value = 0
-    if dlPower >= high_level_critical_downlink:
-        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBm]!</font></h3>"
-    elif dlPower >= high_level_warning_downlink:
-        alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
+    if dlPower >= hl_critical_dl:
+        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
+        alarm += parameter_dict['ulInputPower']
+        alarm += " [dBm]!</font></h3>"
+    elif dlPower >= hl_warning_dl:
+        alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
+        alarm += parameter_dict['ulInputPower']
+        alarm += "[dBm]</font></h3>"
+        
+    if ulPower >= hl_critical_ul:
+        alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
+        alarm += parameter_dict['dlOutputPower']
+        alarm +="[dBm]!</font></h3>"      
+    elif ulPower >= hl_warning_ul:
+        alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
+        alarm += parameter_dict['dlOutputPower']
+        alarm += "[dBm]</font></h3>"
+    return alarm
 
-    if ulPower >= high_level_critical_uplink:
-        alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " +parameter_dict['dlOutputPower']+"[dBm]!</font></h3>"      
-    elif ulPower >= high_level_warning_uplink:
-        alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " +parameter_dict['dlOutputPower']+"[dBm]</font></h3>"
- 
-
-            
-            
-    parameter_html_table = create_table(parameter_dict)  
-
+def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
     
-    uplinkg_graphite  ="Uplink="+parameter_dict['ulInputPower']+";"+str(high_level_warning_uplink)+";"+str(high_level_critical_uplink)
-    downlink_graphite ="Downlink="+parameter_dict['dlOutputPower']+";"+str(high_level_warning_downlink)+";"+str(high_level_critical_downlink)
-    graphite = uplinkg_graphite+" "+downlink_graphite
+    ul_str  ="Uplink="+parameter_dict['ulInputPower']
+    ul_str +=";"+str(hlwul)
+    ul_str +=";"+str(hlcul)
     
-    
-    sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
-    sys.exit(exit_value)
+    dl_str ="Downlink="+parameter_dict['dlOutputPower']
+    dl_str +=";"+str(hlwdl)
+    dl_str +";"+str(hlcdl)
+    graphite = ul_str+" "+dl_str
+    return graphite
 
-def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber):
-    if cmdNumber=='f8':
-        value =  int(hex_validated_frame, 16)
-        parameter_dict['opt1ConnectedRemotes'] = str(value)
+def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmd_number):
+    if cmd_number=='f8':
+        parameter_dict['opt1ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='f9':
+        parameter_dict['opt2ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='fa':
+        parameter_dict['opt3ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='fb':
+        parameter_dict['opt4ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='91':
+        set_opt_status_dict(parameter_dict, hex_validated_frame)
+    elif cmd_number=='9a':
+        set_opt_working_status(parameter_dict, hex_validated_frame)
+    elif cmd_number=='f3':
+        set_power_dict(parameter_dict, hex_validated_frame)
+    elif cmd_number=='42':
+        set_channel_status_dict(parameter_dict, hex_validated_frame)
+    elif cmd_number=='36':
+        set_channel_freq_dict(parameter_dict, hex_validated_frame)
+    elif cmd_number=='81':
+        set_working_mode_dict(parameter_dict, hex_validated_frame)   
+    elif cmd_number=='ef':
+        set_power_att_dict(parameter_dict, hex_validated_frame)
 
-    elif cmdNumber=='f9':
-        value =  int(hex_validated_frame, 16)
-        parameter_dict['opt2ConnectedRemotes'] = str(value)
+def set_opt_status_dict(parameter_dict, hex_validated_frame):
+    if (hex_validated_frame[0:2] == '00'):
+        parameter_dict['opt1ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt1ActivationStatus'] = 'OFF'
 
-    elif cmdNumber=='fa':
-        value =  int(hex_validated_frame, 16)
-        parameter_dict['opt3ConnectedRemotes'] = str(value)
+    if (hex_validated_frame[2:4] == '00'):
+        parameter_dict['opt2ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt2ActivationStatus'] = 'OFF'
 
-    elif cmdNumber=='fb':
-        value =  int(hex_validated_frame, 16)
-        parameter_dict['opt4ConnectedRemotes'] = str(value)
+    if (hex_validated_frame[4:6] == '00'):
+        parameter_dict['opt3ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt3ActivationStatus'] = 'OFF'
 
-    elif cmdNumber=='91':
-        if (hex_validated_frame[0:2] == '00'):
-            parameter_dict['opt1ActivationStatus'] = 'ON'
+    if (hex_validated_frame[6:8] == '00'):
+        parameter_dict['opt4ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt4ActivationStatus'] = 'OFF'
+
+def set_opt_working_status(parameter_dict, hex_validated_frame):
+    hex_as_int = int(hex_validated_frame, 16)
+    hex_as_binary = bin(hex_as_int)
+    padded_binary = hex_as_binary[2:].zfill(8)
+    opt=1
+    temp = []
+    for bit in reversed(padded_binary):
+        if (bit=='0' and opt<=4):
+            temp.append('Connected ')
+        elif (bit=='1' and opt<=4):
+            temp.append('Disconnected ')
+        elif (bit=='0' and opt>4):
+            temp.append('Normal')
+        elif (bit=='1' and opt>4):
+            temp.append('Failure')
+        opt=opt+1
+
+    parameter_dict['opt1ConnectionStatus'] = temp[0]
+    parameter_dict['opt2ConnectionStatus'] = temp[1]
+    parameter_dict['opt3ConnectionStatus'] = temp[2]
+    parameter_dict['opt4ConnectionStatus'] = temp[3]
+    parameter_dict['opt1TransmissionStatus'] = temp[4]
+    parameter_dict['opt2TransmissionStatus'] = temp[5]
+    parameter_dict['opt3TransmissionStatus'] = temp[6]
+    parameter_dict['opt4TransmissionStatus'] = temp[7]
+
+def set_power_dict(parameter_dict, hex_validated_frame):
+    hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
+    hex_as_int = int(hexInvertido, 16)
+    dlPower = s16(hex_as_int)/256
+    parameter_dict['dlOutputPower'] = str(round(dlPower,2))
+
+    hexInvertido = hex_validated_frame[0+4:2+4]+ hex_validated_frame[2+4:4+4]
+    hexInvertido2 = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]
+    hex_as_int = int(hexInvertido, 16)
+    hex_as_int2 = int(hexInvertido2, 16)
+    ulPower = s16(hex_as_int)/256
+    ulPower2 = s16(hex_as_int2)/256
+
+    parameter_dict['ulInputPower'] = str(round(ulPower,2))
+
+def set_channel_status_dict(parameter_dict, hex_validated_frame):
+    i = 0
+    channel = 1
+    while channel <= 16 and i < len(hex_validated_frame):
+        hex_as_int = int(hex_validated_frame[i:i+2], 16)
+        if hex_as_int == 0:
+            parameter_dict["channel"+str(channel)+"Status"] = "ON"
         else:
-            parameter_dict['opt1ActivationStatus'] = 'OFF'
+            parameter_dict["channel"+str(channel)+"Status"] = "OFF"
+        i += 2
+        channel += 1
 
-        if (hex_validated_frame[2:4] == '00'):
-            parameter_dict['opt2ActivationStatus'] = 'ON'
-        else:
-            parameter_dict['opt2ActivationStatus'] = 'OFF'
-
-        if (hex_validated_frame[4:6] == '00'):
-            parameter_dict['opt3ActivationStatus'] = 'ON'
-        else:
-            parameter_dict['opt3ActivationStatus'] = 'OFF'
-
-        if (hex_validated_frame[6:8] == '00'):
-            parameter_dict['opt4ActivationStatus'] = 'ON'
-        else:
-            parameter_dict['opt4ActivationStatus'] = 'OFF'
-
-
-    elif cmdNumber=='9a':
-        hex_as_int = int(hex_validated_frame, 16)
-        hex_as_binary = bin(hex_as_int)
-        padded_binary = hex_as_binary[2:].zfill(8)
-        opt=1
-        temp = []
-        for bit in reversed(padded_binary):
-            if (bit=='0' and opt<=4):
-                temp.append('Connected ')
-            elif (bit=='1' and opt<=4):
-                temp.append('Disconnected ')
-            elif (bit=='0' and opt>4):
-                temp.append('Normal')
-            elif (bit=='1' and opt>4):
-                temp.append('Failure')
-            opt=opt+1
-
-        parameter_dict['opt1ConnectionStatus'] = temp[0]
-        parameter_dict['opt2ConnectionStatus'] = temp[1]
-        parameter_dict['opt3ConnectionStatus'] = temp[2]
-        parameter_dict['opt4ConnectionStatus'] = temp[3]
-        parameter_dict['opt1TransmissionStatus'] = temp[4]
-        parameter_dict['opt2TransmissionStatus'] = temp[5]
-        parameter_dict['opt3TransmissionStatus'] = temp[6]
-        parameter_dict['opt4TransmissionStatus'] = temp[7]
-
-    elif cmdNumber=='f3':
-        hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
-        hex_as_int = int(hexInvertido, 16)
-        dlPower = s16(hex_as_int)/256
-        parameter_dict['dlOutputPower'] = str(round(dlPower,2))
-
-        hexInvertido = hex_validated_frame[0+4:2+4]+ hex_validated_frame[2+4:4+4]
-        hexInvertido2 = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]
-        hex_as_int = int(hexInvertido, 16)
-        hex_as_int2 = int(hexInvertido2, 16)
-        ulPower = s16(hex_as_int)/256
-        ulPower2 = s16(hex_as_int2)/256
-
-        parameter_dict['ulInputPower'] = str(round(ulPower,2))
-        #print(hex_validated_frame,hexInvertido,hexInvertido2,ulPower,ulPower2)
-               
-        if ulPower >= 41:
-          #print(ulPower)
-          ulPower = dlPower
-          #print(ulPower)
-          parameter_dict['ulInputPower'] = parameter_dict['dlOutputPower']
-          #print("WARNING - Dato recibido es desconocido")
-          #print(hex_validated_frame,hexInvertido,hexInvertido2,ulPower,ulPower2)
-          #sys.exit(1)
-
-
-    elif cmdNumber=='42':
-        i = 0
-        channel = 1
-        while channel <= 16 and i < len(hex_validated_frame):
-            hex_as_int = int(hex_validated_frame[i:i+2], 16)
-            if hex_as_int == 0:
-                parameter_dict["channel"+str(channel)+"Status"] = "ON"
-            else:
-                parameter_dict["channel"+str(channel)+"Status"] = "OFF"
-            i += 2
-            channel += 1
-
-    elif cmdNumber=='36':
-        channel = 1
-        i = 0
-        while channel <= 16:
-            byte = hex_validated_frame[i:i+8]
-            byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
-            hex_as_int = int(byteInvertido, 16)
+def set_channel_freq_dict(parameter_dict, hex_validated_frame):
+    channel = 1
+    i = 0
+    while channel <= 16:
+        byte = hex_validated_frame[i:i+8]
+        byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
+        hex_as_int = int(byteInvertido, 16)
             #print(byte,byteInvertido,hex_as_int)
-            try:
-              texto = frequencyDictionary[hex_as_int]
-              parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]
-              parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]
-              channel += 1
-              i += 8
-            except:
-              print("WARNING - Dato recibido es desconocido ")
-              print(byte,byteInvertido,hex_as_int)
-              sys.exit(1)
-              
-
-    elif cmdNumber=='81':
         try:
-          #print(hex_validated_frame)
-          if hex_validated_frame == '03':
-              parameter_dict['workingMode'] = 'Channel Mode'
-          elif hex_validated_frame == '02':
-              parameter_dict['workingMode'] = 'WideBand Mode'
-          else:
-              parameter_dict['workingMode'] = 'Unknown Mode'
+          texto = frequencyDictionary[hex_as_int]
+          parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]
+          parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]
+          channel += 1
+          i += 8
         except:
-              print("WARNING - Dato recibido es desconocido ")
-              print(hex_validated_frame)
-              sys.exit(1)
-              
-    elif cmdNumber=='ef':
-        byte01toInt = int(hex_validated_frame[0:2], 16)/4
-        byte02toInt = int(hex_validated_frame[2:4], 16)/4
-        valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-        valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
-        parameter_dict['ulAtt'] = valor1
-        parameter_dict['dlAtt'] = valor2
+          print("WARNING - Dato recibido es desconocido ")
+          print(byte,byteInvertido,hex_as_int)
+          sys.exit(1)
 
+def set_power_att_dict(parameter_dict, hex_validated_frame):
+    byte01toInt = int(hex_validated_frame[0:2], 16)/4
+    byte02toInt = int(hex_validated_frame[2:4], 16)/4
+    valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+    valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+    parameter_dict['ulAtt'] = valor1
+    parameter_dict['dlAtt'] = valor2
+
+def set_working_mode_dict(parameter_dict, hex_validated_frame):
+    try:
+          #print(hex_validated_frame)
+      if hex_validated_frame == '03':
+          parameter_dict['workingMode'] = 'Channel Mode'
+      elif hex_validated_frame == '02':
+          parameter_dict['workingMode'] = 'WideBand Mode'
+      else:
+          parameter_dict['workingMode'] = 'Unknown Mode'
+    except:
+          print("WARNING - Dato recibido es desconocido ")
+          print(hex_validated_frame)
+          sys.exit(1)
 
 def create_table(responseDict):
 
+    table1 = get_opt_status_table(responseDict)
+    table2 = get_power_table(responseDict)
+    table3 = get_channel_table(responseDict)
     
-    table1 = "<table width=280>"
-    table1 += "<thead>"
-    table1 += "<tr align=\"center\" style=font-size:12px>"
-    table1 += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
-    table1 += "</tr>"
-    table1 += "</thead>"
-    table1 +="<tbody>"
+    table =  "<h3><font color=\"#046c94\">"+responseDict['workingMode']+"</font></h3>"
+    table += '<div class="sigma-container">'
+    table += table1+table2+table3
+    table += "</div>"
+    return table
 
-    for i in range(1,5):
-        opt = str(i)
-        table1 +="<tr align=\"center\" style=font-size:12px>"
-        table1 +="<td>opt"+opt+"</td>"
-        table1 +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
-        table1 +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
-        table1 +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
-        table1 +="</tr>"
-
-    table1 +="</tbody>"
-    table1 +="</table>"
-
-    table2 = "<table width=250>"
-    table2 += "<thead>"
-    table2 += "<tr  align=\"center\" style=font-size:12px>"
-    table2 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
-    table2 += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
-    table2 += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
-    table2 += "</tr>"
-    table2 += "</thead>"
-    table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
-    table2+="</tbody></table>"
-    
-    
-
+def get_channel_table(responseDict):
     table3 = "<table width=40%>"
     table3 += "<thead><tr style=font-size:11px>"
     table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
@@ -789,14 +619,47 @@ def create_table(responseDict):
         table3 +="</tr>"
        
     table3 +="</tbody></table>"
-    
-    
-    
-    table =  "<h3><font color=\"#046c94\">"+responseDict['workingMode']+"</font></h3>"
-    table += '<div class="sigma-container">'
-    table += table1+table2+table3
-    table += "</div>"
-    return table
+    return table3
+
+def get_power_table(responseDict):
+    table2 = "<table width=250>"
+    table2 += "<thead>"
+    table2 += "<tr  align=\"center\" style=font-size:12px>"
+    table2 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
+    table2 += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
+    table2 += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
+    table2 += "</tr>"
+    table2 += "</thead>"
+    table2 += "<tbody>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
+    table2+="</tbody></table>"
+    return table2
+
+def get_opt_status_table(responseDict):
+    table1 = "<table width=280>"
+    table1 += "<thead>"
+    table1 += "<tr align=\"center\" style=font-size:12px>"
+    table1 += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
+    table1 += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
+    table1 += "</tr>"
+    table1 += "</thead>"
+    table1 +="<tbody>"
+
+    for i in range(1,5):
+        opt = str(i)
+        table1 +="<tr align=\"center\" style=font-size:12px>"
+        table1 +="<td>opt"+opt+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'ActivationStatus']+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'ConnectedRemotes']+"</td>"
+        table1 +="<td>"+responseDict['opt'+opt+'TransmissionStatus']+"</td>"
+        table1 +="</tr>"
+
+    table1 +="</tbody>"
+    table1 +="</table>"
+    return table1
 
 
 if __name__ == "__main__":
