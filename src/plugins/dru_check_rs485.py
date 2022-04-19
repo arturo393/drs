@@ -574,7 +574,7 @@ def main():
     if dlPower >= high_level_warning_downlink:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
     elif dlPower >= high_level_critical_downlink:
-        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBm]!</font></h3>"
+        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
             
     if ulPower >= high_level_warning_uplink:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " +parameter_dict['dlOutputPower']+"[dBm]</font></h3>"
@@ -722,8 +722,8 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
             parameter_dic["channel"+str(ch_number)+"dlFreq"] = text[23:40-6+2]
         
         elif cmd_number == '160a':
-            byte1 = cmd_value[0:2]
-            byte2 = cmd_value[2:4]
+            byte2 = cmd_value[0:2]
+            byte1 = cmd_value[2:4]
             res1 = "{0:08b}".format(int(byte1, 16))
             res2 = "{0:08b}".format(int(byte2, 16))
             binario = res1 + res2
