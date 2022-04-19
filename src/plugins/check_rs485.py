@@ -761,13 +761,13 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
             #Result = formato + " [dBm] | power=" + str(rbm)
             
             hexInvertido = Result[0+4:2+4]+ Result[2+4:4+4]
-            print(Result,hexInvertido)
+            #print(Result,hexInvertido)
             hex_as_int = int(hexInvertido, 16)
             ulPower = s16(hex_as_int)/256
             ulPowerStr = str(round(ulPower,2))
             
             hexInvertido = Result[2:4] + Result[0:2]
-            print(Result,hexInvertido)
+            #print(Result,hexInvertido)
             hex_as_int = int(hexInvertido, 16)
             dlPower = s16(hex_as_int)/256
             dlPowerStr = str(round(dlPower,2))
@@ -825,10 +825,10 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
         
         elif (Device=='dmu' and CmdNumber=='81'):
             tmp = ''
-            if Result == '01':
+            if Result == '03':
                 tmp = 'Channel Mode ' 
             elif Result == '02':
-                tmp = 'W ideBand Mode '
+                tmp = 'WideBand Mode '
             else:
                 tmp = 'Unknown '
             Result = tmp     

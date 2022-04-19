@@ -362,12 +362,6 @@ def help():
     -l, --cmdBodyLenght  tamano del cuerpo en bytes, 1, 2.
     -c, --cmdDat CMDDATA: dato a escribir
     -i, --druId DRU ID number Ej. 0x11-0x16 / 0x21-0x26 / 0x31-36 / 0x41-46
-
-
-    Ejemplo:
-    check_portserial.py -p COM0       --> Usar el primer puerto serie (Windows)
-    check_portserial.py -p /dev/ttyS0 --> Especificar el dispositivo serie (Linux)
-
     """)
 
 # -----------------------------------------------------
@@ -554,11 +548,12 @@ def main():
     
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
+
     
     alarm =""
     exit_value = 0
     if dlPower >= high_level_critical_downlink:
-        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBn]!</font></h3>"
+        alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "+ parameter_dict['ulInputPower']+ " [dBm]!</font></h3>"
     elif dlPower >= high_level_warning_downlink:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "+ parameter_dict['ulInputPower']+ "[dBm]</font></h3>"
 
@@ -653,9 +648,23 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
         parameter_dict['dlOutputPower'] = str(round(dlPower,2))
 
         hexInvertido = hex_validated_frame[0+4:2+4]+ hex_validated_frame[2+4:4+4]
+        hexInvertido2 = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]
         hex_as_int = int(hexInvertido, 16)
+        hex_as_int2 = int(hexInvertido2, 16)
         ulPower = s16(hex_as_int)/256
+        ulPower2 = s16(hex_as_int2)/256
+
         parameter_dict['ulInputPower'] = str(round(ulPower,2))
+        #print(hex_validated_frame,hexInvertido,hexInvertido2,ulPower,ulPower2)
+               
+        if ulPower >= 41:
+          #print(ulPower)
+          ulPower = dlPower
+          #print(ulPower)
+          parameter_dict['ulInputPower'] = parameter_dict['dlOutputPower']
+          #print("WARNING - Dato recibido es desconocido")
+          #print(hex_validated_frame,hexInvertido,hexInvertido2,ulPower,ulPower2)
+          #sys.exit(1)
 
 
     elif cmdNumber=='42':
@@ -677,18 +686,33 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
             byte = hex_validated_frame[i:i+8]
             byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
             hex_as_int = int(byteInvertido, 16)
-            texto = frequencyDictionary[hex_as_int]
-            parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]
-            parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]
-            channel += 1
-            i += 8
+            #print(byte,byteInvertido,hex_as_int)
+            try:
+              texto = frequencyDictionary[hex_as_int]
+              parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]
+              parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]
+              channel += 1
+              i += 8
+            except:
+              print("WARNING - Dato recibido es desconocido ")
+              print(byte,byteInvertido,hex_as_int)
+              sys.exit(1)
+              
 
     elif cmdNumber=='81':
-        if hex_validated_frame == '01':
-            parameter_dict['workingMode'] = 'Channel Mode'
-        elif hex_validated_frame == '02':
-            parameter_dict['workingMode'] = 'WideBand Mode'
-
+        try:
+          #print(hex_validated_frame)
+          if hex_validated_frame == '03':
+              parameter_dict['workingMode'] = 'Channel Mode'
+          elif hex_validated_frame == '02':
+              parameter_dict['workingMode'] = 'WideBand Mode'
+          else:
+              parameter_dict['workingMode'] = 'Unknown Mode'
+        except:
+              print("WARNING - Dato recibido es desconocido ")
+              print(hex_validated_frame)
+              sys.exit(1)
+              
     elif cmdNumber=='ef':
         byte01toInt = int(hex_validated_frame[0:2], 16)/4
         byte02toInt = int(hex_validated_frame[2:4], 16)/4

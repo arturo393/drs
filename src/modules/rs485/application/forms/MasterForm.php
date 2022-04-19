@@ -93,7 +93,7 @@ class MasterForm extends ConfigForm
                         array(
                             'label' => $this->translate($descripcion),
                             'multiOptions' =>[
-                            '01' => 'Channel Mode',
+                            '03' => 'Channel Mode',
                             '02' => 'WideBand Mode'
                             ],
                             'required' => true,
