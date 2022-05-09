@@ -8,8 +8,14 @@
 
 ```
 mkdir /usr/lib/monitoring-plugins
-cp /tmp/src/sigma-rds/plugins/check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/dmu_check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/dru_check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/dru_discovery.py /usr/lib/monitoring-plugins
 chmod a+x /usr/lib/monitoring-plugins/check_rs485.py
+chmod a+x /usr/lib/monitoring-plugins/dmu_check_rs485.py
+chmod a+x /usr/lib/monitoring-plugins/dru_check_rs485.py
+chmod a+x /usr/lib/monitoring-plugins/dru_discovery.py
 ```
 
 ## Install python
