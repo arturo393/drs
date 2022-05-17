@@ -11,19 +11,27 @@ use Icinga\Application\Version;
         $this->provideCssFile('vendor/flatpickr.min.css');
     }
 
-    $this->menuSection(N_('Rs485'))->add(N_('Config DRU'), array(
+    /*$this->menuSection(N_('Device configuration'))->add(N_('Config DRU'), array(
         'url' => 'rs485/setdru/list',
     ));
 
-    $this->menuSection(N_('Rs485'))->add(N_('Config DMU'), array(
+    $this->menuSection(N_('Device configuration'))->add(N_('Config DMU'), array(
         'url' => 'rs485/setdmu/list',
     ));
 
-    $this->menuSection(N_('Rs485'))->add(N_('Formulario General'), array(
+    $this->menuSection(N_('Device configuration'))->add(N_('Formulario General'), array(
         'url' => 'rs485/general/edit',
+    ));*/
+
+    $this->menuSection(N_('Device configuration'))->add(N_('Configure Master'), array(
+        'url' => 'rs485/master/edit',
     ));
 
-   $this->provideConfigTab('form', array(
+    $this->menuSection(N_('Device configuration'))->add(N_('Configure Remote'), array(
+        'url' => 'rs485/remote/edit',
+    ));
+
+   /*$this->provideConfigTab('form', array(
         'title' => $this->translate('Formulario para ingresar datos dmu'),
         'label' => $this->translate('Formulario DMU'),
         'url'   => 'rs485/setdmu/dmu'
@@ -34,11 +42,10 @@ use Icinga\Application\Version;
         'title' => $this->translate('Formulario para ingresar datos dru'),
 	'label' => $this->translate('Formulario DRU'),
 	'url'   => 'rs485/setdru/dru'
-    ));
+    ));*/
 
     $this->provideConfigTab('backend', array(
         'title' => $this->translate('Configure the database backend'),
         'label' => $this->translate('Backend'),
         'url'   => 'config/backend'
     ));
-

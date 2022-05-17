@@ -2,37 +2,22 @@
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
-# Master: Director Module
+# Master: Cube Module
+
+## Installation
 
 ```
-apt install -y icingaweb2-module-director
+cd /usr/share/icingaweb2/modules
+git clone https://github.com/Icinga/icingaweb2-module-cube cube
+chown -R www-data:icingaweb2 cube
+sed -i 's/charset = "utf8"/charset = "latin1"/g' /etc/icingaweb2/resources.ini
 ```
 
-mysql
+Open ÌcingaWeb2 and go to menu "Configuration" -> "Modules" -> "cube" -> Enable
 
-```
-CREATE DATABASE director CHARACTER SET 'utf8';
-CREATE USER director@localhost IDENTIFIED BY 'Admin.123';
-GRANT ALL ON director.* TO director@localhost;
-```
+## Use
 
-open `http://<host-ip>/icingaweb2`
-Go to menu "Configuration" -> "Application" -> "Resources" -> "Add" -> "Create a New Resource"
-
-```
-Resource Name: director_db
-Database Name: director
-Username: director
-Password: Admin.123
-Charset: utf8
-```
-
-Go to menu "Icinga Director" -> "[Create Schema]"
-
-
-# Upgrade Director
-
-To upgrade director module, follow the steps following the steps in the [upgrade_director.md](/docs/upgrade_director.md) file.
+Open IcingaWeb2 and go to menú "Reporting" -> "Cube"
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |

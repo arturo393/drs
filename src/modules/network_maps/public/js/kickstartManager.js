@@ -1,51 +1,53 @@
 function kickstartManager() {
+  populateDbDropdown = (data) => {
+    var resources = JSON.parse(data);
 
-    populateDbDropdown = (data) => {
+    var $dropdown = $('#resource-field');
 
-        var resources = JSON.parse(data);
-
-        var $dropdown = $("#resource-field");
-
-        for (i = 0; i < resources['databases'].length; i++) {
-            $dropdown.append("<option value=" + resources['databases'][i] + ">" + resources['databases'][i] + "</option>");
-        }
-
-        startFormListeners();
-
+    for (i = 0; i < resources['databases'].length; i++) {
+      $dropdown.append(
+        '<option value=' +
+          resources['databases'][i] +
+          '>' +
+          resources['databases'][i] +
+          '</option>'
+      );
     }
 
-    processError = (error) => {
+    startFormListeners();
+  };
 
-        errorHandler(error); 
+  processError = (error) => {
+    errorHandler(error);
+  };
 
-    }
+  startFormListeners = () => {
+    $('form').submit(function (data) {
+      var formData = $('form.settings-form').serializeArray();
 
-    startFormListeners = () => {
+      var settingsPromise = storeSettings(formData).then(
+        testSettings,
+        processError
+      );
+    });
+  };
 
-        $('form').submit(function (data) {
+  testSettings = () => {
+    success = () => {
+      $('#notifications')
+        .append()
+        .html('<li class="success fade-out">Settings Saved Successfully</li>');
 
-            var formData = $("form.settings-form").serializeArray();
+      setTimeout(() => {
+        window.location.replace('./network_maps/module/network');
+      }, 1000);
+    };
 
-            var settingsPromise = storeSettings(formData).then(testSettings, processError)
+    var hostPromise = getHosts().then(success, processError);
+  };
 
-        });
-
-    }
-
-    testSettings = () => {
-
-        success = () => {
-
-            $('#notifications').append().html('<li class="success fade-out">Settings Saved Successfully</li>');
-
-            setTimeout(() =>{
-                window.location.replace('./network')
-            }, 1000)
-        }
-
-        var hostPromise = getHosts().then(success, processError)
-    }
-
-    var resourcePromise = getIcingaResourceDatabases().then(populateDbDropdown, processError)
-
+  var resourcePromise = getIcingaResourceDatabases().then(
+    populateDbDropdown,
+    processError
+  );
 }
