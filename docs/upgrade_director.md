@@ -15,16 +15,16 @@ mysqldump --host=localhost --user=root --port=3306 -p --all-databases > backup_a
 ## Incubator
 
 ```
-cd /usr/share/icinga2/modules
+cd /usr/share/icingaweb2/modules
 git clone https://github.com/Icinga/icingaweb2-module-incubator --branch v0.14.0 incubator
-chown -R chown -R www-data:icingaweb2 incubator
+chown -R www-data:icingaweb2 incubator
 icingacli module enable incubator
 ```
 
 ## React Bundle
 
 ```
-cd /usr/share/icinga2/modules
+cd /usr/share/icingaweb2/modules
 git clone https://github.com/Icinga/icingaweb2-module-reactbundle --branch v0.9.0 reactbundle
 chown -R www-data:icingaweb2 reactbundle
 icingacli module enable reactbundle
@@ -33,7 +33,7 @@ icingacli module enable reactbundle
 # Install  Upgrade
 
 ```
-cd /usr/share/icinga2/modules
+cd /usr/share/icingaweb2/modules
 git clone https://github.com/icinga/icingaweb2-module-director director
 chown -R www-data:icingaweb2 director
 icingacli module enable director
