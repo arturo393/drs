@@ -1,0 +1,22 @@
+<div class="controls">
+   <?= /** @var \Icinga\Web\Widget\Tabs $tabs */ $tabs ?>
+</div>
+
+<div class="content">
+<?php foreach ($this->salida as $result) { ?>
+<h4><?= $result['comando']  ?>
+
+ change:  <?= $result['resultado']  ?>
+</h4>
+
+<!--- <pre>
+New Parameters <br>
+   <?= $result['query'] ?>
+</pre>
+<br><br>
+-->
+<?php }  ?>
+<?php echo $this->params ?>
+
+</div>
+

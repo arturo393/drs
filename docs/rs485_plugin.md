@@ -8,8 +8,14 @@
 
 ```
 mkdir /usr/lib/monitoring-plugins
-cp /tmp/src/sigma-rds/plugins/check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/dmu_check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/dru_check_rs485.py /usr/lib/monitoring-plugins
+cp /tmp/sigma-rds/src/plugins/dru_discovery.py /usr/lib/monitoring-plugins
 chmod a+x /usr/lib/monitoring-plugins/check_rs485.py
+chmod a+x /usr/lib/monitoring-plugins/dmu_check_rs485.py
+chmod a+x /usr/lib/monitoring-plugins/dru_check_rs485.py
+chmod a+x /usr/lib/monitoring-plugins/dru_discovery.py
 ```
 
 ## Install python
@@ -26,6 +32,20 @@ ln -sf pip3 /usr/bin/pip
 pip install crccheck serial pyserial
 ```
 
+## Configure hostname 
+
+```
+hostname dmuX
+
+```
+add hostname in  `/etc/hostname`
+
+
+restart service
+```
+systemctl restart systemd-hostnamed
+
+```
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
