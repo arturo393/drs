@@ -32,20 +32,6 @@ ln -sf pip3 /usr/bin/pip
 pip install crccheck serial pyserial
 ```
 
-## Configure hostname 
-
-```
-hostname dmuX
-
-```
-add hostname in  `/etc/hostname`
-
-
-restart service
-```
-systemctl restart systemd-hostnamed
-
-```
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
