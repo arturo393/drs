@@ -50,6 +50,21 @@ usermod -a -G dialout nagios
 
 ```
 
+## Configure hostname 
+
+change hostname
+```
+hostname dmuX
+
+```
+add hostname in  `/etc/hostname`
+
+restart service
+
+```
+systemctl restart systemd-hostnamed
+
+```
 ## Configure Extra Dependencies
 
 - [MOXA Driver](/docs/moxa_drivers.md)
@@ -60,6 +75,8 @@ usermod -a -G dialout nagios
 ## Important!
 
 _Do not add Director module to satellite node_
+
+
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
