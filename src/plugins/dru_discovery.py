@@ -18,6 +18,7 @@ from pickle import FALSE, TRUE
 import sys
 import getopt
 import serial
+import time
 from crccheck.crc import Crc16Xmodem
 import argparse
 # importing the requests library
@@ -95,28 +96,28 @@ def main():
     opt = analizar_argumentos()
     
     r = icinga_get_service_last_check_result(opt)
-
     dru_list = list()
     if (r.status_code == 200):
         remotes = get_performance_data_from_json(r)
-
         for remote in range(remotes):
             dru_list.append("dru"+str(remote+1))
-
-    
+   # id = director_get_service_apply_id()
     remotes_created = 0
+      
     for dru in dru_list:
-        
         q = director_create_dru_host(opt,dru)
         resp_str=json.dumps(q.json(),indent=2)
+      #  print(resp_str)
         resp_dict = json.loads(resp_str)
-        
+
+
         if 'address' in resp_dict:
+            director_create_dru_services(opt, dru)
             remotes_created += 1
             
     if(remotes_created > 0):
         director_deploy()
-        
+    
     
     sys.exit(0)
             
@@ -172,17 +173,96 @@ def director_create_dru_host(opt,dru):
     #print(json.dumps(q.json(),indent=2))
     return q
 
+def director_create_dru_services(opt, dru):
+
+    service_name = "dlPower-2"
+    master_hostname = socket.gethostname()
+    master_host = get_master_host()
+    remote_hostname = master_hostname+"-opt"+opt[3:]+"-dru"+dru[3:]
+    imports = list()
+     
+     ## the names are from service templates
+    imports.append(("Downlink Power","dlPower"))
+    imports.append(("Uplink Power","ulPower"))
+    imports.append(("Power Amplifier Temperature","paTemperature"))
+    imports.append(("VSWR","vswr"))   
+    
+    for template in imports:    
+        
+        director_query = {
+            "assign_filter": "host.name=%22"+remote_hostname+"\"",
+           # "check_command": master_hostname+"-service-command",
+            "imports": ["dmu-dru-query-"+template[1]+"-template"],
+            "object_name": template[0],
+            "object_type": "apply",
+            "vars": {
+                "druID": opt[3:]+dru[3:]
+            }
+        }    
+        
+        
+        headers = {
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'POST'
+        }
+        
+        request_url = "http://"+master_host+"/director/service"
+
+        q = requests.post(request_url,
+                        headers=headers,
+                        data=json.dumps(director_query),
+                        auth=(director_api_login, director_api_password),
+                        verify=False)
+        
+        print(q.text)
+        
+    return q
+
+def director_get_service_apply_id():
+    
+
+    master_host = get_master_host()   
+    
+    headers = {
+        'Accept': 'application/json',
+        'X-HTTP-Method-Override': 'GET'
+        }
+        
+    request_url = "http://"+master_host+"/director/serviceapplyrules"
+
+    q = requests.get(request_url,
+                        headers=headers,
+                        data=json.dumps(""),
+                        auth=(director_api_login, director_api_password),
+                        verify=False)
+        
+    resp_q = json.dumps(q.json(),indent=2)
+    resp_dict = json.loads(resp_q)
+
+    last_object=resp_dict["objects"].pop()
+    
+    id_list = list()
+    for object in resp_dict["objects"]:
+      
+      #print(object["id"])
+      id_list.append(int(object["id"]))
+    if(len(id_list)):
+      return max(id_list)
+    else:
+      return int(last_object["id"])
+
+
 def icinga_get_service_last_check_result(opt):
     
     hostname = socket.gethostname()    
     servicename = hostname+'!'+opt
     master_host = get_master_host()
-    
+
     query = {
             'type': 'Service',
             'service':servicename,
             'filter': 'service.state == ServiceOK',
-            'attrs': ['last_check_result']
+    #        'attrs': ['last_check_result']
             }
         
     headers = {
@@ -197,8 +277,10 @@ def icinga_get_service_last_check_result(opt):
                      data=json.dumps(query),
                      auth=(icinga_api_login,icinga_api_password),
                      verify=False)
-                     
     return r
+
+
+
 
 def get_performance_data_from_json(r):
     try:
