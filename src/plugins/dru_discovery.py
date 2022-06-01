@@ -25,7 +25,7 @@ import argparse
 import requests,json
 import socket
 import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.disable_warnings()
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -97,6 +97,7 @@ def main():
     
     r = icinga_get_service_last_check_result(opt)
     dru_list = list()
+    #print(r)
     if (r.status_code == 200):
         remotes = get_performance_data_from_json(r)
         for remote in range(remotes):
@@ -104,15 +105,16 @@ def main():
    # id = director_get_service_apply_id()
     remotes_created = 0
       
+    #print(dru_list)
     for dru in dru_list:
         q = director_create_dru_host(opt,dru)
         resp_str=json.dumps(q.json(),indent=2)
-      #  print(resp_str)
+        #print(resp_str)
         resp_dict = json.loads(resp_str)
 
 
         if 'address' in resp_dict:
-            director_create_dru_services(opt, dru)
+#            director_create_dru_services(opt, dru)
             remotes_created += 1
             
     if(remotes_created > 0):
@@ -122,8 +124,6 @@ def main():
     sys.exit(0)
             
 def director_deploy():
-    
-    
     master_host = get_master_host()  
     director_url = "http://"+master_host+"/director/config/deploy"
     director_headers = {
@@ -131,11 +131,15 @@ def director_deploy():
         'X-HTTP-Method-Override': 'POST'
         }
     
-    q = requests.post(director_url,
+    try: 
+        q = requests.post(director_url,
                          headers=director_headers,
                          auth=(director_api_login,director_api_password),
                          verify=False)
-                     
+    except:
+        print("no connection")
+        sys.exit(0)
+
     return q
 
     
@@ -144,17 +148,24 @@ def director_create_dru_host(opt,dru):
     hostname = socket.gethostname()    
     ip_addr=socket.gethostbyname(hostname)
     master_host = get_master_host()
+
+    if(dru == "dru1"):
+        parent = hostname
+    else:
+        druid = int(dru[3:]) - 1
+        parent = hostname+"-"+opt+"-dru"+str(druid)
     
     director_query = {
             'object_name':hostname+"-"+opt+"-"+dru, 
             "object_type": "object",
             "address": ip_addr ,
             "imports": [hostname+"-opt-dru-host-template"],
-            "display_name": "Remote "+ dru[3:],
+            "display_name": "Remote "+ dru[3:]+"("+opt+")",
              "vars": {
               "opt": opt[3:],
-              "dru": dru[3:]
-                }
+              "dru": dru[3:],
+              "parents": [ parent ]     
+              }
         }
         
    
@@ -164,12 +175,17 @@ def director_create_dru_host(opt,dru):
         'X-HTTP-Method-Override': 'POST'
         }
     
-    q = requests.post(request_url,
+    try:
+        q = requests.post(request_url,
                          headers=headers,
                          data=json.dumps(director_query),
                          auth=(director_api_login,director_api_password),
                          verify=False)
-                     
+       
+    except:
+        print("no connection")
+        sys.exit(0)
+
     #print(json.dumps(q.json(),indent=2))
     return q
 
@@ -200,7 +216,6 @@ def director_create_dru_services(opt, dru):
             }
         }    
         
-        
         headers = {
             'Accept': 'application/json',
             'X-HTTP-Method-Override': 'POST'
@@ -208,14 +223,17 @@ def director_create_dru_services(opt, dru):
         
         request_url = "http://"+master_host+"/director/service"
 
-        q = requests.post(request_url,
+        try:
+            q = requests.post(request_url,
                         headers=headers,
                         data=json.dumps(director_query),
                         auth=(director_api_login, director_api_password),
                         verify=False)
         
-        print(q.text)
-        
+        #print(q.text)
+        except: 
+            print("no connection")
+            sys.exit(0)
     return q
 
 def director_get_service_apply_id():
@@ -229,13 +247,16 @@ def director_get_service_apply_id():
         }
         
     request_url = "http://"+master_host+"/director/serviceapplyrules"
-
-    q = requests.get(request_url,
+    try:
+        q = requests.get(request_url,
                         headers=headers,
                         data=json.dumps(""),
                         auth=(director_api_login, director_api_password),
                         verify=False)
-        
+    except:
+        print("no connection")
+        sys.exit(0)
+
     resp_q = json.dumps(q.json(),indent=2)
     resp_dict = json.loads(resp_q)
 
@@ -272,11 +293,15 @@ def icinga_get_service_last_check_result(opt):
     
     request_url = "https://"+master_host+":5665/v1/objects/services"
 
-    r = requests.get(request_url,
+    try:
+        r = requests.get(request_url,
                      headers=headers,
                      data=json.dumps(query),
                      auth=(icinga_api_login,icinga_api_password),
                      verify=False)
+    except:
+        print("no connection")
+        sys.exit(0)
     return r
 
 
