@@ -10,8 +10,24 @@ To add direct links to rs485 device configuration module, please add the followi
 
 ```php
     <li>
-    <?php if ($object->getType() === $object::TYPE_HOST) {
-            if ($object->customvars['device'] === 'dmu') {
+    <?php 
+     if (substr($object->host,5,3) === 'opt') {
+            echo $this->qlink(
+                $this->translate('Device Configuration'),
+                'rs485/remote/edit',
+                array('host' => $object->getName()),
+                array(
+                    'class'             => 'action-link',
+                    'data-base-target'  => '_self',
+                    'icon'              => 'plug',
+                    'title'             => $this->translate(
+                        'Remote Device Configuration'
+                    )
+                )
+            );
+
+	    } elseif ($object->getType() === $object::TYPE_HOST) {
+            if (substr($object->host,0,3) === 'dmu') {
             echo $this->qlink(
                 $this->translate('Device Configuration'),
                 'rs485/master/edit',
@@ -25,22 +41,7 @@ To add direct links to rs485 device configuration module, please add the followi
                     )
                 )
             );
-	    } elseif ($object->customvars['device'] === 'dru') {
-            echo $this->qlink(
-                $this->translate('Device Configuration'),
-                'rs485/remote/edit',
-                array('host' => $object->getName()),
-                array(
-                    'class'             => 'action-link',
-                    'data-base-target'  => '_self',
-                    'icon'              => 'plug',
-                    'title'             => $this->translate(
-                        'Master Device Configuration'
-                    )
-                )
-            );
-
-	    } 
+	    }
         }?>
         </li>
 
