@@ -32,6 +32,12 @@ ln -sf pip3 /usr/bin/pip
 pip install crccheck serial pyserial
 ```
 
-|                                                                                                                        |
+|  
+## Add sigmadev user to dialout grou
+
+```
+adduser sigmadev dialout
+```                   
+                                                                                                   |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
