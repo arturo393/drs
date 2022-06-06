@@ -158,8 +158,9 @@ def director_create_dru_host(opt,dru):
     director_query = {
             'object_name':hostname+"-"+opt+"-"+dru, 
             "object_type": "object",
+            "zone":hostname,
             "address": ip_addr ,
-            "imports": [hostname+"-opt-dru-host-template"],
+            "imports": ["dmu-opt-dru-host-template"],
             "display_name": "Remote "+ dru[3:]+"("+opt+")",
              "vars": {
               "opt": opt[3:],
