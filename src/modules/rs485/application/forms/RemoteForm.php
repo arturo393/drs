@@ -353,9 +353,10 @@ class RemoteForm extends ConfigForm
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->entry_name] = $row->entry_value;
-            if($row->entry_value == $opt_dru)
+            if($row->entry_value == $opt_dru){
                 $value[$row->entry_name] = $row->entry_value;
-            return $value;
+                return $value;
+            }
         }
         return $list;
     }
