@@ -11,18 +11,18 @@ class RemoteForm extends ConfigForm
 {
     use Database;
     private $listComando = [
-    # 15, #15: Upstream noise switch
-    # 16, #16: High threshold of upstream soise
-    # 17, #17: Low threshold of upstream noise
-    # 18, #18: Uplink noise correction value
-    # 19, #19: Uplink noise Detection parameter 1
-    # 20, #20: Uplink noise Detection parameter 2
-     22, #22: Uplink ATT [dB]  - Cmd data 0x04004
-     23, #23: Downlink ATT [dB] - Cmd data 0x04104
-     25, #25: Choice of working mode - Cmd data 0xEF0B
-   #  26, #26: Uplinkg Start Frequency
-   #  27, #27: Downlink Start Frequency
-   #  30  #30: Master/Slave Link Alarm Control
+        # 15, #15: Upstream noise switch
+        # 16, #16: High threshold of upstream soise
+        # 17, #17: Low threshold of upstream noise
+        # 18, #18: Uplink noise correction value
+        # 19, #19: Uplink noise Detection parameter 1
+        # 20, #20: Uplink noise Detection parameter 2
+        22, #22: Uplink ATT [dB]  - Cmd data 0x04004
+        23, #23: Downlink ATT [dB] - Cmd data 0x04104
+        25, #25: Choice of working mode - Cmd data 0xEF0B
+        #  26, #26: Uplinkg Start Frequency
+        #  27, #27: Downlink Start Frequency
+        #  30  #30: Master/Slave Link Alarm Control
     ];
 
     public function init()
@@ -34,25 +34,33 @@ class RemoteForm extends ConfigForm
 
     public function createElements(array $formData)
     {
-        
-        $listHost = $this->cargarHost();
-        $listTrama = $this->tramasDRU();
-        $listIdDRU = $this->listDRU();
+        $hostname = '';
+        $opt_dru = '';
+        if (isset($_GET['host'])){
+            $hostname = $_GET['host'];
+            $opt = substr($hostname,8,1);
+            $dru = substr($hostname,13,1);
+            $opt_dru = "OPT".$opt." Remote ".$dru;
+        }
+        $listHost = $this->cargarHostList($hostname);
+        $listIdDRU = $this->listDRU($opt_dru);
+        $listTrama = $this->tramasDRUList();
+
         #$this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
 
         $this->addElement(
-              'select',
-              'host_remote',
-              array(
-                  #'label' => $this->translate('Host'),
-                  'multiOptions' => $listHost,
-                  'required' => true,
-                  // 'autosubmit' acts like an AJAX-Request
-                  //'class' => 'autosubmit'
-              )
-          );
-        
-          $this->addElement(
+            'select',
+            'host_remote',
+            array(
+                #'label' => $this->translate('Host'),
+                'multiOptions' => $listHost,
+                'required' => true,
+                // 'autosubmit' acts like an AJAX-Request
+                //'class' => 'autosubmit'
+            )
+        );
+
+        $this->addElement(
             'select',
             'dru_id',
             array(
@@ -64,23 +72,23 @@ class RemoteForm extends ConfigForm
             )
         );
 
-          $this->addElement(
+        $this->addElement(
             'select',
             'trama',
             array(
-                 #'label' => $this->translate('Comando'),
-                 'multiOptions' => $listTrama,
-                 'value' => '',
-                 'required' => false,
+                #'label' => $this->translate('Comando'),
+                'multiOptions' => $listTrama,
+                'value' => '',
+                'required' => false,
                 // 'autosubmit' acts like an AJAX-Request
                 'class' => 'autosubmit'
-        )
+            )
         );
 
         if ((isset($formData['trama']) && $formData['trama'] != '') || isset($formData['btn_submit']))  {
-           
+
             $option = isset($formData['btn_submit']) ? 0 : $formData['trama'];
-            
+
             #15: Upstream noise switch
             if ($option == 15 ||  isset($formData["opt15_hidden"])) {
                 $input = 15;
@@ -125,7 +133,7 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-            
+
             #18: Uplink noise correction value
             if ($option == 18 ||  isset($formData["opt18_hidden"])) {
                 $input = 18;
@@ -140,7 +148,7 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }  
-            
+
             #19: Uplink noise Detection parameter 1
             if ($option == 19 ||  isset($formData["opt19_hidden"])) {
                 $input = 19;
@@ -155,7 +163,7 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-            
+
             #20: Uplink noise Detection parameter 2
             if ($option == 20 ||  isset($formData["opt20_hidden"])) {
                 $input = 20;
@@ -170,7 +178,7 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-            
+
             #22: Uplink ATT [dB]
             if ($option == 22 ||  isset($formData["opt22_hidden"])) {
                 $input = 22;
@@ -185,7 +193,7 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             } 
-            
+
             #23: Downlink ATT [dB]
             if ($option == 23 ||  isset($formData["opt23_hidden"])) {
                 $input = 23;
@@ -214,18 +222,18 @@ class RemoteForm extends ConfigForm
                         array(
                             'label' => $this->translate($descripcion),
                             'multiOptions' =>[
-                            '02' => 'WideBand Mode',
-                            '03' => 'Channel Mode'
+                                '02' => 'WideBand Mode',
+                                '03' => 'Channel Mode'
                             ],
                             'required' => true,
                             // 'autosubmit' acts like an AJAX-Request
                             //'class' => 'autosubmit'
                         )
                     );
-                     
+
                 }    
             }
-            
+
             #26: Uplinkg Start Frequency
             if ($option == 26 ||  isset($formData['opt26_hidden'])) {
                 $input = 26;
@@ -235,17 +243,17 @@ class RemoteForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);                                    
                     $this->addElement(
-                            'select',
-                            "opt{$input}",
-                            array(
-                                'label' => $this->translate($descripcion),
-                                'multiOptions' => $listFrecuencia,
-                                'required' => true,
-                                // 'autosubmit' acts like an AJAX-Request
-                                //'class' => 'autosubmit'
-                            )
+                        'select',
+                        "opt{$input}",
+                        array(
+                            'label' => $this->translate($descripcion),
+                            'multiOptions' => $listFrecuencia,
+                            'required' => true,
+                            // 'autosubmit' acts like an AJAX-Request
+                            //'class' => 'autosubmit'
+                        )
                     ); 
-                    
+
                 }
             }
 
@@ -258,15 +266,15 @@ class RemoteForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);                                    
                     $this->addElement(
-                            'select',
-                            "opt{$input}",
-                            array(
-                                'label' => $this->translate($descripcion),
-                                'multiOptions' => $listFrecuencia,
-                                'required' => true,
-                                // 'autosubmit' acts like an AJAX-Request
-                                //'class' => 'autosubmit'
-                            )
+                        'select',
+                        "opt{$input}",
+                        array(
+                            'label' => $this->translate($descripcion),
+                            'multiOptions' => $listFrecuencia,
+                            'required' => true,
+                            // 'autosubmit' acts like an AJAX-Request
+                            //'class' => 'autosubmit'
+                        )
                     );                     
                 }
             }
@@ -284,36 +292,40 @@ class RemoteForm extends ConfigForm
                         array(
                             'label' => $this->translate($descripcion),
                             'multiOptions' =>[
-                            '01' => 'Enable',
-                            '00' => 'Disable'
+                                '01' => 'Enable',
+                                '00' => 'Disable'
                             ],
                             'required' => true,
                             // 'autosubmit' acts like an AJAX-Request
                             //'class' => 'autosubmit'
                         )
                     );
-                     
+
                 }    
             }
 
-       }       
+        }       
     }
 
-    private function cargarHost(){
-            $select = (new Select())
+    private function cargarHostList($hostname){
+        $select = (new Select())
             ->from('icinga_host r')
             ->columns(['r.*'])
             ->where(['r.object_type = ?' => 'object'])
-            ->where("object_name not like '%-opt%'")
+            ->where("object_name like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
-          $list[''] = '(Masters - IP )';
-         foreach ($this->getDb()->select($select) as $row) {
-                $list[$row->id] = "{$row->display_name} - {$row->address}";
-         }
+        $list[''] = '(Masters - IP )';
+        foreach ($this->getDb()->select($select) as $row) {
+            $list[$row->id] = "{$row->display_name} - {$row->address}";
+            if($row->object_name == $hostname){
+                $value[$row->id] = "{$row->display_name} - {$row->address}";
+                return $value;
+            }
+        }
         return $list;
     }
 
-    private function tramasDRU(){
+    private function tramasDRUList(){
         $select = (new Select())
             ->from('rs485_dru_trama r')
             ->columns(['r.*'])
@@ -324,11 +336,12 @@ class RemoteForm extends ConfigForm
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->id] = $row->name;
+
         }
         return $list;
     }
 
-    private function listDRU(){
+    private function listDRU($opt_dru){
         $id = $this->getIdDataList('druIDDataList');
         $select = (new Select())
             ->from('director_datalist_entry r')
@@ -340,6 +353,9 @@ class RemoteForm extends ConfigForm
 
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->entry_name] = $row->entry_value;
+            if($row->entry_value == $opt_dru)
+                $value[$row->entry_name] = $row->entry_value;
+            return $value;
         }
         return $list;
     }
@@ -349,8 +365,8 @@ class RemoteForm extends ConfigForm
             ->from('director_datalist r')
             ->columns(['r.*'])
             ->where(['r.list_name = ?' => $nameList]);
-      
-         $row  = $this->getDb()->select($select)->fetch();
+
+        $row  = $this->getDb()->select($select)->fetch();
 
         return $row->id;
     }
@@ -361,8 +377,8 @@ class RemoteForm extends ConfigForm
             ->from('rs485_dru_trama r')
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
-      
-         $row  = $this->getDb()->select($select)->fetch();
+
+        $row  = $this->getDb()->select($select)->fetch();
 
         return $row->name;
     }

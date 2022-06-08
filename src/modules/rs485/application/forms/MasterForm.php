@@ -20,46 +20,42 @@ class MasterForm extends ConfigForm
 
     public function createElements(array $formData)
     {
-        
-        if (isset($_GET['host'])){
-            
-        $listHost = $this->cargarHost($_GET['host']);
-        
-        } else{
-        $listHost = $this->cargarHostList();
-        }
+        $hostname = '';
+        if (isset($_GET['host']))
+            $hostname = $_GET['host'];
+        $listHost = $this->cargarHostList($hostname);
         $listTrama = $this->tramasDMU();
         #$this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
 
         $this->addElement(
-              'select',
-              'host_remote',
-              array(
-                  #'label' => $this->translate('Master List'),
-                  'multiOptions' => $listHost,
-                  'required' => true,
-                  // 'autosubmit' acts like an AJAX-Request
-                  //'class' => 'autosubmit'
-              )
-          );
+            'select',
+            'host_remote',
+            array(
+                #'label' => $this->translate('Master List'),
+                'multiOptions' => $listHost,
+                'required' => true,
+                // 'autosubmit' acts like an AJAX-Request
+                //'class' => 'autosubmit'
+            )
+        );
 
-          $this->addElement(
+        $this->addElement(
             'select',
             'trama',
             array(
                 # 'label' => $this->translate('Parameter List'),
-                 'multiOptions' => $listTrama,
-                 'value' => '',
-                 'required' => false,
+                'multiOptions' => $listTrama,
+                'value' => '',
+                'required' => false,
                 // 'autosubmit' acts like an AJAX-Request
                 'class' => 'autosubmit'
-        )
+            )
         );
 
         if ((isset($formData['trama']) && $formData['trama'] != '') || isset($formData['btn_submit']))  {
-           
+
             $option = isset($formData['btn_submit']) ? 0 : $formData['trama'];
-                        
+
             #5: Optical PortState
             if ($option == 5 || $option == 999 ||  isset($formData['opt5_hidden'])) {
                 $input = 5;
@@ -70,7 +66,7 @@ class MasterForm extends ConfigForm
                     $this->addElement('checkbox', "opt{$input}_1", [
                         'label'       => "Enable - Port 1"
                     ]); 
-                    
+
                     $this->addElement('checkbox', "opt{$input}_2", [
                         'label'       => "Enable - Port 2"
                     ]); 
@@ -84,8 +80,8 @@ class MasterForm extends ConfigForm
                     ]);                     
                 }
             }
-             
-            
+
+
             #1: Working mode 
             if ($option == 1 || $option == 999 ||  isset($formData["opt1_hidden"])) {
                 $input = 1;
@@ -99,15 +95,15 @@ class MasterForm extends ConfigForm
                         array(
                             'label' => $this->translate($descripcion),
                             'multiOptions' =>[
-                            '03' => 'Channel Mode',
-                            '02' => 'WideBand Mode'
+                                '03' => 'Channel Mode',
+                                '02' => 'WideBand Mode'
                             ],
                             'required' => true,
                             // 'autosubmit' acts like an AJAX-Request
                             //'class' => 'autosubmit'
                         )
                     );
-                     
+
                 }    
             }
             #2: Gain power control ATT
@@ -122,12 +118,12 @@ class MasterForm extends ConfigForm
                         'placeholder' => 'between 0[dB] and 30[dB]',
                         'required' => true,
                     ]); 
-                    
+
                     $this->addElement('text', "opt{$input}_2", [
                         'label'       =>'Downlink ATT [dB]',
                         'placeholder' =>'between 0[dB] and 30[dB]',
                         'required' => true,                        
-                         
+
                     ]);
                 }
             }
@@ -146,8 +142,8 @@ class MasterForm extends ConfigForm
                             array(
                                 'label' => $this->translate("Channel {$i}"),
                                 'multiOptions' =>[
-                                1 => 'ON',
-                                0 => 'OFF'
+                                    1 => 'ON',
+                                    0 => 'OFF'
                                 ],
                                 'required' => true,
                                 // 'autosubmit' acts like an AJAX-Request
@@ -160,8 +156,8 @@ class MasterForm extends ConfigForm
                     }
                 }
             }
-            
-            
+
+
             #4: Channel Frecuency Point Configuration
             if ($option == 4 || $option == 999 || isset($formData['opt4_hidden'])) {
                 $input = 4;
@@ -185,39 +181,24 @@ class MasterForm extends ConfigForm
                     }
                 }
             }
-
-            
-               
-
-       }       
+        }       
     }
 
-    private function cargarHostList(){
-            $select = (new Select())
+    private function cargarHostList($hostname){
+        $select = (new Select())
             ->from('icinga_host r')
             ->columns(['r.*'])
             ->where(['r.object_type = ?' => 'object'])
             ->where("object_name not like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
-          $list[''] = '(Master List - IP )';
-         foreach ($this->getDb()->select($select) as $row) {
-                $list[$row->id] = "{$row->display_name} - {$row->address}";
-         }
-        return $list;
-    }
-
-    private function cargarHost($hostname){
-            echo 'hostname '. $hostname;
-            $select = (new Select())
-            ->from('icinga_host r')
-            ->columns(['r.*'])
-            ->where(['r.object_type = ?' => 'object'])
-            ->where("object_name not like '%-opt%'")
-            ->where("object_name like '$hostname'")
-            ->orderBy('r.object_name', SORT_ASC);
-         foreach ($this->getDb()->select($select) as $row) {
-                $list[$row->id] = "{$row->display_name} - {$row->address}";
-         }
+        $list[''] = '(Master List - IP )';
+        foreach ($this->getDb()->select($select) as $row) {
+            $list[$row->id] = "{$row->display_name} - {$row->address}";
+            if($row->object_name == $hostname){
+                $value[$row->id] = "{$row->display_name} - {$row->address}";
+                return $value;
+            }
+        }
         return $list;
     }
 
@@ -225,7 +206,7 @@ class MasterForm extends ConfigForm
         $select = (new Select())
             ->from('rs485_dmu_trama r')
             ->columns(['r.*'])
-            //->where(['r.id not in (?)' => $excluir])
+        //->where(['r.id not in (?)' => $excluir])
             ->orderBy('r.name', SORT_ASC);
         $list[''] = '(Parameter List)';
 
@@ -242,8 +223,8 @@ class MasterForm extends ConfigForm
             ->from('rs485_dmu_trama r')
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
-      
-         $row  = $this->getDb()->select($select)->fetch();
+
+        $row  = $this->getDb()->select($select)->fetch();
 
         return $row->name;
     }
