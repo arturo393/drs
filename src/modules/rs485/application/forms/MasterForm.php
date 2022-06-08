@@ -21,7 +21,13 @@ class MasterForm extends ConfigForm
     public function createElements(array $formData)
     {
         
-        $listHost = $this->cargarHost();
+        if (isset($_GET['host'])){
+            
+        $listHost = $this->cargarHost($_GET['host']);
+        
+        } else{
+        $listHost = $this->cargarHostList();
+        }
         $listTrama = $this->tramasDMU();
         #$this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
 
@@ -186,7 +192,7 @@ class MasterForm extends ConfigForm
        }       
     }
 
-    private function cargarHost(){
+    private function cargarHostList(){
             $select = (new Select())
             ->from('icinga_host r')
             ->columns(['r.*'])
@@ -194,6 +200,21 @@ class MasterForm extends ConfigForm
             ->where("object_name not like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
           $list[''] = '(Master List - IP )';
+         foreach ($this->getDb()->select($select) as $row) {
+                $list[$row->id] = "{$row->display_name} - {$row->address}";
+         }
+        return $list;
+    }
+
+    private function cargarHost($hostname){
+            echo 'hostname '. $hostname;
+            $select = (new Select())
+            ->from('icinga_host r')
+            ->columns(['r.*'])
+            ->where(['r.object_type = ?' => 'object'])
+            ->where("object_name not like '%-opt%'")
+            ->where("object_name like '$hostname'")
+            ->orderBy('r.object_name', SORT_ASC);
          foreach ($this->getDb()->select($select) as $row) {
                 $list[$row->id] = "{$row->display_name} - {$row->address}";
          }
