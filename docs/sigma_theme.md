@@ -36,6 +36,12 @@ Configuration -> Application -> General:
 - Change footer information
 - Remove social media links
 
+## Copy tab icon 
+```
+cp -R /tmp/sigma-rds/src/modules/icingaweb2-theme-sigma/public/img/favicon.png /usr/share/icingaweb2/public/img/
+chown www-data:icingaweb2 /usr/share/icingaweb2/modules/sigma-theme
+```
+
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
