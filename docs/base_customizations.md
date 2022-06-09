@@ -47,6 +47,18 @@ To add direct links to rs485 device configuration module, please add the followi
 
 ```
 
+## Change Tab Icon 
+```
+cp -R /tmp/sigma-rds/src/modules/icingaweb2-theme-sigma/public/img/favicon.png /usr/share/icingaweb2/public/img/
+chown www-data:icingaweb2 /usr/share/icingaweb2/modules/sigma-theme
+```
+
+## Change Tab name
+```
+sed -i 's/Icinga Web/RDS/g' /usr/share/php/Icinga/Web/Controller/ActionController.php
+sed -i 's/Icinga Web/RDS/g' /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+
+```
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
