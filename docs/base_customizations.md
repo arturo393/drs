@@ -55,8 +55,8 @@ chown www-data:icingaweb2 /usr/share/icingaweb2/modules/sigma-theme
 
 ## Change Tab name
 ```
-sed -i 's/Icinga Web/RDS/g' /usr/share/php/Icinga/Web/Controller/ActionController.php
-sed -i 's/Icinga Web/RDS/g' /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+sed -i 's/Icinga Web/DRS/g' /usr/share/php/Icinga/Web/Controller/ActionController.php
+sed -i 's/Icinga Web/DRS/g' /usr/share/icingaweb2/application/controllers/AuthenticationController.php
 
 ```
 
