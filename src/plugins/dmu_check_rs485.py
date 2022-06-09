@@ -382,7 +382,8 @@ def main():
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
         
     s.close()
-    
+   
+    dru_host_created = 0
     for i in range(1,5):
         opt = "opt"+str(i)
         dru_number = int(parameter_dict['opt'+str(i)+'ConnectedRemotes'])
@@ -391,9 +392,13 @@ def main():
                 dru = "dru"+str(d)
                 #print("creating ",opt,dru)
                 q =  discovery.director_create_dru_host(opt,dru)
-                #print(q)
-            discovery.director_deploy()
+                if(q.status_code == 201):
+                    dru_host_created += 1
+                    
 
+            if dru_host_created > 0:
+                discovery.director_deploy()
+                dru_host_created = 0
 
 
 
