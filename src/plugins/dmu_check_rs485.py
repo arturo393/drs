@@ -380,9 +380,10 @@ def main():
 
         cmdNumber = frame[8:10]
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
-        
+       
     s.close()
    
+
     dru_host_created = 0
     for i in range(1,5):
         opt = "opt"+str(i)
@@ -400,14 +401,16 @@ def main():
                 discovery.director_deploy()
                 dru_host_created = 0
 
-
-
     alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
     parameter_html_table = create_table(parameter_dict)      
     graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
 
     sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
-    sys.exit(0)
+    if( alarm != ""):
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
 
 def get_frame_list():
     frame_list  = list()
@@ -431,22 +434,22 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
 
 
     alarm =""
-    if dlPower >= hl_critical_dl:
+    if dlPower >= hl_critical_ul:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
         alarm += parameter_dict['ulInputPower']
         alarm += " [dBm]!</font></h3>"
-    elif dlPower >= hl_warning_dl:
+    elif dlPower >= hl_warning_ul:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
         alarm += parameter_dict['ulInputPower']
         alarm += "[dBm]</font></h3>"
 
     if ulPower > 0:
         alarm +=""         
-    elif ulPower >= hl_critical_ul:
+    elif ulPower >= hl_critical_dl:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
         alarm += parameter_dict['dlOutputPower']
         alarm +="[dBm]!</font></h3>"      
-    elif ulPower >= hl_warning_ul:
+    elif ulPower >= hl_warning_dl:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
         alarm += parameter_dict['dlOutputPower']
         alarm += "[dBm]</font></h3>"
@@ -465,6 +468,7 @@ def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
     ul_str  ="Uplink="+ulPower_str
     ul_str +=";"+str(hlwul)
     ul_str +=";"+str(hlcul)
+
 
 
 

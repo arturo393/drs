@@ -317,6 +317,7 @@ def analizar_argumentos():
         help()
         sys.exit(1)
 
+
     dru = str(args['dru'])
     opt = str(args['opt'])
     hl_warning_ul = int(args['highLevelWarningUL'])
@@ -332,7 +333,7 @@ def analizar_argumentos():
         sys.stderr.write("CRITICAL - dru es obligatorio")
         sys.exit(2)
 
-    return opt,dru,hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, hl_warning_temperature,hl_critical_temperature
+    return args
 
 def s8(byte):
     if byte > 127:
@@ -347,13 +348,13 @@ def s8(byte):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-    opt,dru,hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, hl_warning_temperature,hl_critical_temperature = analizar_argumentos()
+    args = analizar_argumentos()
 
     frame_list = list()
 
     # -- Armando la trama
-    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', opt+dru))
-    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',opt+dru))
+    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
     
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -396,57 +397,80 @@ def main():
         data_result = get_data_result_list_from_validated_frame(data)
         set_paramter_dic_from_data_result(parameter_dict, data_result)        
         
-    alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
+    alarm = get_alarm_from_dict(args, parameter_dict)
     table = create_table(parameter_dict)    
-    graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, hl_warning_temperature, hl_critical_temperature, parameter_dict)
+    graphite = get_graphite_str(args, parameter_dict)
     
     print(alarm+table+"|"+graphite)
-    sys.exit(0)
+    if( alarm != ""):
+        sys.exit(3)
+    else:
+        sys.exit(1)
 
-def get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, hl_warning_temperature, hl_critical_temperature, parameter_dict):
+def get_graphite_str(args, parameter_dict):
+    
+    hl_warning_uplink = int(args['highLevelWarningUL'])
+    hl_critical_uplink = int(args['highLevelCriticalUL'])
+    hl_warning_downlink = int(args['highLevelWarningDL'])
+    hl_critical_downlink = int(args['highLevelCriticalDL'])
+    hl_warning_temperature = int(args['highLevelWarningTemperature'])
+    hl_critical_temperature = int(args['highLevelCriticalTemperature'])
+    dlPower = float(parameter_dict['dlOutputPower'])
+    ulPower = float(parameter_dict['ulInputPower'])
+    temperature = float(parameter_dict['paTemperature'])
+ 
+ 
     pa_temperature ="Temperature="+parameter_dict['paTemperature']
     pa_temperature+=";"+str(hl_warning_temperature)
     pa_temperature+=";"+str(hl_critical_temperature)
     dlPower ="Downlink="+parameter_dict['dlOutputPower']
-    dlPower+=";"+str(hl_warning_dl)
-    dlPower+=";"+str(hl_critical_dl)
+    dlPower+=";"+str(hl_warning_downlink)
+    dlPower+=";"+str(hl_critical_downlink)
     vswr  ="VSWR="+parameter_dict['vswr']
     ulPower ="Uplink="+parameter_dict['ulInputPower']
-    ulPower+=";"+str(hl_warning_ul)
-    ulPower+=";"+str(hl_critical_ul)
+    ulPower+=";"+str(hl_warning_uplink)
+    ulPower+=";"+str(hl_critical_uplink)
     
     graphite = pa_temperature+" "+dlPower+" "+vswr+" "+ulPower
     return graphite
 
-def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict):
+def get_alarm_from_dict(args, parameter_dict):
+    
+    hl_warning_uplink = int(args['highLevelWarningUL'])
+    hl_critical_uplink = int(args['highLevelCriticalUL'])
+    hl_warning_downlink = int(args['highLevelWarningDL'])
+    hl_critical_downlink = int(args['highLevelCriticalDL'])
+    hl_warning_temperature = int(args['highLevelWarningTemperature'])
+    hl_critical_temperature = int(args['highLevelCriticalTemperature'])
+
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
     temperature = float(parameter_dict['paTemperature'])
-    
+
     alarm =""
-    if dlPower >= hl_warning_dl:
+    if dlPower >= hl_warning_downlink:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
         alarm += parameter_dict['ulInputPower']
         alarm += "[dBm]</font></h3>"
-    elif dlPower >= hl_critical_dl:
+    elif dlPower >= hl_critical_downlink:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
         alarm += parameter_dict['ulInputPower']
         alarm += " [dBn]!</font></h3>"
             
-    if ulPower >= hl_warning_ul:
+    if ulPower >= hl_warning_uplink:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
         alarm += parameter_dict['dlOutputPower']
         alarm +="[dBm]</font></h3>"
-    elif ulPower >= hl_critical_ul:
+    elif ulPower >= hl_critical_uplink:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
         alarm +=parameter_dict['dlOutputPower']
         alarm +="[dBm]!</font></h3>"  
 
-    if temperature >= hl_warning_dl:
-        alarm +="<h3><font color=\"#ff5566\">Temperature Level Warning "
+    if temperature >= hl_warning_temperature:
+        alarm +="<h3><font color=\"#ffaa44\">Temperature Level Warning "
         alarm += parameter_dict['paTemperature']
         alarm += " [°C]]!</font></h3>"
-    elif temperature >= hl_critical_dl:
+    elif temperature >= hl_critical_temperature:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "
         alarm += parameter_dict['paTemperature']
         alarm += " [°C]]!</font></h3>"
