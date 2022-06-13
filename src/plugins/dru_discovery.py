@@ -107,11 +107,7 @@ def main():
       
     #print(dru_list)
     for dru in dru_list:
-        q = director_create_dru_host(opt,dru)
-        resp_str=json.dumps(q.json(),indent=2)
-        #print(resp_str)
-        resp_dict = json.loads(resp_str)
-
+        q = director_create_dru_service(opt,dru)       
 
         if 'address' in resp_dict:
 #            director_create_dru_services(opt, dru)
@@ -142,7 +138,7 @@ def director_deploy():
 
     return q
 
-    
+
 def director_create_dru_host(opt,dru):
     
     hostname = socket.gethostname()    
@@ -189,8 +185,55 @@ def director_create_dru_host(opt,dru):
 
     #print(json.dumps(q.json(),indent=2))
     return q
+    
+def director_create_dru_service(opt,dru):
+    
+    hostname = socket.gethostname()    
+    ip_addr=socket.gethostbyname(hostname)
+    master_host = get_master_host()
 
-def director_create_dru_services(opt, dru):
+    if(dru == "dru1"):
+        parent = hostname
+    else:
+        druid = int(dru[3:]) - 1
+        parent = hostname+"-"+opt+"-dru"+str(druid)
+    
+    director_query = {
+
+            'object_name':hostname+"-"+opt+"-"+dru, 
+            "object_type": "object",
+            "host": hostname,
+            "imports": ["dmu-dru-working-parameters-service-template"],
+            "display_name": "Remote "+ dru[3:]+"("+opt+")",
+             "vars": {
+              "opt": opt[3:],
+              "dru": dru[3:],
+              "parents": [ parent ]     
+              }
+        }
+        
+   
+    request_url = "http://"+master_host+"/director/service"
+    headers = {
+        'Accept':'application/json',
+        'X-HTTP-Method-Override': 'POST'
+        }
+    
+    try:
+        q = requests.post(request_url,
+                         headers=headers,
+                         data=json.dumps(director_query),
+                         auth=(director_api_login,director_api_password),
+                         verify=False)
+       
+    except:
+        print("no connection")
+        sys.exit(0)
+
+    #print(json.dumps(q.json(),indent=2))
+    return q
+
+def director_create_dru_applyservices(opt, dru):
 
     service_name = "dlPower-2"
     master_hostname = socket.gethostname()

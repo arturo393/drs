@@ -22,6 +22,7 @@ import argparse
 import check_rs485 as rs485
 import os
 import dru_discovery as discovery
+import requests,json
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -380,10 +381,9 @@ def main():
 
         cmdNumber = frame[8:10]
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
-       
+        
     s.close()
    
-
     dru_host_created = 0
     for i in range(1,5):
         opt = "opt"+str(i)
@@ -392,7 +392,7 @@ def main():
             for d in range(1,dru_number+1):
                 dru = "dru"+str(d)
                 #print("creating ",opt,dru)
-                q =  discovery.director_create_dru_host(opt,dru)
+                q =  discovery.director_create_dru_service(opt,dru)
                 if(q.status_code == 201):
                     dru_host_created += 1
                     
@@ -410,7 +410,6 @@ def main():
         sys.exit(1)
     else:
         sys.exit(0)
-
 
 def get_frame_list():
     frame_list  = list()
@@ -434,22 +433,22 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
 
 
     alarm =""
-    if dlPower >= hl_critical_ul:
+    if dlPower >= hl_critical_dl:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
         alarm += parameter_dict['ulInputPower']
         alarm += " [dBm]!</font></h3>"
-    elif dlPower >= hl_warning_ul:
+    elif dlPower >= hl_warning_dl:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
         alarm += parameter_dict['ulInputPower']
         alarm += "[dBm]</font></h3>"
 
     if ulPower > 0:
         alarm +=""         
-    elif ulPower >= hl_critical_dl:
+    elif ulPower >= hl_critical_ul:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
         alarm += parameter_dict['dlOutputPower']
         alarm +="[dBm]!</font></h3>"      
-    elif ulPower >= hl_warning_dl:
+    elif ulPower >= hl_warning_ul:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
         alarm += parameter_dict['dlOutputPower']
         alarm += "[dBm]</font></h3>"
@@ -468,7 +467,6 @@ def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
     ul_str  ="Uplink="+ulPower_str
     ul_str +=";"+str(hlwul)
     ul_str +=";"+str(hlcul)
-
 
 
 
