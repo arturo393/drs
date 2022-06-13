@@ -403,9 +403,9 @@ def main():
     
     print(alarm+table+"|"+graphite)
     if( alarm != ""):
-        sys.exit(3)
-    else:
         sys.exit(1)
+    else:
+        sys.exit(0)
 
 def get_graphite_str(args, parameter_dict):
     
@@ -448,32 +448,40 @@ def get_alarm_from_dict(args, parameter_dict):
     temperature = float(parameter_dict['paTemperature'])
 
     alarm =""
-    if dlPower >= hl_warning_downlink:
-        alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
-        alarm += parameter_dict['ulInputPower']
-        alarm += "[dBm]</font></h3>"
-    elif dlPower >= hl_critical_downlink:
+    
+
+    if dlPower >= hl_critical_downlink:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
         alarm += parameter_dict['ulInputPower']
         alarm += " [dBn]!</font></h3>"
+    
+    
+    elif dlPower >= hl_warning_downlink:
+        alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
+        alarm += parameter_dict['ulInputPower']
+        alarm += "[dBm]</font></h3>"
             
-    if ulPower >= hl_warning_uplink:
-        alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
-        alarm += parameter_dict['dlOutputPower']
-        alarm +="[dBm]</font></h3>"
-    elif ulPower >= hl_critical_uplink:
+    if ulPower >= hl_critical_uplink:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
         alarm +=parameter_dict['dlOutputPower']
         alarm +="[dBm]!</font></h3>"  
 
-    if temperature >= hl_warning_temperature:
-        alarm +="<h3><font color=\"#ffaa44\">Temperature Level Warning "
-        alarm += parameter_dict['paTemperature']
-        alarm += " [°C]]!</font></h3>"
-    elif temperature >= hl_critical_temperature:
+    elif ulPower >= hl_warning_uplink:
+        alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
+        alarm += parameter_dict['dlOutputPower']
+        alarm +="[dBm]</font></h3>"
+
+
+    if temperature >= hl_critical_temperature:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "
         alarm += parameter_dict['paTemperature']
         alarm += " [°C]]!</font></h3>"
+
+    elif temperature >= hl_warning_temperature:
+        alarm +="<h3><font color=\"#ffaa44\">Temperature Level Warning "
+        alarm += parameter_dict['paTemperature']
+        alarm += " [°C]]!</font></h3>"
+
     return alarm
 
 def create_table(parameter_dic):
