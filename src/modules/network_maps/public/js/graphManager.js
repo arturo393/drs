@@ -126,17 +126,20 @@ function formatDependencies(
   //          });
   //      console.log("====SERVICES=====");
   //      console.log("")
-  //      console.log(service.attrs.display_name,service.attrs.state)
+  //      console.log(service.attrs)
+  //      console.log(service.attrs.display_name,service.attrs.name)
         var hostname = service.attrs.host_name;
         let parentItem = service.attrs.vars.parents[0]
-        let currentItem = service.attrs.display_name;
-        Hosts.addHost({
+        let druService = service.attrs.host_name+"-opt"+service.attrs.vars.opt+"-dru"+service.attrs.vars.dru;
+  
+        let currentItem = druService;
+             Hosts.addHost({
                 ...service.attrs,
                 display_name: service.attrs.display_name,
                 name: currentItem,
                 hostname: hostname,
                 druHost: hostname,
-                druService: service.attrs.display_name, 
+                druService: druService, 
  //               zone: service.attrs.zone,
                 type: 'Service',
               });
