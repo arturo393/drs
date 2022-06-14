@@ -10,8 +10,10 @@ To add direct links to rs485 device configuration module, please add the followi
 
 ```php
     <li>
-    <?php 
-     if (substr($object->host,5,3) === 'opt') {
+    <?php endif ?>
+       <li><?php if ($object->getType() === $object::TYPE_HOST) {
+       
+	    if (substr($object->host,5,3)  === 'opt') {
             echo $this->qlink(
                 $this->translate('Device Configuration'),
                 'rs485/remote/edit',
@@ -25,9 +27,8 @@ To add direct links to rs485 device configuration module, please add the followi
                     )
                 )
             );
+	    }elseif (substr($object->host,0,3) === 'dmu') {
 
-	    } elseif ($object->getType() === $object::TYPE_HOST) {
-            if (substr($object->host,0,3) === 'dmu') {
             echo $this->qlink(
                 $this->translate('Device Configuration'),
                 'rs485/master/edit',
@@ -41,8 +42,47 @@ To add direct links to rs485 device configuration module, please add the followi
                     )
                 )
             );
-	    }
-        }?>
+
+
+	    } 
+   } else {
+
+  /*  echo '<pre>';
+    print_r ($object->host->getName());
+    echo '</pre>';
+  */
+    if (substr($object->service,0,6)  === 'Master') {
+        echo $this->qlink(
+            $this->translate('Device Configuration'),
+            'rs485/master/edit',
+            array('host' => $object->host->getName()),
+            array(
+                'class'             => 'action-link',
+                'data-base-target'  => '_self',
+                'icon'              => 'plug',
+                'title'             => $this->translate(
+                    'Master Device Configuration'
+                )
+            )
+        );
+    }else {
+        echo $this->qlink(
+            $this->translate('Device Configuration'),
+            'rs485/remote/edit',
+            array('service' => $object->getName()),
+            array(
+                'class'             => 'action-link',
+                'data-base-target'  => '_self',
+                'icon'              => 'plug',
+                'title'             => $this->translate(
+                    'Remote Device Configuration'
+            )
+        )
+    );
+    }
+   }
+   
+   ?>
         </li>
 
 ```

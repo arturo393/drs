@@ -22,7 +22,7 @@ class MasterForm extends ConfigForm
     {
         $hostname = '';
         if (isset($_GET['host']))
-            $hostname = $_GET['host'];
+          $hostname = $_GET['host'];
         $listHost = $this->cargarHostList($hostname);
         $listTrama = $this->tramasDMU();
         #$this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
