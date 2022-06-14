@@ -54,7 +54,6 @@ install -d -o icingadirector -g icingaweb2 -m 0750 /var/lib/icingadirector
 ```
 
 Copy system init script and inscribe daemon:
-```
 
 ```
 MODULE_PATH=/usr/share/icingaweb2/modules/director
