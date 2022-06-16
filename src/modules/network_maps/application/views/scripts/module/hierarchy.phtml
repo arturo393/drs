@@ -8,21 +8,28 @@
 </head>
 
 <body>
-
 <div class="column" id="dependency-network">
 </div>
 
 </body>
 <script>
-if (document.readyState === "complete") {
+function loop (){
 
+if (document.readyState === "complete") 
+{
     getData();
 
-} else {
+} else 
+{
     window.onload = function () {
-
         getData();
-
     }
+ }
+
+setTimeout(function () {
+    console.log('Refresh');
+    loop();
+  }, 60000);
 }
+loop();
 </script>

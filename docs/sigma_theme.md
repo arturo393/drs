@@ -36,6 +36,7 @@ Configuration -> Application -> General:
 - Change footer information
 - Remove social media links
 
+
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |

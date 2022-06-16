@@ -36,10 +36,12 @@ class RemoteForm extends ConfigForm
     {
         $hostname = '';
         $opt_dru = '';
-        if (isset($_GET['host'])){
-            $hostname = $_GET['host'];
-            $opt = substr($hostname,8,1);
-            $dru = substr($hostname,13,1);
+        if (isset($_GET['service'])){
+            $servicename = $_GET['service'];
+            $hostname = substr($servicename,0,4);
+            echo $hostname;
+            $opt = substr($servicename,8,1);
+            $dru = substr($servicename,13,1);
             $opt_dru = "OPT".$opt." Remote ".$dru;
         }
         $listHost = $this->cargarHostList($hostname);
@@ -312,12 +314,12 @@ class RemoteForm extends ConfigForm
             ->from('icinga_host r')
             ->columns(['r.*'])
             ->where(['r.object_type = ?' => 'object'])
-            ->where("object_name like '%-opt%'")
+            ->where("object_name not like '%-opt%'")
             ->orderBy('r.object_name', SORT_ASC);
         $list[''] = '(Masters - IP )';
         foreach ($this->getDb()->select($select) as $row) {
             $list[$row->id] = "{$row->display_name} - {$row->address}";
-            if($row->object_name == $hostname){
+            if($row->object_name == $hostname){              
                 $value[$row->id] = "{$row->display_name} - {$row->address}";
                 return $value;
             }

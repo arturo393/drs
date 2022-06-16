@@ -98,7 +98,7 @@ function formatDependencies(
   // console.log('dependencyData:');
   // console.log(dependencyData.results);
 
-  console.log("=====HOSTS======");
+
   hostData.results.map(host => {
     if (host.attrs.vars?.addToMap === false) return false;
     Hosts.addHost(host.attrs);
@@ -111,58 +111,89 @@ function formatDependencies(
         });
       })
       }
+      
+
     serviceData.results.map(service => {
+
       if (service.attrs.vars?.addToMap === false) return false;
       if (service.attrs.host_name === host.attrs.name) {
-	      const serviceId = service.attrs.name;
+	const serviceId = service.attrs.name;
         service.attrs.name = service.attrs.host_name+"-"+service.attrs.name;
-        Hosts.addHost({ ...service.attrs, id: serviceId, type: 'Service' });
-        Hosts.addDependency({
-              parent_host_name: service.attrs.host_name,
-              child_host_name: service.attrs.name,
-            });
-        if (service.attrs.vars?.isOPTPort === true) { 
-          try {
-            var servicePData = service.attrs.last_check_result.performance_data;
-            var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
-            var values = performance_data[1].split(';');
-            var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
-            // var rdus = Math.floor(Math.random() * 10);
-            for (k = 0; k < rdus; k++) {
-              var hostname = service.attrs.host_name;
-              var druGroup = service.attrs.name+"-dru"+eval(k+1)
-              var state = 2;
-              let parentItem = (k === 0)? service.attrs.name : service.attrs.name + '-dru' + (k);
-              let currentItem = service.attrs.name + '-dru' + eval(k+1);
-
-	      var state = 2;
-              for (l = 0; l < hostData.results.length; l++) {
-                if (druGroup === hostData.results[l].attrs.name) {
-                  state = hostData.results[l].attrs.last_check_result.state;
-                }
-              }  
-
-              Hosts.addHost({
-                display_name: "Remote "+eval(k+1),
+  //      Hosts.addHost({ ...service.attrs, id: serviceId, type: 'Service' });
+  //      Hosts.addDependency({
+  //            parent_host_name: service.attrs.host_name,
+  //            child_host_name: service.attrs.name,
+  //          });
+  //      console.log("====SERVICES=====");
+  //      console.log("")
+  //      console.log(service.attrs)
+  //      console.log(service.attrs.display_name,service.attrs.name)
+        var hostname = service.attrs.host_name;
+        let parentItem = service.attrs.vars.parents[0]
+        let druService = service.attrs.host_name+"-opt"+service.attrs.vars.opt+"-dru"+service.attrs.vars.dru;
+  
+        let currentItem = druService;
+             Hosts.addHost({
+                ...service.attrs,
+                display_name: service.attrs.display_name,
                 name: currentItem,
-                state: state,
                 hostname: hostname,
-                zone: service.attrs.zone,
-                druHost: service.attrs.host_name,
-                druService: service.attrs.name,
-                druGroup: druGroup,
-                type: 'None',
+                druHost: hostname,
+                druService: druService, 
+ //               zone: service.attrs.zone,
+                type: 'Service',
               });
-              Hosts.addDependency({
+        Hosts.addDependency({
                 parent_host_name: parentItem,
                 child_host_name: currentItem,
               });
 
-            }
-          } catch (error) {
-            console.log(error);
-          }
-        }
+            
+    
+        // if (service.attrs.vars?.isOPTPort === true) { 
+        //   try {
+        //     var servicePData = service.attrs.last_check_result.performance_data;
+        //     var performance_data = servicePData.find((val) => val.startsWith('value=')).split('=');
+        //     var values = performance_data[1].split(';');
+        //     var rdus = parseInt(values[0].replace(/[a-z][A-Z]*/g, '') * 1); 
+        //     // var rdus = Math.floor(Math.random() * 10);
+        //     for (k = 0; k < rdus; k++) {
+        //       var hostname = service.attrs.host_name;
+        //       var druGroup = service.attrs.name+"-dru"+eval(k+1)
+        //       var state = 2;
+        //       let parentItem = (k === 0)? service.attrs.name : service.attrs.name + '-dru' + (k);
+        //       let currentItem = service.attrs.name + '-dru' + eval(k+1);
+
+	      // var state = 2;
+        //       for (l = 0; l < hostData.results.length; l++) {
+        //         if (druGroup === hostData.results[l].attrs.name) {
+        //           state = hostData.results[l].attrs.last_check_result.state;
+        //         }
+        //       }  
+
+        //       Hosts.addHost({
+        //         display_name: "Remote "+eval(k+1),
+        //         name: currentItem,
+        //         state: state,
+        //         hostname: hostname,
+        //         zone: service.attrs.zone,
+        //         druHost: service.attrs.host_name,
+        //         druService: service.attrs.name,
+        //         druGroup: druGroup,
+        //         type: 'None',
+        //       });
+        //       Hosts.addDependency({
+        //         parent_host_name: parentItem,
+        //         child_host_name: currentItem,
+        //       });
+
+        //     }
+        //   } catch (error) {
+        //     console.log(error);
+        //   }
+        // }
+
+        
       }
       
       // if (service.attrs.vars?.isOPTPort === true) { 
@@ -365,7 +396,7 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
     node_parent = Hosts.hostObject[currHost].parents[0];
     node_drugroup = Hosts.hostObject[currHost].druGroup;
     node_hostname = Hosts.hostObject[currHost].hostname;
-    node_servicename = Hosts.hostObject[currHost].druService;
+    node_servicename = Hosts.hostObject[currHost].druService;  
 
     if (
       settings.display_only_dependencies &&
@@ -390,6 +421,16 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
 
     if (Hosts.hostObject[currHost].status === 'UNREACHABLE') {
       color_border = 'purple';
+
+      if (settings.display_unreachable) {
+        text_size = settings.text_size / 2;
+      } else {
+        text_size = 0;
+      }
+    }
+
+    if (Hosts.hostObject[currHost].status === 'WARNING') {
+      color_border = 'orange';
 
       if (settings.display_unreachable) {
         text_size = settings.text_size / 2;
@@ -424,14 +465,16 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
 
     if (Hosts.hostObject[currHost].hasPositionData) {
       nodes.update({
+      
         //vis.js function
         id: currHost,
         type: node_type,
         parent: node_parent,
         label: hostLabel,
         drugroup: node_drugroup,
-	hostname: node_hostname,
+	      hostname: node_hostname,
         servicename: node_servicename,
+        
         mass: Hosts.hostObject[currHost].children.length / 4 + 1,
         color: {
           border: color_border,
@@ -451,13 +494,14 @@ function drawNetwork(Hosts, isHierarchical, isFullscreen, settings) {
       });
     } else {
       newHost = true; //has no position data, newly added
-
       nodes.update({
         id: currHost,
         type: node_type,
         parent: node_parent,
         label: hostLabel,
         drugroup: node_drugroup,
+        hostname: node_hostname,
+        servicename: node_servicename,
         mass: Hosts.hostObject[currHost].children.length / 4 + 1,
         color: {
           border: color_border,
@@ -685,9 +729,19 @@ function startEventListeners(
   // function launches all event listeners for the network, and buttons.
   let nodes_defs = networkData.nodes._data;
 
+
   network.on('doubleClick', function (params) {
     thisNode = nodes_defs[params.nodes[0]];
 
+
+    if (thisNode?.hostname || thisNode?.servicename ){
+      hostname = thisNode.hostname;
+      servicename = thisNode.servicename;
+
+    } else{
+      hostname = thisNode.parent;
+      servicename = params.nodes[0].split('-')[1];
+    }
 
     //double click on node listener
     if (params.nodes[0] != undefined) {
@@ -714,15 +768,15 @@ function startEventListeners(
         } else {
           hostMonitoringAddress = '/monitoring/service/show?host=';
         }
-	
+	//TODO : definor hostname y service name
         location.href =
           './network_maps/module/' +
           draw_type +
           '#!' +
           hostMonitoringAddress +
-          thisNode.parent +
+          hostname +
           '&service=' +
-          params.nodes[0].split('-')[1];
+          servicename;
   //        params.nodes[0]; //redirect to host info page.
       } else if (thisNode.type === 'None') {
        
@@ -1084,18 +1138,28 @@ function Host(hostData) {
   //function accepts raw host data pulled from icinga 2 api, and formats it into a more usable format
   //while providing functions to add dependencies and position
 
-  determineStatus = (state, wasReachable) => {
+  determineStatus = (state, wasReachable, druHost) => {
+    if (druHost == undefined){
     if (state === 0) {
       return 'UP';
     } else if (state === 1 && !wasReachable) {
       return 'UNREACHABLE';
-    } else {
+    } else 
       return 'DOWN';
+  } else {
+      if (state === 0) {
+        return 'UP';
+      }else if (state === 1){
+        return 'WARNING';
+      } else if(state === 2) {
+        return 'DOWN';
+      } else 
+        return 'UNREACHABLE';
     }
   };
 
   this.name = '' || hostData.name;
-  this.status = determineStatus(hostData.state, hostData.last_reachable);
+  this.status = determineStatus(hostData.state, hostData.last_reachable,hostData.druHost);
   this.description = '' || hostData.display_name;
   this.druHost = '' || hostData.druHost;
   this.hostname = '' || hostData.hostname;

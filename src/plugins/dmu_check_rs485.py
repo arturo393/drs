@@ -22,6 +22,7 @@ import argparse
 import check_rs485 as rs485
 import os
 import dru_discovery as discovery
+import requests,json
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -382,7 +383,8 @@ def main():
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
         
     s.close()
-    
+   
+    dru_host_created = 0
     for i in range(1,5):
         opt = "opt"+str(i)
         dru_number = int(parameter_dict['opt'+str(i)+'ConnectedRemotes'])
@@ -390,19 +392,24 @@ def main():
             for d in range(1,dru_number+1):
                 dru = "dru"+str(d)
                 #print("creating ",opt,dru)
-                q =  discovery.director_create_dru_host(opt,dru)
-                #print(q)
-            discovery.director_deploy()
+                q =  discovery.director_create_dru_service(opt,dru)
+                if(q.status_code == 201):
+                    dru_host_created += 1
+                    
 
-
-
+            if dru_host_created > 0:
+                discovery.director_deploy()
+                dru_host_created = 0
 
     alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
     parameter_html_table = create_table(parameter_dict)      
     graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
 
     sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
-    sys.exit(0)
+    if( alarm != ""):
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 def get_frame_list():
     frame_list  = list()
