@@ -1072,7 +1072,7 @@ def main():
     else:
         sys.stderr.write(
             "- Invalid action  %s \n" % Action)
-        sys.exit(1)
+        sys.exit(3)
 
 def read_serial_frame(Port, s):
     hexadecimal_string = ''
@@ -1103,7 +1103,7 @@ def read_serial_frame(Port, s):
 
     except serial.SerialException:
         sys.stderr.write("- Connecting busy, retrying connection")
-        sys.exit(1)
+        sys.exit(3)
     hexResponse = bytearray.fromhex(hexadecimal_string)
     return hexResponse
 
