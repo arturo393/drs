@@ -734,9 +734,9 @@ function startEventListeners(
     thisNode = nodes_defs[params.nodes[0]];
 
 
-    if (thisNode?.hostname || thisNode?.servicename ){
+    if (thisNode?.hostname || thisNode?.label ){
       hostname = thisNode.hostname;
-      servicename = thisNode.servicename;
+      servicename = thisNode.label;
 
     } else{
       hostname = thisNode.parent;

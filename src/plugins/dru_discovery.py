@@ -138,7 +138,6 @@ def director_deploy():
 
     return q
 
-
 def director_create_dru_host(opt,dru):
     
     hostname = socket.gethostname()    
@@ -189,7 +188,7 @@ def director_create_dru_host(opt,dru):
 def director_create_dru_service(opt,dru):
     
     hostname = socket.gethostname()    
-    ip_addr=socket.gethostbyname(hostname)
+    ip_addr = socket.gethostbyname(hostname)
     master_host = get_master_host()
 
     if(dru == "dru1"):
@@ -200,11 +199,11 @@ def director_create_dru_service(opt,dru):
     
     director_query = {
 
-            'object_name':hostname+"-"+opt+"-"+dru, 
+            'object_name':"Remote "+opt[3:]+dru[3:], 
             "object_type": "object",
             "host": hostname,
             "imports": ["dmu-dru-working-parameters-service-template"],
-            "display_name": "Remote "+ dru[3:]+"("+opt+")",
+ #           "display_name": "Remote "+ dru[3:]+"("+opt+")",
              "vars": {
               "opt": opt[3:],
               "dru": dru[3:],
@@ -316,7 +315,6 @@ def director_get_service_apply_id():
     else:
       return int(last_object["id"])
 
-
 def icinga_get_service_last_check_result(opt):
     
     hostname = socket.gethostname()    
@@ -348,9 +346,6 @@ def icinga_get_service_last_check_result(opt):
         sys.exit(0)
     return r
 
-
-
-
 def get_performance_data_from_json(r):
     try:
         resp_str=json.dumps(r.json(),indent=2)
@@ -372,7 +367,6 @@ def get_master_host():
                 line=(line[line.find("\"")+1:])
                 master_host=line[:line.find("\"")]
     return master_host
-
-            
+           
 if __name__ == "__main__":
     main()
