@@ -14,6 +14,7 @@
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
+from logging import CRITICAL, WARN
 import sys
 import getopt
 import serial
@@ -23,6 +24,11 @@ import check_rs485 as rs485
 import os
 import dru_discovery as discovery
 import requests,json
+
+OK = 0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -310,7 +316,7 @@ def analizar_argumentos():
         # print help information and exit:
         print(e.msg)
         help()
-        sys.exit(1)
+        sys.exit(WARNING)
 
     HighLevelWarningUL = int(args['highLevelWarningUplink'])
     HighLevelCriticalUL = int(args['highLevelCriticalUplink'])
@@ -362,7 +368,7 @@ def main():
         # -- Error al abrir el puerto serie
         sys.stderr.write(
             "CRITICAL - Error al abrir puerto %s " % str(Port))
-        sys.exit(2)
+        sys.exit(CRITICAL)
 
     parameter_dict = dict()
 
@@ -377,7 +383,7 @@ def main():
             resultOK =  int(hex_validated_frame, 16)
         except:
             print("WARNING - Dato recibido es desconocido")
-            sys.exit(1)
+            sys.exit(WARNING)
 
         cmdNumber = frame[8:10]
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
@@ -407,9 +413,9 @@ def main():
 
     sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
     if( alarm != ""):
-        sys.exit(1)
+        sys.exit(WARNING)
     else:
-        sys.exit(0)
+        sys.exit(OK)
 
 def get_frame_list():
     frame_list  = list()
@@ -452,8 +458,7 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
         alarm += parameter_dict['dlOutputPower']
         alarm += "[dBm]</font></h3>"
-
-
+        
     return alarm
 
 def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
@@ -467,9 +472,7 @@ def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
     ul_str  ="Uplink="+ulPower_str
     ul_str +=";"+str(hlwul)
     ul_str +=";"+str(hlcul)
-
-
-
+    
     dl_str ="Downlink="+parameter_dict['dlOutputPower']
     dl_str +=";"+str(hlwdl)
     dl_str +=";"+str(hlcdl)
@@ -655,6 +658,7 @@ def get_channel_table(responseDict):
 
     table3 +="</tbody></table>"
     return table3
+
 def get_power_table(responseDict):
     ulPower = float(responseDict['ulInputPower'])
 
