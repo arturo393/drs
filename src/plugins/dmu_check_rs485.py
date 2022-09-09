@@ -391,21 +391,22 @@ def main():
     s.close()
    
     dru_host_created = 0
-    for i in range(1,5):
-        opt = "opt"+str(i)
-        dru_number = int(parameter_dict['opt'+str(i)+'ConnectedRemotes'])
-        if (dru_number > 0 and dru_number <8):
-            for d in range(1,dru_number+1):
-                dru = "dru"+str(d)
-                #print("creating ",opt,dru)
-                q =  discovery.director_create_dru_service(opt,dru)
-                if(q.status_code == 201):
-                    dru_host_created += 1
-                    
+    complete_services =  discovery.icinga_get_localhost_services()
+    if (complete_services.status_code == 200):
+        for opt in range(1,5):
+        
+            dru_connected = int(parameter_dict['opt'+str(opt)+'ConnectedRemotes'])
+            dru_services_list =discovery.get_dru_services_list(complete_services,opt)
 
-            if dru_host_created > 0:
-                discovery.director_deploy()
-                dru_host_created = 0
+            if (dru_connected > 0 and dru_connected <8):
+                for d in range(1,dru_connected+1):
+                    if(d not in  dru_services_list):
+                        director_resp =  discovery.director_create_dru_service(opt,d)
+                        if(director_resp.status_code == 201):
+                            dru_host_created += 1
+    if dru_host_created > 0:
+        discovery.director_deploy()
+        dru_host_created = 0
 
     alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
     parameter_html_table = create_table(parameter_dict)      

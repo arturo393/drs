@@ -95,20 +95,16 @@ def main():
     
     opt = analizar_argumentos()
     
-    r = icinga_get_service_last_check_result(opt)
-    dru_list = list()
-    #print(r)
+    r = icinga_get_localhost_services()
     if (r.status_code == 200):
-        remotes = get_performance_data_from_json(r)
-        for remote in range(remotes):
-            dru_list.append("dru"+str(remote+1))
-   # id = director_get_service_apply_id()
-    remotes_created = 0
-      
-    #print(dru_list)
+        dru_list = get_dru_services_list(r,opt)
+     
+    print(dru_list)
     for dru in dru_list:
-        q = director_create_dru_service(opt,dru)       
-
+        q = director_create_dru_service(opt,dru)
+        resp_str=json.dumps(q.json(),indent=2)
+        resp_dict = json.loads(resp_str)
+        print(resp_str)
         if 'address' in resp_dict:
 #            director_create_dru_services(opt, dru)
             remotes_created += 1
@@ -137,6 +133,7 @@ def director_deploy():
         sys.exit(0)
 
     return q
+
 
 def director_create_dru_host(opt,dru):
     
@@ -188,30 +185,25 @@ def director_create_dru_host(opt,dru):
 def director_create_dru_service(opt,dru):
     
     hostname = socket.gethostname()    
-    ip_addr = socket.gethostbyname(hostname)
     master_host = get_master_host()
 
-    if(dru == "dru1"):
+    if(dru == 1):
         parent = hostname
     else:
-        druid = int(dru[3:]) - 1
-        parent = hostname+"-"+opt+"-dru"+str(druid)
+        parent = hostname+"-opt"+str(opt)+"-dru"+str(dru)
     
     director_query = {
-
-            'object_name':"Remote "+opt[3:]+dru[3:], 
+            'object_name':"Remote "+str(opt)+str(dru), 
             "object_type": "object",
             "host": hostname,
             "imports": ["dmu-dru-working-parameters-service-template"],
- #           "display_name": "Remote "+ dru[3:]+"("+opt+")",
              "vars": {
-              "opt": opt[3:],
-              "dru": dru[3:],
+              "opt": opt,
+              "dru": dru,
               "parents": [ parent ]     
               }
         }
         
-   
     request_url = "http://"+master_host+"/director/service"
     headers = {
         'Accept':'application/json',
@@ -281,9 +273,7 @@ def director_create_dru_applyservices(opt, dru):
 
 def director_get_service_apply_id():
     
-
     master_host = get_master_host()   
-    
     headers = {
         'Accept': 'application/json',
         'X-HTTP-Method-Override': 'GET'
@@ -315,17 +305,13 @@ def director_get_service_apply_id():
     else:
       return int(last_object["id"])
 
-def icinga_get_service_last_check_result(opt):
+def icinga_get_localhost_services():
     
     hostname = socket.gethostname()    
-    servicename = hostname+'!'+opt
     master_host = get_master_host()
-
     query = {
             'type': 'Service',
-            'service':servicename,
-            'filter': 'service.state == ServiceOK',
-    #        'attrs': ['last_check_result']
+            'host_name': hostname, 
             }
         
     headers = {
@@ -347,9 +333,11 @@ def icinga_get_service_last_check_result(opt):
     return r
 
 def get_performance_data_from_json(r):
+
     try:
         resp_str=json.dumps(r.json(),indent=2)
         resp_dict = json.loads(resp_str)
+        print(resp_dict)
         results_array = resp_dict['results']
         result = results_array[0]
         data_list = result['attrs']['last_check_result']['performance_data']
@@ -358,7 +346,25 @@ def get_performance_data_from_json(r):
         return remotes
     except:
         return 0
-
+    
+def get_dru_services_list(r,opt_asked):
+    dru_list = []
+    resp_str=json.dumps(r.json(),indent=2)
+    resp_dict = json.loads(resp_str)
+    #print(resp_dict)
+    results_array = resp_dict['results']
+    try:
+        for result in results_array:
+            opt_readed = 0
+            if('opt' in result['attrs']['vars']):
+                opt_readed = int(result['attrs']['vars']['opt'])
+            if(opt_asked == opt_readed):
+                dru = int(result['attrs']['vars']['dru'])
+                dru_list.append(dru)
+        return dru_list
+    except Exception  as e:
+        return []
+        
 def get_master_host():
     with open(ZONES_CONF) as f: 
         datafile = f.readlines()
@@ -367,6 +373,7 @@ def get_master_host():
                 line=(line[line.find("\"")+1:])
                 master_host=line[:line.find("\"")]
     return master_host
-           
+
+            
 if __name__ == "__main__":
     main()
