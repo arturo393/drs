@@ -190,7 +190,7 @@ def director_create_dru_service(opt,dru):
     if(dru == 1):
         parent = hostname
     else:
-        parent = hostname+"-opt"+str(opt)+"-dru"+str(dru)
+        parent = hostname+"-opt"+str(opt)+"-dru"+str(dru-1)
     
     director_query = {
             'object_name':"Remote "+str(opt)+str(dru), 
