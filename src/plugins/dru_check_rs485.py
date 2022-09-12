@@ -475,12 +475,12 @@ def get_alarm_from_dict(args, parameter_dict):
     if temperature >= hl_critical_temperature:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "
         alarm += parameter_dict['paTemperature']
-        alarm += " [°C]]!</font></h3>"
+        alarm += " [°C]!</font></h3>"
 
     elif temperature >= hl_warning_temperature:
         alarm +="<h3><font color=\"#ffaa44\">Temperature Level Warning "
         alarm += parameter_dict['paTemperature']
-        alarm += " [°C]]!</font></h3>"
+        alarm += " [°C]!</font></h3>"
 
     return alarm
 
