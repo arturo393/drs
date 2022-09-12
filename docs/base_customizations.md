@@ -66,10 +66,13 @@ To add direct links to rs485 device configuration module, please add the followi
             )
         );
     }else {
+        $opt = $object->customvars['opt'];
+        $dru = $object->customvars['dru'];
+        $service = $object->host->getName().'-opt'.$opt.'-dru'.$dru;
         echo $this->qlink(
             $this->translate('Device Configuration'),
             'rs485/remote/edit',
-            array('service' => $object->getName()),
+            array('service' =>$service),
             array(
                 'class'             => 'action-link',
                 'data-base-target'  => '_self',
