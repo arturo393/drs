@@ -442,22 +442,22 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
     alarm =""
     if dlPower >= hl_critical_dl:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
-        alarm += parameter_dict['ulInputPower']
+        alarm += parameter_dict['dlInputPower']
         alarm += " [dBm]!</font></h3>"
     elif dlPower >= hl_warning_dl:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
-        alarm += parameter_dict['ulInputPower']
+        alarm += parameter_dict['dlInputPower']
         alarm += "[dBm]</font></h3>"
 
     if ulPower > 0:
         alarm +=""         
     elif ulPower >= hl_critical_ul:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
-        alarm += parameter_dict['dlOutputPower']
+        alarm += parameter_dict['ulOutputPower']
         alarm +="[dBm]!</font></h3>"      
     elif ulPower >= hl_warning_ul:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
-        alarm += parameter_dict['dlOutputPower']
+        alarm += parameter_dict['ulOutputPower']
         alarm += "[dBm]</font></h3>"
         
     return alarm
