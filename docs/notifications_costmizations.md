@@ -37,7 +37,16 @@ vim mail-service-notification.sh
 cd /etc/icinga2/scripts/
 vim mail-host-notification.sh
 ```
+
 ```
+140 ## Check whether Icinga Web 2 URL was specified.
+141 if [ -n "$ICINGAWEB2URL" ] ; then
+142   NOTIFICATION_MESSAGE="$NOTIFICATION_MESSAGE
+143
+144 $ICINGAWEB2URL/monitoring/host/show?host=$(urlencode "$HOSTNAME")"
+145 else
+146 IP=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+147   NOTIFICATION_MESSAGE="$NOTIFICATION_MESSAGE
 148 $IP/monitoring/host/show?host=$(urlencode "$HOSTNAME")"
 149
 150 fi
