@@ -133,8 +133,8 @@ class MasterController extends Controller
 		    $dmuDevice2 = $trama->dmu_device2;
             $dmuCmdLength = $trama->cmd_body_lenght; 
             $dmuCmdCode = $trama->cmd_number;
-            $byte1 = dechex(4 * (int) $this->_getParam('opt2_1'));
-            $byte2 = dechex(4* (int) $this->_getParam('opt2_2'));
+            $byte1 = dechex(4 * (int) $this->_getParam('opt2_2'));
+            $byte2 = dechex(4* (int) $this->_getParam('opt2_1'));
             $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT); 
             $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT); 
             $dmuCmdData = "{$byte1}{$byte2}";
