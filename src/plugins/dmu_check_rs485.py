@@ -438,7 +438,7 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
 
-
+    ulPower_str = "-"
     alarm =""
     if dlPower >= hl_critical_dl:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
@@ -469,6 +469,8 @@ def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
         ulPower_str = "-"
     else:
         ulPower_str = parameter_dict['ulInputPower']
+    
+    ulPower_str = "-"
 
     ul_str  ="Uplink="+ulPower_str
     ul_str +=";"+str(hlwul)
@@ -562,7 +564,7 @@ def set_power_dict(parameter_dict, hex_validated_frame):
     hex_as_int = int(hexInvertido, 16)
     hex_as_int2 = int(hexInvertido2, 16)
     ulPower = s16(hex_as_int)/256
-    ulPower2 = s16(hex_as_int2)/256
+
 
     parameter_dict['ulInputPower'] = str(round(ulPower,2))
 
@@ -667,6 +669,8 @@ def get_power_table(responseDict):
         ulPower = "-"
     else:
         ulPower = responseDict['ulInputPower']
+    
+    ulPower_str = "-"
 
     table2 = "<table width=250>"
     table2 += "<thead>"
