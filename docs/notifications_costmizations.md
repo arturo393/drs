@@ -10,12 +10,12 @@ cd /etc/icinga2/scripts/
 vim mail-service-notification.sh
 ```
 # Add filter to info message
-
+```
 108 if [ "${#SERVICEOUTPUT}" -gt 40 ]; then
 109   SERVICEOUTPUT="Alert"
 110 fi
 111
-
+```
 
 # Add IP to service 
 ```
