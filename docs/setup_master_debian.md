@@ -121,7 +121,8 @@ open `http://<host-ip>/icingaweb2`
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
 - [Cube WebUI Module](/docs/cube_module.md)
 - [Base Customizations](/docs/base_customizations.md)
+- [Notificaions Customizations](/docs/notificaion_customizations.md)
 
 |                                                                                                                        |
-| ---------------------------------------------------------------------------------------------------------------------- |
+| --------------------------------------------s------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
