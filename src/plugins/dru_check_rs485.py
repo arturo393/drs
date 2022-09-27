@@ -418,12 +418,16 @@ def get_graphite_str(args, parameter_dict):
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
     temperature = float(parameter_dict['paTemperature'])
- 
+    
+    if(dlPower == 0.0):
+        dlPowerStr = "-"
+    else:
+        dlPowerStr = str(dlPower)
  
     pa_temperature ="Temperature="+parameter_dict['paTemperature']
     pa_temperature+=";"+str(hl_warning_temperature)
     pa_temperature+=";"+str(hl_critical_temperature)
-    dlPower ="Downlink="+parameter_dict['dlOutputPower']
+    dlPower ="Downlink="+dlPowerStr
     dlPower+=";"+str(hl_warning_downlink)
     dlPower+=";"+str(hl_critical_downlink)
     vswr  ="VSWR="+parameter_dict['vswr']
@@ -452,23 +456,23 @@ def get_alarm_from_dict(args, parameter_dict):
 
     if dlPower >= hl_critical_downlink:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
-        alarm += parameter_dict['ulInputPower']
+        alarm += parameter_dict['dlOutputPower']
         alarm += " [dBn]!</font></h3>"
     
     
     elif dlPower >= hl_warning_downlink:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
-        alarm += parameter_dict['ulInputPower']
+        alarm += parameter_dict['dlOutputPower']
         alarm += "[dBm]</font></h3>"
             
     if ulPower >= hl_critical_uplink:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
-        alarm +=parameter_dict['dlOutputPower']
+        alarm +=parameter_dict['ulInputPower']
         alarm +="[dBm]!</font></h3>"  
 
     elif ulPower >= hl_warning_uplink:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
-        alarm += parameter_dict['dlOutputPower']
+        alarm += parameter_dict['ulInputPower']
         alarm +="[dBm]</font></h3>"
 
 
@@ -539,6 +543,12 @@ def get_vswr_temperature_table(parameter_dic):
     return table2
 
 def get_power_att_table(parameter_dic):
+    dlPower = parameter_dic['dlOutputPower']
+    if(dlPower == str(0)):
+        dlPowerStr = "-"
+    else:
+        dlPowerStr = str(dlPower)
+
     table1  = "<table width=250>"
     table1 += "<thead>"
     table1 += "<tr  align=\"center\" style=font-size:12px>"
@@ -549,7 +559,7 @@ def get_power_att_table(parameter_dic):
     table1 += "</thead>"
     table1 += "<tbody>"
     table1 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
-    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
+    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+dlPowerStr+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
     table1 +="</tbody></table>"
     return table1
 
@@ -565,7 +575,6 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
         elif cmd_number == '0305':
             dl_power = s8(int(cmd_value, 16))
             parameter_dic['dlOutputPower'] = str(dl_power)
-            
         elif cmd_number == '2505':
             ul_power = s8(int(cmd_value, 16))
             parameter_dic['ulInputPower'] = str(ul_power)
