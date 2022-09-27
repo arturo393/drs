@@ -10,40 +10,22 @@ _Distributed monitoring platform_
 
 ```mermaid
 graph LR;
-  rds-m-1-->rds-s-1;
-  rds-m-1-->rds-s-2;
+  rds-m-1-->dmu1;
+  rds-m-1-->dmu2;
 
-  rds-s-1-->mdu1_p1;
-  rds-s-1-->mdu1_p2;
-  rds-s-1-->mdu1_p3;
-  rds-s-1-->mdu1_p4;
+  dmu1-->dmu1-opt1-dru1-->dmu1-opt1-dru2-->dmu1-opt1-dru3;
+  dmu1-->dmu1-opt2-dru1-->dmu1-opt2-dru2-->dmu1-opt2-dru3-->dmu1-opt2-dru4-->dmu1-opt2-dru5;
+  dmu1-->dmu1-opt3-dru1;
+  dmu1-->dmu1-opt4-dru1-->dmu1-opt4-dru2-->dmu1-opt4-dru3;
 
-  rds-s-2-->mdu2_p1;
-  rds-s-2-->mdu2_p2;
-  rds-s-2-->mdu2_p3;
-  rds-s-2-->mdu2_p4;
-
-  mdu1_p1-->mdu1_p1_rdu1-->mdu1_p1_rdu2-->mdu1_p1_rdu3;
-  mdu1_p2-->mdu1_p2_rdu1-->mdu1_p2_rdu2-->mdu1_p2_rdu3-->mdu1_p2_rdu4-->mdu1_p2_rdu5;
-  mdu1_p3-->mdu1_p3_rdu1;
-  mdu1_p4-->mdu1_p4_rdu1-->mdu1_p4_rdu2-->mdu1_p4_rdu3;
-
-  mdu2_p2-->mdu2_p2_rdu1-->mdu2_p2_rdu2;
+  dmu2-->dmu2-opt1-dru1-->dmu2-opt1-dru2;
+  dmu2-->dmu2-opt4-dru1-->dmu2-opt4-dru2-->dmu2-opt4-dru3;
 
   style rds-m-1 color:#000,fill:#5f5,stroke:#050,stroke-width:1px;
 
-  style rds-s-1 color:#f55,fill:#5f5,stroke:#050,stroke-width:1px;
-  style rds-s-2 color:#f55,fill:#5f5,stroke:#050,stroke-width:1px;
+  style dmu1 color:#f55,fill:#5f5,stroke:#050,stroke-width:1px;
+  style dmu2 color:#f55,fill:#5f5,stroke:#050,stroke-width:1px;
 
-  style mdu1_p1 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-  style mdu1_p2 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-  style mdu1_p3 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-  style mdu1_p4 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-
-  style mdu2_p1 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-  style mdu2_p2 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-  style mdu2_p3 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
-  style mdu2_p4 color:#fff,fill:#55f,stroke:#005,stroke-width:1px;
 ```
 
 ---
@@ -57,8 +39,8 @@ graph LR;
 ## Naming convention:
 
 - `Master` node hostname (FQDN): rds-m-[1-..]
-- `Satellite` node hostname (FQDN):: rds-s-[1-..]
-- `MDU` ports are Services of `Satellite` host: (e.g. mdu1_p1)
+- `Satellite` node hostname (FQDN):: dmu[1-..]
+- `MDU` ports are Services of `Satellite` host: (e.g. dmu1-opt1-dru1)
 
 See [docs](/docs) folder for more information
 
