@@ -544,12 +544,12 @@ def get_vswr_temperature_table(parameter_dic):
 
 def get_power_att_table(parameter_dic):
     dlPower = parameter_dic['dlOutputPower']
-    if(dlPower == str(0)):
+    if(int(dlPower) == 0 or int(dlPower) >= 31):
         dlPowerStr = "-"
     else:
         dlPowerStr = str(dlPower)
 
-    table1  = "<table width=250>"
+    table1  = "<table width=250>"s
     table1 += "<thead>"
     table1 += "<tr  align=\"center\" style=font-size:12px>"
     table1 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"

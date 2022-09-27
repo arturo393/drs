@@ -665,12 +665,10 @@ def get_channel_table(responseDict):
 def get_power_table(responseDict):
     ulPower = float(responseDict['ulInputPower'])
 
-    if ulPower > 0 or ulPower <-110:
-        ulPower = "-"
+    if ulPower > 0 or ulPower < -110 or ulPower >= 31 :
+        ulPower_str = "-"
     else:
-        ulPower = responseDict['ulInputPower']
-    
-    ulPower_str = "-"
+        ulPower_str = responseDict['ulInputPower']+" [dBm]"
 
     table2 = "<table width=250>"
     table2 += "<thead>"
@@ -681,7 +679,7 @@ def get_power_table(responseDict):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPower+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPower_str+"</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
     table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
     table2+="</tbody></table>"
     return table2
