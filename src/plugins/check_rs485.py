@@ -35,7 +35,7 @@ C_TXRXS_80 = '80'
 C_TXRXS_FF = 'FF'
 C_TYPE_QUERY = '02'
 C_TYPE_SET = '03'
-C_RETURN = '0d'
+C_RETURN = '7e'
 C_SITE_NUMBER = '00000000'
 
 dataDMU = {
