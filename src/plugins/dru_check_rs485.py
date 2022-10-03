@@ -381,8 +381,11 @@ def main():
     table =""
     graphite=""
     for frame in frame_list:
-        rs485.write_serial_frame(frame, s)
-        hexResponse = rs485.read_serial_frame(port, s)
+        for i in range(20):
+            rs485.write_serial_frame(frame, s)
+            hexResponse = rs485.read_serial_frame(port, s)
+            if(hexResponse != '00'):
+                break        
         
         data = rs485.validar_trama_respuesta(hexResponse,'dru',5)
         a_bytearray = bytearray(data)

@@ -21,6 +21,7 @@ import serial
 from crccheck.crc import Crc16Xmodem
 import argparse
 import os
+import time
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -1018,10 +1019,11 @@ def main():
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
 
     if Action == "query" or Action == "set":
-        write_serial_frame(Trama, s)
-        #hexResponse = s.readline()
-
-        hexResponse = read_serial_frame(Port, s)
+        for i in range(20):
+            write_serial_frame(Trama, s)
+            hexResponse = read_serial_frame(Port, s)
+            if(hexResponse != '00'):
+                break
         #print("Answer byte: ")
         # print(hexResponse)
         #print("Answer Hex: ")
@@ -1079,17 +1081,14 @@ def read_serial_frame(Port, s):
     rcvHexArray = list()
     isDataReady = False
     rcvcount = 0
+    timeOut = time.time()
     try:
         while not isDataReady and rcvcount < 200:
             Response = s.read()
             rcvHex = Response.hex()
                 #print('rcvHex: [' + rcvHex + ']')
-            if(rcvHex == ''):
-                isDataReady = True
-                s.write(b'\x7e')
-                sys.stderr.write(
-                        "- Device is not responding! ")
-                sys.exit(2)
+            if(time.time() - timeOut > 1):
+                return '00'
             elif(rcvcount == 0 and rcvHex == '7e'):
                 rcvHexArray.append(rcvHex)
                 hexadecimal_string = hexadecimal_string + rcvHex
