@@ -25,6 +25,12 @@ import time
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
+OK =  0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
+
+    
 C_HEADER = '7E'
 C_DATA_TYPE = '00'
 C_RESPONSE_FLAG = '00'
@@ -36,7 +42,8 @@ C_TXRXS_80 = '80'
 C_TXRXS_FF = 'FF'
 C_TYPE_QUERY = '02'
 C_TYPE_SET = '03'
-C_RETURN = '7e'
+C_RETURN = '7E'
+#C_RETURN = ''
 C_SITE_NUMBER = '00000000'
 
 dataDMU = {
@@ -373,7 +380,6 @@ def help():
 # --  Devuelve el puerto y otros argumentos enviados como parametros
 # -----------------------------------------------------
 
-
 def analizar_argumentos():
 
     # Construct the argument parser
@@ -523,7 +529,6 @@ def buscaArray(lst, value):
 # -- Formateria formato cadena de byte a Hex
 # --------------------------------------------------
 
-
 def formatearHex(dato):
 
     if dato[0:2] == '0x':
@@ -541,7 +546,6 @@ def formatearHex(dato):
 # -- CmdData: dato a escribir <integer en hex>
 # -- Crc: Byte de control
 # ---------------------------------------------------
-
 
 def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
 
@@ -623,7 +627,6 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
     #print('Query: %s' % trama)
     return str(trama)
 
-
 def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
     try:
         data = list()
@@ -669,8 +672,8 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         sys.stderr.write("- Unknown received message")
         sys.exit(3)
     except:
-        sys.stderr.write(" - Message not validated")
-        sys.exit(1)    
+        sys.stderr.write("No data avaliable")
+        sys.exit(OK)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
@@ -764,6 +767,7 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
             hex_as_int = int(hexInvertido, 16)
             ulPower = s16(hex_as_int)/256
             ulPowerStr = str(round(ulPower,2))
+            #ulPowerStr = "-"
             
             hexInvertido = Result[2:4] + Result[0:2]
             #print(Result,hexInvertido)
@@ -771,7 +775,10 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
             dlPower = s16(hex_as_int)/256
             dlPowerStr = str(round(dlPower,2))
 
-            
+            ul_output = "Uplink Power "+ulPowerStr+" [dBm]" 
+            dl_output = "Downlink Power "+dlPowerStr+" [dBm]"
+            output = ul_output+", "+dl_output
+          
             table = "<table width=250>"
             table += "<thead>"
             table += "<tr  align=\"center\" style=font-size:12px>"
@@ -788,7 +795,7 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
             downlink_graphite ="Downlink="+dlPowerStr
             graphite = uplinkg_graphite+" "+downlink_graphite
 
-            Result = table+"|"+graphite
+            Result = output+"|"+graphite
 
         elif (Device=='dmu' and CmdNumber=='42'):    
             i = 0            
@@ -922,14 +929,16 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
              or CmdNumber=='1E04' or CmdNumber=='1F04')):                                      
             byte0 = int(Result[0:2], 16)            
             channel = 4270000 + (125 * byte0)
-            Result = 'CH ' + frequencyDictionary[channel]          
-        
+            Result = 'CH ' + frequencyDictionary[channel]
+        elif CmdNumber =='4C0B':
+            sys.stderr.write(Result)
+        #    sys.exit(0)  
         return Result
-    except :
+    except Exception as e:
         sys.stderr.write("- Failed to read message from device: " + Result)
         sys.exit(1)    
         
-def  convertirMultipleRespuesta(data):
+def convertirMultipleRespuesta(data):
     i = 0
     j = 0
     temp = list()
@@ -980,12 +989,55 @@ def  convertirMultipleRespuesta(data):
     Table += "</tbody></table>" 
     Table += "|" + graphite
     return Table
-       
+     
+def read_serial_frame(Port, s):
+    hexadecimal_string = ''
+    rcvHexArray = list()
+    isDataReady = False
+    rcvcount = 0
+    start_time = time.time()
+    timeOut = 0.7
+
+    try:
+        while not isDataReady and rcvcount < 200:
+            Response = s.read()
+            rcvHex = Response.hex()
+            if(time.time() - start_time > timeOut):
+                sys.stderr.write("No Response")
+                timeOut  = time.time()
+                sys.exit(CRITICAL)
+            if(rcvcount == 0 and rcvHex == '7e'):
+                rcvHexArray.append(rcvHex)
+                hexadecimal_string = hexadecimal_string + rcvHex
+                rcvcount = rcvcount + 1
+            elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
+                rcvHexArray.append(rcvHex)
+                hexadecimal_string = hexadecimal_string + rcvHex
+                rcvcount = rcvcount + 1
+                if(rcvHex == '7e' or rcvHex == '7f'):
+                    isDataReady = True
+
+    except serial.SerialException:
+        sys.stderr.write("- No Response, retrying connection")
+        sys.exit(CRITICAL)
+
+    hexResponse = bytearray.fromhex(hexadecimal_string)
+    return hexResponse
+
+def write_serial_frame(Trama, s):
+    cmd_bytes = bytearray.fromhex(Trama)
+#    print(cmd_bytes)
+#    s.write(cmd_bytes)
+    hex_byte = ''
+    for cmd_byte in cmd_bytes:
+        hex_byte = ("{0:02x}".format(cmd_byte))
+        s.write(bytes.fromhex(hex_byte))
+    s.flush()
+  
 # ----------------------
 #   MAIN
 # ----------------------
-
-    
+  
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
@@ -994,7 +1046,7 @@ def main():
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
                           DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
-
+    print(Trama)
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
     # --------------------------------------------------------
@@ -1017,13 +1069,15 @@ def main():
 
     # -- Mostrar el nombre del dispositivo
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
-
+    start_time = time.time()
+    response_time = 0
     if Action == "query" or Action == "set":
-        for i in range(20):
-            write_serial_frame(Trama, s)
-            hexResponse = read_serial_frame(Port, s)
-            if(hexResponse != '00'):
-                break
+       # write_serial_frame(Trama, s)
+        #hexResponse = s.readline()
+
+        write_serial_frame(Trama, s)
+        hexResponse = read_serial_frame(Port, s)
+        response_time = time.time()-start_time
         #print("Answer byte: ")
         # print(hexResponse)
         #print("Answer Hex: ")
@@ -1060,6 +1114,8 @@ def main():
                 hex_string = convertirMultipleRespuesta(data)
             else:   
                 hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
+                
+                hex_string +=" - "+ str(int(response_time*1000)) + " milliseconds"
 
             if (resultOK  >= HighLevelCritical) :
                 print("CRITICAL Alert! - " + hex_string )
@@ -1074,46 +1130,7 @@ def main():
     else:
         sys.stderr.write(
             "- Invalid action  %s \n" % Action)
-        sys.exit(3)
-
-def read_serial_frame(Port, s):
-    hexadecimal_string = ''
-    rcvHexArray = list()
-    isDataReady = False
-    rcvcount = 0
-    timeOut = time.time()
-    try:
-        while not isDataReady and rcvcount < 200:
-            Response = s.read()
-            rcvHex = Response.hex()
-                #print('rcvHex: [' + rcvHex + ']')
-            if(time.time() - timeOut > 1):
-                return '00'
-            elif(rcvcount == 0 and rcvHex == '7e'):
-                rcvHexArray.append(rcvHex)
-                hexadecimal_string = hexadecimal_string + rcvHex
-                rcvcount = rcvcount + 1
-            elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
-                rcvHexArray.append(rcvHex)
-                hexadecimal_string = hexadecimal_string + rcvHex
-                rcvcount = rcvcount + 1
-                if(rcvHex == '7e' or rcvHex == '7f'):
-                    isDataReady = True
-
-    except serial.SerialException:
-        sys.stderr.write("- Connecting busy, retrying connection")
-        sys.exit(3)
-    hexResponse = bytearray.fromhex(hexadecimal_string)
-    return hexResponse
-
-def write_serial_frame(Trama, s):
-    cmd_bytes = bytearray.fromhex(Trama)
-        #print(cmd_bytes)
-    hex_byte = ''
-    for cmd_byte in cmd_bytes:
-        hex_byte = ("{0:02x}".format(cmd_byte))
-        s.write(bytes.fromhex(hex_byte))
-    s.flush()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

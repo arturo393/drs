@@ -14,7 +14,8 @@
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
-from logging import CRITICAL, WARN
+import cmd
+import dis
 import sys
 import getopt
 import serial
@@ -24,11 +25,7 @@ import check_rs485 as rs485
 import os
 import dru_discovery as discovery
 import requests,json
-
-OK = 0
-WARNING = 1
-CRITICAL = 2
-UNKNOWN = 3
+import time
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -316,7 +313,7 @@ def analizar_argumentos():
         # print help information and exit:
         print(e.msg)
         help()
-        sys.exit(WARNING)
+        sys.exit(1)
 
     HighLevelWarningUL = int(args['highLevelWarningUplink'])
     HighLevelCriticalUL = int(args['highLevelCriticalUplink'])
@@ -368,55 +365,46 @@ def main():
         # -- Error al abrir el puerto serie
         sys.stderr.write(
             "CRITICAL - Error al abrir puerto %s " % str(Port))
-        sys.exit(CRITICAL)
+        sys.exit(2)
 
     parameter_dict = dict()
-
+    start_time = time.time()
+    response_time = 0
     for frame in frame_list:
         rs485.write_serial_frame(frame,s)
         hex_data_frame = rs485.read_serial_frame(Port, s)
+
         data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
         a_bytearray = bytearray(data)
         hex_validated_frame = a_bytearray.hex()
-        
         try:
-            resultOK =  int(hex_validated_frame, 16)
+              resultOK =  int(hex_validated_frame, 16)
         except:
-            print("WARNING - Dato recibido es desconocido")
-            sys.exit(WARNING)
+            print("No Response")
+            sys.exit(2)
 
         cmdNumber = frame[8:10]
+
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
-        
-    s.close()
-   
-    dru_host_created = 0
-    complete_services =  discovery.icinga_get_localhost_services()
-    if (complete_services.status_code == 200):
-        for opt in range(1,5):
-        
-            dru_connected = int(parameter_dict['opt'+str(opt)+'ConnectedRemotes'])
-            dru_services_list =discovery.get_dru_services_list(complete_services,opt)
-
-            if (dru_connected > 0 and dru_connected <8):
-                for d in range(1,dru_connected+1):
-                    if(d not in  dru_services_list):
-                        director_resp =  discovery.director_create_dru_service(opt,d)
-                        if(director_resp.status_code == 201):
-                            dru_host_created += 1
-    if dru_host_created > 0:
-        discovery.director_deploy()
-        dru_host_created = 0
-
+    
+    
+    response_time = time.time() - start_time
+    parameter_dict["rt"] = str(response_time)
+    s.close()    
+    
     alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
     parameter_html_table = create_table(parameter_dict)      
     graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict)
 
     sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
+
+    discovery.dru_discovery(parameter_dict)
+
+
     if( alarm != ""):
-        sys.exit(WARNING)
+        sys.exit(1)
     else:
-        sys.exit(OK)
+        sys.exit(0)
 
 def get_frame_list():
     frame_list  = list()
@@ -438,48 +426,42 @@ def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critica
     dlPower = float(parameter_dict['dlOutputPower'])
     ulPower = float(parameter_dict['ulInputPower'])
 
-    ulPower_str = "-"
+
     alarm =""
     if dlPower >= hl_critical_dl:
         alarm +="<h3><font color=\"#ff5566\">Downlink Power Level Critical "
-        alarm += parameter_dict['dlInputPower']
+        alarm += parameter_dict['dlOutputPower']
         alarm += " [dBm]!</font></h3>"
     elif dlPower >= hl_warning_dl:
         alarm +="<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
-        alarm += parameter_dict['dlInputPower']
+        alarm += parameter_dict['dlOutputPower']
         alarm += "[dBm]</font></h3>"
 
     if ulPower > 0:
         alarm +=""         
     elif ulPower >= hl_critical_ul:
         alarm +="<h3><font color=\"#ff5566\">Uplink Power Level Critical " 
-        alarm += parameter_dict['ulOutputPower']
+        alarm += parameter_dict['ulInputPower']
         alarm +="[dBm]!</font></h3>"      
     elif ulPower >= hl_warning_ul:
         alarm +="<h3><font color=\"#ffaa44\">Uplink Power Level Warning " 
-        alarm += parameter_dict['ulOutputPower']
+        alarm += parameter_dict['ulInputPower']
         alarm += "[dBm]</font></h3>"
-        
+
+
     return alarm
 
 def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
-    ulPower = float(parameter_dict['ulInputPower'])
-
-    if(ulPower > 0 or ulPower < -110):
-        ulPower_str = "-"
-    else:
-        ulPower_str = parameter_dict['ulInputPower']
+    rt = parameter_dict['rt']
     
-    ulPower_str = "-"
+    rt_str  ="RT="+rt
+    rt_str +=";"+str(1000)
+    rt_str +=";"+str(2000)
 
-    ul_str  ="Uplink="+ulPower_str
-    ul_str +=";"+str(hlwul)
-    ul_str +=";"+str(hlcul)
-    
     dl_str ="Downlink="+parameter_dict['dlOutputPower']
     dl_str +=";"+str(hlwdl)
     dl_str +=";"+str(hlcdl)
-    graphite = ul_str+" "+dl_str
+    graphite = rt_str+" "+dl_str
     return graphite
 
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmd_number):
@@ -565,7 +547,6 @@ def set_power_dict(parameter_dict, hex_validated_frame):
     hex_as_int2 = int(hexInvertido2, 16)
     ulPower = s16(hex_as_int)/256
 
-
     parameter_dict['ulInputPower'] = str(round(ulPower,2))
 
 def set_channel_status_dict(parameter_dict, hex_validated_frame):
@@ -627,22 +608,22 @@ def create_table(responseDict):
     table2 = get_power_table(responseDict)
     table3 = get_channel_table(responseDict)
 
-    table =  "<h3><font color=\"#046c94\">"+responseDict['workingMode']+"</font></h3>"
+    table =  ""
     table += '<div class="sigma-container">'
     table += table1+table2+table3
     table += "</div>"
     return table
 
 def get_channel_table(responseDict):
-    table3 = "<table width=40%>"
-    table3 += "<thead><tr style=font-size:11px>"
-    table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
-    table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-    table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-    table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
-    table3 += "</tr></thead><tbody>"
-
+    
     if (responseDict['workingMode'] == 'Channel Mode'):
+        table3 = "<table width=40%>"
+        table3 += "<thead><tr style=font-size:11px>"
+        table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+        table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+        table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "</tr></thead><tbody>"
         for i in range(1,17):
             channel = str(i)
             table3 +="<tr align=\"center\" style=font-size:11px>"
@@ -652,11 +633,18 @@ def get_channel_table(responseDict):
             table3 +="<td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td>"
             table3 +="</tr>"
     else:        
+        table3 = "<table width=40%>"
+        table3 += "<thead><tr style=font-size:11px>"
+        table3 += "<th width='30%'><font color=\"#046c94\">Status</font></th>"
+        table3 += "<th width='10%'><font color=\"#046c94\">Bandwidth</font></th>"
+        table3 += "<th width='30%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table3 += "<th width='30%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "</tr></thead><tbody>"
         table3 +="<tr align=\"center\" style=font-size:11px>"    
-        table3 +="<td>&nbsp;</td>"
-        table3 +="<td>&nbsp;</td>"
-        table3 +="<td>&nbsp;</td>"
-        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>"+responseDict['workingMode']+"</td>"
+        table3 +="<td>3[MHz]</td>"
+        table3 +="<td>417[MHz]</td>"
+        table3 +="<td>427[MHz]</td>"
         table3 +="</tr>"
 
     table3 +="</tbody></table>"
@@ -665,10 +653,10 @@ def get_channel_table(responseDict):
 def get_power_table(responseDict):
     ulPower = float(responseDict['ulInputPower'])
 
-    if ulPower > 0 or ulPower < -110 or ulPower >= 31 :
-        ulPower_str = "-"
+    if ulPower >= 0 or ulPower < -110 or ulPower >= 31 :
+        ulPower = "-"
     else:
-        ulPower_str = responseDict['ulInputPower']+" [dBm]"
+        ulPower = responseDict['ulInputPower']+" [dBm]"
 
     table2 = "<table width=250>"
     table2 += "<thead>"
@@ -679,7 +667,7 @@ def get_power_table(responseDict):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPower_str+"</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPower+"</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
     table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
     table2+="</tbody></table>"
     return table2

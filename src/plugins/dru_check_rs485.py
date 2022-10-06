@@ -20,6 +20,13 @@ import serial
 from crccheck.crc import Crc16Xmodem
 import argparse
 import check_rs485 as rs485
+import time
+
+OK =  0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
+
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -351,8 +358,10 @@ def main():
     args = analizar_argumentos()
 
     frame_list = list()
-
+    
     # -- Armando la trama
+    #def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
+    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
     
@@ -378,28 +387,39 @@ def main():
     #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
     
     parameter_dict = dict()
+    start_time = time.time()
+    response_time = 0
     table =""
     graphite=""
     for frame in frame_list:
-        for i in range(20):
-            rs485.write_serial_frame(frame, s)
-            hexResponse = rs485.read_serial_frame(port, s)
-            if(hexResponse != '00'):
-                break        
-        
-        data = rs485.validar_trama_respuesta(hexResponse,'dru',5)
+        rs485.write_serial_frame(frame, s)
+        hexResponse = rs485.read_serial_frame(port, s)
+        #'7e01010000000021010000010200094c0b70c03804cc4ac98c7e'
+
+        if frame == frame_list[0]:
+            data = rs485.validar_trama_respuesta(hexResponse,'dru',4)
+
+        else:
+            data = rs485.validar_trama_respuesta(hexResponse,'dru',5)     
         a_bytearray = bytearray(data)
-        resultHEX = a_bytearray.hex()
-        
+        resultHEX = a_bytearray.hex()  
         try:
             resultOK =  int(resultHEX, 16)
         except:
             print("WARNING - Dato recibido es desconocido")
             sys.exit(1)
-        
+
+
         data_result = get_data_result_list_from_validated_frame(data)
-        set_paramter_dic_from_data_result(parameter_dict, data_result)        
-        
+        if len(data_result):
+            set_paramter_dic_from_data_result(parameter_dict, data_result)        
+        else:
+            a_bytearray = bytearray(data)
+            resultHEX = a_bytearray.hex()
+            data_result.append('4C0B'+resultHEX)
+            set_paramter_dic_from_data_result(parameter_dict, data_result)
+    response_time = time.time() - start_time
+    parameter_dict["rt"] = str(response_time)
     alarm = get_alarm_from_dict(args, parameter_dict)
     table = create_table(parameter_dict)    
     graphite = get_graphite_str(args, parameter_dict)
@@ -411,7 +431,7 @@ def main():
         sys.exit(0)
 
 def get_graphite_str(args, parameter_dict):
-    
+
     hl_warning_uplink = int(args['highLevelWarningUL'])
     hl_critical_uplink = int(args['highLevelCriticalUL'])
     hl_warning_downlink = int(args['highLevelWarningDL'])
@@ -426,7 +446,7 @@ def get_graphite_str(args, parameter_dict):
         dlPowerStr = "-"
     else:
         dlPowerStr = str(dlPower)
- 
+
     pa_temperature ="Temperature="+parameter_dict['paTemperature']
     pa_temperature+=";"+str(hl_warning_temperature)
     pa_temperature+=";"+str(hl_critical_temperature)
@@ -437,8 +457,10 @@ def get_graphite_str(args, parameter_dict):
     ulPower ="Uplink="+parameter_dict['ulInputPower']
     ulPower+=";"+str(hl_warning_uplink)
     ulPower+=";"+str(hl_critical_uplink)
+    rt = "RT="+ parameter_dict['rt']+";1000;2000"
     
-    graphite = pa_temperature+" "+dlPower+" "+vswr+" "+ulPower
+    
+    graphite =rt+" "+ pa_temperature+" "+dlPower+" "+vswr+" "+ulPower
     return graphite
 
 def get_alarm_from_dict(args, parameter_dict):
@@ -482,12 +504,12 @@ def get_alarm_from_dict(args, parameter_dict):
     if temperature >= hl_critical_temperature:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "
         alarm += parameter_dict['paTemperature']
-        alarm += " [°C]!</font></h3>"
+        alarm += " [°C]]!</font></h3>"
 
     elif temperature >= hl_warning_temperature:
         alarm +="<h3><font color=\"#ffaa44\">Temperature Level Warning "
         alarm += parameter_dict['paTemperature']
-        alarm += " [°C]!</font></h3>"
+        alarm += " [°C]]!</font></h3>"
 
     return alarm
 
@@ -497,7 +519,7 @@ def create_table(parameter_dic):
     table2 = get_vswr_temperature_table(parameter_dic)
     table3 = get_channel_freq_table(parameter_dic)
     
-    table =  "<h3><font color=\"#046c94\">"+parameter_dic['workingMode']+"</font></h3>"
+    table =  ""
     table += '<div class="sigma-container">'
     table += table2+table1+table3
     table += "</div>"
@@ -514,6 +536,13 @@ def get_channel_freq_table(parameter_dic):
     table3 += "</tr></thead><tbody>"
 
     if (parameter_dic['workingMode'] == 'Channel Mode'):
+        table3 = "<table width=40%>"
+        table3 += "<thead><tr style=font-size:11px>"
+        table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
+        table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
+        table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "</tr></thead><tbody>"
         for i in range(1,17):
             channel = str(i)
             table3 +="<tr align=\"center\" style=font-size:11px>"
@@ -523,12 +552,20 @@ def get_channel_freq_table(parameter_dic):
             table3 +="<td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td>"
             table3 +="</tr>"
     else:        
+        table3 = "<table width=40%>"
+        table3 += "<thead><tr style=font-size:11px>"
+        table3 += "<th width='30%'><font color=\"#046c94\">Status</font></th>"
+        table3 += "<th width='10%'><font color=\"#046c94\">Bandwidth</font></th>"
+        table3 += "<th width='30%'><font color=\"#046c94\">UpLink Frequency</font></th>"
+        table3 += "<th width='30%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "</tr></thead><tbody>"
         table3 +="<tr align=\"center\" style=font-size:11px>"    
-        table3 +="<td>&nbsp;</td>"
-        table3 +="<td>&nbsp;</td>"
-        table3 +="<td>&nbsp;</td>"
-        table3 +="<td>&nbsp;</td>"
+        table3 +="<td>"+parameter_dic['workingMode']+"</td>"
+        table3 +="<td>3[MHz]</td>"
+        table3 +="<td>417[MHz]</td>"
+        table3 +="<td>427[MHz]</td>"
         table3 +="</tr>"
+
     table3+="</tbody></table>"
     return table3
 
@@ -550,9 +587,9 @@ def get_power_att_table(parameter_dic):
     if(int(dlPower) == 0 or int(dlPower) >= 31):
         dlPowerStr = "-"
     else:
-        dlPowerStr = str(dlPower)
+        dlPowerStr = str(dlPower) +" [dBm]"
 
-    table1  = "<table width=250>"s
+    table1  = "<table width=250>"
     table1 += "<thead>"
     table1 += "<tr  align=\"center\" style=font-size:12px>"
     table1 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
@@ -562,7 +599,7 @@ def get_power_att_table(parameter_dic):
     table1 += "</thead>"
     table1 += "<tbody>"
     table1 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
-    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+dlPowerStr+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
+    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+dlPowerStr+"</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
     table1 +="</tbody></table>"
     return table1
 
@@ -630,7 +667,10 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
                 if (i == '1' ):  
                     parameter_dic["channel"+str(channel)+"Status"] = "ON"                      
                 else:
-                    parameter_dic["channel"+str(channel)+"Status"] = "OFF"            
+                    parameter_dic["channel"+str(channel)+"Status"] = "OFF"         
+        elif cmd_number =='4C0B':
+            parameter_dic['mac'] = cmd_value
+            
 
 def get_data_result_list_from_validated_frame(data):
     i = 0
