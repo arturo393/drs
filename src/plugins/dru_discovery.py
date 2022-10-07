@@ -39,6 +39,10 @@ class DRU:
         self.opt = opt
         self.mac = mac
         self.name = name
+OK =  0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
 
 ZONES_CONF = '/etc/icinga2/zones.conf'
 
@@ -54,15 +58,89 @@ icinga_api_password = "Admin.123"
 #   MAIN
 # ----------------------
 def main():
+    
+    frame_list = list()
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fa','01','00','00'))
+    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fb','01','00','00'))
+    
+    # --------------------------------------------------------
+    # -- Abrir el puerto serie. Si hay algun error se termina
+    # --------------------------------------------------------
+    try:
+        Port = '/dev/ttyS0'
+        baudrate = 19200
+        s = serial.Serial(Port, baudrate)
+        # -- Timeout: 1 seg
+        s.timeout = 1
+
+    except serial.SerialException:
+        # -- Error al abrir el puerto serie
+        sys.stderr.write(
+            "CRITICAL - Error al abrir puerto %s " % str(Port))
+        sys.exit(2)
 
     parameter_dict = dict()
-    parameter_dict['opt1ConnectedRemotes'] = "02"
-    parameter_dict['opt2ConnectedRemotes'] = "00"
-    parameter_dict['opt3ConnectedRemotes'] = "00"
-    parameter_dict['opt4ConnectedRemotes'] = "00"
-    dru_discovery(parameter_dict)
+    start_time = time.time()
+    response_time = 0
+    discovery_time = 0
+    for frame in frame_list:
+        rs485.write_serial_frame(frame,s)
+        hex_data_frame = rs485.read_serial_frame(Port, s)
 
-    sys.exit(0)
+        data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
+        a_bytearray = bytearray(data)
+        hex_validated_frame = a_bytearray.hex()
+        try:
+              resultOK =  int(hex_validated_frame, 16)
+        except:
+            print("No Response")
+            sys.exit(2)
+
+        cmdNumber = frame[8:10]
+
+        set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
+        
+
+    
+
+
+    response_time = time.time() - start_time
+    parameter_dict["rt"] = str(response_time)
+    s.close()    
+     
+    start_time = time.time()
+    dru_created = dru_discovery(parameter_dict)
+    
+    discovery_time = time.time() - start_time
+    parameter_dict["rt"] = str(response_time)
+    parameter_dict["dt"] = str(discovery_time)
+    
+    rt = parameter_dict['rt']
+    
+    rt_str  ="RT="+rt
+    rt_str +=";"+str(1)
+    rt_str +=";"+str(1)
+
+    dt_str ="DT="+parameter_dict['dt']
+    dt_str +=";"+str(2)
+    dt_str +=";"+str(2)
+    graphite = rt_str+" "+dt_str
+
+    sys.stderr.write(str(dru_created)+" RU Found")
+    sys.stderr.write("|"+graphite)
+    sys.exit(OK)
+    
+def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmd_number):
+    if cmd_number=='f8':
+        parameter_dict['opt1ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='f9':
+        parameter_dict['opt2ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='fa':
+        parameter_dict['opt3ConnectedRemotes'] = hex_validated_frame
+    elif cmd_number=='fb':
+        parameter_dict['opt4ConnectedRemotes'] = hex_validated_frame
 
 def dru_discovery(opt_dict):
     found_dru_list = rs485_get_found_mac_list(opt_dict)
@@ -123,6 +201,8 @@ def dru_discovery(opt_dict):
     if dru_host_created > 0:
         director_deploy()
         dru_host_created = 0
+        
+    return dru_host_created
 
 def director_deploy():
     master_host = get_master_host()
