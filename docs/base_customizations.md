@@ -65,7 +65,7 @@ To add direct links to rs485 device configuration module, please add the followi
                 )
             )
         );
-    }else {
+    }else if(isset($object->customvars['opt']) && $object->customvars['dru']){
         $opt = $object->customvars['opt'];
         $dru = $object->customvars['dru'];
         $service = $object->host->getName().'-opt'.$opt.'-dru'.$dru;
