@@ -56,8 +56,8 @@ icinga_api_password = "Admin.123"
 def main():
 
     parameter_dict = dict()
-    parameter_dict['opt1ConnectedRemotes'] = "00"
-    parameter_dict['opt2ConnectedRemotes'] = "02"
+    parameter_dict['opt1ConnectedRemotes'] = "02"
+    parameter_dict['opt2ConnectedRemotes'] = "00"
     parameter_dict['opt3ConnectedRemotes'] = "00"
     parameter_dict['opt4ConnectedRemotes'] = "00"
     dru_discovery(parameter_dict)
@@ -74,8 +74,7 @@ def dru_discovery(opt_dict):
         for found in found_dru_list:
             not_in_created = True
             for created in created_dru_list:
-                if (found.mac == created.mac.swapcase() or found.mac == created.mac):
-                 
+                if (found.mac == created.mac.swapcase() or found.mac == created.mac):                
                     if (found.opt != created.opt):
                         ru_created_name = "RU"+str(created.opt)+str(created.dru)
                         ru_found_name = "RU"+str(found.opt)+str(found.dru)                       
@@ -84,28 +83,36 @@ def dru_discovery(opt_dict):
                             name = created.name +"-"+ru_found_name
                         else:
                             name = ru_found_name
-
                         not_in_new = True
                         for new in new_dru_list:
                             if(new.mac == found.mac):
                                 not_in_new = False
                                 if(len(name) > 4):
-                                    new.name = name
-                                   
+                                    new.name = name                                  
                         if(not_in_new):
                             new_dru_list.append(
                             DRU(found.dru, found.opt, found.mac,name))
                         
                         not_in_created = False
-
                     else:
                       if(found.dru == created.dru):
                         not_in_created = False
-            
-   
+  
             if(not_in_created):
                 name = "RU"+str(found.opt)+str(found.dru)
                 new_dru_list.append(DRU(found.dru, found.opt, found.mac,name))
+     
+        
+        for found in found_dru_list:
+            not_in_created = True
+            for created in created_dru_list:
+                if (found.mac == created.mac.swapcase() or found.mac == created.mac):
+                    if (found.opt == created.opt):
+                        if(found.dru == created.dru):
+                            not_in_new = True
+                            for new in new_dru_list:
+                                if(new.mac == found.mac):
+                                    new_dru_list.remove(new)
                            
     dru_host_created = 0
     for dru_service in new_dru_list:
