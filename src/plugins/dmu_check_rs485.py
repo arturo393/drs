@@ -23,9 +23,14 @@ from crccheck.crc import Crc16Xmodem
 import argparse
 import check_rs485 as rs485
 import os
-import dru_discovery as discovery
+#import dru_discovery as discovery
 import requests,json
 import time
+
+OK =  0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -373,6 +378,13 @@ def main():
     for frame in frame_list:
         rs485.write_serial_frame(frame,s)
         hex_data_frame = rs485.read_serial_frame(Port, s)
+        
+            
+        if (hex_data_frame == None or hex_data_frame == "" or hex_data_frame == " "  or len(hex_data_frame) == 0 ):
+            sys.stderr.write("No Response")
+            fix_frame = rs485.obtener_trama('query','dmu','07','7e','f8','01','00','00')
+            rs485.write_serial_frame(fix_frame,s)
+            sys.exit(CRITICAL)
 
         data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
         a_bytearray = bytearray(data)
@@ -381,10 +393,11 @@ def main():
               resultOK =  int(hex_validated_frame, 16)
         except:
             print("No Response")
+            fix_frame = rs485.obtener_trama('query','dmu','07','7e','f8','01','00','00')
+            rs485.write_serial_frame(fix_frame,s)
             sys.exit(2)
 
         cmdNumber = frame[8:10]
-
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
     
     
@@ -398,7 +411,7 @@ def main():
 
     sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
 
-    discovery.dru_discovery(parameter_dict)
+    #discovery.dru_discovery(parameter_dict)
 
 
     if( alarm != ""):
