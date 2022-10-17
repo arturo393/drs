@@ -391,14 +391,15 @@ def main():
     response_time = 0
     table =""
     graphite=""
+    hexResponse = ''
     for frame in frame_list:
+
         rs485.write_serial_frame(frame, s)
         hexResponse = rs485.read_serial_frame(port, s)
         #'7e01010000000021010000010200094c0b70c03804cc4ac98c7e'
 
         if frame == frame_list[0]:
             data = rs485.validar_trama_respuesta(hexResponse,'dru',4)
-
         else:
             data = rs485.validar_trama_respuesta(hexResponse,'dru',5)     
         a_bytearray = bytearray(data)
@@ -472,7 +473,11 @@ def get_alarm_from_dict(args, parameter_dict):
     hl_warning_temperature = int(args['highLevelWarningTemperature'])
     hl_critical_temperature = int(args['highLevelCriticalTemperature'])
 
-    dlPower = float(parameter_dict['dlOutputPower'])
+    if('dlOutputPower' in parameter_dict):
+        dlPower = float(parameter_dict['dlOutputPower'])
+    else:
+        dlPower = -200
+    
     ulPower = float(parameter_dict['ulInputPower'])
     temperature = float(parameter_dict['paTemperature'])
 
@@ -671,7 +676,6 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
         elif cmd_number =='4C0B':
             parameter_dic['mac'] = cmd_value
             
-
 def get_data_result_list_from_validated_frame(data):
     i = 0
     j = 0
