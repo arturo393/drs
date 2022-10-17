@@ -102,16 +102,12 @@ def main():
 
         set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
         
-
-    
-
-
     response_time = time.time() - start_time
     parameter_dict["rt"] = str(response_time)
     s.close()    
      
     start_time = time.time()
-    dru_created = dru_discovery(parameter_dict)
+    discovery_str = dru_discovery(parameter_dict)
     
     discovery_time = time.time() - start_time
     parameter_dict["rt"] = str(response_time)
@@ -128,7 +124,7 @@ def main():
     dt_str +=";"+str(2)
     graphite = rt_str+" "+dt_str
 
-    sys.stderr.write(str(dru_created)+" RU Found")
+    sys.stderr.write("Summary - "+discovery_str)
     sys.stderr.write("|"+graphite)
     sys.exit(OK)
     
@@ -146,9 +142,10 @@ def dru_discovery(opt_dict):
     found_dru_list = rs485_get_found_mac_list(opt_dict)
     complete_services = icinga_get_localhost_services()
     new_dru_list = list()
-
+    detected_str ="detected: "+ str(len(found_dru_list))
     if (complete_services.status_code == 200):
-        created_dru_list = get_dru_services_list(complete_services, 1)          
+        created_dru_list = get_dru_services_list(complete_services, 1)  
+        created_str = " created: "+ str(len(created_dru_list))        
         for found in found_dru_list:
             not_in_created = True
             for created in created_dru_list:
@@ -193,6 +190,7 @@ def dru_discovery(opt_dict):
                                     new_dru_list.remove(new)
                            
     dru_host_created = 0
+    new_str = " new: "+ str(len((new_dru_list)))
     for dru_service in new_dru_list:
         director_resp = director_create_dru_service(dru_service)
         if (director_resp.status_code == 201):
@@ -202,7 +200,7 @@ def dru_discovery(opt_dict):
         director_deploy()
         dru_host_created = 0
         
-    return dru_host_created
+    return detected_str+" "+created_str+" "+new_str
 
 def director_deploy():
     master_host = get_master_host()
@@ -403,6 +401,7 @@ def icinga_get_localhost_services():
     query = {
         'type': 'Service',
         'host_name': hostname,
+        'filter': "service.vars.opt"
     }
 
     headers = {
@@ -442,21 +441,21 @@ def get_dru_services_list(r, opt_asked):
     dru_list = []
     resp_str = json.dumps(r.json(), indent=2)
     resp_dict = json.loads(resp_str)
-    # print(resp_dict)
     results_array = resp_dict['results']
     try:
         for result in results_array:
             opt_readed = 0
-            if ('opt' in result['attrs']['vars']):
-                opt_readed = int(result['attrs']['vars']['opt'])
-          #  if (opt_asked == opt_readed):
-                dru = int(result['attrs']['vars']['dru'])
-                mac = result['attrs']['vars']['mac']
-                name = result["attrs"]["display_name"]
-                dru_list.append(DRU(dru, opt_readed, mac, name))
+            if('vars' in result['attrs']):
+                if ('opt' in result['attrs']['vars']):
+                    opt_readed = int(result['attrs']['vars']['opt'])
+                    dru = int(result['attrs']['vars']['dru'])
+                    mac = result['attrs']['vars']['mac']
+                    name = result["attrs"]["display_name"]
+                    dru_list.append(DRU(dru, opt_readed, mac, name))
         return dru_list
     except Exception as e:
-        return []
+        sys.stderr.write(e)
+        sys.exit(CRITICAL)
 
 def get_master_host():
     with open(ZONES_CONF) as f:
@@ -500,15 +499,17 @@ def get_dru_mac_from_rs485(dru, opt):
 
 def rs485_get_found_mac_list(opt_dict):
     found_dru_list = list()
-    for opt in range(1, 5):
-        dru_connected = int(opt_dict['opt'+str(opt)+'ConnectedRemotes'])
-        if (dru_connected > 0 and dru_connected < 8):
+    try:
+        for opt in range(1, 5):
+         dru_connected = int(opt_dict['opt'+str(opt)+'ConnectedRemotes'])
+         if (dru_connected > 0 and dru_connected < 8):
             for dru_found in range(1, dru_connected+1):
                 mac_found = get_dru_mac_from_rs485(dru_found, opt)
                 found_dru_list.append(DRU(dru_found, opt, mac_found, "new"))
 
-    return found_dru_list
-
+        return found_dru_list
+    except Exception as e:
+        return []
 
 if __name__ == "__main__":
     main()
