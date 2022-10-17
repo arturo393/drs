@@ -628,19 +628,13 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
     return str(trama)
 
 def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
+
+    if (hexResponse == None or hexResponse == "" or hexResponse == " "  or len(hexResponse) == 0 ):
+            sys.stderr.write("No Response")
+            sys.exit(CRITICAL)
     try:
         data = list()
 
-        if (
-            hexResponse == None
-            or hexResponse == ""
-            or hexResponse == " "
-            or len(hexResponse) == 0
-            or hexResponse[0] != 126
-        ):
-            sys.stderr.write(
-                "- Unknown Message\n")
-            sys.exit(3)
         if Device == 'dru':
             #print('Entro aqui')
             byte_respuesta = 14  # Para equipos remotos  de la trama
@@ -669,11 +663,11 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         
         return data
     except ValueError:
-        sys.stderr.write("- Unknown received message")
-        sys.exit(3)
+        sys.stderr.write("No data avaliable")
+        sys.exit(CRITICAL)
     except:
         sys.stderr.write("No data avaliable")
-        sys.exit(OK)    
+        sys.exit(CRITICAL)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
@@ -1003,9 +997,9 @@ def read_serial_frame(Port, s):
             Response = s.read()
             rcvHex = Response.hex()
             if(time.time() - start_time > timeOut):
-                sys.stderr.write("No Response")
+               # sys.stderr.write("No Response")
                 timeOut  = time.time()
-                sys.exit(CRITICAL)
+                return rcvHex
             if(rcvcount == 0 and rcvHex == '7e'):
                 rcvHexArray.append(rcvHex)
                 hexadecimal_string = hexadecimal_string + rcvHex
@@ -1018,7 +1012,7 @@ def read_serial_frame(Port, s):
                     isDataReady = True
 
     except serial.SerialException:
-        sys.stderr.write("- No Response, retrying connection")
+        sys.stderr.write("No Response, retrying connection")
         sys.exit(CRITICAL)
 
     hexResponse = bytearray.fromhex(hexadecimal_string)
@@ -1078,14 +1072,9 @@ def main():
         write_serial_frame(Trama, s)
         hexResponse = read_serial_frame(Port, s)
         response_time = time.time()-start_time
-        #print("Answer byte: ")
-        # print(hexResponse)
-        #print("Answer Hex: ")
-        #print(rcvHexArray)
 
         # Aqui se realiza la validacion de la respuesta
         data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
-
         if Action == 'set':
             if len(data) != 0 and Device == 'dmu':
                 sys.stderr.write(
