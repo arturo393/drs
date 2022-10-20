@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-15 -*-
 
-# check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la
+# dru_check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la
 # libreria multiplataforma pyserial.py (http://pyserial.sf.net)
 #
 #  Se envia una cadena por el puerto serie y se muestra lo que se recibe
@@ -14,6 +14,7 @@
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
+from shutil import ExecError
 import sys
 import getopt
 import serial
@@ -351,7 +352,6 @@ def s8(byte):
 #   MAIN
 # ----------------------
 
-
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
@@ -361,7 +361,7 @@ def main():
     
     # -- Armando la trama
     #def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
-    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru']))
+    #frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
     
@@ -392,33 +392,24 @@ def main():
     table =""
     graphite=""
     hexResponse = ''
+    set_parameter_dict_default_values(parameter_dict)
     for frame in frame_list:
-
         rs485.write_serial_frame(frame, s)
         hexResponse = rs485.read_serial_frame(port, s)
-        #'7e01010000000021010000010200094c0b70c03804cc4ac98c7e'
-
-        if frame == frame_list[0]:
-            data = rs485.validar_trama_respuesta(hexResponse,'dru',4)
+        
+        if (hexResponse == None or hexResponse == "" or hexResponse == " "  or len(hexResponse) == 0 ):
+            sys.stderr.write("No Response")
+#            fix_frame = rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru'])
+#            rs485.write_serial_frame(fix_frame,s)
+            sys.exit(CRITICAL)
         else:
-            data = rs485.validar_trama_respuesta(hexResponse,'dru',5)     
-        a_bytearray = bytearray(data)
-        resultHEX = a_bytearray.hex()  
-        try:
-            resultOK =  int(resultHEX, 16)
-        except:
-            print("WARNING - Dato recibido es desconocido")
-            sys.exit(1)
+            data = rs485.validar_trama_respuesta(hexResponse,'dru',5)             
+            data_result = get_data_result_list_from_validated_frame(data)
+            set_paramter_dic_from_data_result(parameter_dict, data_result)  
 
 
-        data_result = get_data_result_list_from_validated_frame(data)
-        if len(data_result):
-            set_paramter_dic_from_data_result(parameter_dict, data_result)        
-        else:
-            a_bytearray = bytearray(data)
-            resultHEX = a_bytearray.hex()
-            data_result.append('4C0B'+resultHEX)
-            set_paramter_dic_from_data_result(parameter_dict, data_result)
+    
+            
     response_time = time.time() - start_time
     parameter_dict["rt"] = str(response_time)
     alarm = get_alarm_from_dict(args, parameter_dict)
@@ -439,9 +430,9 @@ def get_graphite_str(args, parameter_dict):
     hl_critical_downlink = int(args['highLevelCriticalDL'])
     hl_warning_temperature = int(args['highLevelWarningTemperature'])
     hl_critical_temperature = int(args['highLevelCriticalTemperature'])
-    dlPower = float(parameter_dict['dlOutputPower'])
-    ulPower = float(parameter_dict['ulInputPower'])
-    temperature = float(parameter_dict['paTemperature'])
+    dlPower = parameter_dict['dlOutputPower']
+    ulPower = parameter_dict['ulInputPower']
+    temperature = parameter_dict['paTemperature']
     
     if(dlPower == 0.0):
         dlPowerStr = "-"
@@ -473,13 +464,19 @@ def get_alarm_from_dict(args, parameter_dict):
     hl_warning_temperature = int(args['highLevelWarningTemperature'])
     hl_critical_temperature = int(args['highLevelCriticalTemperature'])
 
-    if('dlOutputPower' in parameter_dict):
+
+    if(parameter_dict['dlOutputPower'] != '-'):
         dlPower = float(parameter_dict['dlOutputPower'])
     else:
         dlPower = -200
-    
-    ulPower = float(parameter_dict['ulInputPower'])
-    temperature = float(parameter_dict['paTemperature'])
+    if(parameter_dict['ulInputPower'] != '-'):
+        ulPower = float(parameter_dict['ulInputPower'])
+    else:
+        ulPower = -200
+    if(parameter_dict['paTemperature'] != '-'):
+        paTemperature = float(parameter_dict['paTemperature'])
+    else:
+        paTemperature = -200
 
     alarm =""
     
@@ -506,12 +503,12 @@ def get_alarm_from_dict(args, parameter_dict):
         alarm +="[dBm]</font></h3>"
 
 
-    if temperature >= hl_critical_temperature:
+    if paTemperature >= hl_critical_temperature:
         alarm +="<h3><font color=\"#ff5566\">Temperature Level Critical "
         alarm += parameter_dict['paTemperature']
         alarm += " [°C]]!</font></h3>"
 
-    elif temperature >= hl_warning_temperature:
+    elif paTemperature >= hl_warning_temperature:
         alarm +="<h3><font color=\"#ffaa44\">Temperature Level Warning "
         alarm += parameter_dict['paTemperature']
         alarm += " [°C]]!</font></h3>"
@@ -588,11 +585,7 @@ def get_vswr_temperature_table(parameter_dic):
     return table2
 
 def get_power_att_table(parameter_dic):
-    dlPower = parameter_dic['dlOutputPower']
-    if(int(dlPower) == 0 or int(dlPower) >= 31):
-        dlPowerStr = "-"
-    else:
-        dlPowerStr = str(dlPower) +" [dBm]"
+
 
     table1  = "<table width=250>"
     table1 += "<thead>"
@@ -604,7 +597,7 @@ def get_power_att_table(parameter_dic):
     table1 += "</thead>"
     table1 += "<tbody>"
     table1 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+parameter_dic['ulInputPower']+" [dBm]</td><td>"+parameter_dic['ulAtt']+" [dB]</td></tr>"
-    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+dlPowerStr+"</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
+    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+parameter_dic['dlOutputPower']+" [dBm]</td><td>"+parameter_dic['dlAtt']+" [dB]</td></tr>"
     table1 +="</tbody></table>"
     return table1
 
@@ -619,10 +612,16 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
                                                                                                                  
         elif cmd_number == '0305':
             dl_power = s8(int(cmd_value, 16))
-            parameter_dic['dlOutputPower'] = str(dl_power)
+
+            if(int(dl_power) == 0 or int(dl_power) >= 31):
+                parameter_dic['dlOutputPower'] ="-"
+            else:
+                parameter_dic['dlOutputPower'] = str(dl_power)
+            
         elif cmd_number == '2505':
             ul_power = s8(int(cmd_value, 16))
             parameter_dic['ulInputPower'] = str(ul_power)
+            
             
         elif cmd_number == '0605':
             vswr = s8(int(cmd_value, 16))/10
@@ -675,6 +674,30 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
                     parameter_dic["channel"+str(channel)+"Status"] = "OFF"         
         elif cmd_number =='4C0B':
             parameter_dic['mac'] = cmd_value
+
+def set_parameter_dict_default_values(parameters_dict):
+    if('dlOutputPower' not in parameters_dict):
+        parameters_dict['dlOutputPower'] = '-'
+    if('ulInputPower' not in parameters_dict):
+        parameters_dict['ulInputPower'] = '-'
+    if('paTemperature' not in parameters_dict):
+        parameters_dict['paTemperature'] = '-'
+    if('dlAtt' not in parameters_dict):
+        parameters_dict['dlAtt'] = '-'
+    if('ulAtt' not in parameters_dict):
+        parameters_dict['ulAtt'] = '-'
+    if('vswr' not in parameters_dict):
+        parameters_dict['vswr'] = '-'
+    if('workingMode' not in parameters_dict):
+        parameters_dict['workingMode'] = '-'
+    for i in range(1,17):
+        channel = str(i)
+        if("channel"+str(channel)+"Status" not in parameters_dict):
+            parameters_dict["channel"+str(channel)+"Status"] = '-'
+        if("channel"+str(channel)+"ulFreq" not in parameters_dict):
+            parameters_dict["channel"+str(channel)+"ulFreq"] = '-'    
+        if("channel"+str(channel)+"dlFreq" not in parameters_dict):
+            parameters_dict["channel"+str(channel)+"dlFreq"] = '-'
             
 def get_data_result_list_from_validated_frame(data):
     i = 0
@@ -683,22 +706,28 @@ def get_data_result_list_from_validated_frame(data):
     dataResult = list()
     isWriting = False
 
-    for i in range(0,len(data)-1):
-        if isWriting == False:
-            dataLen = data[i]
-            isWriting = True
+    try:
+        for i in range(0,len(data)-1):
+            if isWriting == False:
+                dataLen = data[i]
+                isWriting = True
 
-        if j<dataLen-1:
-            temp.append(data[i+1])
-            j = j+1
-        else:
-            isWriting = False
-            j = 0
-            a_bytearray = bytearray(temp)
-            resultHEX = a_bytearray.hex()
-            dataResult.append(resultHEX)
-            temp.clear()
-    return dataResult
+            if j<dataLen-1:
+                temp.append(data[i+1])
+                j = j+1
+            else:
+                isWriting = False
+                j = 0
+                a_bytearray = bytearray(temp)
+                resultHEX = a_bytearray.hex()
+                dataResult.append(resultHEX)
+                temp.clear()
+        return dataResult
+    except Exception as e:
+        print(str(e))
+        return []
+
+
 
 if __name__ == "__main__":
     main()

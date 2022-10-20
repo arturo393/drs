@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-15 -*-
 
-# check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la
+# dmu_check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la
 # libreria multiplataforma pyserial.py (http://pyserial.sf.net)
 #
 #  Se envia una cadena por el puerto serie y se muestra lo que se recibe
@@ -300,7 +300,6 @@ def help():
 # --  Devuelve el puerto y otros argumentos enviados como parametros
 # -----------------------------------------------------
 
-
 def analizar_argumentos():
 
     # Construct the argument parser
@@ -326,16 +325,6 @@ def analizar_argumentos():
     HighLevelCriticalDL = int(args['highLevelCriticalDownlink'])
     
     return  HighLevelWarningUL,  HighLevelCriticalUL,  HighLevelWarningDL, HighLevelCriticalDL
-# ----------------------------------------------------
-# -- Armar trama de escritura o lectura
-#-- (PARAMETROS)
-# -- Interface: ID de PA ó DSP, Ej. 0x07 => DSP , 0x08 => PA, En la trama MODULE_ADDRESS_FUNCTION
-# -- CmdNumber: 80 = Send ; 00 = Receive
-# -- CmdBodyLenght: Indentica si lee o escribe
-# -- CmdData: dato a escribir <integer en hex>
-# -- Crc: Byte de control
-# ---------------------------------------------------
-
 # -----------------------------------------
 #   convertir hex a decimal con signo
 # ----------------------------------------
@@ -350,12 +339,8 @@ def s16(value):
 def main():
 
     # -- Analizar los argumentos pasados por el usuario
-   
     hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl  = analizar_argumentos()
-
     frame_list = get_frame_list()
-
-
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
     # --------------------------------------------------------
@@ -375,31 +360,24 @@ def main():
     parameter_dict = dict()
     start_time = time.time()
     response_time = 0
+    se_default_parameter_dict(parameter_dict)
     for frame in frame_list:
         rs485.write_serial_frame(frame,s)
         hex_data_frame = rs485.read_serial_frame(Port, s)
-        
-            
+             
         if (hex_data_frame == None or hex_data_frame == "" or hex_data_frame == " "  or len(hex_data_frame) == 0 ):
             sys.stderr.write("No Response")
             fix_frame = rs485.obtener_trama('query','dmu','07','7e','f8','01','00','00')
             rs485.write_serial_frame(fix_frame,s)
             sys.exit(CRITICAL)
-
-        data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
-        a_bytearray = bytearray(data)
-        hex_validated_frame = a_bytearray.hex()
-        try:
-              resultOK =  int(hex_validated_frame, 16)
-        except:
-            print("No Response")
-            fix_frame = rs485.obtener_trama('query','dmu','07','7e','f8','01','00','00')
-            rs485.write_serial_frame(fix_frame,s)
-            sys.exit(2)
-
-        cmdNumber = frame[8:10]
-        set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
-    
+        else: 
+            data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
+            if(data):
+                a_bytearray = bytearray(data)
+                hex_validated_frame = a_bytearray.hex()
+                cmdNumber = frame[8:10]
+                set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
+        
     
     response_time = time.time() - start_time
     parameter_dict["rt"] = str(response_time)
@@ -476,6 +454,32 @@ def get_graphite_str(hlwul, hlcul, hlwdl, hlcdl, parameter_dict):
     dl_str +=";"+str(hlcdl)
     graphite = rt_str+" "+dl_str
     return graphite
+
+def se_default_parameter_dict(parameter_dict):
+    parameter_dict['opt1ConnectedRemotes'] = "-"
+    parameter_dict['opt2ConnectedRemotes'] = "-"
+    parameter_dict['opt3ConnectedRemotes'] = "-"
+    parameter_dict['opt4ConnectedRemotes'] = "-"
+    parameter_dict['opt1ConnectionStatus'] = "-"
+    parameter_dict['opt2ConnectionStatus'] = "-"
+    parameter_dict['opt3ConnectionStatus'] = "-"
+    parameter_dict['opt4ConnectionStatus'] = "-"
+    parameter_dict['opt1TransmissionStatus'] = "-"
+    parameter_dict['opt2TransmissionStatus'] = "-"
+    parameter_dict['opt3TransmissionStatus'] = "-"
+    parameter_dict['opt4TransmissionStatus'] = "-"
+    parameter_dict['dlOutputPower'] = "-"
+    parameter_dict['ulInputPower'] ="-"
+    parameter_dict['ulAtt'] = "-"
+    parameter_dict['dlAtt'] = "-"
+    parameter_dict['workingMode'] = "-"
+
+    channel = 1
+    while channel <= 16:
+      parameter_dict["channel"+str(channel)+"Status"] = "-"
+      parameter_dict["channel"+str(channel)+"ulFreq"] = "-"
+      parameter_dict["channel"+str(channel)+"dlFreq"] = "-"
+      channel += 1
 
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmd_number):
     if cmd_number=='f8':
@@ -578,20 +582,19 @@ def set_channel_freq_dict(parameter_dict, hex_validated_frame):
     channel = 1
     i = 0
     while channel <= 16:
-        byte = hex_validated_frame[i:i+8]
-        byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
-        hex_as_int = int(byteInvertido, 16)
-            #print(byte,byteInvertido,hex_as_int)
         try:
+          byte = hex_validated_frame[i:i+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
+          hex_as_int = int(byteInvertido, 16)
           texto = frequencyDictionary[hex_as_int]
           parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]
           parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]
           channel += 1
           i += 8
         except:
-          print("WARNING - Dato recibido es desconocido ")
-          print(byte,byteInvertido,hex_as_int)
-          sys.exit(1)
+          print("Dato recibido es desconocido ")
+          #print(byte,byteInvertido,hex_as_int)
+          #sys.exit(1)
 
 def set_power_att_dict(parameter_dict, hex_validated_frame):
     byte01toInt = int(hex_validated_frame[0:2], 16)/4
@@ -613,7 +616,7 @@ def set_working_mode_dict(parameter_dict, hex_validated_frame):
     except:
         print("WARNING - Dato recibido es desconocido ")
         print(hex_validated_frame)
-        sys.exit(1)
+        #sys.exit(1)
 
 def create_table(responseDict):
 
