@@ -27,19 +27,24 @@ import requests
 import json
 import socket
 import urllib3
+import re
 import check_rs485 as rs485
 
 urllib3.disable_warnings()
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
+
+
 class DRU:
     def __init__(self, dru, opt, mac, name):
         self.dru = dru
         self.opt = opt
         self.mac = mac
         self.name = name
-OK =  0
+
+
+OK = 0
 WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
@@ -57,14 +62,20 @@ icinga_api_password = "Admin.123"
 # ----------------------
 #   MAIN
 # ----------------------
+
+
 def main():
-    
+
     frame_list = list()
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f8','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','f9','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fa','01','00','00'))
-    frame_list.append(rs485.obtener_trama('query','dmu','07','00','fb','01','00','00'))
-    
+    frame_list.append(rs485.obtener_trama(
+        'query', 'dmu', '07', '00', 'f8', '01', '00', '00'))
+    frame_list.append(rs485.obtener_trama(
+        'query', 'dmu', '07', '00', 'f9', '01', '00', '00'))
+    frame_list.append(rs485.obtener_trama(
+        'query', 'dmu', '07', '00', 'fa', '01', '00', '00'))
+    frame_list.append(rs485.obtener_trama(
+        'query', 'dmu', '07', '00', 'fb', '01', '00', '00'))
+
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
     # --------------------------------------------------------
@@ -86,111 +97,117 @@ def main():
     response_time = 0
     discovery_time = 0
     for frame in frame_list:
-        rs485.write_serial_frame(frame,s)
+        rs485.write_serial_frame(frame, s)
         hex_data_frame = rs485.read_serial_frame(Port, s)
-
-        data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
-        a_bytearray = bytearray(data)
-        hex_validated_frame = a_bytearray.hex()
-        try:
-              resultOK =  int(hex_validated_frame, 16)
-        except:
-            print("No Response")
-            sys.exit(2)
-
-        cmdNumber = frame[8:10]
-
-        set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmdNumber)
         
+        if (hex_data_frame == None or hex_data_frame == "" or hex_data_frame == " "  or len(hex_data_frame) == 0 ):
+            sys.stderr.write("No Response")
+            fix_frame = rs485.obtener_trama('query','dmu','07','7e','f8','01','00','00')
+            rs485.write_serial_frame(fix_frame,s)
+            sys.exit(CRITICAL)
+        else: 
+            data = rs485.validar_trama_respuesta(hex_data_frame,'dmu',0)
+            if(data):  
+                a_bytearray = bytearray(data)
+                hex_validated_frame = a_bytearray.hex()
+                cmdNumber = frame[8:10]
+                set_parameter_dic_from_validated_frame(
+                    parameter_dict, hex_validated_frame, cmdNumber)
+
     response_time = time.time() - start_time
     parameter_dict["rt"] = str(response_time)
-    s.close()    
-     
+    s.close()
+
     start_time = time.time()
     discovery_str = dru_discovery(parameter_dict)
-    
+
     discovery_time = time.time() - start_time
     parameter_dict["rt"] = str(response_time)
     parameter_dict["dt"] = str(discovery_time)
-    
-    rt = parameter_dict['rt']
-    
-    rt_str  ="RT="+rt
-    rt_str +=";"+str(1)
-    rt_str +=";"+str(1)
 
-    dt_str ="DT="+parameter_dict['dt']
-    dt_str +=";"+str(2)
-    dt_str +=";"+str(2)
+    rt = parameter_dict['rt']
+
+    rt_str = "RT="+rt
+    rt_str += ";"+str(1)
+    rt_str += ";"+str(1)
+
+    dt_str = "DT="+parameter_dict['dt']
+    dt_str += ";"+str(2)
+    dt_str += ";"+str(2)
     graphite = rt_str+" "+dt_str
 
     sys.stderr.write("Summary - "+discovery_str)
     sys.stderr.write("|"+graphite)
     sys.exit(OK)
-    
+
+
 def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, cmd_number):
-    if cmd_number=='f8':
+    if cmd_number == 'f8':
         parameter_dict['opt1ConnectedRemotes'] = hex_validated_frame
-    elif cmd_number=='f9':
+    elif cmd_number == 'f9':
         parameter_dict['opt2ConnectedRemotes'] = hex_validated_frame
-    elif cmd_number=='fa':
+    elif cmd_number == 'fa':
         parameter_dict['opt3ConnectedRemotes'] = hex_validated_frame
-    elif cmd_number=='fb':
+    elif cmd_number == 'fb':
         parameter_dict['opt4ConnectedRemotes'] = hex_validated_frame
+
 
 def dru_discovery(opt_dict):
     found_dru_list = rs485_get_found_mac_list(opt_dict)
     complete_services = icinga_get_localhost_services()
     new_dru_list = list()
-    detected_str ="detected: "+ str(len(found_dru_list))
+    created_dru_list = list()
+    
+    detected_str = "detected: " + str(len(found_dru_list))
     if (complete_services.status_code == 200):
-        created_dru_list = get_dru_services_list(complete_services, 1)  
-        created_str = " created: "+ str(len(created_dru_list))        
-        for found in found_dru_list:
-            not_in_created = True
-            for created in created_dru_list:
-                if (found.mac == created.mac.swapcase() or found.mac == created.mac):                
-                    if (found.opt != created.opt):
-                        ru_created_name = "RU"+str(created.opt)+str(created.dru)
-                        ru_found_name = "RU"+str(found.opt)+str(found.dru)                       
-                        if(len(created.name) > 4):
-                            created.name.removesuffix(ru_created_name)
-                            name = created.name +"-"+ru_found_name
-                        else:
-                            name = ru_found_name
-                        not_in_new = True
-                        for new in new_dru_list:
-                            if(new.mac == found.mac):
-                                not_in_new = False
-                                if(len(name) > 4):
-                                    new.name = name                                  
-                        if(not_in_new):
-                            new_dru_list.append(
-                            DRU(found.dru, found.opt, found.mac,name))
-                        
-                        not_in_created = False
-                    else:
-                      if(found.dru == created.dru):
-                        not_in_created = False
-  
-            if(not_in_created):
-                name = "RU"+str(found.opt)+str(found.dru)
-                new_dru_list.append(DRU(found.dru, found.opt, found.mac,name))
-     
+        created_dru_list = get_dru_services_list(complete_services, 1)
         
         for found in found_dru_list:
             not_in_created = True
             for created in created_dru_list:
                 if (found.mac == created.mac.swapcase() or found.mac == created.mac):
+                    if (found.opt != created.opt):
+                        ru_created_name = "RU" + \
+                            str(created.opt)+str(created.dru)
+                        ru_found_name = "RU"+str(found.opt)+str(found.dru)
+                        if (len(created.name) > 4):
+                            created.name.removesuffix(ru_created_name)
+                            name = created.name + "-"+ru_found_name
+                        else:
+                            name = ru_found_name
+                        not_in_new = True
+                        for new in new_dru_list:
+                            if (new.mac == found.mac):
+                                not_in_new = False
+                                if (len(name) > 4):
+                                    new.name = name
+                        if (not_in_new):
+                            new_dru_list.append(
+                                DRU(found.dru, found.opt, found.mac, name))
+
+                        not_in_created = False
+                    else:
+                        if (found.dru == created.dru):
+                            not_in_created = False
+
+            if (not_in_created):
+                name = "RU"+str(found.opt)+str(found.dru)
+                new_dru_list.append(DRU(found.dru, found.opt, found.mac, name))
+
+        for found in found_dru_list:
+            not_in_created = True
+            for created in created_dru_list:
+                if (found.mac == created.mac.swapcase() or found.mac == created.mac):
                     if (found.opt == created.opt):
-                        if(found.dru == created.dru):
+                        if (found.dru == created.dru):
                             not_in_new = True
                             for new in new_dru_list:
-                                if(new.mac == found.mac):
+                                if (new.mac == found.mac):
                                     new_dru_list.remove(new)
-                           
+
     dru_host_created = 0
-    new_str = " new: "+ str(len((new_dru_list)))
+    new_str = " new: " + str(len((new_dru_list)))
+    created_str = " created: " + str(len(created_dru_list))
     for dru_service in new_dru_list:
         director_resp = director_create_dru_service(dru_service)
         if (director_resp.status_code == 201):
@@ -199,8 +216,9 @@ def dru_discovery(opt_dict):
     if dru_host_created > 0:
         director_deploy()
         dru_host_created = 0
-        
+
     return detected_str+" "+created_str+" "+new_str
+
 
 def director_deploy():
     master_host = get_master_host()
@@ -220,6 +238,7 @@ def director_deploy():
         sys.exit(0)
 
     return q
+
 
 def director_create_dru_host(opt, dru):
 
@@ -267,6 +286,7 @@ def director_create_dru_host(opt, dru):
     # print(json.dumps(q.json(),indent=2))
     return q
 
+
 def director_create_dru_service(service):
 
     hostname = socket.gethostname()
@@ -312,6 +332,7 @@ def director_create_dru_service(service):
 
     # print(json.dumps(q.json(),indent=2))
     return q
+
 
 def director_create_dru_applyservices(opt, dru):
 
@@ -360,6 +381,7 @@ def director_create_dru_applyservices(opt, dru):
             sys.exit(0)
     return q
 
+
 def director_get_service_apply_id():
 
     master_host = get_master_host()
@@ -394,6 +416,7 @@ def director_get_service_apply_id():
     else:
         return int(last_object["id"])
 
+
 def icinga_get_localhost_services():
 
     hostname = socket.gethostname()
@@ -401,7 +424,8 @@ def icinga_get_localhost_services():
     query = {
         'type': 'Service',
         'host_name': hostname,
-        'filter': "service.vars.opt"
+        'filter': 'service.vars.opt && service.host.name==\"'+hostname+'\"',
+        "joins": [ "host.name", "host.address" ]
     }
 
     headers = {
@@ -422,6 +446,7 @@ def icinga_get_localhost_services():
         sys.exit(0)
     return r
 
+
 def get_performance_data_from_json(r):
 
     try:
@@ -437,6 +462,7 @@ def get_performance_data_from_json(r):
     except:
         return 0
 
+
 def get_dru_services_list(r, opt_asked):
     dru_list = []
     resp_str = json.dumps(r.json(), indent=2)
@@ -445,7 +471,7 @@ def get_dru_services_list(r, opt_asked):
     try:
         for result in results_array:
             opt_readed = 0
-            if('vars' in result['attrs']):
+            if ('vars' in result['attrs']):
                 if ('opt' in result['attrs']['vars']):
                     opt_readed = int(result['attrs']['vars']['opt'])
                     dru = int(result['attrs']['vars']['dru'])
@@ -454,8 +480,9 @@ def get_dru_services_list(r, opt_asked):
                     dru_list.append(DRU(dru, opt_readed, mac, name))
         return dru_list
     except Exception as e:
-        sys.stderr.write(e)
+        sys.stderr.write(str(e))
         sys.exit(CRITICAL)
+
 
 def get_master_host():
     with open(ZONES_CONF) as f:
@@ -465,6 +492,7 @@ def get_master_host():
                 line = (line[line.find("\"")+1:])
                 master_host = line[:line.find("\"")]
     return master_host
+
 
 def get_dru_mac_from_rs485(dru, opt):
 
@@ -492,24 +520,58 @@ def get_dru_mac_from_rs485(dru, opt):
     rs485.write_serial_frame(Trama, s)
     hexResponse = rs485.read_serial_frame(port, s)
 
-    data = rs485.validar_trama_respuesta(hexResponse, 'dru', 4)
-    a_bytearray = bytearray(data)
-    mac = a_bytearray.hex()
+    if (hexResponse == None or hexResponse == "" or hexResponse == " " or len(hexResponse) == 0):
+        sys.stderr.write("RU"+str(opt)+str(dru)+" - No Response\n")
+        # sys.exit(CRITICAL)
+        mac = ''
+    else:
+        data = rs485.validar_trama_respuesta(hexResponse, 'dru', 4)
+        a_bytearray = bytearray(data)
+        mac = a_bytearray.hex()
     return mac
+
+
+def isValidMACAddress(str):
+
+    # Regex to check valid
+    # MAC address
+    regex = ("^[0-9A-Fa-f]{12}$")
+
+    # Compile the ReGex
+    p = re.compile(regex)
+
+    # If the string is empty
+    # return false
+    if (str == None):
+        return False
+
+    # Return if the string
+    # matched the ReGex
+    if (re.search(p, str)):
+        return True
+    else:
+        return False
+
 
 def rs485_get_found_mac_list(opt_dict):
     found_dru_list = list()
     try:
         for opt in range(1, 5):
-         dru_connected = int(opt_dict['opt'+str(opt)+'ConnectedRemotes'])
-         if (dru_connected > 0 and dru_connected < 8):
-            for dru_found in range(1, dru_connected+1):
-                mac_found = get_dru_mac_from_rs485(dru_found, opt)
-                found_dru_list.append(DRU(dru_found, opt, mac_found, "new"))
+            dru_connected = int(opt_dict['opt'+str(opt)+'ConnectedRemotes'])
+            if (dru_connected > 0 and dru_connected < 8):
+                for dru_found in range(1, dru_connected+1):
+                    mac_found = get_dru_mac_from_rs485(dru_found, opt)
+                    is_valid_mac = isValidMACAddress(mac_found)
+                    #sys.stderr.write("mac found: "+mac_found + " valid " + str(isValidstr)+"\r\n")
+                    if (is_valid_mac == True):
+                        found_dru_list.append(
+                            DRU(dru_found, opt, mac_found, "new"))
 
         return found_dru_list
     except Exception as e:
+        sys.stderr.write(str(e))
         return []
+
 
 if __name__ == "__main__":
     main()
