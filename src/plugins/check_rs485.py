@@ -22,6 +22,7 @@ from crccheck.crc import Crc16Xmodem
 import argparse
 import os
 import time
+import binascii
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -514,6 +515,30 @@ def getChecksum(cmd):
     #checksum_new = checksum.replace('5E','5E5D')      
     return checksum_new
 
+def getChecksum2(data):
+    """
+    -Description: this fuction calculate the checksum for a given comand
+    -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
+    -return: cheksum for the given command
+    """
+    
+    crcdata = Crc16Xmodem.calc(data)
+    crc = hex(crcdata)
+    #print("crc: %s" % crc)
+
+    if (len(crc) == 5):
+        checksum = crc[3:5] + '0' + crc[2:3]
+    elif (len(crc) == 4):
+        checksum = crc[2:4] + '00'
+    else:
+        checksum = crc[4:6] + crc[2:4]
+    
+    checksum = checksum.upper()
+    checksum_new = checksum.replace('7E','5E7D')      
+    #checksum_new = checksum.replace('5E','5E5D')      
+    return checksum_new
+
+
 # ----------------------------------------------------
 # -- Buscan un elemento dentro de una array
 # --------------------------------------------------
@@ -628,45 +653,69 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
     return str(trama)
 
 def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
-
-    if (hexResponse == None or hexResponse == "" or hexResponse == " "  or len(hexResponse) == 0 ):
-            sys.stderr.write("No Response")
-            sys.exit(CRITICAL)
     try:
         data = list()
-
         if Device == 'dru':
-            #print('Entro aqui')
-            byte_respuesta = 14  # Para equipos remotos  de la trama
-            cant_bytes_resp = int(hexResponse[byte_respuesta])
-            if(cmdNumberlen > 4):
-                rango_i =  byte_respuesta+1
-                rango_n = rango_i + cant_bytes_resp - 1
-            else: 
-                rango_i = byte_respuesta + 3
-                rango_n = rango_i + cant_bytes_resp - 3
-        else:
-            byte_respuesta = 6
-            cant_bytes_resp = int(hexResponse[byte_respuesta])
-            rango_i = byte_respuesta + 1
-            rango_n = rango_i + cant_bytes_resp
+            size = len(hexResponse)
+            if(hexResponse[size-2]==125):
+                crc = hexResponse[size-4:size-1]
+                crc_debug_str = binascii.hexlify(bytearray(crc))
+                clean_response = hexResponse[1:size-4]   
+            else:
+                crc = hexResponse[size-3:size-1]
+                crc_debug_str = binascii.hexlify(bytearray(crc))
+                clean_response = hexResponse[1:size-3]      
+                   
+            checksum = getChecksum2(clean_response)
+            checksum_bytearray = bytearray.fromhex(checksum)
 
-        #print('Cant Byte respuesta: %d' % cant_bytes_resp)
-        #print('longitud trama: %d' % len(hexResponse))
-        #print('Rango i: %d' % rango_i)
-        #print('Rango n: %d' % rango_n)
-        for i in range(rango_i, rango_n):
-            data.append(hexResponse[i])
-        #print("Resultado de la Query es:")
-        #print(data)
-        
-        
+            if(crc == checksum_bytearray or crc == b'\x00\x00' ):
+
+                byte_respuesta = 14  # Para equipos remotos  de la trama
+                cant_bytes_resp = int(hexResponse[byte_respuesta])
+                if(cmdNumberlen > 4):
+                    rango_i =  byte_respuesta+1
+                    rango_n = rango_i + cant_bytes_resp - 1
+                else: 
+                    rango_i = byte_respuesta + 3
+                    rango_n = rango_i + cant_bytes_resp - 3
+                for i in range(rango_i, rango_n):
+                    data.append(hexResponse[i])
+             
+            else :
+                sys.stderr.write("Checksum Error - "+str(crc_debug_str)+" != "+checksum+"\r\n")
+                #sys.exit(CRITICAL)    
+        else:
+            size = len(hexResponse)
+            crc = hexResponse[size-3:size-1]
+            clean_response = hexResponse[1:size-3]       
+            checksum = getChecksum2(clean_response)
+            checksum_bytearray = bytearray.fromhex(checksum)
+
+            if(crc == checksum_bytearray):
+                byte_respuesta = 6
+                cant_bytes_resp = int(hexResponse[byte_respuesta])
+                
+                rango_i = byte_respuesta + 1
+                rango_n = rango_i + cant_bytes_resp
+                for i in range(rango_i, rango_n):
+                     data.append(hexResponse[i])
+             
+            else :
+                sys.stderr.write("Checksum Error\r\n")
+                #sys.exit(CRITICAL)     
+
+           
         return data
-    except ValueError:
-        sys.stderr.write("No data avaliable")
+    except ValueError as ve:
+        sys.stderr.write("No data avaliable\r\n")
+        sys.stderr.write(str(ve))
+        return []
         sys.exit(CRITICAL)
-    except:
-        sys.stderr.write("No data avaliable")
+    except Exception as e:
+        sys.stderr.write("No data avaliable\r\n")
+        sys.stderr.write(str(e))
+        return []
         sys.exit(CRITICAL)    
 # -----------------------------------------
 #   convertir hex a decimal con signo
