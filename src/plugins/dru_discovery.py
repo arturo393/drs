@@ -14,6 +14,7 @@
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
 
+from dis import disco
 from fcntl import F_SEAL_SEAL
 from pickle import FALSE, TRUE
 import sys
@@ -114,24 +115,30 @@ def main():
                 set_parameter_dic_from_validated_frame(
                     parameter_dict, hex_validated_frame, cmdNumber)
 
-    response_time = time.time() - start_time
-    parameter_dict["rt"] = str(response_time)
-    s.close()
+    if len(parameter_dict):
+        response_time = time.time() - start_time
+        parameter_dict["rt"] = str(response_time)
+        s.close()
+        start_time = time.time()
+        discovery_str = dru_discovery(parameter_dict)
 
-    start_time = time.time()
-    discovery_str = dru_discovery(parameter_dict)
+        discovery_time = time.time() - start_time
+        parameter_dict["rt"] = str(response_time)
+        parameter_dict["dt"] = str(discovery_time)
 
-    discovery_time = time.time() - start_time
-    parameter_dict["rt"] = str(response_time)
-    parameter_dict["dt"] = str(discovery_time)
-
-    rt = parameter_dict['rt']
+        rt = parameter_dict['rt']
+        dt = parameter_dict['dt']
+    else:
+        rt = "-"
+        dt = '-'
+        discovery_str = "No Ru detected"
+        
 
     rt_str = "RT="+rt
     rt_str += ";"+str(1)
     rt_str += ";"+str(1)
 
-    dt_str = "DT="+parameter_dict['dt']
+    dt_str = "DT="+dt
     dt_str += ";"+str(2)
     dt_str += ";"+str(2)
     graphite = rt_str+" "+dt_str
@@ -480,7 +487,7 @@ def get_dru_services_list(r, opt_asked):
                     dru_list.append(DRU(dru, opt_readed, mac, name))
         return dru_list
     except Exception as e:
-        sys.stderr.write(str(e))
+        sys.stderr.write("Error - Service list "+str(e)+"\n")
         sys.exit(CRITICAL)
 
 
@@ -552,24 +559,26 @@ def isValidMACAddress(str):
     else:
         return False
 
-
+#on-hexadecimal number found in fromhex() arg at position 1Error - found mac 'opt1ConnectedRemotes'
 def rs485_get_found_mac_list(opt_dict):
     found_dru_list = list()
     try:
         for opt in range(1, 5):
-            dru_connected = int(opt_dict['opt'+str(opt)+'ConnectedRemotes'])
-            if (dru_connected > 0 and dru_connected < 8):
-                for dru_found in range(1, dru_connected+1):
-                    mac_found = get_dru_mac_from_rs485(dru_found, opt)
-                    is_valid_mac = isValidMACAddress(mac_found)
-                    #sys.stderr.write("mac found: "+mac_found + " valid " + str(isValidstr)+"\r\n")
-                    if (is_valid_mac == True):
-                        found_dru_list.append(
-                            DRU(dru_found, opt, mac_found, "new"))
+            opt_str = 'opt'+str(opt)+'ConnectedRemotes'
+            if(opt_str in opt_dict ):
+                dru_connected = int(opt_dict[opt_str])
+                if (dru_connected > 0 and dru_connected < 8):
+                    for dru_found in range(1, dru_connected+1):
+                        mac_found = get_dru_mac_from_rs485(dru_found, opt)
+                        is_valid_mac = isValidMACAddress(mac_found)
+                        #sys.stderr.write("mac found: "+mac_found + " valid " + str(isValidstr)+"\r\n")
+                        if (is_valid_mac == True):
+                            found_dru_list.append(
+                                DRU(dru_found, opt, mac_found, "new"))
 
         return found_dru_list
     except Exception as e:
-        sys.stderr.write(str(e))
+        sys.stderr.write("Error - found mac "+ str(e)+"\n")
         return []
 
 
