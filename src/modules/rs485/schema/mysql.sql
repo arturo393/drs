@@ -56,6 +56,9 @@ INSERT INTO rs485_dru_trama (name, type,header, x1, site_number,dru_id,x2,tx_rx1
 INSERT INTO rs485_dru_trama (name, type,header, x1, site_number,dru_id,x2,tx_rx1,x3,message_type,tx_rx2,cmd_length,cmd_code, cmd_data,crc,end) VALUES ('Work Bandwidth','Set','7E','0101','00000000','11','0100','80','01','03','FF','07','1A0A','30750000','64D9','7E');
 INSERT INTO rs485_dru_trama (name, type,header, x1, site_number,dru_id,x2,tx_rx1,x3,message_type,tx_rx2,cmd_length,cmd_code, cmd_data,crc,end) VALUES ('Channel bandwidth','Set','7E','0101','00000000','11','0100','80','01','03','FF','07','1B0A','7D000000','C49C','7E');
 INSERT INTO rs485_dru_trama (name, type,header, x1, site_number,dru_id,x2,tx_rx1,x3,message_type,tx_rx2,cmd_length,cmd_code, cmd_data,crc,end) VALUES ('Master/Slave Link Alarm Control','Set','7E','0101','00000000','11','0100','80','01','03','FF','04','0F02','00','C49C','7E');
+INSERT INTO rs485_dru_trama (name, type,header, x1, site_number,dru_id,x2,tx_rx1,x3,message_type,tx_rx2,cmd_length,cmd_code, cmd_data,crc,end) VALUES ('Device Serial Numner','Set','7E','0101','00000000','11','0100','80','01','03','FF','17','0500','0000000000000000000000000000000000000000','B31C','7E');
+INSERT INTO rs485_dru_trama (name, type,header, x1, site_number,dru_id,x2,tx_rx1,x3,message_type,tx_rx2,cmd_length,cmd_code, cmd_data,crc,end) VALUES ('MAC Address','Set','7E','0101','00000000','11','0100','80','01','03','FF','09','4C0B','000000000000','0A88','7E');
+
 
 
 
