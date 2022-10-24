@@ -30,6 +30,7 @@ import socket
 import urllib3
 import re
 import check_rs485 as rs485
+import time
 
 urllib3.disable_warnings()
 # --------------------------------
@@ -38,11 +39,12 @@ urllib3.disable_warnings()
 
 
 class DRU:
-    def __init__(self, dru, opt, mac, name):
+    def __init__(self, dru, opt, mac,sn, name):
         self.dru = dru
         self.opt = opt
         self.mac = mac
         self.name = name
+        self.sn = sn
 
 
 OK = 0
@@ -115,6 +117,7 @@ def main():
                 set_parameter_dic_from_validated_frame(
                     parameter_dict, hex_validated_frame, cmdNumber)
 
+
     if len(parameter_dict):
         response_time = time.time() - start_time
         parameter_dict["rt"] = str(response_time)
@@ -158,6 +161,11 @@ def set_parameter_dic_from_validated_frame(parameter_dict, hex_validated_frame, 
     elif cmd_number == 'fb':
         parameter_dict['opt4ConnectedRemotes'] = hex_validated_frame
 
+def dru_compare(found,created):
+    if((found.mac == created.mac.swapcase() or found.mac == created.mac ) or (found.sn == created.sn.swapcase() or found.sn == created.sn.swapcase()) ):
+        return True
+    else:
+        return False
 
 def dru_discovery(opt_dict):
     found_dru_list = rs485_get_found_mac_list(opt_dict)
@@ -172,7 +180,7 @@ def dru_discovery(opt_dict):
         for found in found_dru_list:
             not_in_created = True
             for created in created_dru_list:
-                if (found.mac == created.mac.swapcase() or found.mac == created.mac):
+                if (dru_compare(found,created)):
                     if (found.opt != created.opt):
                         ru_created_name = "RU" + \
                             str(created.opt)+str(created.dru)
@@ -190,7 +198,7 @@ def dru_discovery(opt_dict):
                                     new.name = name
                         if (not_in_new):
                             new_dru_list.append(
-                                DRU(found.dru, found.opt, found.mac, name))
+                                DRU(found.dru, found.opt, found.mac,found.sn, name))
 
                         not_in_created = False
                     else:
@@ -199,12 +207,12 @@ def dru_discovery(opt_dict):
 
             if (not_in_created):
                 name = "RU"+str(found.opt)+str(found.dru)
-                new_dru_list.append(DRU(found.dru, found.opt, found.mac, name))
+                new_dru_list.append(DRU(found.dru, found.opt, found.mac,found.sn,name))
 
         for found in found_dru_list:
             not_in_created = True
             for created in created_dru_list:
-                if (found.mac == created.mac.swapcase() or found.mac == created.mac):
+                if (dru_compare(found,created)):
                     if (found.opt == created.opt):
                         if (found.dru == created.dru):
                             not_in_new = True
@@ -302,6 +310,7 @@ def director_create_dru_service(service):
     dru = service.dru
     mac = service.mac
     name = service.name
+    sn = service.sn
     if (dru == 1):
         parent = hostname
     else:
@@ -316,6 +325,7 @@ def director_create_dru_service(service):
             "opt": opt,
             "dru": dru,
             "mac": mac,
+            "sn": sn,
             "parents": [parent]
         }
     }
@@ -339,7 +349,6 @@ def director_create_dru_service(service):
 
     # print(json.dumps(q.json(),indent=2))
     return q
-
 
 def director_create_dru_applyservices(opt, dru):
 
@@ -388,7 +397,6 @@ def director_create_dru_applyservices(opt, dru):
             sys.exit(0)
     return q
 
-
 def director_get_service_apply_id():
 
     master_host = get_master_host()
@@ -423,7 +431,6 @@ def director_get_service_apply_id():
     else:
         return int(last_object["id"])
 
-
 def icinga_get_localhost_services():
 
     hostname = socket.gethostname()
@@ -453,7 +460,6 @@ def icinga_get_localhost_services():
         sys.exit(0)
     return r
 
-
 def get_performance_data_from_json(r):
 
     try:
@@ -469,7 +475,6 @@ def get_performance_data_from_json(r):
     except:
         return 0
 
-
 def get_dru_services_list(r, opt_asked):
     dru_list = []
     resp_str = json.dumps(r.json(), indent=2)
@@ -483,13 +488,13 @@ def get_dru_services_list(r, opt_asked):
                     opt_readed = int(result['attrs']['vars']['opt'])
                     dru = int(result['attrs']['vars']['dru'])
                     mac = result['attrs']['vars']['mac']
+                    sn = result['attrs']['vars']['sn']
                     name = result["attrs"]["display_name"]
-                    dru_list.append(DRU(dru, opt_readed, mac, name))
+                    dru_list.append(DRU(dru, opt_readed, mac,sn, name))
         return dru_list
     except Exception as e:
         sys.stderr.write("Error - Service list "+str(e)+"\n")
         sys.exit(CRITICAL)
-
 
 def get_master_host():
     with open(ZONES_CONF) as f:
@@ -499,7 +504,6 @@ def get_master_host():
                 line = (line[line.find("\"")+1:])
                 master_host = line[:line.find("\"")]
     return master_host
-
 
 def get_dru_mac_from_rs485(dru, opt):
 
@@ -529,7 +533,6 @@ def get_dru_mac_from_rs485(dru, opt):
 
     if (hexResponse == None or hexResponse == "" or hexResponse == " " or len(hexResponse) == 0):
         sys.stderr.write("RU"+str(opt)+str(dru)+" - No Response\n")
-        # sys.exit(CRITICAL)
         mac = ''
     else:
         data = rs485.validar_trama_respuesta(hexResponse, 'dru', 4)
@@ -537,7 +540,44 @@ def get_dru_mac_from_rs485(dru, opt):
         mac = a_bytearray.hex()
     return mac
 
+def get_dru_sn_from_rs485(dru, opt):
+    sn = ''
+    port = '/dev/ttyS1'
+    baudrate = 9600
+    s = serial.Serial(port, baudrate)
+    try:
+        if port == '/dev/ttyS0':
+            baudrate = 19200
+        else:
+            baudrate = 9600
+        #print('baudrate: %d' % baudrate)
+        s = serial.Serial(port, baudrate)
 
+        # -- Timeout: 1 seg
+        s.timeout = 1
+
+    except serial.SerialException:
+        # -- Error al abrir el puerto serie
+        sys.stderr.write(
+            " Can not open comunication with device")
+        sys.exit(2)
+    Trama = rs485.obtener_trama(
+        'query', 'dru', '00', '00', '0500', '17', '0000000000000000000000000000000000000000', str(opt)+str(dru))
+    rs485.write_serial_frame(Trama, s)
+    hexResponse = rs485.read_serial_frame(port, s)
+
+    if (hexResponse == None or hexResponse == "" or hexResponse == " " or len(hexResponse) == 0):
+        sys.stderr.write("RU"+str(opt)+str(dru)+" - No Response\n")
+        mac = ''
+    else:
+        data = rs485.validar_trama_respuesta(hexResponse, 'dru', 4)
+        data_sn = [i for i in data if i != 0]
+        a_bytearray = bytearray(data_sn)
+        resultHEX = a_bytearray.hex()
+        sn = bytearray.fromhex(resultHEX).decode()
+    return sn
+
+        
 def isValidMACAddress(str):
 
     # Regex to check valid
@@ -559,7 +599,6 @@ def isValidMACAddress(str):
     else:
         return False
 
-#on-hexadecimal number found in fromhex() arg at position 1Error - found mac 'opt1ConnectedRemotes'
 def rs485_get_found_mac_list(opt_dict):
     found_dru_list = list()
     try:
@@ -570,15 +609,18 @@ def rs485_get_found_mac_list(opt_dict):
                 if (dru_connected > 0 and dru_connected < 8):
                     for dru_found in range(1, dru_connected+1):
                         mac_found = get_dru_mac_from_rs485(dru_found, opt)
+                        time.sleep(0.7)
+                        sn_found = get_dru_sn_from_rs485(dru_found,opt)
                         is_valid_mac = isValidMACAddress(mac_found)
                         #sys.stderr.write("mac found: "+mac_found + " valid " + str(isValidstr)+"\r\n")
                         if (is_valid_mac == True):
                             found_dru_list.append(
-                                DRU(dru_found, opt, mac_found, "new"))
+                                DRU(dru_found, opt, mac_found,sn_found, "new"))
+
 
         return found_dru_list
     except Exception as e:
-        sys.stderr.write("Error - found mac "+ str(e)+"\n")
+        sys.stderr.write("Error - found sn "+ str(e)+"\n")
         return []
 
 
