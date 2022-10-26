@@ -665,32 +665,25 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
             size = len(hexResponse)
             if(hexResponse[size-2]==125):
                 crc = hexResponse[size-4:size-1]
-                crc_debug_str = binascii.hexlify(bytearray(crc))
                 clean_response = hexResponse[1:size-4]   
             else:
                 crc = hexResponse[size-3:size-1]
-                crc_debug_str = binascii.hexlify(bytearray(crc))
                 clean_response = hexResponse[1:size-3]      
                    
             checksum = getChecksum2(clean_response)
             checksum_bytearray = bytearray.fromhex(checksum)
 
             if(crc == checksum_bytearray or crc == b'\x00\x00' ):
-
-                byte_respuesta = 14  # Para equipos remotos  de la trama
-                cant_bytes_resp = int(hexResponse[byte_respuesta])
+                index_respuesta = 14  # Para equipos remotos  de la trama
+                cant_bytes_resp = int(hexResponse[index_respuesta])
                 if(cmdNumberlen > 4):
-                    rango_i =  byte_respuesta+1
+                    rango_i =  index_respuesta+1
                     rango_n = rango_i + cant_bytes_resp - 1
                 else: 
-                    rango_i = byte_respuesta + 3
+                    rango_i = index_respuesta + 3
                     rango_n = rango_i + cant_bytes_resp - 3
                 for i in range(rango_i, rango_n):
-                    data.append(hexResponse[i])
-             
-            else :
-                sys.stderr.write("Checksum Error - "+str(crc_debug_str)+" != "+checksum+"\r\n")
-                #sys.exit(CRITICAL)    
+                    data.append(hexResponse[i])   
         else:
             size = len(hexResponse)
             crc = hexResponse[size-3:size-1]
@@ -699,22 +692,16 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
             checksum_bytearray = bytearray.fromhex(checksum)
 
             if(crc == checksum_bytearray):
-                byte_respuesta = 6
-                cant_bytes_resp = int(hexResponse[byte_respuesta])
+                index_respuesta = 6
+                cant_bytes_resp = int(hexResponse[index_respuesta])
                 
-                rango_i = byte_respuesta + 1
+                rango_i = index_respuesta + 1
                 rango_n = rango_i + cant_bytes_resp
                 for i in range(rango_i, rango_n):
                      data.append(hexResponse[i])
-             
-            else :
-                sys.stderr.write("Checksum Error\r\n")
-                #sys.exit(CRITICAL)     
-
-           
         return data
     except ValueError as ve:
-        sys.stderr.write("VulueError frame "+str(hexResponse)+" "+str(ve)+"\n")
+        sys.stderr.write("ValueError frame "+str(hexResponse)+" "+str(ve)+"\n")
         return []
         sys.exit(CRITICAL)
     except Exception as e:
@@ -1041,18 +1028,15 @@ def read_serial_frame(Port, s):
     hexadecimal_string = ''
     rcvHexArray = list()
     isDataReady = False
-    isDataComplete = False
     rcvcount = 0
     start_time = time.time()
-    timeOut = 2
+    timeOut = 1
     hexadecimal_string=''
-
     try:
         while not isDataReady and rcvcount < 200:
             Response = s.read()
             rcvHex = Response.hex()
             if(time.time() - start_time > timeOut):
-               # sys.stderr.write("No Response")
                 timeOut  = time.time()
                 hexResponse = bytearray.fromhex(hexadecimal_string)
                 return hexResponse
@@ -1068,9 +1052,10 @@ def read_serial_frame(Port, s):
                     isDataReady = True
                     
 
-    except serial.SerialException:
-        sys.stderr.write("No Response, retrying connection")
-        sys.exit(CRITICAL)
+    except serial.SerialException as e:
+        sys.stderr.write(str(e))
+        return bytearray()
+        #sys.exit(CRITICAL)
 
     s.reset_input_buffer()
     hexResponse = bytearray.fromhex(hexadecimal_string)
@@ -1100,57 +1085,32 @@ def main():
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
                           DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
-    #print(Trama)
-    # --------------------------------------------------------
-    # -- Abrir el puerto serie. Si hay algun error se termina
-    # --------------------------------------------------------
-    try:
-        if Port == '/dev/ttyS0':
-            baudrate = 19200
-        else:
-            baudrate = 9600
-        #print('baudrate: %d' % baudrate)
-        s = serial.Serial(Port, baudrate)
-
-        # -- Timeout: 1 seg
-        s.timeout = 1
-
-    except serial.SerialException:
-        # -- Error al abrir el puerto serie
-        sys.stderr.write(
-            " Can not open comunication with device")
-        sys.exit(2)
-
-    # -- Mostrar el nombre del dispositivo
-    #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
-    start_time = time.time()
-    response_time = 0
+    s = serial_init(Port)
+    
+    
     if Action == "query" or Action == "set":
-       # write_serial_frame(Trama, s)
-        #hexResponse = s.readline()
-
         write_serial_frame(Trama, s)
         hexResponse = read_serial_frame(Port, s)
-        response_time = time.time()-start_time
-
-        # Aqui se realiza la validacion de la respuesta
+        s.close()
         data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
+       
         if Action == 'set':
             if len(data) != 0 and Device == 'dmu':
                 sys.stderr.write(
                     "- Can't send a message to master device")
-                sys.exit(2)
+                sys.exit(CRITICAL)
             elif len(data) == 0 and Device == 'dru':
                 sys.stderr.write(
                     "- Can't send a message to remote device")
-                sys.exit(2)
+                sys.exit(CRITICAL)
             else:
                 if Device == 'dru':
                     a_bytearray = bytearray(data)
                     hex_string = a_bytearray.hex()
                     sys.stderr.write(hex_string + '\n')
                 sys.stderr.write("OK")
-        else:
+                
+        elif Action == 'query':
             a_bytearray = bytearray(data)
             resultHEX = a_bytearray.hex()
             try:
@@ -1163,23 +1123,34 @@ def main():
                 hex_string = convertirMultipleRespuesta(data)
             else:   
                 hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
-                
-                hex_string +=" - "+ str(int(response_time*1000)) + " milliseconds"
 
             if (resultOK  >= HighLevelCritical) :
                 print("CRITICAL Alert! - " + hex_string )
-                sys.exit(2)
+                sys.exit(CRITICAL)
             elif (resultOK >=  HighLevelWarning) :
                 print("WARNING Alert !- " + hex_string  )
-                sys.exit(1)
+                sys.exit(WARNING)
             else:
                 print("OK - " + hex_string )
-                sys.exit(0)
-        s.close()
+                sys.exit(OK)     
     else:
         sys.stderr.write(
             "- Invalid action  %s \n" % Action)
-        sys.exit(1)
+        sys.exit(WARNING)
+
+def serial_init(Port):
+    try:
+        if Port == '/dev/ttyS0':
+            baudrate = 19200
+        else:
+            baudrate = 9600
+        s = serial.Serial(Port, baudrate)
+        s.timeout = 1
+    except serial.SerialException:
+        sys.stderr.write(
+            " Can not open comunication with device")
+        sys.exit(2)
+    return s
 
 
 if __name__ == "__main__":
