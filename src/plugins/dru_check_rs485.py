@@ -22,6 +22,7 @@ from crccheck.crc import Crc16Xmodem
 import argparse
 import check_rs485 as rs485
 import time
+import binascii
 
 OK =  0
 WARNING = 1
@@ -310,8 +311,8 @@ def analizar_argumentos():
     #ap.add_argument("-h", "--help", required=False,  help="help")
     ap.add_argument("-d", "--dru", required=True, help="dru es requerido", default="")
     ap.add_argument("-o", "--opt", required=True,help="opt es requerido", default="")
-    ap.add_argument("-d", "--sn", required=False, help="sn es requerido", default="")
-    ap.add_argument("-o", "--mac", required=False,help="mac es requerido", default="")
+    ap.add_argument("-s", "--sn", required=False, help="sn es requerido", default="")
+    ap.add_argument("-m", "--mac", required=False,help="mac es requerido", default="")
     ap.add_argument("-hlwu","--highLevelWarningUL",  required=False,help="highLevelWarning es requerido", default=200)
     ap.add_argument("-hlcu","--highLevelCriticalUL", required=False,help="highLevelCritical es requerido", default=200)
     ap.add_argument("-hlwd","--highLevelWarningDL",  required=False,help="highLevelWarning es requerido", default=200)
@@ -344,7 +345,12 @@ def analizar_argumentos():
     elif dru == "":
         sys.stderr.write("CRITICAL - dru es obligatorio")
         sys.exit(2)
-
+    elif mac == "" :
+        sys.stderr.write("CRITICAL - mac es obligatorio")
+        sys.exit(2)
+    elif sn == "":
+        sys.stderr.write("CRITICAL - sn es obligatorio")
+        sys.exit(2)
     return args
 
 def s8(byte):
@@ -355,29 +361,28 @@ def s8(byte):
 # ----------------------
 #   MAIN
 # ----------------------
-
 def main():
-
     # -- Analizar los argumentos pasados por el usuario
     args = analizar_argumentos()
     
-    if 'sn' in args['sn']:
-        sn_str = args['sn']
-        sn_hex = hex(sn_str)
-        
-    if 'mac' in args['mac']:
-        mac_str = args['mac']
-        mac_hex = hex(mac_str)
-        
-
     frame_list = list()
-    
+    if 'sn' in args:
+        sn_str = args['sn']            
+        sn_bytearray = bytearray(sn_str,'ascii')
+        sn_str_hex = bytearray(sn_bytearray).hex()
+        while len(sn_str_hex)<40:
+            sn_str_hex +='0' 
+
+        frame_list.append(rs485.obtener_trama('set', 'dru', '00','00','0500','17',sn_str_hex, args['opt']+args['dru']))
+        
+    if 'mac' in args:
+        mac_str = args['mac']
+        frame_list.append(rs485.obtener_trama('set', 'dru', '00','00','4C0B','09',mac_str, args['opt']+args['dru']))
+
     # -- Armando la trama
     #def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
-    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','0500','17','000000000000', args['opt']+args['dru']))
-    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
-    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))   
     
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
@@ -402,35 +407,58 @@ def main():
     
     parameter_dict = dict()
     start_time = time.time()
-    response_time = 0
+    response_time = 0.0
     table =""
     graphite=""
     hexResponse = ''
+    tmp = 0
     set_parameter_dict_default_values(parameter_dict)
     for frame in frame_list:
+        start_time = time.time()
+        #sys.stderr.write(str(time.time()-start_time)+" : ")
         rs485.write_serial_frame(frame, s)
         hexResponse = rs485.read_serial_frame(port, s)
-        
+        tmp = time.time() - start_time
+        #sys.stderr.write(str(tmp)+"\r\n")
+       
         if (hexResponse == None or hexResponse == "" or hexResponse == " "  or len(hexResponse) == 0 ):
             sys.stderr.write("No Response")
-#            fix_frame = rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru'])
-#            rs485.write_serial_frame(fix_frame,s)
+            fix_frame = rs485.obtener_trama('query', 'dru', '00','00','a003','04','00', args['opt']+args['dru'])
+            rs485.write_serial_frame(fix_frame,s)
             sys.exit(CRITICAL)
         else:
-            data = rs485.validar_trama_respuesta(hexResponse,'dru',5)             
-            data_result = get_data_result_list_from_validated_frame(data)
-            set_paramter_dic_from_data_result(parameter_dict, data_result)  
+            data = rs485.validar_trama_respuesta(hexResponse,'dru',5)
+            if(data):
+                if(frame == frame_list[0]):
+                    del data[0]
+                    del data[0]
+                    data_sn = [i for i in data if i != 0]
+                    a_bytearray = bytearray(data_sn)
+                    resultHEX = a_bytearray.hex()
+                    sn = bytearray.fromhex(resultHEX).decode()
+                    parameter_dict['sn'] = sn
+                elif(frame == frame_list[1]):
+                    del data[0]
+                    del data[0]
+                    a_bytearray = bytearray(data)
+                    mac = a_bytearray.hex()
+                    parameter_dict['mac'] = mac
+                else:
+                    data_result = get_data_result_list_from_validated_frame(data)
+                    set_paramter_dic_from_data_result(parameter_dict, data_result)  
+        if tmp > response_time:
+            response_time = tmp
 
-
+        time.sleep(response_time)
     
-            
-    response_time = time.time() - start_time
+    s.close()
+    #sys.stderr.write("mac: "+parameter_dict['mac']+" - SN: "+parameter_dict['sn'])
     parameter_dict["rt"] = str(response_time)
     alarm = get_alarm_from_dict(args, parameter_dict)
     table = create_table(parameter_dict)    
     graphite = get_graphite_str(args, parameter_dict)
-    
-    print(alarm+table+"|"+graphite)
+
+    sys.stderr.write(alarm+table+"|"+graphite)
     if( alarm != ""):
         sys.exit(1)
     else:
@@ -688,7 +716,13 @@ def set_paramter_dic_from_data_result(parameter_dic, data_result):
                     parameter_dic["channel"+str(channel)+"Status"] = "OFF"         
         elif cmd_number =='4C0B':
             parameter_dic['mac'] = cmd_value
-
+        elif cmd_number =='0050':
+            cmd_value = [i for i in data if i != 0]
+            a_bytearray = bytearray(cmd_value)
+            resultHEX = a_bytearray.hex()
+            sn = bytearray.fromhex(resultHEX).decode()
+            parameter_dic['sn'] = sn
+            
 def set_parameter_dict_default_values(parameters_dict):
     if('dlOutputPower' not in parameters_dict):
         parameters_dict['dlOutputPower'] = '-'
@@ -704,6 +738,10 @@ def set_parameter_dict_default_values(parameters_dict):
         parameters_dict['vswr'] = '-'
     if('workingMode' not in parameters_dict):
         parameters_dict['workingMode'] = '-'
+    if('mac' not in parameters_dict):
+        parameters_dict['mac'] = '-'
+    if('sn' not in parameters_dict):
+        parameters_dict['sn'] = '-'
     for i in range(1,17):
         channel = str(i)
         if("channel"+str(channel)+"Status" not in parameters_dict):
@@ -740,8 +778,6 @@ def get_data_result_list_from_validated_frame(data):
     except Exception as e:
         print(str(e))
         return []
-
-
 
 if __name__ == "__main__":
     main()
