@@ -29,7 +29,7 @@ ln -sf pip3 /usr/bin/pip
 ## Install python libs
 
 ```
-pip install crccheck serial pyserial
+pip install crccheck serial pyserial config
 ```
 
 |  
