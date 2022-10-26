@@ -38,6 +38,7 @@ C_RESPONSE_FLAG = '00'
 C_END = '7E'
 C_UNKNOWN2BYTE01 = '0101'
 C_UNKNOWN2BYTE02 = '0100'
+C_STATUS2BYTE01 = '0301'
 C_UNKNOWN1BYTE = '01'
 C_TXRXS_80 = '80'
 C_TXRXS_FF = 'FF'
@@ -629,9 +630,14 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
 
     #print('Device: %s' % Device)
     if Device == 'dru':
-        cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + \
-            C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + \
-            CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
+        if(CmdNumber_hex == 'a003'):
+            cmd_string = C_STATUS2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + \
+                C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + \
+                CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
+        else: 
+            cmd_string = C_UNKNOWN2BYTE01 + C_SITE_NUMBER + DruId_hex + C_UNKNOWN2BYTE02 + C_TXRXS_80 + \
+                C_UNKNOWN1BYTE + MessageType + C_TXRXS_FF + \
+                CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
     elif(DmuDevice1_hex == '08'):
         cmd_string = DmuDevice1_hex + DmuDevice2_hex + \
             CmdNumber_hex + C_RESPONSE_FLAG + CmdBodyLenght_hex + CmdData_hex
@@ -708,13 +714,11 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
            
         return data
     except ValueError as ve:
-        sys.stderr.write("No data avaliable\r\n")
-        sys.stderr.write(str(ve))
+        sys.stderr.write("VulueError frame "+str(hexResponse)+" "+str(ve)+"\n")
         return []
         sys.exit(CRITICAL)
     except Exception as e:
-        sys.stderr.write("No data avaliable\r\n")
-        sys.stderr.write(str(e))
+        sys.stderr.write("Exception validate frame "+str(hexResponse)+" "+str(e)+"\n")
         return []
         sys.exit(CRITICAL)    
 # -----------------------------------------
@@ -1037,9 +1041,11 @@ def read_serial_frame(Port, s):
     hexadecimal_string = ''
     rcvHexArray = list()
     isDataReady = False
+    isDataComplete = False
     rcvcount = 0
     start_time = time.time()
-    timeOut = 0.7
+    timeOut = 2
+    hexadecimal_string=''
 
     try:
         while not isDataReady and rcvcount < 200:
@@ -1048,7 +1054,8 @@ def read_serial_frame(Port, s):
             if(time.time() - start_time > timeOut):
                # sys.stderr.write("No Response")
                 timeOut  = time.time()
-                return rcvHex
+                hexResponse = bytearray.fromhex(hexadecimal_string)
+                return hexResponse
             if(rcvcount == 0 and rcvHex == '7e'):
                 rcvHexArray.append(rcvHex)
                 hexadecimal_string = hexadecimal_string + rcvHex
@@ -1059,12 +1066,16 @@ def read_serial_frame(Port, s):
                 rcvcount = rcvcount + 1
                 if(rcvHex == '7e' or rcvHex == '7f'):
                     isDataReady = True
+                    
 
     except serial.SerialException:
         sys.stderr.write("No Response, retrying connection")
         sys.exit(CRITICAL)
 
+    s.reset_input_buffer()
     hexResponse = bytearray.fromhex(hexadecimal_string)
+   #sys.stderr.write(str(s.port)+" : "+str(time.time()-start_time)+" : ")
+    
     return hexResponse
 
 def write_serial_frame(Trama, s):
@@ -1089,7 +1100,7 @@ def main():
     # -- Armando la trama
     Trama = obtener_trama(Action, Device, DmuDevice1,
                           DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
-    print(Trama)
+    #print(Trama)
     # --------------------------------------------------------
     # -- Abrir el puerto serie. Si hay algun error se termina
     # --------------------------------------------------------
