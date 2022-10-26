@@ -529,6 +529,7 @@ def get_dru_mac_from_rs485(dru, opt):
     Trama = rs485.obtener_trama(
         'query', 'dru', '00', '00', '4C0B', '09', '000000000000', str(opt)+str(dru))
     rs485.write_serial_frame(Trama, s)
+
     hexResponse = rs485.read_serial_frame(port, s)
 
     if (hexResponse == None or hexResponse == "" or hexResponse == " " or len(hexResponse) == 0):
@@ -568,7 +569,7 @@ def get_dru_sn_from_rs485(dru, opt):
 
     if (hexResponse == None or hexResponse == "" or hexResponse == " " or len(hexResponse) == 0):
         sys.stderr.write("RU"+str(opt)+str(dru)+" - No Response\n")
-        mac = ''
+        sn = ''
     else:
         data = rs485.validar_trama_respuesta(hexResponse, 'dru', 4)
         data_sn = [i for i in data if i != 0]
