@@ -29,6 +29,8 @@ WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
 
+MINIMUM_FRAME_SIZE = 20
+
 
 frequencyDictionary = {
 4270000  : '000:  417,0000 MHz UL - 427,0000 MHz DL',
@@ -366,21 +368,18 @@ def main():
     args = analizar_argumentos()
     
     frame_list = list()
-    if 'sn' in args:
-        sn_str = args['sn']            
-        sn_bytearray = bytearray(sn_str,'ascii')
-        sn_str_hex = bytearray(sn_bytearray).hex()
-        while len(sn_str_hex)<40:
-            sn_str_hex +='0' 
-
-        frame_list.append(rs485.obtener_trama('set', 'dru', '00','00','0500','17',sn_str_hex, args['opt']+args['dru']))
+    
+    
+    sn_str_hex,sn_action = get_sn_str_hex(args)
+       
         
-    if 'mac' in args:
-        mac_str = args['mac']
-        frame_list.append(rs485.obtener_trama('set', 'dru', '00','00','4C0B','09',mac_str, args['opt']+args['dru']))
+    mac_str,mac_action = get_mac_str(args)
+
 
     # -- Armando la trama
     #def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
+    frame_list.append(rs485.obtener_trama(sn_action, 'dru', '00','00','0500','17',sn_str_hex, args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama(mac_action, 'dru', '00','00','4C0B','09',mac_str, args['opt']+args['dru']))   
     frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))   
     
@@ -390,45 +389,47 @@ def main():
     try:
         port = '/dev/ttyS1'
         baudrate = 9600
-        #print('baudrate: %d' % baudrate)
         s = serial.Serial(port, baudrate)
-
-        # -- Timeout: 1 seg
         s.timeout = 1
 
     except serial.SerialException:
-        # -- Error al abrir el puerto serie
         sys.stderr.write(
             "CRITICAL - Error al abrir puerto %s " % str(port))
-        sys.exit(2)
-
-    # -- Mostrar el nombre del dispositivo
-    #print("Puerto (%s): (%s)" % (str(Port),s.portstr))
-    
+        sys.exit(CRITICAL)
+   
     parameter_dict = dict()
     start_time = time.time()
     response_time = 0.0
     table =""
     graphite=""
-    hexResponse = ''
+    rsp_bytearray = ''
     tmp = 0
+    
     set_parameter_dict_default_values(parameter_dict)
+    frame_critical_err = 0
     for frame in frame_list:
         start_time = time.time()
         #sys.stderr.write(str(time.time()-start_time)+" : ")
         rs485.write_serial_frame(frame, s)
-        hexResponse = rs485.read_serial_frame(port, s)
+        rsp_bytearray = rs485.read_serial_frame(port, s)
         tmp = time.time() - start_time
         #sys.stderr.write(str(tmp)+"\r\n")
        
-        if (hexResponse == None or hexResponse == "" or hexResponse == " "  or len(hexResponse) == 0 ):
-            sys.stderr.write("No Response")
-            fix_frame = rs485.obtener_trama('query', 'dru', '00','00','a003','04','00', args['opt']+args['dru'])
-            rs485.write_serial_frame(fix_frame,s)
-            sys.exit(CRITICAL)
+        if (rsp_bytearray == None or rsp_bytearray == "" or rsp_bytearray == " "  or len(rsp_bytearray) == 0 ):
+            rsp_str = binascii.hexlify(bytearray(rsp_bytearray))
+            sys.stderr.write("No Response "+str(rsp_str))
+            s.reset_input_buffer()
+            frame_critical_err +=1
+            #sys.exit(CRITICAL)
+        elif(rsp_bytearray == '7e' or len(rsp_bytearray) < MINIMUM_FRAME_SIZE ):
+            rsp_str = binascii.hexlify(bytearray(rsp_bytearray))
+            sys.stderr.write("Frame Size Error - frame is not valid: "+str(rsp_str)+"\n")     
         else:
-            data = rs485.validar_trama_respuesta(hexResponse,'dru',5)
-            if(data):
+            data = rs485.validar_trama_respuesta(rsp_bytearray,'dru',5)
+            if not data:
+               hexResponse_str = binascii.hexlify(bytearray(rsp_bytearray))
+               sys.stderr.write("Checksum Error - frame: "+str(hexResponse_str)+"\r\n")
+            elif data:
                 if(frame == frame_list[0]):
                     del data[0]
                     del data[0]
@@ -445,12 +446,15 @@ def main():
                     parameter_dict['mac'] = mac
                 else:
                     data_result = get_data_result_list_from_validated_frame(data)
-                    set_paramter_dic_from_data_result(parameter_dict, data_result)  
+                    set_paramter_dic_from_data_result(parameter_dict, data_result)             
+                
         if tmp > response_time:
             response_time = tmp
 
         time.sleep(response_time)
-    
+    if frame_critical_err == len(frame_list):
+        sys.exit(CRITICAL)
+        
     s.close()
     #sys.stderr.write("mac: "+parameter_dict['mac']+" - SN: "+parameter_dict['sn'])
     parameter_dict["rt"] = str(response_time)
@@ -463,6 +467,32 @@ def main():
         sys.exit(1)
     else:
         sys.exit(0)
+
+def get_mac_str(args):
+    mac_str =''
+    if 'mac' in args:
+        mac_str = args['mac']
+        action = 'set'
+    else:
+        while len(mac_str)<9:
+            mac_str +='0'
+        action = 'query'
+    return mac_str,action
+
+def get_sn_str_hex(args):
+    sn_str_hex = ''
+    if 'sn' in args:
+        sn_str = args['sn']            
+        sn_bytearray = bytearray(sn_str,'ascii')
+        sn_str_hex = bytearray(sn_bytearray).hex()
+        while len(sn_str_hex)<40:
+            sn_str_hex +='0'
+        action = 'set'
+    else:
+        while len(sn_str_hex)<40:
+            sn_str_hex +='0'
+        action = 'query'
+    return sn_str_hex,action
 
 def get_graphite_str(args, parameter_dict):
 
