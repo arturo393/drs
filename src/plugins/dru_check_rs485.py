@@ -310,6 +310,8 @@ def analizar_argumentos():
     #ap.add_argument("-h", "--help", required=False,  help="help")
     ap.add_argument("-d", "--dru", required=True, help="dru es requerido", default="")
     ap.add_argument("-o", "--opt", required=True,help="opt es requerido", default="")
+    ap.add_argument("-d", "--sn", required=False, help="sn es requerido", default="")
+    ap.add_argument("-o", "--mac", required=False,help="mac es requerido", default="")
     ap.add_argument("-hlwu","--highLevelWarningUL",  required=False,help="highLevelWarning es requerido", default=200)
     ap.add_argument("-hlcu","--highLevelCriticalUL", required=False,help="highLevelCritical es requerido", default=200)
     ap.add_argument("-hlwd","--highLevelWarningDL",  required=False,help="highLevelWarning es requerido", default=200)
@@ -328,6 +330,8 @@ def analizar_argumentos():
 
     dru = str(args['dru'])
     opt = str(args['opt'])
+    sn = str(args['sn'])
+    mac = str(args['mac']) 
     hl_warning_ul = int(args['highLevelWarningUL'])
     hl_critical_ul = int(args['highLevelCriticalUL'])
     hl_warning_dl = int(args['highLevelWarningDL'])
@@ -356,12 +360,22 @@ def main():
 
     # -- Analizar los argumentos pasados por el usuario
     args = analizar_argumentos()
+    
+    if 'sn' in args['sn']:
+        sn_str = args['sn']
+        sn_hex = hex(sn_str)
+        
+    if 'mac' in args['mac']:
+        mac_str = args['mac']
+        mac_hex = hex(mac_str)
+        
 
     frame_list = list()
     
     # -- Armando la trama
     #def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
-    #frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','0500','17','000000000000', args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','4C0B','09','000000000000', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query', 'dru', '00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
     
