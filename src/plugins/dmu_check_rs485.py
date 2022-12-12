@@ -341,21 +341,7 @@ def main():
     # -- Analizar los argumentos pasados por el usuario
     hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl  = analizar_argumentos()
     frame_list = get_frame_list()
-    # --------------------------------------------------------
-    # -- Abrir el puerto serie. Si hay algun error se termina
-    # --------------------------------------------------------
-    try:
-        Port = '/dev/ttyS0'
-        baudrate = 19200
-        s = serial.Serial(Port, baudrate)
-        # -- Timeout: 1 seg
-        s.timeout = 1
-
-    except serial.SerialException:
-        # -- Error al abrir el puerto serie
-        sys.stderr.write(
-            "CRITICAL - Error al abrir puerto %s " % str(Port))
-        sys.exit(2)
+    s = rs485.setSerial('/dev/ttyS0',19200)
 
     parameter_dict = dict()
     start_time = time.time()
@@ -363,7 +349,7 @@ def main():
     se_default_parameter_dict(parameter_dict)
     for frame in frame_list:
         rs485.write_serial_frame(frame,s)
-        hex_data_frame = rs485.read_serial_frame(Port, s)
+        hex_data_frame = rs485.read_serial_frame(s)
              
         if (hex_data_frame == None or hex_data_frame == "" or hex_data_frame == " "  or len(hex_data_frame) == 0 ):
             sys.stderr.write("No Response")
@@ -414,9 +400,14 @@ def get_frame_list():
     return frame_list
 
 def get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameter_dict):
-    dlPower = float(parameter_dict['dlOutputPower'])
-    ulPower = float(parameter_dict['ulInputPower'])
-
+    if(parameter_dict['dlOutputPower'] != '-'):
+        dlPower = float(parameter_dict['dlOutputPower'])
+    else:
+        dlPower = -200
+    if(parameter_dict['ulInputPower'] != '-'):
+        ulPower = float(parameter_dict['ulInputPower'])
+    else:
+        ulPower = -200
 
     alarm =""
     if dlPower >= hl_critical_dl:
@@ -473,6 +464,10 @@ def se_default_parameter_dict(parameter_dict):
     parameter_dict['ulAtt'] = "-"
     parameter_dict['dlAtt'] = "-"
     parameter_dict['workingMode'] = "-"
+    parameter_dict['opt1ActivationStatus'] = '-'
+    parameter_dict['opt2ActivationStatus'] = '-'
+    parameter_dict['opt3ActivationStatus'] = '-'
+    parameter_dict['opt4ActivationStatus'] = '-'
 
     channel = 1
     while channel <= 16:
@@ -556,15 +551,25 @@ def set_power_dict(parameter_dict, hex_validated_frame):
     hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
     hex_as_int = int(hexInvertido, 16)
     dlPower = s16(hex_as_int)/256
-    parameter_dict['dlOutputPower'] = str(round(dlPower,2))
+    if dlPower >= 0 or dlPower < -110 or dlPower >= 31 :
+        dlPower = "-"
+    else:
+        dlPower = round(dlPower,2)
 
+    parameter_dict['dlOutputPower'] = str(dlPower)
+    
     hexInvertido = hex_validated_frame[0+4:2+4]+ hex_validated_frame[2+4:4+4]
     hexInvertido2 = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]
     hex_as_int = int(hexInvertido, 16)
     hex_as_int2 = int(hexInvertido2, 16)
     ulPower = s16(hex_as_int)/256
 
-    parameter_dict['ulInputPower'] = str(round(ulPower,2))
+    if ulPower >= 0 or ulPower < -110 or ulPower >= 31 :
+        ulPower = "-"
+    else:
+        ulPower = round(ulPower,2)
+
+    parameter_dict['ulInputPower'] = str(ulPower)
 
 def set_channel_status_dict(parameter_dict, hex_validated_frame):
     i = 0
@@ -667,12 +672,7 @@ def get_channel_table(responseDict):
     return table3
 
 def get_power_table(responseDict):
-    ulPower = float(responseDict['ulInputPower'])
 
-    if ulPower >= 0 or ulPower < -110 or ulPower >= 31 :
-        ulPower = "-"
-    else:
-        ulPower = responseDict['ulInputPower']+" [dBm]"
 
     table2 = "<table width=250>"
     table2 += "<thead>"
@@ -683,7 +683,7 @@ def get_power_table(responseDict):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+ulPower+"</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>"+responseDict['ulInputPower']+" [dBm]</td><td>"+responseDict['ulAtt']+" [dB]</td></tr>"
     table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>"+responseDict['dlOutputPower']+" [dBm]</td><td>"+responseDict['dlAtt']+" [dB]</td></tr>"
     table2+="</tbody></table>"
     return table2
