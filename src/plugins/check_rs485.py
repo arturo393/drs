@@ -52,7 +52,7 @@ C_RETURN = '7E'
 #C_RETURN = ''
 C_SITE_NUMBER = '00000000'
 
-MINIMUM_FRAME_SIZE = 20
+MINIMUM_DRU_FRAME_SIZE = 20
 DRU_MULTIPLE_CMD_LENGTH = 5
 DRU_SINGLE_CMD_LENGTH = 4
 
@@ -730,7 +730,7 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         if Device == 'dru':
             data = validateDruReply(hexResponse, cmdNumberlen)   
         else:
-            data = validateDmuQuery(hexResponse)
+            data = extractDmuReplyData(hexResponse)
         return data
     except ValueError as ve:
         logging.debug("ValueError frame "+str(hexResponse)+" "+str(ve)+"\n")
@@ -741,35 +741,19 @@ def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
         return []
         sys.exit(CRITICAL) 
 
-def validateDmuQuery(hexResponse):
+def extractDmuReplyData(reply):
     data = list()
-    size = len(hexResponse)
-    crc = hexResponse[size-3:size-1]
-    clean_response = hexResponse[1:size-3]       
-    checksum = getChecksum2(clean_response)
-    checksum_bytearray = bytearray.fromhex(checksum)
-
-    if(crc == checksum_bytearray):
-        index_respuesta = 6
-        cant_bytes_resp = int(hexResponse[index_respuesta])
-                
-        rango_i = index_respuesta + 1
-        rango_n = rango_i + cant_bytes_resp
-        for i in range(rango_i, rango_n):
-             data.append(hexResponse[i])
+    index_cmd_lenght = 6
+    index_cmd_number = 4
+    cant_bytes_resp = int(reply[index_cmd_lenght])+1+1+1
+            
+    rango_i = index_cmd_number
+    rango_n = rango_i + cant_bytes_resp
+    for i in range(rango_i, rango_n):
+            data.append(reply[i])
     return data
 
-def hasReplyError(reply,query_id):
-  
-    if (reply == None or reply == "" or reply == " "  or len(reply) == 0 ):
-        logging.debug("RU"+str(query_id)+" No Response ")
-        return 1
-    
-    if(reply == '7e' or len(reply) < MINIMUM_FRAME_SIZE ):
-        reply = binascii.hexlify(bytearray(reply))
-        logging.debug(" Frame Size Error - frame is not valid: "+str(reply)+"\n")
-        return 1
-    
+def hastIdReplyError(reply,query_id):
     query_id = bytes.fromhex(query_id)
     query_id = int.from_bytes(query_id, "big")
     REPLY_ID_INDEX = 7
@@ -777,12 +761,38 @@ def hasReplyError(reply,query_id):
     if( reply_id != query_id):
         logging.debug(" reply id is not the same "+str(reply)+"\n")
         return 1
+    return 0
     
+def hasReplyError(reply):
+  
+    if (reply == None or reply == "" or reply == " "  or len(reply) == 0 ):
+        logging.debug("RU"+str(reply)+" No Response ")
+        return 1
+
     reply_crc, calculated_crc = getReplyCrc(reply)
     if(reply_crc != calculated_crc):
         logging.debug("Checksum error - CRC reply: "+str(reply_crc)+"  CRC calculated: " +str(calculated_crc)+"\n")
         return 1
+    return 0
 
+def hasSizeReplyError(reply):
+    if(reply == '7e' or len(reply) < MINIMUM_DRU_FRAME_SIZE ):
+        reply = binascii.hexlify(bytearray(reply))
+        logging.debug(" Frame Size Error - frame is not valid: "+str(reply)+"\n")
+        return 1
+
+def hasDruReplyError(reply,query_id):
+    if hasReplyError(reply):
+        return 1
+    if hasSizeReplyError(reply):
+        return 1
+    if hastIdReplyError(reply,query_id):
+        return 1
+    return 0
+
+def hasDmuReplyError(reply):
+    if hasReplyError(reply):
+        return 1
     return 0
 
 def getReplyCrc(reply):
@@ -803,10 +813,11 @@ def validateDruReply(reply,cmdNumberlen):
     calculated_crc = bytearray.fromhex(calculated_crc)
 
     if(reply_crc == calculated_crc or reply_crc == b'\x00\x00' ):
-        reply_data = extractReplyData(reply, cmdNumberlen)
+        reply_data = extractDruReplyData(reply, cmdNumberlen)
     return reply_data
 
-def extractReplyData(reply, cmdNumberlen):
+def extractDruReplyData(reply, cmdNumberlen):
+    
     reply_data_lenght_index = 14  # Para equipos remotos  de la trama
     reply_data_lenght = int(reply[reply_data_lenght_index])  
     if(cmdNumberlen == DRU_MULTIPLE_CMD_LENGTH):
@@ -1304,6 +1315,34 @@ def druReplyDecode(parameters,reply_data):
         sn = bytearray.fromhex(resultHEX).decode()
         parameters['sn'] = sn
  
+def dmuReplyDecode(parameters, reply_data):
+    
+    cmd_number = reply_data[:2]
+    cmd_value = reply_data[6:]
+    
+    if cmd_number=='f8':
+        parameters['opt1ConnectedRemotes'] = cmd_value
+    elif cmd_number=='f9':
+        parameters['opt2ConnectedRemotes'] = cmd_value
+    elif cmd_number=='fa':
+        parameters['opt3ConnectedRemotes'] = cmd_value
+    elif cmd_number=='fb':
+        parameters['opt4ConnectedRemotes'] = cmd_value
+    elif cmd_number=='91':
+        set_opt_status_dict(parameters, cmd_value)
+    elif cmd_number=='9a':
+        set_opt_working_status(parameters, cmd_value)
+    elif cmd_number=='f3':
+        set_power_dict(parameters, cmd_value)
+    elif cmd_number=='42':
+        set_channel_status_dict(parameters, cmd_value)
+    elif cmd_number=='36':
+        set_channel_freq_dict(parameters, cmd_value)
+    elif cmd_number=='81':
+        set_working_mode_dict(parameters, cmd_value)   
+    elif cmd_number=='ef':
+        set_power_att_dict(parameters, cmd_value)
+
 def splitMultipleReplyData(reply_data):
     i = 0
     j = 0
@@ -1332,7 +1371,7 @@ def splitMultipleReplyData(reply_data):
         print(str(e))
         return []
      
-def newBlankDruParameterDict():
+def newBlankDruParameter():
     parameters = dict()
     
     if('dlOutputPower' not in parameters):
@@ -1363,6 +1402,158 @@ def newBlankDruParameterDict():
             parameters["channel"+str(channel)+"dlFreq"] = '-'
     
     return parameters
+
+def newBlankDmuParameter():
+    parameters = dict()
+    parameters['opt1ConnectedRemotes'] = "-"
+    parameters['opt2ConnectedRemotes'] = "-"
+    parameters['opt3ConnectedRemotes'] = "-"
+    parameters['opt4ConnectedRemotes'] = "-"
+    parameters['opt1ConnectionStatus'] = "-"
+    parameters['opt2ConnectionStatus'] = "-"
+    parameters['opt3ConnectionStatus'] = "-"
+    parameters['opt4ConnectionStatus'] = "-"
+    parameters['opt1TransmissionStatus'] = "-"
+    parameters['opt2TransmissionStatus'] = "-"
+    parameters['opt3TransmissionStatus'] = "-"
+    parameters['opt4TransmissionStatus'] = "-"
+    parameters['dlOutputPower'] = "-"
+    parameters['ulInputPower'] ="-"
+    parameters['ulAtt'] = "-"
+    parameters['dlAtt'] = "-"
+    parameters['workingMode'] = "-"
+    parameters['opt1ActivationStatus'] = '-'
+    parameters['opt2ActivationStatus'] = '-'
+    parameters['opt3ActivationStatus'] = '-'
+    parameters['opt4ActivationStatus'] = '-'
+
+    channel = 1
+    while channel <= 16:
+      parameters["channel"+str(channel)+"Status"] = "-"
+      parameters["channel"+str(channel)+"ulFreq"] = "-"
+      parameters["channel"+str(channel)+"dlFreq"] = "-"
+      channel += 1
+    return parameters
+
+def set_opt_status_dict(parameter_dict, hex_validated_frame):
+    if (hex_validated_frame[0:2] == '00'):
+        parameter_dict['opt1ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt1ActivationStatus'] = 'OFF'
+
+    if (hex_validated_frame[2:4] == '00'):
+        parameter_dict['opt2ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt2ActivationStatus'] = 'OFF'
+
+    if (hex_validated_frame[4:6] == '00'):
+        parameter_dict['opt3ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt3ActivationStatus'] = 'OFF'
+
+    if (hex_validated_frame[6:8] == '00'):
+        parameter_dict['opt4ActivationStatus'] = 'ON'
+    else:
+        parameter_dict['opt4ActivationStatus'] = 'OFF'
+
+def set_opt_working_status(parameter_dict, hex_validated_frame):
+    hex_as_int = int(hex_validated_frame, 16)
+    hex_as_binary = bin(hex_as_int)
+    padded_binary = hex_as_binary[2:].zfill(8)
+    opt=1
+    temp = []
+    for bit in reversed(padded_binary):
+        if (bit=='0' and opt<=4):
+            temp.append('Connected ')
+        elif (bit=='1' and opt<=4):
+            temp.append('Disconnected ')
+        elif (bit=='0' and opt>4):
+            temp.append('Normal')
+        elif (bit=='1' and opt>4):
+            temp.append('Failure')
+        opt=opt+1
+
+    parameter_dict['opt1ConnectionStatus'] = temp[0]
+    parameter_dict['opt2ConnectionStatus'] = temp[1]
+    parameter_dict['opt3ConnectionStatus'] = temp[2]
+    parameter_dict['opt4ConnectionStatus'] = temp[3]
+    parameter_dict['opt1TransmissionStatus'] = temp[4]
+    parameter_dict['opt2TransmissionStatus'] = temp[5]
+    parameter_dict['opt3TransmissionStatus'] = temp[6]
+    parameter_dict['opt4TransmissionStatus'] = temp[7]
+
+def set_power_dict(parameter_dict, hex_validated_frame):
+    hexInvertido = hex_validated_frame[2:4] + hex_validated_frame[0:2]
+    hex_as_int = int(hexInvertido, 16)
+    dlPower = s16(hex_as_int)/256
+    if dlPower >= 0 or dlPower < -110 or dlPower >= 31 :
+        dlPower = "-"
+    else:
+        dlPower = round(dlPower,2)
+
+    parameter_dict['dlOutputPower'] = str(dlPower)
+    
+    hexInvertido = hex_validated_frame[0+4:2+4]+ hex_validated_frame[2+4:4+4]
+    hexInvertido2 = hex_validated_frame[2+4:4+4] + hex_validated_frame[0+4:2+4]
+    hex_as_int = int(hexInvertido, 16)
+    hex_as_int2 = int(hexInvertido2, 16)
+    ulPower = s16(hex_as_int)/256
+
+    if ulPower >= 0 or ulPower < -110 or ulPower >= 31 :
+        ulPower = "-"
+    else:
+        ulPower = round(ulPower,2)
+
+    parameter_dict['ulInputPower'] = str(ulPower)
+
+def set_channel_status_dict(parameter_dict, hex_validated_frame):
+    i = 0
+    channel = 1
+    while channel <= 16 and i < len(hex_validated_frame):
+        hex_as_int = int(hex_validated_frame[i:i+2], 16)
+        if hex_as_int == 0:
+            parameter_dict["channel"+str(channel)+"Status"] = "ON"
+        else:
+            parameter_dict["channel"+str(channel)+"Status"] = "OFF"
+        i += 2
+        channel += 1
+
+def set_channel_freq_dict(parameter_dict, hex_validated_frame):
+    channel = 1
+    i = 0
+    while channel <= 16:
+        try:
+          byte = hex_validated_frame[i:i+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
+          hex_as_int = int(byteInvertido, 16)
+          texto = frequencyDictionary[hex_as_int]
+          parameter_dict["channel"+str(channel)+"ulFreq"] = texto[4:22-6+2]
+          parameter_dict["channel"+str(channel)+"dlFreq"] = texto[23:40-6+2]
+          channel += 1
+          i += 8
+        except:
+          print("Dato recibido es desconocido ")
+
+def set_power_att_dict(parameter_dict, hex_validated_frame):
+    byte01toInt = int(hex_validated_frame[0:2], 16)/4
+    byte02toInt = int(hex_validated_frame[2:4], 16)/4
+    valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+    valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
+    parameter_dict['ulAtt'] = valor1
+    parameter_dict['dlAtt'] = valor2
+
+def set_working_mode_dict(parameter_dict, hex_validated_frame):
+    try:
+        #print(hex_validated_frame)
+      if hex_validated_frame == '03':
+          parameter_dict['workingMode'] = 'Channel Mode'
+      elif hex_validated_frame == '02':
+          parameter_dict['workingMode'] = 'WideBand Mode'
+      else:
+          parameter_dict['workingMode'] = 'Unknown Mode'
+    except:
+        print("WARNING - Dato recibido es desconocido ")
+        print(hex_validated_frame)
 
 if __name__ == "__main__":
     main()
