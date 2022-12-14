@@ -8,8 +8,8 @@
 #  Se puede especificar por la linea de comandos el puerto serie a
 #  a emplear
 #
-#  (C)2022 Guillermo Gonzalez (ggonzalez@itaum.com)
-#
+#  (C)2022 Guillermo Gonzalez (ggonzalez@itaum.com) creador
+#          
 #
 #  LICENCIA GPL
 # -----------------------------------------------------------------------------
@@ -23,6 +23,11 @@ import argparse
 import os
 import time
 import binascii
+import logging
+
+path = "/home/sigmadev/"
+logging.basicConfig(format='%(asctime)s %(message)s',filename=path+"check_rs485.log", level=logging.DEBUG)
+
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -31,7 +36,6 @@ WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
 
-    
 C_HEADER = '7E'
 C_DATA_TYPE = '00'
 C_RESPONSE_FLAG = '00'
@@ -47,6 +51,10 @@ C_TYPE_SET = '03'
 C_RETURN = '7E'
 #C_RETURN = ''
 C_SITE_NUMBER = '00000000'
+
+MINIMUM_FRAME_SIZE = 20
+DRU_MULTIPLE_CMD_LENGTH = 5
+DRU_SINGLE_CMD_LENGTH = 4
 
 dataDMU = {
     "F8" : "opt1",
@@ -107,6 +115,9 @@ dataDRU = {
     "E30B" : " [dBm]",
     "E40B" : " [dBm]",
     "E50B" : " [dBm]",
+    "E40B" : " [dBm]",
+    "E50B" : " [dBm]"
+    
 }
 
 frequencyDictionary = {
@@ -376,13 +387,76 @@ def help():
     check_portserial.py -p /dev/ttyS0 --> Especificar el dispositivo serie (Linux) 
     
     """)
+# ----------------------
+#   MAIN
+# ----------------------
+  
+def main():
 
+    # -- Analizar los argumentos pasados por el usuario
+    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
+
+    # -- Armando la trama
+    Trama = obtener_trama(Action, Device, DmuDevice1,
+                          DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
+    s = serial_init(Port)
+    
+    
+    if Action == "query" or Action == "set":
+        write_serial_frame(Trama, s)
+        hexResponse = read_serial_frame(s)
+        s.close()
+        data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
+       
+        if Action == 'set':
+            if len(data) != 0 and Device == 'dmu':
+                logging.debug(
+                    "- Can't send a message to master device")
+                sys.exit(CRITICAL)
+            elif len(data) == 0 and Device == 'dru':
+                logging.debug(
+                    "- Can't send a message to remote device")
+                sys.exit(CRITICAL)
+            else:
+                if Device == 'dru':
+                    a_bytearray = bytearray(data)
+                    hex_string = a_bytearray.hex()
+                    logging.debug(hex_string + '\n')
+                logging.debug("OK")
+                
+        elif Action == 'query':
+            a_bytearray = bytearray(data)
+            resultHEX = a_bytearray.hex()
+            try:
+                resultOK =  s8(int(resultHEX, 16))
+            except:
+                print("- Unknown received message")
+                sys.exit(3)    
+            
+            if len(CmdNumber) > 4:
+                hex_string = convertirMultipleRespuesta(data)
+            else:   
+                hex_string =  convertirRespuestaHumana(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
+
+            if (resultOK  >= HighLevelCritical) :
+                print("CRITICAL Alert! - " + hex_string )
+                sys.exit(CRITICAL)
+            elif (resultOK >=  HighLevelWarning) :
+                print("WARNING Alert !- " + hex_string  )
+                sys.exit(WARNING)
+            else:
+                print("OK - " + hex_string )
+                sys.exit(OK)     
+    else:
+        logging.debug(
+            "- Invalid action  %s \n" % Action)
+        sys.exit(WARNING)
+
+def analizar_argumentos():
 # -----------------------------------------------------
 # --  Analizar los argumentos pasados por el usuario
 # --  Devuelve el puerto y otros argumentos enviados como parametros
 # -----------------------------------------------------
-
-def analizar_argumentos():
 
     # Construct the argument parser
     ap = argparse.ArgumentParser()
@@ -415,7 +489,6 @@ def analizar_argumentos():
     ap.add_argument("-hc", "--highLevelCritical", required=False,
                     help="highLevelCritical es requerido", default=200)
                                                     
-
     try:
         args = vars(ap.parse_args())
     except getopt.GetoptError as e:
@@ -539,10 +612,6 @@ def getChecksum2(data):
     #checksum_new = checksum.replace('5E','5E5D')      
     return checksum_new
 
-
-# ----------------------------------------------------
-# -- Buscan un elemento dentro de una array
-# --------------------------------------------------
 def buscaArray(lst, value):
 
     try:
@@ -551,9 +620,6 @@ def buscaArray(lst, value):
       ndx = -1
 
     return ndx
-# ----------------------------------------------------
-# -- Formateria formato cadena de byte a Hex
-# --------------------------------------------------
 
 def formatearHex(dato):
 
@@ -563,6 +629,9 @@ def formatearHex(dato):
         dato_hex = dato
 
     return dato_hex
+
+def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
+    
 # ----------------------------------------------------
 # -- Armar trama de escritura o lectura
 #-- (PARAMETROS)
@@ -572,8 +641,6 @@ def formatearHex(dato):
 # -- CmdData: dato a escribir <integer en hex>
 # -- Crc: Byte de control
 # ---------------------------------------------------
-
-def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
 
     DmuDevice1_hex = formatearHex(DmuDevice1)
     #print('DmuDevice1_hex: %s' % DmuDevice1_hex)
@@ -598,7 +665,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
             cant_bytes = int(CmdBodyLenght_hex, 16)
             #print('cant_bytes: %s' % cant_bytes)
         except ValueError:
-            sys.stderr.write(
+            logging.debug(
                 "CRITICAL - CmdBodyLenght no tiene formato hexadecimal")
             sys.exit(2)
         tramaLengthCodeData = CmdBodyLenght_hex + CmdNumber_hex + CmdData_hex
@@ -606,7 +673,7 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
         lenTramaLengthCodeData = int(len(tramaLengthCodeData)/2)
         #print('lenTramaLengthCodeData: %s' % lenTramaLengthCodeData)
         if lenTramaLengthCodeData != cant_bytes:
-            sys.stderr.write(
+            logging.debug(
                 "CRITICAL - CmdBodyLenght + CmdNumber + CmdData, no corresponde a la cantidad de bytes indicados\n")
             sys.exit(2)
         if (Action == 'set'):
@@ -660,57 +727,99 @@ def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLeng
 
 def validar_trama_respuesta(hexResponse, Device,cmdNumberlen):
     try:
-        data = list()
         if Device == 'dru':
-            size = len(hexResponse)
-            if(hexResponse[size-2]==125):
-                crc = hexResponse[size-4:size-1]
-                clean_response = hexResponse[1:size-4]   
-            else:
-                crc = hexResponse[size-3:size-1]
-                clean_response = hexResponse[1:size-3]      
-                   
-            checksum = getChecksum2(clean_response)
-            checksum_bytearray = bytearray.fromhex(checksum)
-
-            if(crc == checksum_bytearray or crc == b'\x00\x00' ):
-                index_respuesta = 14  # Para equipos remotos  de la trama
-                cant_bytes_resp = int(hexResponse[index_respuesta])
-                if(cmdNumberlen > 4):
-                    rango_i =  index_respuesta+1
-                    rango_n = rango_i + cant_bytes_resp - 1
-                else: 
-                    rango_i = index_respuesta + 3
-                    rango_n = rango_i + cant_bytes_resp - 3
-                for i in range(rango_i, rango_n):
-                    data.append(hexResponse[i])   
+            data = validateDruReply(hexResponse, cmdNumberlen)   
         else:
-            size = len(hexResponse)
-            crc = hexResponse[size-3:size-1]
-            clean_response = hexResponse[1:size-3]       
-            checksum = getChecksum2(clean_response)
-            checksum_bytearray = bytearray.fromhex(checksum)
-
-            if(crc == checksum_bytearray):
-                index_respuesta = 6
-                cant_bytes_resp = int(hexResponse[index_respuesta])
-                
-                rango_i = index_respuesta + 1
-                rango_n = rango_i + cant_bytes_resp
-                for i in range(rango_i, rango_n):
-                     data.append(hexResponse[i])
+            data = validateDmuQuery(hexResponse)
         return data
     except ValueError as ve:
-        sys.stderr.write("ValueError frame "+str(hexResponse)+" "+str(ve)+"\n")
+        logging.debug("ValueError frame "+str(hexResponse)+" "+str(ve)+"\n")
         return []
         sys.exit(CRITICAL)
     except Exception as e:
-        sys.stderr.write("Exception validate frame "+str(hexResponse)+" "+str(e)+"\n")
+        logging.debug("Exception validate frame "+str(hexResponse)+" "+str(e)+"\n")
         return []
-        sys.exit(CRITICAL)    
-# -----------------------------------------
-#   convertir hex a decimal con signo
-# ----------------------------------------
+        sys.exit(CRITICAL) 
+
+def validateDmuQuery(hexResponse):
+    data = list()
+    size = len(hexResponse)
+    crc = hexResponse[size-3:size-1]
+    clean_response = hexResponse[1:size-3]       
+    checksum = getChecksum2(clean_response)
+    checksum_bytearray = bytearray.fromhex(checksum)
+
+    if(crc == checksum_bytearray):
+        index_respuesta = 6
+        cant_bytes_resp = int(hexResponse[index_respuesta])
+                
+        rango_i = index_respuesta + 1
+        rango_n = rango_i + cant_bytes_resp
+        for i in range(rango_i, rango_n):
+             data.append(hexResponse[i])
+    return data
+
+def hasReplyError(reply,query_id):
+  
+    if (reply == None or reply == "" or reply == " "  or len(reply) == 0 ):
+        logging.debug("RU"+str(query_id)+" No Response ")
+        return 1
+    
+    if(reply == '7e' or len(reply) < MINIMUM_FRAME_SIZE ):
+        reply = binascii.hexlify(bytearray(reply))
+        logging.debug(" Frame Size Error - frame is not valid: "+str(reply)+"\n")
+        return 1
+    
+    query_id = bytes.fromhex(query_id)
+    query_id = int.from_bytes(query_id, "big")
+    REPLY_ID_INDEX = 7
+    reply_id = reply[REPLY_ID_INDEX]
+    if( reply_id != query_id):
+        logging.debug(" reply id is not the same "+str(reply)+"\n")
+        return 1
+    
+    reply_crc, calculated_crc = getReplyCrc(reply)
+    if(reply_crc != calculated_crc):
+        logging.debug("Checksum error - CRC reply: "+str(reply_crc)+"  CRC calculated: " +str(calculated_crc)+"\n")
+        return 1
+
+    return 0
+
+def getReplyCrc(reply):
+    reply_size = len(reply)
+    reply_crc = reply[reply_size-3:reply_size-1]
+    reply_clean = reply[1:reply_size-3]                  
+    calculated_crc = getChecksum2(reply_clean)
+    calculated_crc = bytearray.fromhex(calculated_crc)
+    return reply_crc,calculated_crc
+
+def validateDruReply(reply,cmdNumberlen):
+    
+    reply_size = len(reply)
+           
+    reply_crc = reply[reply_size-3:reply_size-1]
+    reply_clean = reply[1:reply_size-3]                  
+    calculated_crc = getChecksum2(reply_clean)
+    calculated_crc = bytearray.fromhex(calculated_crc)
+
+    if(reply_crc == calculated_crc or reply_crc == b'\x00\x00' ):
+        reply_data = extractReplyData(reply, cmdNumberlen)
+    return reply_data
+
+def extractReplyData(reply, cmdNumberlen):
+    reply_data_lenght_index = 14  # Para equipos remotos  de la trama
+    reply_data_lenght = int(reply[reply_data_lenght_index])  
+    if(cmdNumberlen == DRU_MULTIPLE_CMD_LENGTH):
+        reply_data_start_index =  reply_data_lenght_index+1
+        reply_data_end_index = reply_data_start_index + reply_data_lenght - 1
+    else: 
+        reply_data_start_index = reply_data_lenght_index + 3
+        reply_data_end_index = reply_data_start_index + reply_data_lenght - 3
+            
+    reply_data = list()
+    for i in range(reply_data_start_index, reply_data_end_index):
+        reply_data.append(reply[i])
+    return reply_data
 
 def s16(value):
     return -(value & 0x8000) | (value & 0x7fff)
@@ -720,17 +829,15 @@ def s8(byte):
         return (256-byte) * (-1)
     else:
         return byte
-# ----------------------------------------------------------------
-#   convierte la salida en hex a un valor representacion humana
-# ---------------------------------------------------------------
-def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_warning):
+
+def convertirRespuestaHumana(Result, Device, CmdNumber,high_level_critical,high_level_warning):
     try:
         CmdNumber = CmdNumber.upper()
         Device = Device.lower()
         if Device=='dmu' and (CmdNumber=='F8' or CmdNumber=='F9' or CmdNumber=='FA' or CmdNumber=='FB'):
             Value =  int(Result, 16)
             if(Value >8):
-                sys.stderr.write("- Wrong Remotes value: " + str(Value))
+                logging.debug("- Wrong Remotes value: " + str(Value))
                 sys.exit(1)  
             else :
                  Result = str(Value) + " Remotes Discovered | value=" + str(Value) 
@@ -879,6 +986,16 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
             valor1 = '{:,.2f}'.format(byte01toInt).replace(",", "@").replace(".", ",").replace("@", ".")
             valor2 = '{:,.2f}'.format(byte02toInt).replace(",", "@").replace(".", ",").replace("@", ".")
             Result = valor1 + " Uplink ATT [dB] - " + valor2 + " Downlink ATT [dB] "
+        
+        elif (Device=='dmu' and CmdNumber=='84'):
+            tmp = ''
+            if Result == '01':
+                tmp = 'On ' 
+            elif Result == '00':
+                tmp = 'Off'
+            else:
+                tmp = 'Unknown '
+            Result = tmp       
         #convirtiendo hex to decimal
 
         elif (Device=='dru' and (CmdNumber=='0300' or CmdNumber=='0104' or CmdNumber=='EF0B' or CmdNumber=='0102'
@@ -945,7 +1062,6 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
                     Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>ON</td><td>&nbsp;</td></tr>"                             
                 else:
                     Table += "<tr><td>" + str(channel).zfill(2) + "</td><td>OFF</td><td>&nbsp;</td></tr>"                    
-            
             Table +=   "</tbody></table>"
             Result = hex+" "+Table
 
@@ -965,11 +1081,11 @@ def convertirRespuesta(Result, Device, CmdNumber,high_level_critical,high_level_
             channel = 4270000 + (125 * byte0)
             Result = 'CH ' + frequencyDictionary[channel]
         elif CmdNumber =='4C0B':
-            sys.stderr.write(Result)
+            logging.debug(Result)
         #    sys.exit(0)  
         return Result
     except Exception as e:
-        sys.stderr.write("- Failed to read message from device: " + Result)
+        logging.debug("- Failed to read message from device: " + Result)
         sys.exit(1)    
         
 def convertirMultipleRespuesta(data):
@@ -1023,121 +1139,60 @@ def convertirMultipleRespuesta(data):
     Table += "</tbody></table>" 
     Table += "|" + graphite
     return Table
-     
-def read_serial_frame(Port, s):
+
+def setSerial(port, baudrate):
+    for times in range(3):
+        try:
+            s = serial.Serial(port, baudrate)
+            s.timeout = 1
+            s.exclusive = True
+
+        except serial.SerialException as e:
+            logging.debug(
+                "WARNING - "+str(times)+" "+str(e)+" "+str(port))
+            #sys.stderr.write(str(e))
+            time.sleep(1)
+        return s
+    sys.stderr.write(str(e))
+    sys.exit(WARNING)
+
+def read_serial_frame(s):
     hexadecimal_string = ''
     rcvHexArray = list()
     isDataReady = False
     rcvcount = 0
-    start_time = time.time()
-    timeOut = 1
-    hexadecimal_string=''
-    try:
-        while not isDataReady and rcvcount < 200:
+    while not isDataReady:
+        try:
             Response = s.read()
-            rcvHex = Response.hex()
-            if(time.time() - start_time > timeOut):
-                timeOut  = time.time()
-                hexResponse = bytearray.fromhex(hexadecimal_string)
-                return hexResponse
-            if(rcvcount == 0 and rcvHex == '7e'):
-                rcvHexArray.append(rcvHex)
-                hexadecimal_string = hexadecimal_string + rcvHex
-                rcvcount = rcvcount + 1
-            elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
-                rcvHexArray.append(rcvHex)
-                hexadecimal_string = hexadecimal_string + rcvHex
-                rcvcount = rcvcount + 1
-                if(rcvHex == '7e' or rcvHex == '7f'):
-                    isDataReady = True
-                    
-
-    except serial.SerialException as e:
-        sys.stderr.write(str(e))
-        return bytearray()
-        #sys.exit(CRITICAL)
-
+        except serial.SerialException as e:
+            logging.debug(str(e))
+            return bytearray()
+        rcvHex = Response.hex()
+        if(rcvcount == 0 and rcvHex == '7e'):
+            rcvHexArray.append(rcvHex)
+            hexadecimal_string = hexadecimal_string + rcvHex
+            rcvcount = rcvcount + 1
+        elif(rcvcount > 0 and rcvHexArray[0] == '7e' and (rcvcount == 1 and rcvHex == '7e') is not True):
+            rcvHexArray.append(rcvHex)
+            hexadecimal_string = hexadecimal_string + rcvHex
+            rcvcount = rcvcount + 1
+            if(rcvHex == '7e' or rcvHex == '7f'):
+                isDataReady = True
+        elif rcvHex == '':
+            return ""
+            
     s.reset_input_buffer()
     hexResponse = bytearray.fromhex(hexadecimal_string)
-   #sys.stderr.write(str(s.port)+" : "+str(time.time()-start_time)+" : ")
-    
     return hexResponse
 
 def write_serial_frame(Trama, s):
     cmd_bytes = bytearray.fromhex(Trama)
-#    print(cmd_bytes)
-#    s.write(cmd_bytes)
     hex_byte = ''
     for cmd_byte in cmd_bytes:
         hex_byte = ("{0:02x}".format(cmd_byte))
         s.write(bytes.fromhex(hex_byte))
     s.flush()
-  
-# ----------------------
-#   MAIN
-# ----------------------
-  
-def main():
-
-    # -- Analizar los argumentos pasados por el usuario
-    Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
-
-    # -- Armando la trama
-    Trama = obtener_trama(Action, Device, DmuDevice1,
-                          DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
-    s = serial_init(Port)
     
-    
-    if Action == "query" or Action == "set":
-        write_serial_frame(Trama, s)
-        hexResponse = read_serial_frame(Port, s)
-        s.close()
-        data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
-       
-        if Action == 'set':
-            if len(data) != 0 and Device == 'dmu':
-                sys.stderr.write(
-                    "- Can't send a message to master device")
-                sys.exit(CRITICAL)
-            elif len(data) == 0 and Device == 'dru':
-                sys.stderr.write(
-                    "- Can't send a message to remote device")
-                sys.exit(CRITICAL)
-            else:
-                if Device == 'dru':
-                    a_bytearray = bytearray(data)
-                    hex_string = a_bytearray.hex()
-                    sys.stderr.write(hex_string + '\n')
-                sys.stderr.write("OK")
-                
-        elif Action == 'query':
-            a_bytearray = bytearray(data)
-            resultHEX = a_bytearray.hex()
-            try:
-                resultOK =  s8(int(resultHEX, 16))
-            except:
-                print("- Unknown received message")
-                sys.exit(3)    
-            
-            if len(CmdNumber) > 4:
-                hex_string = convertirMultipleRespuesta(data)
-            else:   
-                hex_string =  convertirRespuesta(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
-
-            if (resultOK  >= HighLevelCritical) :
-                print("CRITICAL Alert! - " + hex_string )
-                sys.exit(CRITICAL)
-            elif (resultOK >=  HighLevelWarning) :
-                print("WARNING Alert !- " + hex_string  )
-                sys.exit(WARNING)
-            else:
-                print("OK - " + hex_string )
-                sys.exit(OK)     
-    else:
-        sys.stderr.write(
-            "- Invalid action  %s \n" % Action)
-        sys.exit(WARNING)
-
 def serial_init(Port):
     try:
         if Port == '/dev/ttyS0':
@@ -1147,11 +1202,167 @@ def serial_init(Port):
         s = serial.Serial(Port, baudrate)
         s.timeout = 1
     except serial.SerialException:
-        sys.stderr.write(
+        logging.debug(
             " Can not open comunication with device")
         sys.exit(2)
     return s
 
+def writeSerialQueries(queries,serial):
+    replies = list()
+    response_time = 0.0
+    for query in queries:
+        start_time = time.time()
+        write_serial_frame(query, serial)
+        reply = read_serial_frame(serial)
+        replies.append(reply)
+        tmp = time.time() - start_time                
+        if tmp > response_time:
+            response_time = tmp
+        time.sleep(response_time)
+    serial.close()
+    return replies
+
+def druReplyDecode(parameters,reply_data):
+    
+    cmd_number = reply_data[:4]
+    cmd_value = reply_data[4:]
+    
+    if cmd_number =='0105':
+        temperature = s8(int(cmd_value,16))
+        parameters['paTemperature'] = str(temperature)
+                                                                                                                
+    elif cmd_number == '0305':
+        dl_power = s8(int(cmd_value, 16))
+
+        if(int(dl_power) == 0 or int(dl_power) >= 31):
+            parameters['dlOutputPower'] ="-"
+        else:
+            parameters['dlOutputPower'] = str(dl_power)
+        
+    elif cmd_number == '2505':
+        ul_power = s8(int(cmd_value, 16))
+        parameters['ulInputPower'] = str(ul_power)
+                
+    elif cmd_number == '0605':
+        vswr = s8(int(cmd_value, 16))/10
+        parameters['vswr'] = str(round(vswr,2))
+        
+    elif cmd_number == '4004':
+        ul_att = (int(cmd_value, 16))
+        parameters['ulAtt'] = str(ul_att)  
+                                
+    elif cmd_number == '4104':
+        dl_att = (int(cmd_value, 16))
+        parameters['dlAtt'] = str(dl_att)
+        
+    elif cmd_number == 'ef0b':
+        working_mode = (int(cmd_value, 16))
+
+        if working_mode == 2:
+            parameters['workingMode'] = "WideBand Mode"
+        elif working_mode == 3:
+            parameters['workingMode'] = "Channel Mode"
+        else:
+            parameters['workingMode'] = "Unknown"
+            
+    elif (cmd_number == '1004' or cmd_number == '1104' or cmd_number == '1204'
+        or cmd_number == '1304' or cmd_number == '1404' or cmd_number == '1504'
+        or cmd_number == '1604' or cmd_number == '1704' or cmd_number == '1804'
+        or cmd_number == '1904' or cmd_number == '1a04' or cmd_number == '1b04'
+        or cmd_number == '1c04' or cmd_number == '1d04' or cmd_number == '1e04'
+        or cmd_number == '1f04'):
+        
+        byte0 = int(cmd_value[0:2], 16)   
+        ch_number = int(cmd_number[1],16)+1
+        channel = 4270000 + (125 * byte0)   
+        text = frequencyDictionary[channel] 
+        parameters["channel"+str(ch_number)+"ulFreq"] = text[4:22-6+2]
+        parameters["channel"+str(ch_number)+"dlFreq"] = text[23:40-6+2]
+    
+    elif cmd_number == '160a':
+        byte2 = cmd_value[0:2]
+        byte1 = cmd_value[2:4]
+        res1 = "{0:08b}".format(int(byte1, 16))
+        res2 = "{0:08b}".format(int(byte2, 16))
+        binario = res1 + res2
+        channel = 0            
+        for i  in binario:
+            channel += 1                
+            if (i == '1' ):  
+                parameters["channel"+str(channel)+"Status"] = "ON"                      
+            else:
+                parameters["channel"+str(channel)+"Status"] = "OFF"  
+    elif cmd_number =='4c0b':
+        mac = cmd_value
+        parameters['mac'] = mac
+    elif cmd_number =='0500':
+        sn = bytearray.fromhex(reply_data)
+        sn = [i for i in sn if i != 0]
+        del sn[0]
+        a_bytearray = bytearray(sn)
+        resultHEX = a_bytearray.hex()
+        sn = bytearray.fromhex(resultHEX).decode()
+        parameters['sn'] = sn
+ 
+def splitMultipleReplyData(reply_data):
+    i = 0
+    j = 0
+    temp = list()
+    dataResult = list()
+    isWriting = False
+
+    try:
+        for i in range(0,len(reply_data)-1):
+            if isWriting == False:
+                dataLen = reply_data[i]
+                isWriting = True
+
+            if j<dataLen-1:
+                temp.append(reply_data[i+1])
+                j = j+1
+            else:
+                isWriting = False
+                j = 0
+                a_bytearray = bytearray(temp)
+                resultHEX = a_bytearray.hex()
+                dataResult.append(resultHEX)
+                temp.clear()
+        return dataResult
+    except Exception as e:
+        print(str(e))
+        return []
+     
+def newBlankDruParameterDict():
+    parameters = dict()
+    
+    if('dlOutputPower' not in parameters):
+        parameters['dlOutputPower'] = '-'
+    if('ulInputPower' not in parameters):
+        parameters['ulInputPower'] = '-'
+    if('paTemperature' not in parameters):
+        parameters['paTemperature'] = '-'
+    if('dlAtt' not in parameters):
+        parameters['dlAtt'] = '-'
+    if('ulAtt' not in parameters):
+        parameters['ulAtt'] = '-'
+    if('vswr' not in parameters):
+        parameters['vswr'] = '-'
+    if('workingMode' not in parameters):
+        parameters['workingMode'] = '-'
+    if('mac' not in parameters):
+        parameters['mac'] = '-'
+    if('sn' not in parameters):
+        parameters['sn'] = '-'
+    for i in range(1,17):
+        channel = str(i)
+        if("channel"+str(channel)+"Status" not in parameters):
+            parameters["channel"+str(channel)+"Status"] = '-'
+        if("channel"+str(channel)+"ulFreq" not in parameters):
+            parameters["channel"+str(channel)+"ulFreq"] = '-'    
+        if("channel"+str(channel)+"dlFreq" not in parameters):
+            parameters["channel"+str(channel)+"dlFreq"] = '-'
+    
+    return parameters
 
 if __name__ == "__main__":
     main()
