@@ -20,9 +20,13 @@ class RemoteForm extends ConfigForm
         22, #22: Uplink ATT [dB]  - Cmd data 0x04004
         23, #23: Downlink ATT [dB] - Cmd data 0x04104
         25, #25: Choice of working mode - Cmd data 0xEF0B
-        #  26, #26: Uplinkg Start Frequency
-        #  27, #27: Downlink Start Frequency
-        #  30  #30: Master/Slave Link Alarm Control
+         #26: Uplinkg Start Frequency
+         #27: Downlink Start Frequency
+         #28: Work Bandwidth
+         #29: Channel bandwidth
+        #30  #30: Master/Slave Link Alarm Control
+         #31: Device Serial Numner
+         #32: MAC Address
     ];
 
     public function init()
@@ -39,7 +43,7 @@ class RemoteForm extends ConfigForm
         if (isset($_GET['service'])){
             $servicename = $_GET['service'];
             $hostname = substr($servicename,0,4);
-            echo $hostname;
+            #echo json_encode($_GET);
             $opt = substr($servicename,8,1);
             $dru = substr($servicename,13,1);
             $opt_dru = "OPT".$opt." Remote ".$dru;
@@ -105,7 +109,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-
             #16: High threshold of upstream soise
             if ($option == 16 ||  isset($formData["opt16_hidden"])) {
                 $input = 16;
@@ -120,7 +123,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-
             #17: Low threshold of upstream noise
             if ($option == 17 ||  isset($formData["opt17_hidden"])) {
                 $input = 17;
@@ -135,7 +137,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-
             #18: Uplink noise correction value
             if ($option == 18 ||  isset($formData["opt18_hidden"])) {
                 $input = 18;
@@ -150,7 +151,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }  
-
             #19: Uplink noise Detection parameter 1
             if ($option == 19 ||  isset($formData["opt19_hidden"])) {
                 $input = 19;
@@ -165,7 +165,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-
             #20: Uplink noise Detection parameter 2
             if ($option == 20 ||  isset($formData["opt20_hidden"])) {
                 $input = 20;
@@ -180,7 +179,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-
             #22: Uplink ATT [dB]
             if ($option == 22 ||  isset($formData["opt22_hidden"])) {
                 $input = 22;
@@ -195,7 +193,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             } 
-
             #23: Downlink ATT [dB]
             if ($option == 23 ||  isset($formData["opt23_hidden"])) {
                 $input = 23;
@@ -210,7 +207,6 @@ class RemoteForm extends ConfigForm
                     ]);                     
                 }    
             }
-
             #25: Choice of working mode
             if ($option == 25 ||  isset($formData["opt25_hidden"])) {
                 $input = 25;
@@ -235,7 +231,6 @@ class RemoteForm extends ConfigForm
 
                 }    
             }
-
             #26: Uplinkg Start Frequency
             if ($option == 26 ||  isset($formData['opt26_hidden'])) {
                 $input = 26;
@@ -244,40 +239,59 @@ class RemoteForm extends ConfigForm
                     $listFrecuencia = $this->frecuenciaDMU();         
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);                                    
-                    $this->addElement(
-                        'select',
-                        "opt{$input}",
-                        array(
-                            'label' => $this->translate($descripcion),
-                            'multiOptions' => $listFrecuencia,
-                            'required' => true,
-                            // 'autosubmit' acts like an AJAX-Request
-                            //'class' => 'autosubmit'
-                        )
-                    ); 
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}").'   - value between 417[MHz] - 420[MHz]',
+                        'required' => true,
+                    ]);  
 
                 }
             }
-
             #27: Downlink Start Frequency
             if ($option == 27 ||  isset($formData['opt27_hidden'])) {
                 $input = 27;
                 $hidden =  isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {      
-                    $listFrecuencia = $this->frecuenciaDMU();         
+      
+                $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                $descripcion = $this->getDescripcion($input);                                    
+                $this->addElement('text', "opt{$input}", [
+                    #'label'       => $this->translate("{$descripcion}"),
+                    'placeholder' => $this->translate("{$descripcion}").'   - value between 427[MHz] - 430[MHz]',
+                    'required' => true,
+                ]);                      
+                }
+            }
+            #28: Work bandwidth
+            if ($option == 28 ||  isset($formData['opt28_hidden'])) {
+                $input = 28;
+                $hidden =  isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {      
+                #    $listFrecuencia = $this->frecuenciaDMU();         
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);                                    
-                    $this->addElement(
-                        'select',
-                        "opt{$input}",
-                        array(
-                            'label' => $this->translate($descripcion),
-                            'multiOptions' => $listFrecuencia,
-                            'required' => true,
-                            // 'autosubmit' acts like an AJAX-Request
-                            //'class' => 'autosubmit'
-                        )
-                    );                     
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}").'   - value between 1[MHz] - 3[MHz]',
+                        'required' => true,
+                    ]);  
+                }
+            }
+
+            #29: Channel bandwidth
+            if ($option == 29 ||  isset($formData['opt29_hidden'])) {
+                $input = 29;
+                $hidden =  isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {            
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);                                    
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);                                    
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}").'   - value between 12.5[KHz] - 20[KHz]',
+                        'required' => true,
+                    ]);                    
                 }
             }
 
@@ -302,6 +316,36 @@ class RemoteForm extends ConfigForm
                             //'class' => 'autosubmit'
                         )
                     );
+
+                }    
+            }                  
+            #31: Device Serial number
+            if ($option == 31 ||  isset($formData["opt31_hidden"])) {
+                $input = 31;
+                $hidden =  isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {                                        
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}").'   - enter text here',
+                        'required' => true,
+                    ]);  
+
+                }    
+            }
+            #32: MAC Address
+            if ($option == 32 ||  isset($formData["opt32_hidden"])) {
+                $input = 32;
+                $hidden =  isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {                                        
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}").'   - 00-00-00-00-00-00',
+                        'required' => true,
+                    ]);  
 
                 }    
             }
@@ -373,7 +417,6 @@ class RemoteForm extends ConfigForm
 
         return $row->id;
     }
-
 
     private function getDescripcion($id){
         $select = (new Select())

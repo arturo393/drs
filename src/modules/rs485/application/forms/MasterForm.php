@@ -183,7 +183,6 @@ class MasterForm extends ConfigForm
             }
         }       
     }
-
     private function cargarHostList($hostname){
         $select = (new Select())
             ->from('icinga_host r')

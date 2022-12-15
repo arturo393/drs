@@ -86,6 +86,10 @@ class MasterController extends Controller
 
         $this->view->form = $form;
 
+
+
+
+
        }
 
 
@@ -250,14 +254,14 @@ class MasterController extends Controller
             
         }
 
-        $ejecutarQuery = $this->comando_dmu($host_remote);
-        exec($ejecutarQuery . " 2>&1", $parameters);  
-	    $index = strpos($parameters[0],'|');
-    	$params = substr($parameters[0],0,$index);
+      #  $ejecutarQuery = $this->comando_dmu($host_remote);
+      #  exec($ejecutarQuery . " 2>&1", $parameters);  
+	  #    $index = strpos($parameters[0],'|');
+      #	$params = substr($parameters[0],0,$index);
 
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);	
-        $this->view->assign('params', $params);	
+      #  $this->view->assign('params', $params);	
     }
 
     private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, $action){
