@@ -754,24 +754,33 @@ def extractDmuReplyData(reply):
     return data
 
 def hastIdReplyError(reply,query_id):
+    if(query_id == '00'):
+        return 0
     query_id = bytes.fromhex(query_id)
     query_id = int.from_bytes(query_id, "big")
     REPLY_ID_INDEX = 7
     reply_id = reply[REPLY_ID_INDEX]
     if( reply_id != query_id):
-        logging.debug(" reply id is not the same "+str(reply)+"\n")
+        logging.debug("RU"+str(hex(query_id))+" reply id "+str(hex(reply_id))+"is not the same "+str(reply))
         return 1
     return 0
     
-def hasReplyError(reply):
-  
+def hasReplyError(reply,query_id):
+    if query_id == "00":
+        query_id = "DMU"
+    else:
+        query_id = "RU"+query_id
+   
     if (reply == None or reply == "" or reply == " "  or len(reply) == 0 ):
-        logging.debug("RU"+str(reply)+" No Response ")
+        logging.debug(query_id+str(reply)+" No Response ")
         return 1
-
-    reply_crc, calculated_crc = getReplyCrc(reply)
+    try:
+        reply_crc, calculated_crc = getReplyCrc(reply)
+    except Exception as e:
+        logging.debug(query_id+" - " +str(e)+" "+str(reply))
+        return 1
     if(reply_crc != calculated_crc):
-        logging.debug("Checksum error - CRC reply: "+str(reply_crc)+"  CRC calculated: " +str(calculated_crc)+"\n")
+        logging.debug(query_id+" Checksum error - CRC reply: "+str(reply_crc)+"  CRC calculated: " +str(calculated_crc) + " " + str(reply))
         return 1
     return 0
 
@@ -782,7 +791,7 @@ def hasSizeReplyError(reply):
         return 1
 
 def hasDruReplyError(reply,query_id):
-    if hasReplyError(reply):
+    if hasReplyError(reply,query_id):
         return 1
     if hasSizeReplyError(reply):
         return 1
@@ -791,7 +800,7 @@ def hasDruReplyError(reply,query_id):
     return 0
 
 def hasDmuReplyError(reply):
-    if hasReplyError(reply):
+    if hasReplyError(reply,"00"):
         return 1
     return 0
 
@@ -1155,7 +1164,7 @@ def setSerial(port, baudrate):
     for times in range(3):
         try:
             s = serial.Serial(port, baudrate)
-            s.timeout = 1
+            s.timeout = 0.2
             s.exclusive = True
 
         except serial.SerialException as e:
@@ -1554,6 +1563,62 @@ def set_working_mode_dict(parameter_dict, hex_validated_frame):
     except:
         print("WARNING - Dato recibido es desconocido ")
         print(hex_validated_frame)
+
+def updateParametersWithDmuDataReply(parameters, reply):
+    reply_data = extractDmuReplyData(reply)
+    reply_data = bytearray(reply_data).hex()
+    dmuReplyDecode(parameters, reply_data)
+    
+def getParametersFromDmuReplies(queries, replies):
+    parameters = newBlankDmuParameter()
+    reply_errors_count = 0
+    for reply in replies:
+        if hasDmuReplyError(reply):
+            reply_errors_count +=1
+        else:
+            updateParametersWithDmuDataReply(parameters, reply)
+            
+    queries_count = len(queries)
+    if reply_errors_count == queries_count:
+        sys.stderr.write("No response")
+        sys.exit(CRITICAL)
+    return parameters
+
+def getParametersFromDruReplies(queries, replies, query_id):
+    parameters = newBlankDruParameter()
+    reply_errors_count = 0
+    for reply in replies:
+        if hasDruReplyError(reply,query_id):
+            reply_errors_count +=1
+        else:
+            updateParametersWithReplyData(parameters, reply)
+    
+    queries_count = len(queries)
+    if reply_errors_count == queries_count:
+        sys.stderr.write("No response")
+        sys.exit(CRITICAL)
+    return parameters
+
+def updateParametersWithReplyData(parameters, reply):
+    try:
+        reply_data = extractDruReplyData(reply, DRU_MULTIPLE_CMD_LENGTH)
+    except Exception as e:
+        logging.debug(str(e)+"- "+str(reply))
+        return 1
+    try:
+        reply_datas = splitMultipleReplyData(reply_data)
+    except Exception as e:
+        logging.debug(str(e)+"-"+str(reply_data))
+        return 1    
+    try:
+     for data in reply_datas:
+        druReplyDecode(parameters, data)
+    except Exception as e:
+        logging.debug(str(e)+"- "+str(data))
+        return 1
+    return 0 
+
+
 
 if __name__ == "__main__":
     main()

@@ -60,26 +60,14 @@ def help():
 def main():
 
     args = analizar_argumentos()    
-    queries = setRs485CmdFrames(args)   
+    queries = setRs485CmdFrames(args)
+    query_id = args['opt']+args['dru'] 
 
     serial = rs485.setSerial('/dev/ttyS1', 9600)
     reply_time = time.time()
     replies = rs485.writeSerialQueries(queries,serial)
     reply_time = time.time()-reply_time
-    
-    parameters = rs485.newBlankDruParameterDict()
-    query_id = args['opt']+args['dru']
-    reply_errors_count = 0
-    for reply in replies:
-        if rs485.hasReplyError(reply,query_id):
-            reply_errors_count +=1
-        else:
-            updateParametersWithReplyData(parameters, reply)
-    
-    queries_count = len(queries)
-    if reply_errors_count == queries_count:
-        sys.stderr.write("No response")
-        sys.exit(CRITICAL)
+    parameters = rs485.getParametersFromDruReplies(queries, replies, query_id)
         
     parameters["rt"] = str(round(reply_time,2))
     alarm = get_alarm_from_dict(args, parameters)
@@ -91,6 +79,8 @@ def main():
         sys.exit(1)
     else:
         sys.exit(0)
+
+
 
 # -----------------------------------------------------
 # --  Analizar los argumentos pasados por el usuario
@@ -148,24 +138,6 @@ def analizar_argumentos():
         sys.exit(2)
     return args
 
-def updateParametersWithReplyData(parameters, reply):
-    try:
-        reply_data = rs485.extractReplyData(reply, DRU_MULTIPLE_CMD_LENGTH)
-    except Exception as e:
-        logging.debug(str(e)+"- "+str(reply))
-        return 1
-    try:
-        reply_datas = rs485.splitMultipleReplyData(reply_data)
-    except Exception as e:
-        logging.debug(str(e)+"-"+str(reply_data))
-        return 1    
-    try:
-     for data in reply_datas:
-        rs485.druReplyDecode(parameters, data)
-    except Exception as e:
-        logging.debug(str(e)+"- "+str(data))
-        return 1
-    return 0 
 
 def setRs485CmdFrames(args):
     frame_list = list()

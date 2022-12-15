@@ -91,24 +91,11 @@ def main():
     
     start_time = time.time()
     response_time = 0
-    parameters = rs485.newBlankDmuParameter()
+
     
     serial = rs485.setSerial('/dev/ttyS0',19200)
     replies = rs485.writeSerialQueries(queries,serial)
-    
-    reply_errors_count = 0
-    for reply in replies:
-        if rs485.hasDmuReplyError(reply):
-            reply_errors_count +=1
-        else:
-            reply_data = rs485.extractDmuReplyData(reply)
-            reply_data = bytearray(reply_data).hex()
-            rs485.dmuReplyDecode(parameters, reply_data)
-    
-    queries_count = len(queries)
-    if reply_errors_count == queries_count:
-        sys.stderr.write("No response")
-        sys.exit(CRITICAL)
+    parameters = rs485.getParametersFromDmuReplies(queries, replies)
     
     response_time = time.time() - start_time
     parameters["rt"] = str(response_time)
