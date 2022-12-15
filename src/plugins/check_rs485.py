@@ -760,8 +760,9 @@ def hastIdReplyError(reply,query_id):
     query_id = int.from_bytes(query_id, "big")
     REPLY_ID_INDEX = 7
     reply_id = reply[REPLY_ID_INDEX]
+    reply  = ''.join(format(x, '02x') for x in reply)
     if( reply_id != query_id):
-        logging.debug("RU"+str(hex(query_id))+" reply id "+str(hex(reply_id))+"is not the same "+str(reply))
+        logging.debug("RU"+str(hex(query_id))+" Error - reply id "+str(hex(reply_id))+"is not the same "+str(reply))
         return 1
     return 0
     
@@ -772,7 +773,7 @@ def hasReplyError(reply,query_id):
         query_id = "RU"+query_id
    
     if (reply == None or reply == "" or reply == " "  or len(reply) == 0 ):
-        logging.debug(query_id+str(reply)+" No Response ")
+        logging.debug(query_id+" Error - Blank Response ")
         return 1
     try:
         reply_crc, calculated_crc = getReplyCrc(reply)
@@ -780,14 +781,17 @@ def hasReplyError(reply,query_id):
         logging.debug(query_id+" - " +str(e)+" "+str(reply))
         return 1
     if(reply_crc != calculated_crc):
-        logging.debug(query_id+" Checksum error - CRC reply: "+str(reply_crc)+"  CRC calculated: " +str(calculated_crc) + " " + str(reply))
+        reply_crc  = ''.join(format(x, '02x') for x in reply_crc)
+        calculated_crc  = ''.join(format(x, '02x') for x in calculated_crc)
+        reply  = ''.join(format(x, '02x') for x in reply)             
+        logging.debug(query_id+" Error - CRC reply: "+str(reply_crc)+"  CRC calculated: " +str(calculated_crc) + " " + str(reply))
         return 1
     return 0
 
 def hasSizeReplyError(reply):
     if(reply == '7e' or len(reply) < MINIMUM_DRU_FRAME_SIZE ):
         reply = binascii.hexlify(bytearray(reply))
-        logging.debug(" Frame Size Error - frame is not valid: "+str(reply)+"\n")
+        logging.debug(" Frame Size Error - frame is not valid: "+ str(reply)+"\n")
         return 1
 
 def hasDruReplyError(reply,query_id):
@@ -1164,7 +1168,9 @@ def setSerial(port, baudrate):
     for times in range(3):
         try:
             s = serial.Serial(port, baudrate)
-            s.timeout = 0.2
+            s.timeout = 0.1
+            
+            
             s.exclusive = True
 
         except serial.SerialException as e:
@@ -1569,6 +1575,27 @@ def updateParametersWithDmuDataReply(parameters, reply):
     reply_data = bytearray(reply_data).hex()
     dmuReplyDecode(parameters, reply_data)
     
+    
+def getParametersFromDmuMessages(messages):
+    parameters = newBlankDmuParameter()
+    reply_errors_count = 0
+    for message in messages:
+        query = message[0]
+        reply = message[1]
+        logging.debug("DMU Query: "+str(query).lower())
+        reply_temp = ''.join(format(x, '02x') for x in reply)
+        logging.debug("DMU Reply: "+str(reply_temp))
+        if hasDmuReplyError(reply):
+            reply_errors_count +=1
+        else:
+            updateParametersWithDmuDataReply(parameters, reply)
+            
+    queries_count = len(messages)
+    if reply_errors_count == queries_count:
+        sys.stderr.write("No response")
+        sys.exit(CRITICAL)
+    return parameters
+    
 def getParametersFromDmuReplies(queries, replies):
     parameters = newBlankDmuParameter()
     reply_errors_count = 0
@@ -1579,6 +1606,31 @@ def getParametersFromDmuReplies(queries, replies):
             updateParametersWithDmuDataReply(parameters, reply)
             
     queries_count = len(queries)
+    if reply_errors_count == queries_count:
+        sys.stderr.write("No response")
+        sys.exit(CRITICAL)
+    return parameters
+
+
+
+def getParametersFromDruMessages(messages):
+    parameters = newBlankDruParameter()
+    reply_errors_count = 0
+    
+    for message in messages:
+        query = message[0]
+        reply = message[1]
+        QUERY_ID_INDEX = 14
+        query_id = query[QUERY_ID_INDEX:QUERY_ID_INDEX+2]
+        logging.debug("[Check] RU"+query_id+ " Query: "+str(query).lower())
+        reply_temp = ''.join(format(x, '02x') for x in reply)
+        logging.debug("[Check] RU"+query_id+ " Reply: "+str(reply_temp))
+        if hasDruReplyError(reply,query_id):
+            reply_errors_count +=1
+        else:
+            updateParametersWithReplyData(parameters, reply)
+    
+    queries_count = len(messages)
     if reply_errors_count == queries_count:
         sys.stderr.write("No response")
         sys.exit(CRITICAL)
@@ -1600,6 +1652,7 @@ def getParametersFromDruReplies(queries, replies, query_id):
     return parameters
 
 def updateParametersWithReplyData(parameters, reply):
+    
     try:
         reply_data = extractDruReplyData(reply, DRU_MULTIPLE_CMD_LENGTH)
     except Exception as e:

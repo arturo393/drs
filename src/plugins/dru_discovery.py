@@ -169,12 +169,9 @@ def getCreatedDruServices():
 def getNewListFromConnectedEqualCreated(connected_dru, created_dru):
     new_dru = list()
     for connected in connected_dru:
-        logging.debug("Found " + str(connected))
         not_in_created = True
         for created in created_dru:
-            logging.debug("Created "+str(created))
             if(dru_compare_mac_and_sn(connected,created)):
-                logging.debug(str(connected)+" "+str(created))
                 if (connected.opt != created.opt):    
                     ru_created_name = "RU" + \
                         str(created.opt)+str(created.dru)
@@ -239,9 +236,11 @@ def getConnectedDruFromQueries(discovery):
     for discover in discovery:
         query = discover[0]
         reply = discover[1]     
-        
-        query_id_index = 14
-        query_id = query[query_id_index:query_id_index+2]
+        QUERY_ID_INDEX = 14
+        query_id = query[QUERY_ID_INDEX:QUERY_ID_INDEX+2]
+        logging.debug("[Discovery] RU"+query_id+ " Query: "+str(query).lower())
+        reply_temp = ''.join(format(x, '02x') for x in reply)
+        logging.debug("[Discovery] RU"+query_id+ " Reply: "+str(reply_temp))
         if rs485.hasDruReplyError(reply,query_id):
             reply_errors_count +=1
         else:
@@ -634,7 +633,7 @@ def getConnectedDruQueries(parameters):
                         queries.append(rs485.obtener_trama('query','dru','00','00','094C0B'+mac+'170500'+sn,'22','00',str(opt)+str(dru_found)))
         return queries
     except Exception as e:
-        sys.stderr.write("Error - found sn "+ str(e)+"\n")
+        logging.debug("Error - found sn "+ str(e)+"\n")
         return []
     
     

@@ -95,6 +95,8 @@ def main():
     
     serial = rs485.setSerial('/dev/ttyS0',19200)
     replies = rs485.writeSerialQueries(queries,serial)
+    messages =  list(zip(queries,replies))
+    parameters = rs485.getParametersFromDmuMessages(messages)
     parameters = rs485.getParametersFromDmuReplies(queries, replies)
     
     response_time = time.time() - start_time

@@ -67,7 +67,9 @@ def main():
     reply_time = time.time()
     replies = rs485.writeSerialQueries(queries,serial)
     reply_time = time.time()-reply_time
-    parameters = rs485.getParametersFromDruReplies(queries, replies, query_id)
+    messages =  list(zip(queries,replies))
+    parameters = rs485.getParametersFromDruMessages(messages)
+    #parameters = rs485.getParametersFromDruReplies(queries, replies, query_id)
         
     parameters["rt"] = str(round(reply_time,2))
     alarm = get_alarm_from_dict(args, parameters)
