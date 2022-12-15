@@ -25,9 +25,14 @@ import time
 import binascii
 import logging
 
-path = "/home/sigmadev/"
-logging.basicConfig(format='%(asctime)s %(message)s',filename=path+"check_rs485.log", level=logging.DEBUG)
-
+path = "/var/log/icinga2/"
+filename = "check_rs485.log"
+try:
+    logging.basicConfig(format='%(asctime)s %(message)s',filename=path+filename, level=logging.DEBUG)
+except Exception as e:
+    logging.basicConfig(format='%(asctime)s %(message)s',filename=path+filename, level=logging.DEBUG)
+    os.chmod(path+filename, 0o777)  
+      
 # --------------------------------
 # -- Declaracion de constantes
 # --------------------------------
@@ -400,8 +405,6 @@ def main():
     Trama = obtener_trama(Action, Device, DmuDevice1,
                           DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
     s = serial_init(Port)
-    
-    
     if Action == "query" or Action == "set":
         write_serial_frame(Trama, s)
         hexResponse = read_serial_frame(s)
@@ -409,20 +412,25 @@ def main():
         data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
        
         if Action == 'set':
-            if len(data) != 0 and Device == 'dmu':
-                logging.debug(
-                    "- Can't send a message to master device")
+            if len(data) == 0 and Device == 'dmu':
+                hexResponse = ''.join(format(x, '02x') for x in hexResponse)
+                logging.debug("DMU Error - Can't validate data "+str(hexResponse))
                 sys.exit(CRITICAL)
             elif len(data) == 0 and Device == 'dru':
                 logging.debug(
-                    "- Can't send a message to remote device")
+                    "DRU - Can't send a message to remote device")
                 sys.exit(CRITICAL)
             else:
                 if Device == 'dru':
                     a_bytearray = bytearray(data)
                     hex_string = a_bytearray.hex()
-                    logging.debug(hex_string + '\n')
-                logging.debug("OK")
+                if Device == 'dmu':
+                  a_bytearray = bytearray(data)
+                  resultHEX = a_bytearray.hex()
+                  logging.debug("DMU OK - Reply: "+str(hexResponse))
+                  print("OK")
+                  sys.exit(OK)
+
                 
         elif Action == 'query':
             a_bytearray = bytearray(data)
@@ -433,20 +441,20 @@ def main():
                 print("- Unknown received message")
                 sys.exit(3)    
             
-            if len(CmdNumber) > 4:
-                hex_string = convertirMultipleRespuesta(data)
-            else:   
-                hex_string =  convertirRespuestaHumana(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
+        if len(CmdNumber) > 4:
+            hex_string = convertirMultipleRespuesta(data)
+        else:   
+            hex_string =  convertirRespuestaHumana(resultHEX, Device, CmdNumber,HighLevelCritical,HighLevelWarning)
 
-            if (resultOK  >= HighLevelCritical) :
-                print("CRITICAL Alert! - " + hex_string )
-                sys.exit(CRITICAL)
-            elif (resultOK >=  HighLevelWarning) :
-                print("WARNING Alert !- " + hex_string  )
-                sys.exit(WARNING)
-            else:
-                print("OK - " + hex_string )
-                sys.exit(OK)     
+        if (resultOK  >= HighLevelCritical) :
+            print("CRITICAL Alert! - " + hex_string )
+            sys.exit(CRITICAL)
+        elif (resultOK >=  HighLevelWarning) :
+            print("WARNING Alert !- " + hex_string  )
+            sys.exit(WARNING)
+        else:
+            print("OK - " + hex_string )
+            sys.exit(OK)     
     else:
         logging.debug(
             "- Invalid action  %s \n" % Action)
@@ -1220,17 +1228,18 @@ def write_serial_frame(Trama, s):
     s.flush()
     
 def serial_init(Port):
-    try:
-        if Port == '/dev/ttyS0':
-            baudrate = 19200
-        else:
-            baudrate = 9600
-        s = serial.Serial(Port, baudrate)
-        s.timeout = 1
-    except serial.SerialException:
-        logging.debug(
-            " Can not open comunication with device")
-        sys.exit(2)
+    for times in range(3):
+        try:
+            if Port == '/dev/ttyS0':      
+                baudrate = 19200
+            else:
+                baudrate = 9600
+            s = serial.Serial(Port, baudrate)
+            s.timeout = 0.1
+        except serial.SerialException as e:
+            logging.debug(
+                "WARNING - "+str(times)+" "+str(e)+" "+str(Port))
+            time.sleep(1)
     return s
 
 def writeSerialQueries(queries,serial):
@@ -1575,7 +1584,6 @@ def updateParametersWithDmuDataReply(parameters, reply):
     reply_data = bytearray(reply_data).hex()
     dmuReplyDecode(parameters, reply_data)
     
-    
 def getParametersFromDmuMessages(messages):
     parameters = newBlankDmuParameter()
     reply_errors_count = 0
@@ -1610,8 +1618,6 @@ def getParametersFromDmuReplies(queries, replies):
         sys.stderr.write("No response")
         sys.exit(CRITICAL)
     return parameters
-
-
 
 def getParametersFromDruMessages(messages):
     parameters = newBlankDruParameter()
