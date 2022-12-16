@@ -3,9 +3,6 @@
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
 # RS485 Write WebUI Module
-
-console
-
 ```
 apt install icingaweb2-module-ipl
 mysql -p -u root director < /tmp/sigma-rds/src/modules/rs485/schema/mysql.sql
