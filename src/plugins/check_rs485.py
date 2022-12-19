@@ -402,34 +402,41 @@ def main():
     Port, Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId, LowLevelWarning, HighLevelWarning, LowLevelCritical, HighLevelCritical  = analizar_argumentos()
 
     # -- Armando la trama
-    Trama = obtener_trama(Action, Device, DmuDevice1,
+    query = obtener_trama(Action, Device, DmuDevice1,
                           DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId)
     s = serial_init(Port)
     if Action == "query" or Action == "set":
-        write_serial_frame(Trama, s)
-        hexResponse = read_serial_frame(s)
+        #write_serial_frame(Trama, s)
+        #hexResponse = read_serial_frame(s)
+        write_serial_frame(query, s)
+        time.sleep(0.2)
+        reply = read_serial_frame(s)
         s.close()
-        data = validar_trama_respuesta(hexResponse, Device,len(CmdNumber))
+        data = validar_trama_respuesta(reply, Device,len(CmdNumber))
        
         if Action == 'set':
             if len(data) == 0 and Device == 'dmu':
-                hexResponse = ''.join(format(x, '02x') for x in hexResponse)
-                logging.debug("DMU Error - Can't validate data "+str(hexResponse))
+                reply = ''.join(format(x, '02x') for x in reply)
+                logging.debug("DMU Error - Can't validate data "+str(reply))
                 sys.exit(CRITICAL)
             elif len(data) == 0 and Device == 'dru':
                 logging.debug(
                     "DRU - Can't send a message to remote device")
+                print("No Response")
                 sys.exit(CRITICAL)
             else:
                 if Device == 'dru':
                     a_bytearray = bytearray(data)
                     hex_string = a_bytearray.hex()
+                    logging.debug("DRU OK - Reply: "+str(reply))
+                    print("OK")
+                    sys.exit(OK)
                 if Device == 'dmu':
-                  a_bytearray = bytearray(data)
-                  resultHEX = a_bytearray.hex()
-                  logging.debug("DMU OK - Reply: "+str(hexResponse))
-                  print("OK")
-                  sys.exit(OK)
+                    a_bytearray = bytearray(data)
+                    resultHEX = a_bytearray.hex()
+                    logging.debug("DMU OK - Reply: "+str(reply))
+                    print("OK")
+                    sys.exit(OK)
 
                 
         elif Action == 'query':
@@ -616,9 +623,10 @@ def getChecksum2(data):
         checksum = crc[4:6] + crc[2:4]
     
     checksum = checksum.upper()
-    checksum_new = checksum.replace('7E','5E7D')      
+    if(checksum[:2] == '7E' or checksum[2:] == '7E'):
+         checksum = checksum.replace('7E','5E7D')      
     #checksum_new = checksum.replace('5E','5E5D')      
-    return checksum_new
+    return checksum
 
 def buscaArray(lst, value):
 
@@ -1250,7 +1258,8 @@ def writeSerialQueries(queries,serial):
         write_serial_frame(query, serial)
         reply = read_serial_frame(serial)
         replies.append(reply)
-        tmp = time.time() - start_time                
+        tmp = time.time() - start_time
+        logging.debug("time - "+str(round(tmp,2)))                
         if tmp > response_time:
             response_time = tmp
         time.sleep(response_time)
