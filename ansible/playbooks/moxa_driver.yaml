@@ -1,0 +1,43 @@
+# Install MiniPC Software 
+---
+- name: Install RDSS Frontend
+  hosts: all
+  become: true
+  vars_files:
+    - ../vars.yaml
+  tasks:
+   - name: Get moxa drivers
+    get_url:
+      url: https://www.moxa.com/getmedia/57dfa4c1-8a2a-4da6-84c1-a36944ead74d/moxa-uport-1100-series-linux-kernel-5.x-driver-v5.1.tgz
+      dest: /tmp
+      mode: '0777'
+
+  - name: Extract Moxa Drivers
+    unarchive:
+      src: /tmp/moxa-uport-1100-series-linux-kernel-5.x-driver-v5.1.tgz
+      dest: /tmp
+      remote_src: yes
+
+  - name: Install Moxa Drivers
+    shell: ./mxinstall
+    args: 
+      chdir: /tmp/mxu11x0
+
+  - name: Adding user sigmadev  to dialout  
+    user: name=sigmadev
+          shell=/bin/zsh
+          groups=dialout
+          append=yes
+
+  - name: Install setserial
+    apt:
+        name:
+            - setserial
+        state: present
+  
+
+  - name: Set /dev/ttyS0 to RS-485 2W
+    shell : setserial /dev/ttyS0 port 1
+
+  - name: Set /dev/ttyS1 to RS-485 2W
+    shell : setserial /dev/ttyS1 port 1

@@ -1,0 +1,8 @@
+---
+gitlabuser: arturo33
+gitlabpassword: gitlab393
+# icinga2 master, which is also the default endpoint
+icinga2_master: "192.168.60.78"
+icinga2_master_name: "rds-m-1"
+# list of additional check plugins
+

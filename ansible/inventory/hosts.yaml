@@ -1,0 +1,6 @@
+---
+miniPCs:
+  hosts:
+    dmu4:
+      ansible_host: 192.168.60.89
+      ansible_port: 22
