@@ -250,12 +250,15 @@ class RemoteController extends Controller
             $druCmdData = str_pad($hex, 2, "0", STR_PAD_LEFT);           
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
+ 
+            $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied"; 
             //$salida = "OK";   
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
         }
         #22: Uplink ATT [dB] 
         if ($this->_hasParam('opt22_hidden')){
+
             $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));                    
 		    $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
@@ -263,21 +266,22 @@ class RemoteController extends Controller
             $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salidaArray = [];
-            $salida = system($ejecutar . " 2>&1");  
+            exec($ejecutar . " 2>&1", $salidaArray);   
             $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied"; 
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
         }
         #23: Downlink ATT [dB]
         if ($this->_hasParam('opt23_hidden')){
-            $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));                   
+
+            $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));                  
 		    $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
             $byte1 = dechex((int) $this->_getParam('opt23'));
-            $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);            
-            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);          
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData); 
             $salidaArray = [];
-            $salida = system($ejecutar . " 2>&1");  
+            exec($ejecutar . " 2>&1", $salidaArray);   
             $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";   
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
@@ -290,7 +294,7 @@ class RemoteController extends Controller
             $druCmdData = $this->_getParam('opt25');           
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salidaArray = [];
-            $salida = system($ejecutar . " 2>&1");  
+            exec($ejecutar . " 2>&1", $salidaArray);   
             $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied"; 
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
@@ -301,7 +305,8 @@ class RemoteController extends Controller
             $druCmdLength = $trama->cmd_length; 
             $druCmdCode = $trama->cmd_code;            
             $byte1 = dechex((int) $this->_getParam('opt26')*10000);
-            $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);         $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
+            $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);     
+            $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
             //$salida = "OK";   
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
@@ -317,6 +322,7 @@ class RemoteController extends Controller
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             $salida = system($ejecutar . " 2>&1");  
             //$salida = "OK";   
+
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'ssh' => $ejecutar ]);      
             usleep(100000);
         }
@@ -393,7 +399,9 @@ class RemoteController extends Controller
       #	$params = substr($parameters[0],0,$index);
         
        # $this->view->assign('params',$params);
+
         $this->view->assign('salida', $result);
+
         	
     }
 

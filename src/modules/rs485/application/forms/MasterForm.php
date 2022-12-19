@@ -17,7 +17,6 @@ class MasterForm extends ConfigForm
         $this->setSubmitLabel($this->translate('Submit Changes'));
         $this->setAction('rs485/master/edit');
     }
-
     public function createElements(array $formData)
     {
         $hostname = '';

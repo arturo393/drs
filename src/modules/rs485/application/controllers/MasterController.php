@@ -155,7 +155,6 @@ class MasterController extends Controller
             #$query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
-            
         }
         #3: Channel Activation Status           
         if ($this->_hasParam('opt3_hidden')){
