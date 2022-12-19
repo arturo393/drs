@@ -86,6 +86,10 @@ class MasterController extends Controller
 
         $this->view->form = $form;
 
+
+
+
+
        }
 
 
@@ -133,8 +137,8 @@ class MasterController extends Controller
 		    $dmuDevice2 = $trama->dmu_device2;
             $dmuCmdLength = $trama->cmd_body_lenght; 
             $dmuCmdCode = $trama->cmd_number;
-            $byte1 = dechex(4 * (int) $this->_getParam('opt2_1'));
-            $byte2 = dechex(4* (int) $this->_getParam('opt2_2'));
+            $byte1 = dechex(4 * (int) $this->_getParam('opt2_2'));
+            $byte2 = dechex(4* (int) $this->_getParam('opt2_1'));
             $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT); 
             $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT); 
             $dmuCmdData = "{$byte1}{$byte2}";
@@ -151,7 +155,6 @@ class MasterController extends Controller
             #$query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
             
             array_push($result, ['comando' => $trama->name , 'resultado' =>  $salida, 'query' => $query  ]);      
-            
         }
         #3: Channel Activation Status           
         if ($this->_hasParam('opt3_hidden')){
@@ -250,14 +253,14 @@ class MasterController extends Controller
             
         }
 
-        $ejecutarQuery = $this->comando_dmu($host_remote);
-        exec($ejecutarQuery . " 2>&1", $parameters);  
-	    $index = strpos($parameters[0],'|');
-    	$params = substr($parameters[0],0,$index);
+      #  $ejecutarQuery = $this->comando_dmu($host_remote);
+      #  exec($ejecutarQuery . " 2>&1", $parameters);  
+	  #    $index = strpos($parameters[0],'|');
+      #	$params = substr($parameters[0],0,$index);
 
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);	
-        $this->view->assign('params', $params);	
+      #  $this->view->assign('params', $params);	
     }
 
     private function comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, $action){

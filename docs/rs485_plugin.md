@@ -29,23 +29,15 @@ ln -sf pip3 /usr/bin/pip
 ## Install python libs
 
 ```
-pip install crccheck serial pyserial
+pip install crccheck serial pyserial config
 ```
 
-## Configure hostname 
+|  
+## Add sigmadev user to dialout grou
 
 ```
-hostname dmuX
-
-```
-add hostname in  `/etc/hostname`
-
-
-restart service
-```
-systemctl restart systemd-hostnamed
-
-```
-|                                                                                                                        |
+adduser sigmadev dialout
+```                   
+                                                                                                   |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |

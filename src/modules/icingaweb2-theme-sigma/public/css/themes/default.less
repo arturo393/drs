@@ -5,72 +5,78 @@
  *  - Links and buttons
  *  - Highlighting
  */
-@icinga-blue: #0980aa;
-@icinga-secondary: #ec5707;
-
-#login {
-  background-image: url('../img/sigma-theme/tunel-01.jpg');
-
-  input[type='submit'] {
-    background-color: @icinga-blue;
-  }
-}
-
-.login-form {
-  background-color: #b1b2b2;
-}
-
-/*
- * Logo display on login page
- */
-#icinga-logo {
-  // TODO
-  background-image: url('../img/sigma-theme/logo-sigma.svg');
-
-  &.invert {
-    // The logo shown on white background (DEFAULT)
-    background-image: url('../img/sigma-theme/logo-sigma.svg');
-  }
-}
-
-/*
- * The logo container in the main menu
- * Adjusting the padding here to have a larger logo
- */
-#header-logo-container {
-  padding: 0.5em;
-}
-
-/*
- * Logo link shown in the main menu
- *
- * Background below is @icinga-blue
- */
-#header-logo {
-  background-image: url('../img/sigma-theme/logo-sigma.svg');
-}
-
-/*
- * Logo on mobile devices
- */
-#mobile-menu-logo {
-  background-image: url('../img/sigma-theme/logo-sigma.svg');
-}
-
-#layout:not(.minimal-layout).sidebar-collapsed #header-logo {
-  background-image: url('../img/sigma-theme/logo-sigma.svg');
-}
-
-.sigma-container {
-  width: 100%;  
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  align-content: flex-start;
-}
-
-.sigma-container table th,thead {
-  background-color: #f5f5f5;
-}
+ @icinga-blue: #10263b;
+ @icinga-secondary: #ff5000;
+ 
+ #login {
+   background-image: url('../img/sigma-theme/tunel-01.jpg');
+ 
+   input[type='submit'] {
+     background-color: @icinga-secondary;
+   }
+ }
+ 
+ #login .login-form {
+   background-color: @icinga-blue;
+ }
+ 
+ /*
+ 
+  * Logo display on login page
+  */
+ #icinga-logo {
+   // TODO
+   background-image: url('../img/sigma-theme/logo_uqomm.svg');
+   padding: 4.0em;
+ 
+   &.invert {
+     // The logo shown on white background (DEFAULT)
+     background-image: url('../img/sigma-theme/logo_uqomm.svg');
+     padding: 4.0em;
+   }
+ }
+ 
+ /*
+  * The logo container in the main menu
+  * Adjusting the padding here to have a larger logo
+  */
+ #header-logo-container {
+   padding: 0.5em;
+ }
+ 
+ /*
+  * Logo link shown in the main menu
+  *
+  * Background below is @icinga-blue
+  */
+ #header-logo {
+   background-image: url('../img/sigma-theme/logo_uqomm.svg');
+ }
+ 
+ /*
+  * Logo on mobile devices
+  */
+ #mobile-menu-logo {
+   background-image: url('../img/sigma-theme/logo_uqomm.svg');
+ }
+ 
+ #layout:not(.minimal-layout).sidebar-collapsed #header-logo {
+   background-image: url('../img/sigma-theme/logo_uqomm.svg');
+ }
+ 
+ .sigma-container {
+   width: 100%;
+   display:flex;
+   flex-direction:row;
+   flex-wrap: nowrap;
+   justify-content:space-between ;
+   align-items:flex-start;
+   align-content:flex-start;
+ }
+ 
+ .sigma-container table th,thead {
+   background-color: #f5f5f5;
+ }
+ 
+ 
+ 

@@ -11,10 +11,7 @@ apt update && apt upgrade
 apt install -y icinga2 monitoring-plugins mariadb-server mariadb-client icinga2-ido-mysql git
 mariadb-secure-installation
 icinga2 feature enable ido-mysql
-
 icinga2 node wizard
-
-
 ```
 
 Change API user password:
@@ -121,6 +118,7 @@ open `http://<host-ip>/icingaweb2`
 - [Sigma WebUI Theme](/docs/sigma_theme.md)
 - [Cube WebUI Module](/docs/cube_module.md)
 - [Base Customizations](/docs/base_customizations.md)
+- [Notificaions Customizations](/docs/notificaion_customizations.md)
 
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
