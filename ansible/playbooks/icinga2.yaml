@@ -1,129 +1,155 @@
 # Install MiniPC Software 
 ---
 - name: Install Icinga2 Satellite
-  hosts: all
+  hosts: icinga_satellite
   become: true
   vars_files:
     - ../vars.yaml
 
+  roles:
+    - icinga.icinga.repos
+    - icinga.icinga.icinga2
+
   tasks:
-  # - name: Update and upgrade apt packages
-  #   apt:
-  #     upgrade: yes
-  #     update_cache: yes
-  #     cache_valid_time: 86400 #One day
+  - name: Update and upgrade apt packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+      cache_valid_time: 86400 #One day
 
-  # - name: Install Icinga2 Monitor
-  #   apt:
-  #       name:
-  #           - icinga2
-  #           - monitoring-plugins
-  #       state: present
+  - name: Install Icinga2 Monitor
+    apt:
+        name:
+            - icinga2
+            - monitoring-plugins
+        state: present
     
+  - name: Adding user sigmadev to nagios  
+    user: name=sigmadev
+          shell=/bin/zsh
+          groups=nagios
+          append=yes
+          
+  - name: Config Icinga2 ApiUser
+    shell: |
+      cat << EOF | sudo tee /etc/icinga2/conf.d/api-users.conf
+        object ApiUser "root" {
+        password = "Admin.123"
+        permissions = [ "*" ]
+        }
+      EOF
+
+  - name: Config Icinga2 ApiUser
+    shell: echo -n | sudo tee /etc/icinga2/conf.d/{apt.conf,commands.conf,groups.conf,hosts.conf,downtimes.conf,notifications.conf,satellite.conf,services.conf,templates.conf,timeperiods.conf,users.conf}
+
+  - name: Reload service icinga2, in all cases
+    ansible.builtin.systemd:
+      name: icinga2
+      state: reloaded
+
+  - name: Install kernel sources and compilation tools 
+    apt:
+        name:
+            - dpkg-dev
+            - linux-image-{{ansible_kernel}}
+            - linux-headers-{{ansible_kernel}}
+        state: present
+
+  - name: Clean artifact path
+    file:
+      state: absent
+      path: /tmp/sigma-rds
+
+  - name: "Cloning Sigma-DRS repo"
+    git:
+      repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/itaum/sigma-rds.git
+      dest: /tmp/sigma-rds
+      version: development
+      accept_hostkey: true
+      
+  - name: "Create installation directory"
+    file:
+      path: /usr/lib/monitoring
+      state: directory
+      mode: '0755'
+
+  - name: "Installing Plugins"
+    copy:
+      remote_src: true
+      src: /tmp/sigma-rds/src/plugins/
+      dest: /usr/lib/monitoring-plugins
+
+  - name: Change monitoring-plugins ownership, group and permissions
+    file:
+        path: /usr/lib/monitoring-plugins
+        mode: '0755'
+        state: directory
+        recurse: yes
+
+  - name: Install Python, Dev and Pip
+    apt:
+        name:
+            - python3 
+            - python3-dev
+            - python3-pip
+        state: present
+
+  - name: Adding user sigmadev  to dialout  
+    user: name=sigmadev
+          shell=/bin/zsh
+          groups=dialout
+          append=yes
+
+  - name: Create a symbolic link
+    ansible.builtin.file:
+      src: /usr/bin/python
+      dest: python3
+      state: link   
+      force: yes
+
+  - name: Create a symbolic link
+    ansible.builtin.file:
+      src: /usr/bin/pip
+      dest: pip3
+      state: link   
+      force : yes
+
+  - name: Install bottle python package
+    ansible.builtin.pip:
+      name: 
+          - crccheck
+          - serial
+          - pyserial
 
 
-  # - name: Adding user sigmadev to nagios  
-  #   user: name=sigmadev
-  #         shell=/bin/zsh
-  #         groups=nagios
-  #         append=yes
-  # - name: Config Icinga2 ApiUser
-  #   shell: |
-  #     cat << EOF | sudo tee /etc/icinga2/conf.d/api-users.conf
-  #       object ApiUser "root" {
-  #       password = "Admin.123"
-  #       permissions = [ "*" ]
-  #       }
-  #     EOF
+- hosts: icinga_master
+  vars_files:
+    - ../vars.yaml
 
-  # - name: Config Icinga2 ApiUser
-  #   shell: echo -n | sudo tee /etc/icinga2/conf.d/{apt.conf,commands.conf,groups.conf,hosts.conf,downtimes.conf,notifications.conf,satellite.conf,services.conf,templates.conf,timeperiods.conf,users.conf}
+  tasks:
+  - name: Fetch the SSH public key from the Icinga Master
+    fetch:
+      src: /home/{{ icinga2_master_user }}/.ssh/id_rsa.pub
+      dest: //id_rsa.pub
+      flat: yes
+      server: "{{ icinga2_master_host }}"
 
-  # - name: Reload service icinga2, in all cases
-  #   ansible.builtin.systemd:
-  #     name: icinga2
-  #     state: reloaded
-  
-  # - name: Install kernel sources and compilation tools 
-  #   apt:
-  #       name:
-  #           - dpkg-dev
-  #           - linux-image-{{ansible_kernel}}
-  #           - linux-headers-{{ansible_kernel}}
-  #       state: present
-  
-  # - name: Clean artifact path
-  #   file:
-  #     state: absent
-  #     path: /tmp/sigma-rds
+  - name: Get provisio
 
-  # - name: "Cloning Sigma-DRS repo"
-  #   git:
-  #     repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/itaum/sigma-rds.git
-  #     dest: /tmp/sigma-rds
-  #     single_branch: yes
-  #     version: development
-  #     accept_hostkey: yes
-  # - name: "Create installation directory"
-  #   file:
-  #     path: /usr/lib/monitoring
-  #     state: directory
-  #     mode: '0755'
+- hosts: all
+  vars_files:
+    - ../vars.yaml
 
-  # - name: "Installing Plugins"
-  #   copy:
-  #     remote_src: true
-  #     src: /tmp/sigma-rds/src/plugins/
-  #     dest: /usr/lib/monitoring-plugins
+  tasks:
+  - name: Copy the SSH public key to the inventory hosts
+    copy:
+      src: /tmp/id_rsa.pub
+      dest: ~/.ssh/id_rsa.pub
 
-  # - name: Change file ownership, group and permissions
-  #   file:
-  #       path: /usr/lib/monitoring-plugins
-  #       mode: '0755'
-  #       state: directory
-  #       recurse: yes
-
-  # - name: Install Python
-  #   apt:
-  #       name:
-  #           - python3 
-  #           - python3-dev
-  #           - python3-pip
-  #       state: present
-
-  # - name: Adding user sigmadev  to dialout  
-  #   user: name=sigmadev
-  #         shell=/bin/zsh
-  #         groups=dialout
-  #         append=yes
-
-  # - name: Create a symbolic link
-  #   ansible.builtin.file:
-  #     src: /usr/bin/python
-  #     dest: python3
-  #     state: link   
-  #     force: yes
-
-  # - name: Create a symbolic link
-  #   ansible.builtin.file:
-  #     src: /usr/bin/pip
-  #     dest: pip3
-  #     state: link   
-  #     force : yes
-
-  # - name: Install bottle python package
-  #   ansible.builtin.pip:
-  #     name: 
-  #         - crccheck
-  #         - serial
-  #         - pyserial
-
-   - name: Generate keypair
-         file:
-         path: ~/.ssh
-         mode: '0700'
-
-         
+  - name: Add the SSH public key to the authorized keys on the inventory host
+    authorized_key:
+      user: "{{icinga2_satellite_user }}"
+      key: "{{ lookup('file', '/tmp/id_rsa.pub') }}"
 
 
 

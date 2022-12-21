@@ -1,0 +1,44 @@
+# Install MiniPC Software 
+---
+- name: Install Icinga2 Satellite
+
+  hosts: icinga_master
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Get provisioning ticket
+    command: icinga2 pki ticket --cn {{item}}
+    register: ticket
+    with_items: "{{ groups['icinga_satellite'] }}"
+  
+  - set_fact:
+      msg:  "{{item}} {{item}}" 
+      loop: "{{ticket.results}}"
+      with_items: [0,1]
+      
+
+  #  hosts: icinga_satellite
+  #   vars_files:
+  #     - ../vars.yaml
+  #   tasks:
+  #   - name: Configure Icinga Agent
+  #     shell:
+  #       icinga2 node setup --ticket {{item.stdout}} \
+  #          --endpoint {{inventory_hostname }} \
+  #          --zone {{inventory_hostname}} \
+  #          --parent_zone master \
+  #          --parent_host {{icinga2_master_hostname}},{{icinga2_master_host}},5665 \
+  #          --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
+  #          --accept-commands --accept-config \
+  #          --disable-confd
+      
+    
+  #   loop: "{{ticket.results}}"
+  #   when: {{time.item}} == {{inventory_hostname}}
+                
+
+
+
+      
