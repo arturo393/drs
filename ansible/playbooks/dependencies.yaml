@@ -1,7 +1,7 @@
 # Install MiniPC Software 
 ---
 - name: Install Debian Image dependencies   
-  hosts: all
+  hosts: icinga_satellite
   become: true
   tasks:
   - name: Update and upgrade apt packages
@@ -19,16 +19,22 @@
             - zsh
             - vim
         state: present
-  - name: Download oh-my-zsh now
-    get_url:
-      url:  https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-      dest: /tmp
-      mode: '0777'
+    register: output
 
-  - name: Install oh-my-zsh now
-    shell: ./install.sh
-    args:
-        chdir: /tmp
+  - name: Debug
+    debug:
+      msg: "{{output.stdout}}"
+
+  # - name: Download oh-my-zsh now
+  #   get_url:
+  #     url:  https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+  #     dest: /tmp
+  #     mode: '0777'
+
+  # - name: Install oh-my-zsh now
+  #   shell: ./install.sh
+  #   args:
+  #       chdir: /tmp
 
 
    

@@ -12,33 +12,80 @@
     command: icinga2 pki ticket --cn {{item}}
     register: ticket
     with_items: "{{ groups['icinga_satellite'] }}"
-  
-  - set_fact:
-      msg:  "{{item}} {{item}}" 
-      loop: "{{ticket.results}}"
-      with_items: [0,1]
-      
-
-  #  hosts: icinga_satellite
-  #   vars_files:
-  #     - ../vars.yaml
-  #   tasks:
-  #   - name: Configure Icinga Agent
-  #     shell:
-  #       icinga2 node setup --ticket {{item.stdout}} \
-  #          --endpoint {{inventory_hostname }} \
-  #          --zone {{inventory_hostname}} \
-  #          --parent_zone master \
-  #          --parent_host {{icinga2_master_hostname}},{{icinga2_master_host}},5665 \
-  #          --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
-  #          --accept-commands --accept-config \
-  #          --disable-confd
-      
     
-  #   loop: "{{ticket.results}}"
-  #   when: {{time.item}} == {{inventory_hostname}}
-                
+  - set_fact:
+      dmu_ticket: "{{ticket}}"
+   
+  - debug:
+      msg: "The value of my_variable is {{ hostvars[inventory_hostname].dmu_ticket }}"
+
+  - debug:
+      msg: "{{ item.item }} {{item.stdout}}"
+    with_items: "{{ticket.results}}"           
+    loop_control:
+      label: '{{ item.item }}'
+
+- hosts: icinga_satellite
+  become: true
+  vars_files:
+       - ../vars.yaml
+
+  tasks:
+  - name: Make sure that the /var/lib/icinga2/certs directory exists and is owned by the icinga user (or the user Icinga 2 is running as).
+    file:
+      path: /var/lib/icinga2/certs
+      owner: nagios
+      group: nagios
+      state: directory    
+      mode: '0755'
+
+  - name: First you’ll need to generate a new local self-signed certificate. Pass the following details to the pki new-cert CLI command
+    shell: |
+      icinga2 pki new-cert --cn {{inventory_hostname}} \
+      --key /var/lib/icinga2/certs/{{inventory_hostname}}.key \
+      --cert /var/lib/icinga2/certs/{{inventory_hostname}}.crt
+    register: output
+    
+  - debug:
+      msg: "{{output}}"
+
+  - name : VERIFY PARENT CONNECTION
+    shell: |
+      icinga2 pki save-cert \
+      --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
+      --host {{icinga2_master_host}}
+    register: output
+    
+  - debug:
+      msg: "{{output}}"
+
+  - name: Node Setup
+    shell: |
+        icinga2 node setup --ticket {{item.stdout}} \
+        --endpoint {{inventory_hostname }} \
+        --zone {{inventory_hostname}} \
+        --parent_zone master \
+        --parent_host {{icinga2_master_host}},5665 \
+        --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
+        --accept-commands --accept-config \
+        --disable-confd
+    with_items: "{{hostvars[icinga2_master_hostname].dmu_ticket.results}}"           
+    loop_control:
+      label: '{{ item.item }}'
+    when: item.item == inventory_hostname
+    register: output
+
+  - name: Debug
+    debug:
+      msg: "{{output}}"
+
+  - name: Reload service icinga2, in all cases
+    ansible.builtin.systemd:
+      name: icinga2
+      state: restarted
+      
 
 
 
       
+
