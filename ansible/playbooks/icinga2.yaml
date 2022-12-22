@@ -6,10 +6,6 @@
   vars_files:
     - ../vars.yaml
 
-  roles:
-    - icinga.icinga.repos
-    - icinga.icinga.icinga2
-
   tasks:
   - name: Update and upgrade apt packages
     apt:
@@ -130,11 +126,9 @@
   - name: Fetch the SSH public key from the Icinga Master
     fetch:
       src: /home/{{ icinga2_master_user }}/.ssh/id_rsa.pub
-      dest: //id_rsa.pub
+      dest: /tmp/id_rsa.pub
       flat: yes
       server: "{{ icinga2_master_host }}"
-
-  - name: Get provisio
 
 - hosts: all
   vars_files:
