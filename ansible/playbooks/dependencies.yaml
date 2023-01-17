@@ -21,9 +21,6 @@
         state: present
     register: output
 
-  - name: Debug
-    debug:
-      msg: "{{output.stdout}}"dd
 
   # - name: Download oh-my-zsh now
   #   get_url:

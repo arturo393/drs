@@ -7,12 +7,6 @@
     - ../vars.yaml
 
   tasks:
-  - name: Update and upgrade apt packages
-    apt:
-      upgrade: yes
-      update_cache: yes
-      cache_valid_time: 86400 #One day
-
   - name: Install Icinga2 Monitor
     apt:
         name:
@@ -26,22 +20,6 @@
           groups=nagios
           append=yes
           
-  - name: Config Icinga2 ApiUser
-    shell: |
-      cat << EOF | sudo tee /etc/icinga2/conf.d/api-users.conf
-        object ApiUser "root" {
-        password = "Admin.123"
-        permissions = [ "*" ]
-        }
-      EOF
-
-  - name: Config Icinga2 ApiUser
-    shell: echo -n | sudo tee /etc/icinga2/conf.d/{apt.conf,commands.conf,groups.conf,hosts.conf,downtimes.conf,notifications.conf,satellite.conf,services.conf,templates.conf,timeperiods.conf,users.conf}
-
-  - name: Reload service icinga2, in all cases
-    ansible.builtin.systemd:
-      name: icinga2
-      state: reloaded
 
   - name: Install kernel sources and compilation tools 
     apt:
@@ -116,6 +94,8 @@
           - crccheck
           - serial
           - pyserial
+          - config
+          - requests
 
 
 - hosts: icinga_master
