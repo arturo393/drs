@@ -23,7 +23,7 @@
 
   - name: Debug
     debug:
-      msg: "{{output.stdout}}"
+      msg: "{{output.stdout}}"dd
 
   # - name: Download oh-my-zsh now
   #   get_url:
