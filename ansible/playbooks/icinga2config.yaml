@@ -62,8 +62,9 @@
   - name: Node Setup
     shell: |
         icinga2 node setup --ticket {{item.stdout}} \
-        --endpoint {{inventory_hostname }} \
+        --cn {{inventory_hostname}} \
         --zone {{inventory_hostname}} \
+        --endpoint {{icinga2_master_hostname}},{{icinga2_master_host}},5665 \
         --parent_zone master \
         --parent_host {{icinga2_master_host}},5665 \
         --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
@@ -81,9 +82,8 @@
 
   - name: Reload service icinga2, in all cases
     ansible.builtin.systemd:
-      name: icinga2
       state: restarted
-      
+      name: icinga2
 
 
 
