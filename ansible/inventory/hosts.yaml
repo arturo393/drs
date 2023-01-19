@@ -2,25 +2,25 @@
 icinga_satellite:
   hosts:
     # dmu1:
-    #   ansible_host: 192.168.60.85
-    #   ansible_port: 22
-    # dmu2:
-    #   ansible_host: 192.168.60.87
-    #   ansible_port: 22
-    # dmu4:
-    #   ansible_host: 192.168.60.89
-    #   ansible_port: 22
+    #     ansible_host: 192.168.60.85
+    #     ansible_port: 22
+
+    dmu2:
+        ansible_host: 192.168.60.58
+        ansible_port: 22
+        
     # dmu3:
-    #   ansible_host: 192.168.60.44
-    #   ansible_port: 22
+    #     ansible_host: 192.168.60.44
+    #     ansible_port: 22
 
-    # dmu5:
-    #   ansible_host: 192.168.60.45
-    #   ansible_port: 22
-     dmu-lab:
-       ansible_host: 192.168.60.79
-       ansible_port: 22
+    dmu4:
+         ansible_host: 192.168.60.28
+         ansible_port: 22
 
+    dmu-muestra:
+        ansible_host: 192.168.60.89
+        ansible_port: 22
+          
 icinga_master:
   hosts:
     rds-m-1:

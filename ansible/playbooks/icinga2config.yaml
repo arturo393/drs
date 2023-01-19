@@ -6,8 +6,24 @@
   become: true
   vars_files:
     - ../vars.yaml
+    
 
   tasks:
+  - name: first here we create the zones in icinga director
+    command: icingacli director zone create {{item}} --parent "master"
+    with_items: "{{ groups['icinga_satellite']}}" 
+
+  - name: here we create a endpoints in icinga director
+    command: icingacli director endpoint create {{item}} 
+    with_items: "{{ groups['icinga_satellite']}}"
+
+  - name: here we create a hosts in icinga director
+    command: icingacli director host create {{item}} --imports "dmu-host-template" --address {{hostvars[item].ansible_host}} --vars.safed_profile '3' 
+    with_items: "{{ groups['icinga_satellite']}}"
+
+  - name: here we config the deploy 
+    command: icingacli director config deploy
+    
   - name: Get provisioning ticket
     command: icinga2 pki ticket --cn {{item}}
     register: ticket
