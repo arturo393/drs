@@ -113,6 +113,9 @@
       state: restarted
       name: icinga2
 
+  - name: reboot all hosts 
+    reboot:
+
 
 
       
