@@ -3,7 +3,16 @@
 - name: Install Debian Image dependencies   
   hosts: icinga_satellite
   become: true
+  roles:
+  - role: gantsign.oh-my-zsh
+    users:
+      - username: sigmadev
+      - username: root
+
   tasks:
+  - name: Write the new ec2 instance host key to known hosts
+    connection: local
+    shell: "ssh-keyscan -H {{ inventory_hostname }} >> ~/.ssh/known_hosts"
   - name: Update and upgrade apt packages
     apt:
       upgrade: yes
