@@ -53,12 +53,6 @@
       src: /tmp/sigma-rds/src/plugins/
       dest: /usr/lib/monitoring-plugins
   
-  - name: create check_rs485.log
-    ansible.builtin.file:
-        path: /var/log/icinga2/check_rs485.log
-        state: touch
-        mode: 777
-
   - name: Change monitoring-plugins ownership, group and permissions
     file:
         path: /usr/lib/monitoring-plugins
