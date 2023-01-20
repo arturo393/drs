@@ -1185,18 +1185,18 @@ def setSerial(port, baudrate):
         try:
             s = serial.Serial(port, baudrate)
             s.timeout = 0.1
-            
-            
             s.exclusive = True
-
+            return s
         except serial.SerialException as e:
             logging.debug(
                 "WARNING - "+str(times)+" "+str(e)+" "+str(port))
             #sys.stderr.write(str(e))
             time.sleep(1)
-        return s
-    sys.stderr.write(str(e))
-    sys.exit(WARNING)
+            
+    logging.debug(
+        "CRITICAL - No Connection to "+str(port))
+    sys.stderr.write("CRITICAL - No Connection to "+str(port))
+    sys.exit(CRITICAL)
 
 def read_serial_frame(s):
     hexadecimal_string = ''
@@ -1244,6 +1244,11 @@ def serial_init(Port):
                 baudrate = 9600
             s = serial.Serial(Port, baudrate)
             s.timeout = 0.1
+        except UnboundLocalError as e:
+            logging.debug(
+                "CRITICAL - "+str(e)+" "+str(Port))
+            sys.stderr.write("CRITICAL - "+str(e)+" "+str(Port))
+            sys.exit(CRITICAL)
         except serial.SerialException as e:
             logging.debug(
                 "WARNING - "+str(times)+" "+str(e)+" "+str(Port))
