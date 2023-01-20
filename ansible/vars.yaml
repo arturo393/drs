@@ -2,9 +2,9 @@
 gitlabuser: arturo33
 gitlabpassword: gitlab393
 # icinga2 master, which is also the default endpoint
-icinga2_master_host: "192.168.60.78"
-icinga2_master_hostname: "rds-m-1"
-icinga2_master_user: "sigmadev"
+icinga2_monitor_host: "192.168.60.78"
+icinga2_monitor_hostname: "rds-m-1"
+icinga2_monitor_user: "sigmadev"
 icinga2_satellite_user: "sigmadev"
 ticket: ""
 # list of additional check plugins

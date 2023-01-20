@@ -7,21 +7,21 @@
     - ../vars.yaml
 
   tasks:
-  - name: Install Icinga2 Monitor
+  - name: Install Icinga2 Satellites
     apt:
         name:
             - icinga2
             - monitoring-plugins
         state: present
     
-  - name: Adding user sigmadev to nagios  
+  - name: Adding User sigmadev To Nagios  
     user: name=sigmadev
           shell=/bin/zsh
           groups=nagios
           append=yes
           
 
-  - name: Install kernel sources and compilation tools 
+  - name: Install Kernel Sources And Compilation Tools 
     apt:
         name:
             - dpkg-dev
@@ -29,38 +29,12 @@
             - linux-headers-{{ansible_kernel}}
         state: present
 
-  - name: Clean artifact path
+  - name: Clean Artifact Path
     file:
       state: absent
       path: /tmp/sigma-rds
 
-  - name: "Cloning Sigma-DRS repo"
-    git:
-      repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/itaum/sigma-rds.git
-      dest: /tmp/sigma-rds
-      version: development
-      accept_hostkey: true
-      
-  - name: "Create installation directory"
-    file:
-      path: /usr/lib/monitoring
-      state: directory
-      mode: '0755'
-
-  - name: "Installing Plugins"
-    copy:
-      remote_src: true
-      src: /tmp/sigma-rds/src/plugins/
-      dest: /usr/lib/monitoring-plugins
-  
-  - name: Change monitoring-plugins ownership, group and permissions
-    file:
-        path: /usr/lib/monitoring-plugins
-        mode: '0755'
-        state: directory
-        recurse: yes
-
-  - name: Install Python, Dev and Pip
+  - name: Install Python, Dev And Pip
     apt:
         name:
             - python3 
@@ -68,32 +42,32 @@
             - python3-pip
         state: present
 
-  - name: Adding user sigmadev  to dialout  
+  - name: Adding User Sigmadev To Dialout  
     user: name=sigmadev
           shell=/bin/zsh
           groups=dialout
           append=yes
 
-  - name: Adding user nagios  to dialout  
+  - name: Adding User Nagios To Dialout  
     user: name=nagios
           groups=dialout
           append=yes        
 
-  - name: Create a symbolic link python3
+  - name: Create a Symbolic Link Python3
     ansible.builtin.file:
       src: /usr/bin/python3
       dest: /usr/bin/python
       state: link   
       force: yes
 
-  - name: Create a symbolic link pip3
+  - name: Create a Symbolic Link Pip3
     ansible.builtin.file:
       src: /usr/bin/pip3
       dest: /usr/bin/pip
       state: link   
       force : yes
 
-  - name: Install bottle python package
+  - name: Install Bottle Python Package
     ansible.builtin.pip:
       name: 
           - crccheck
@@ -103,29 +77,29 @@
           - requests
 
 
-- hosts: icinga_master
+- hosts: icinga_monitor
   vars_files:
     - ../vars.yaml
 
   tasks:
-  - name: Fetch the SSH public key from the Icinga Master
+  - name: Fetch The SSH Public Key From The Icinga Monitor
     fetch:
-      src: /home/{{ icinga2_master_user }}/.ssh/id_rsa.pub
+      src: /home/{{ icinga2_monitor_user }}/.ssh/id_rsa.pub
       dest: /tmp/id_rsa.pub
       flat: yes
-      server: "{{ icinga2_master_host }}"
+      server: "{{ icinga2_monitor_host }}"
 
 - hosts: all
   vars_files:
     - ../vars.yaml
 
   tasks:
-  - name: Copy the SSH public key to the inventory hosts
+  - name: Copy The SSH Public Key To The Inventory Hosts
     copy:
       src: /tmp/id_rsa.pub
       dest: ~/.ssh/id_rsa.pub
 
-  - name: Add the SSH public key to the authorized keys on the inventory host
+  - name: Add The SSH Public Key To The Authorized Keys On The Inventory Host
     authorized_key:
       user: "{{icinga2_satellite_user }}"
       key: "{{ lookup('file', '/tmp/id_rsa.pub') }}"

@@ -2,44 +2,32 @@
 ---
 - name: Install Icinga2 Satellite
 
-  hosts: icinga_master
+  hosts: icinga_monitor
   become: true
   vars_files:
     - ../vars.yaml
     
 
   tasks:
-  - name: first here we create the zones in icinga director
+  - name: First Create The Zones In Icinga Director
     command: icingacli director zone create {{item}} --parent "master"
     with_items: "{{ groups['icinga_satellite']}}" 
 
-  - name: here we create a endpoints in icinga director
+  - name: Create The Endpoints In Icinga Director
     command: icingacli director endpoint create {{item}} 
     with_items: "{{ groups['icinga_satellite']}}"
 
-  - name: here we create a hosts in icinga director
+  - name: Create The Hosts In Icinga Director
     command: icingacli director host create {{item}} --imports "dmu-host-template" --address {{hostvars[item].ansible_host}} --vars.safed_profile '3' 
     with_items: "{{ groups['icinga_satellite']}}"
 
-  - name: here we config the deploy 
+  - name: Deploying The Changes
     command: icingacli director config deploy
     
-  - name: Get provisioning ticket
+  - name: Get Provisioning Ticket
     command: icinga2 pki ticket --cn {{item}}
     register: ticket
     with_items: "{{ groups['icinga_satellite'] }}"
-    
-  - set_fact:
-      dmu_ticket: "{{ticket}}"
-   
-  - debug:
-      msg: "The value of my_variable is {{ hostvars[inventory_hostname].dmu_ticket }}"
-
-  - debug:
-      msg: "{{ item.item }} {{item.stdout}}"
-    with_items: "{{ticket.results}}"           
-    loop_control:
-      label: '{{ item.item }}'
 
 - hosts: icinga_satellite
   become: true
@@ -47,7 +35,7 @@
        - ../vars.yaml
 
   tasks:
-  - name: Make sure that the /var/lib/icinga2/certs directory exists and is owned by the icinga user (or the user Icinga 2 is running as).
+  - name: Make Sure That The /var/lib/icinga2/certs Directory Exists And Is Owned By The Icinga User (Or The User Icinga 2 Is Running As).
     file:
       path: /var/lib/icinga2/certs
       owner: nagios
@@ -55,46 +43,36 @@
       state: directory    
       mode: '0755'
 
-  - name: First you’ll need to generate a new local self-signed certificate. Pass the following details to the pki new-cert CLI command
+  - name: First You’ll Need To Generate A New Local Self-signed Certificate. 
     shell: |
       icinga2 pki new-cert --cn {{inventory_hostname}} \
       --key /var/lib/icinga2/certs/{{inventory_hostname}}.key \
       --cert /var/lib/icinga2/certs/{{inventory_hostname}}.crt
     register: output
-    
-  - debug:
-      msg: "{{output}}"
 
   - name : VERIFY PARENT CONNECTION
     shell: |
       icinga2 pki save-cert \
       --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
-      --host {{icinga2_master_host}}
+      --host {{icinga2_monitor_host}}
     register: output
-    
-  - debug:
-      msg: "{{output}}"
 
-  - name: Node Setup
+  - name: Icinga Node Setup
     shell: |
         icinga2 node setup --ticket {{item.stdout}} \
         --cn {{inventory_hostname}} \
         --zone {{inventory_hostname}} \
-        --endpoint {{icinga2_master_hostname}},{{icinga2_master_host}},5665 \
+        --endpoint {{icinga2_monitor_hostname}},{{icinga2_monitor_host}},5665 \
         --parent_zone master \
-        --parent_host {{icinga2_master_host}},5665 \
+        --parent_host {{icinga2_monitor_host}},5665 \
         --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
         --accept-commands --accept-config \
         --disable-confd
-    with_items: "{{hostvars[icinga2_master_hostname].dmu_ticket.results}}"           
+    with_items: "{{hostvars[icinga2_monitor_hostname].dmu_ticket.results}}"           
     loop_control:
       label: '{{ item.item }}'
     when: item.item == inventory_hostname
     register: output
-
-  - name: Debug
-    debug:
-      msg: "{{output}}"
 
   - name: Config Icinga2 ApiUser
     shell: |
@@ -113,7 +91,7 @@
       state: restarted
       name: icinga2
 
-  - name: reboot all hosts 
+  - name: Reboot All Hosts 
     reboot:
 
 

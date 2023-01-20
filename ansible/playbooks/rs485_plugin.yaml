@@ -1,0 +1,31 @@
+- hosts: icinga_satellite
+  become: true
+  vars_files:
+       - ../vars.yaml
+  tasks:
+
+  - name: Downloading Sigma Software
+    git:
+      repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/itaum/sigma-rds.git
+      dest: /tmp/sigma-rds
+      version: development
+      accept_hostkey: true
+      
+  - name: Create Installation Directory
+    file:
+      path: /usr/lib/monitoring
+      state: directory
+      mode: '0755'
+
+  - name: Installing Plugins
+    copy:
+      remote_src: true
+      src: /tmp/sigma-rds/src/plugins/
+      dest: /usr/lib/monitoring-plugins
+  
+  - name: Change Monitoring-plugins Ownership, Group And Permissions
+    file:
+        path: /usr/lib/monitoring-plugins
+        mode: '0755'
+        state: directory
+        recurse: yes
