@@ -1186,13 +1186,13 @@ def setSerial(port, baudrate):
             s = serial.Serial(port, baudrate)
             s.timeout = 0.1
             s.exclusive = True
-            return s
+
         except serial.SerialException as e:
             logging.debug(
                 "WARNING - "+str(times)+" "+str(e)+" "+str(port))
             #sys.stderr.write(str(e))
             time.sleep(1)
-            
+    return s
     logging.debug(
         "CRITICAL - No Connection to "+str(port))
     sys.stderr.write("CRITICAL - No Connection to "+str(port))
