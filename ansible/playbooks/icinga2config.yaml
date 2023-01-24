@@ -28,6 +28,10 @@
     command: icinga2 pki ticket --cn {{item}}
     register: ticket
     with_items: "{{ groups['icinga_satellite'] }}"
+  
+  - name: Save Remote Satellite Host As Known Host
+    shell: ssh-keyscan {{hostvars[item].ansible_host}} >> /home/{{icinga2_monitor_user}}/.ssh/known_hosts
+    with_items: "{{ groups['icinga_satellite'] }}"
 
 - hosts: icinga_satellite
   become: true
@@ -68,7 +72,7 @@
         --trustedcert /var/lib/icinga2/certs/trusted-parent.crt \
         --accept-commands --accept-config \
         --disable-confd
-    with_items: "{{hostvars[icinga2_monitor_hostname].dmu_ticket.results}}"           
+    with_items: "{{hostvars[icinga2_monitor_hostname].ticket.results}}"           
     loop_control:
       label: '{{ item.item }}'
     when: item.item == inventory_hostname
