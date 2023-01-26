@@ -1076,10 +1076,10 @@ def druReplyDecode(parameters,reply_data):
         
         byte0 = int(cmd_value[0:2], 16)   
         ch_number = int(cmd_number[1],16)+1
-        channel = 4270000 + (125 * byte0)   
-        text = frequencyDictionary[channel] 
-        parameters["channel"+str(ch_number)+"ulFreq"] = text[4:22-6+2]
-        parameters["channel"+str(ch_number)+"dlFreq"] = text[23:40-6+2]
+        hex_as_int = 4270000 + (125 * byte0)   
+        hexup,hexdl= get_downlink_uplink_freq(hex_as_int)
+        parameters["channel"+str(ch_number)+"ulFreq"] = hexup
+        parameters["channel"+str(ch_number)+"dlFreq"] = hexdl
     
     elif cmd_number == '160a':
         byte2 = cmd_value[0:2]
@@ -1309,37 +1309,44 @@ def set_channel_status_dict(parameter_dict, hex_validated_frame):
         i += 2
         channel += 1
 
-def set_channel_freq_dict(parameter_dict, hex_validated_frame):
+def set_channel_freq_dict(parameter, hex_validated_frame):
     channel = 1
     i = 0
     while channel <= 16:
         try:
           byte = hex_validated_frame[i:i+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
+          
           hex_as_int = int(byteInvertido, 16)
-          dl_up_dif = int()
-          dl_frec_min = 4270000
-          dl_frec_max = 4300000
-          dl_vhf_frec_min = 1520000
-          dl_vhf_frec_max = 1580000
-          if(hex_as_int >= dl_frec_min and hex_as_int <= dl_frec_max):
-              dl_up_dif = 10
-          elif(hex_as_int >= dl_vhf_frec_min and hex_as_int <= dl_vhf_frec_max):
-              dl_up_dif = -16
-          hextodlmhz = hex_as_int/10000
-          hextoupmhz =  hextodlmhz - dl_up_dif
-          hexdl = str(hextodlmhz)
-          hexup = str(hextoupmhz)
-          while(len(hexdl) != 8):
-              hexdl = hexdl + "0"
-          while(len(hexup) != 8):
-              hexup = hexup + "0"    
-          parameter_dict["channel"+str(channel)+"ulFreq"] = hexup
-          parameter_dict["channel"+str(channel)+"dlFreq"] = hexdl
+          
+          hexdl, hexup = get_downlink_uplink_freq(hex_as_int)    
+          parameter["channel"+str(channel)+"ulFreq"] = hexup
+          parameter["channel"+str(channel)+"dlFreq"] = hexdl
           channel += 1
           i += 8
         except:
           print("Dato recibido es desconocido ")
+
+def get_downlink_uplink_freq(hex_as_int):
+    dl_up_dif = int()
+    dl_frec_min = 4270000
+    dl_frec_max = 4300000
+    dl_vhf_frec_min = 1520000
+    dl_vhf_frec_max = 1580000
+    if(hex_as_int >= dl_frec_min and hex_as_int <= dl_frec_max):
+        dl_up_dif = 10
+    elif(hex_as_int >= dl_vhf_frec_min and hex_as_int <= dl_vhf_frec_max):
+        dl_up_dif = -16
+    hextodlmhz = hex_as_int/10000
+    hextoupmhz =  hextodlmhz - dl_up_dif
+    hexdl = str(hextodlmhz)
+    hexup = str(hextoupmhz)
+    while(len(hexdl) != 8):
+        hexdl = hexdl + "0"
+    while(len(hexup) != 8):
+        hexup = hexup + "0"
+    return hexdl,hexup
+        
    
 def set_power_att_dict(parameter_dict, hex_validated_frame):
     byte01toInt = int(hex_validated_frame[0:2], 16)/4
