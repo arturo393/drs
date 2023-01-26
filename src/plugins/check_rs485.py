@@ -61,6 +61,11 @@ MINIMUM_DRU_FRAME_SIZE = 20
 DRU_MULTIPLE_CMD_LENGTH = 5
 DRU_SINGLE_CMD_LENGTH = 4
 
+dl_frec_min = 4270000
+dl_frec_max = 4300000
+dl_vhf_frec_min = 1520000
+dl_vhf_frec_max = 1580000
+
 dataDMU = {
     "F8" : "opt1",
     "F9" : "opt2",
@@ -124,8 +129,6 @@ dataDRU = {
     "E50B" : " [dBm]"
     
 }
-
-
 # --------------------------------
 # -- Imprimir mensaje de ayuda
 # --------------------------------
@@ -943,8 +946,6 @@ def setSerial(port, baudrate):
         try:
             s = serial.Serial(port, baudrate)
             s.timeout = 0.1
-            
-            
             s.exclusive = True
 
         except serial.SerialException as e:
@@ -952,9 +953,11 @@ def setSerial(port, baudrate):
                 "WARNING - "+str(times)+" "+str(e)+" "+str(port))
             #sys.stderr.write(str(e))
             time.sleep(1)
-        return s
-    sys.stderr.write(str(e))
-    sys.exit(WARNING)
+    return s
+    logging.debug(
+        "CRITICAL - No Connection to "+str(port))
+    sys.stderr.write("CRITICAL - No Connection to "+str(port))
+    sys.exit(CRITICAL)
 
 def read_serial_frame(s):
     hexadecimal_string = ''
@@ -1002,6 +1005,11 @@ def serial_init(Port):
                 baudrate = 9600
             s = serial.Serial(Port, baudrate)
             s.timeout = 0.1
+        except UnboundLocalError as e:
+            logging.debug(
+                "CRITICAL - "+str(e)+" "+str(Port))
+            sys.stderr.write("CRITICAL - "+str(e)+" "+str(Port))
+            sys.exit(CRITICAL)
         except serial.SerialException as e:
             logging.debug(
                 "WARNING - "+str(times)+" "+str(e)+" "+str(Port))
@@ -1066,7 +1074,32 @@ def druReplyDecode(parameters,reply_data):
             parameters['workingMode'] = "Channel Mode"
         else:
             parameters['workingMode'] = "Unknown"
-            
+    elif cmd_number == "180a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          up_start_freq = (int(byteInvertido,16))
+          parameters["Uplink Start Frequency"] =str(up_start_freq/10000)
+          
+    elif cmd_number == "190a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          dl_start_freq = (int(byteInvertido,16))
+          parameters["Downlink Start Frequency"] = str(dl_start_freq/10000)
+          
+          
+    elif cmd_number == "190a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          work_bandwith = (int(byteInvertido,16))
+          parameters["Work Bandwith"] = str(work_bandwith)
+          
+    elif cmd_number == "1a0a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          channel_bandwith = (int(byteInvertido,16))
+          parameters["Channel Bandwith"] = str(channel_bandwith/10000)
+          
+                    
     elif (cmd_number == '1004' or cmd_number == '1104' or cmd_number == '1204'
         or cmd_number == '1304' or cmd_number == '1404' or cmd_number == '1504'
         or cmd_number == '1604' or cmd_number == '1704' or cmd_number == '1804'
@@ -1077,9 +1110,11 @@ def druReplyDecode(parameters,reply_data):
         byte0 = int(cmd_value[0:2], 16)   
         ch_number = int(cmd_number[1],16)+1
         hex_as_int = 4270000 + (125 * byte0)   
+        
         hexup,hexdl= get_downlink_uplink_freq(hex_as_int)
         parameters["channel"+str(ch_number)+"ulFreq"] = hexup
         parameters["channel"+str(ch_number)+"dlFreq"] = hexdl
+
     
     elif cmd_number == '160a':
         byte2 = cmd_value[0:2]
@@ -1087,13 +1122,13 @@ def druReplyDecode(parameters,reply_data):
         res1 = "{0:08b}".format(int(byte1, 16))
         res2 = "{0:08b}".format(int(byte2, 16))
         binario = res1 + res2
-        channel = 0            
+        hex_as_int = 0            
         for i  in binario:
-            channel += 1                
+            hex_as_int += 1                
             if (i == '1' ):  
-                parameters["channel"+str(channel)+"Status"] = "ON"                      
+                parameters["channel"+str(hex_as_int)+"Status"] = "ON"                      
             else:
-                parameters["channel"+str(channel)+"Status"] = "OFF"  
+                parameters["channel"+str(hex_as_int)+"Status"] = "OFF"  
     elif cmd_number =='4c0b':
         mac = cmd_value
         parameters['mac'] = mac
@@ -1183,6 +1218,10 @@ def newBlankDruParameter():
         parameters['mac'] = '-'
     if('sn' not in parameters):
         parameters['sn'] = '-'
+    if("Uplink Start Frequency"not in parameters):
+        parameters["Uplink Start Frequency"]= ""
+    if("Downlink Start Frequency"not in parameters):
+        parameters["Downlink Start Frequency"]=""
     for i in range(1,17):
         channel = str(i)
         if("channel"+str(channel)+"Status" not in parameters):
@@ -1329,10 +1368,8 @@ def set_channel_freq_dict(parameter, hex_validated_frame):
 
 def get_downlink_uplink_freq(hex_as_int):
     dl_up_dif = int()
-    dl_frec_min = 4270000
-    dl_frec_max = 4300000
-    dl_vhf_frec_min = 1520000
-    dl_vhf_frec_max = 1580000
+
+    
     if(hex_as_int >= dl_frec_min and hex_as_int <= dl_frec_max):
         dl_up_dif = 10
     elif(hex_as_int >= dl_vhf_frec_min and hex_as_int <= dl_vhf_frec_max):
@@ -1347,7 +1384,8 @@ def get_downlink_uplink_freq(hex_as_int):
         hexup = hexup + "0"
     return hexdl,hexup
         
-   
+          
+
 def set_power_att_dict(parameter_dict, hex_validated_frame):
     byte01toInt = int(hex_validated_frame[0:2], 16)/4
     byte02toInt = int(hex_validated_frame[2:4], 16)/4
@@ -1454,14 +1492,16 @@ def updateParametersWithReplyData(parameters, reply):
     except Exception as e:
         logging.debug(str(e)+"- "+str(reply))
         return 1
+
     try:
         reply_datas = splitMultipleReplyData(reply_data)
     except Exception as e:
         logging.debug(str(e)+"-"+str(reply_data))
-        return 1    
+        return 1      
     try:
      for data in reply_datas:
         druReplyDecode(parameters, data)
+    
     except Exception as e:
         logging.debug(str(e)+"- "+str(data))
         return 1

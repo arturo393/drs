@@ -151,6 +151,7 @@ def setRs485CmdFrames(args):
     frame_list.append(rs485.obtener_trama('set'  ,'dru','00','00','094C0B'+mac+'170500'+sn,'22','00',args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query','dru','00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
     frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','07180A0000000007190A00000000071A0A00000000071B0A00000000','1e','00',args['opt']+args['dru']))
     return frame_list
 
 def get_mac_str(args):
@@ -289,8 +290,8 @@ def get_channel_freq_table(parameter_dic):
     table3 += "<thead><tr style=font-size:11px>"
     table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
     table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-    table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-    table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+    table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency [Mhz]</font></th>"
+    table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency [Mhz]</font></th>"
     table3 += "</tr></thead><tbody>"
 
     if (parameter_dic['workingMode'] == 'Channel Mode'):
@@ -298,8 +299,8 @@ def get_channel_freq_table(parameter_dic):
         table3 += "<thead><tr style=font-size:11px>"
         table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
         table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-        table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-        table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency [Mhz]</font></th>"
+        table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         for i in range(1,17):
             channel = str(i)
@@ -314,14 +315,14 @@ def get_channel_freq_table(parameter_dic):
         table3 += "<thead><tr style=font-size:11px>"
         table3 += "<th width='30%'><font color=\"#046c94\">Status</font></th>"
         table3 += "<th width='10%'><font color=\"#046c94\">Bandwidth</font></th>"
-        table3 += "<th width='30%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-        table3 += "<th width='30%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "<th width='30%'><font color=\"#046c94\">UpLink Frequency [Mhz]</font></th>"
+        table3 += "<th width='30%'><font color=\"#046c94\">Downlink Frequency [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         table3 +="<tr align=\"center\" style=font-size:11px>"    
         table3 +="<td>"+parameter_dic['workingMode']+"</td>"
-        table3 +="<td>3[MHz]</td>"
-        table3 +="<td>417[MHz]</td>"
-        table3 +="<td>427[MHz]</td>"
+        table3 +="<td>3</td>"
+        table3 +="<td>"+parameter_dic['Uplink Start Frequency']+"</td>"
+        table3 +="<td>"+parameter_dic['Downlink Start Frequency']+"</td>"
         table3 +="</tr>"
 
     table3+="</tbody></table>"
