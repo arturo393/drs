@@ -282,25 +282,29 @@ def create_table(parameter_dic):
     table += '<div class="sigma-container">'
     table += table2+table1+table3
     table += "</div>"
-
+    tableportdru = '<div class="dru-container" >'+table1+"</div>"
+    powertabledru = '<div class="dru-container2" >'+table2+"</div>"
+    channeltabledru = '<div class="dru-container3" >'+table3+"</div>"
     return table
 
+    
+
 def get_channel_freq_table(parameter_dic):
-    table3 = "<table width=40%>"
-    table3 += "<thead><tr style=font-size:11px>"
-    table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
-    table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-    table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency [Mhz]</font></th>"
-    table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency [Mhz]</font></th>"
+    table3 = "<table width=90%>"
+    table3 += "<thead><tr style=font-size:10px>"
+    table3 += "<th width='10%'>Channel</font></th>"
+    table3 += "<th width='10%'>Status</font></th>"
+    table3 += "<th width='40%'>UpLink Frequency [Mhz]</font></th>"
+    table3 += "<th width='40%'>Downlink Frequency [Mhz]</font></th>"
     table3 += "</tr></thead><tbody>"
 
     if (parameter_dic['workingMode'] == 'Channel Mode'):
-        table3 = "<table width=40%>"
-        table3 += "<thead><tr style=font-size:11px>"
-        table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
-        table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-        table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency [Mhz]</font></th>"
-        table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency [Mhz]</font></th>"
+        table3 = "<table width=100%>"
+        table3 += "<thead><tr style=font-size:10px>"
+        table3 += "<th width='5%'>Channel</font></th>"
+        table3 += "<th width='5%'>Status</font></th>"
+        table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
+        table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         for i in range(1,17):
             channel = str(i)
@@ -311,14 +315,14 @@ def get_channel_freq_table(parameter_dic):
             table3 +="<td>"+parameter_dic["channel"+str(channel)+"dlFreq"]+"</td>"
             table3 +="</tr>"
     else:        
-        table3 = "<table width=40%>"
-        table3 += "<thead><tr style=font-size:11px>"
-        table3 += "<th width='30%'><font color=\"#046c94\">Status</font></th>"
-        table3 += "<th width='10%'><font color=\"#046c94\">Bandwidth</font></th>"
-        table3 += "<th width='30%'><font color=\"#046c94\">UpLink Frequency [Mhz]</font></th>"
-        table3 += "<th width='30%'><font color=\"#046c94\">Downlink Frequency [Mhz]</font></th>"
+        table3 = "<table width=90%>"
+        table3 += "<thead><tr style=font-size:10px>"
+        table3 += "<th width='30%'>Status</font></th>"
+        table3 += "<th width='10%'>Bandwidth</font></th>"
+        table3 += "<th width='30%'>UpLink [Mhz]</font></th>"
+        table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
-        table3 +="<tr align=\"center\" style=font-size:11px>"    
+        table3 +="<tr align=\"center\" style=font-size:10px>"    
         table3 +="<td>"+parameter_dic['workingMode']+"</td>"
         table3 +="<td>3</td>"
         table3 +="<td>"+parameter_dic['Uplink Start Frequency']+"</td>"
@@ -329,11 +333,11 @@ def get_channel_freq_table(parameter_dic):
     return table3
 
 def get_vswr_temperature_table(parameter_dic):
-    table2  = "<table width=100>"
+    table2  = "<table width=90%>"
     table2 += "<thead>"
     table2 += "<tr  style=font-size:12px>"
-    table2 += "<th width='70%'><font color=\"#046c94\">Temperature</font></th>"
-    table2 += "<th width='30%'><font color=\"#046c94\">VSWR</font></th>"
+    table2 += "<th width='40%'>Temperature</font></th>"
+    table2 += "<th width='40%'>VSWR</font></th>"
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
@@ -344,12 +348,12 @@ def get_vswr_temperature_table(parameter_dic):
 def get_power_att_table(parameter_dic):
 
 
-    table1  = "<table width=250>"
+    table1  = "<table width=90%>"
     table1 += "<thead>"
     table1 += "<tr  align=\"center\" style=font-size:12px>"
-    table1 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
-    table1 += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
-    table1 += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
+    table1 += "<th width='30%'>Link</font></th>"
+    table1 += "<th width='35%'>Power</font> </th>"
+    table1 += "<th width='35%'>Attenuation</font></th>"
     table1 += "</tr>"
     table1 += "</thead>"
     table1 += "<tbody>"
