@@ -14,13 +14,7 @@
             - monitoring-plugins
         state: present
     
-  - name: Adding User sigmadev To Nagios  
-    user: name=sigmadev
-          shell=/bin/zsh
-          groups=nagios
-          append=yes
           
-
   - name: Install Kernel Sources And Compilation Tools 
     apt:
         name:
@@ -42,10 +36,9 @@
             - python3-pip
         state: present
 
-  - name: Adding User Sigmadev To Dialout  
+  - name: Adding User Sigmadev To Dialout , Nagios, Adm  and www-data
     user: name=sigmadev
-          shell=/bin/zsh
-          groups=dialout
+          groups=dialout,adm,nagios,www-data
           append=yes
 
   - name: Adding User Nagios To Dialout  
@@ -75,7 +68,6 @@
           - pyserial
           - config
           - requests
-
 
 - hosts: icinga_monitor
   vars_files:

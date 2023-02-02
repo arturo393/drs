@@ -1191,7 +1191,7 @@ def setSerial(port, baudrate):
             s = serial.Serial(port, baudrate)
             s.timeout = 0.1
             s.exclusive = True
-            return s
+
         except serial.SerialException as e:
             logging.debug(
                 "WARNING - "+str(times)+" "+str(e)+" "+str(port))
