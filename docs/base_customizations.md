@@ -9,6 +9,7 @@
 To add direct links to rs485 device configuration module, please add the following code at line 141 of the file `/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml `:
 
 ```php
+
         <?php if ($this->hasPermission('monitoring/command/send-custom-notification')): ?>
         <li>
             <?php if ($object->getType() === $object::TYPE_HOST) {
@@ -93,27 +94,30 @@ To add direct links to rs485 device configuration module, please add the followi
                             )
                         )
                     );
-                } elseif (substr($object->host, 0, 3) === 'dmu') {
-                    echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/master/edit',
-                        array('host' => $object->getName()),
-                        array(
-                            'class' => 'action-link',
-                            'data-base-target' => '_self',
-                            'icon' => 'plug',
-                            'title' => $this->translate(
-                                'Master Device Configuration'
-                            )
-                        )
-                    );
-                }
+                 } //elseif (substr($object->host, 0, 3) === 'dmu') {
+                //     echo $this->qlink(
+                //         $this->translate('Device Configuration'),
+                //         'rs485/master/edit',
+                //         array('host' => $object->getName()),
+                //         array(
+                //             'class' => 'action-link',
+                //             'data-base-target' => '_self',
+                //             'icon' => 'plug',
+                //             'title' => $this->translate(
+                //                 'Master Device Configuration'
+                //             )
+                //         )
+                //     );
+                // }
             } else {
-                if (substr($object->service, 0, 6) === 'Master') {
+                if (substr($object->service, 0, 6) === 'Master' ) {
+                    
+                    $frequency = isset($object->customvars['frequencies']) ? $object->customvars['frequencies'] :" " ;
+                    $service = $object->host->getName() . '-freq' . $frequency;
                     echo $this->qlink(
                         $this->translate('Device Configuration'),
                         'rs485/master/edit',
-                        array('host' => $object->host->getName()),
+                        array('host' => $object->host->getName(),'freq'=> $frequency),
                         array(
                             'class' => 'action-link',
                             'data-base-target' => '_self',
