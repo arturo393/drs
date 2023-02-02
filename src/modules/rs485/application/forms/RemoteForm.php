@@ -42,10 +42,10 @@ class RemoteForm extends ConfigForm
         $opt_dru = '';
         if (isset($_GET['service'])){
             $servicename = $_GET['service'];
-            $hostname = substr($servicename,0,4);
+            $hostname = substr($servicename,0, -10);
             #echo json_encode($_GET);
-            $opt = substr($servicename,8,1);
-            $dru = substr($servicename,13,1);
+            $opt = substr($servicename,15,-5);
+            $dru = substr($servicename,20,);
             $opt_dru = "OPT".$opt." Remote ".$dru;
         }
         $listHost = $this->cargarHostList($hostname);
