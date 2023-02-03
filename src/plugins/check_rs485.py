@@ -63,8 +63,8 @@ DRU_SINGLE_CMD_LENGTH = 4
 
 dl_frec_min = 4270000
 dl_frec_max = 4300000
-dl_vhf_frec_min = 1520000
-dl_vhf_frec_max = 1580000
+dl_vhf_frec_min = 1450000
+dl_vhf_frec_max = 1700000
 
 dataDMU = {
     "F8" : "opt1",
@@ -1617,7 +1617,7 @@ def get_downlink_uplink_freq(hex_as_int):
     if(hex_as_int >= dl_frec_min and hex_as_int <= dl_frec_max):
         dl_up_dif = 10
     elif(hex_as_int >= dl_vhf_frec_min and hex_as_int <= dl_vhf_frec_max):
-        dl_up_dif = -16
+        dl_up_dif = dl_vhf_frec_min-dl_vhf_frec_max
     hextodlmhz = hex_as_int/10000
     hextoupmhz =  hextodlmhz - dl_up_dif
     hexdl = str(hextodlmhz)
