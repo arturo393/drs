@@ -41,19 +41,26 @@ class RemoteForm extends ConfigForm
         $hostname = '';
         $opt_dru = '';
         if (isset($_GET['service'])){
+            
             $servicename = $_GET['service'];
-            $hostname = substr($servicename,0, -10);
-            #echo json_encode($_GET);
-            $opt = substr($servicename,15,-5);
-            $dru = substr($servicename,20,);
+            $opt_dru_len = 9;
+            $hostname_start = 0;
+            $hostname_len = strlen($servicename)-$opt_dru_len -1;
+            $hostname = substr($servicename,$hostname_start,$hostname_len );
+            $opt_start = strlen($hostname)+4;
+            $opt_len = 1;
+            $opt = substr($servicename,$opt_start,$opt_len);
+            $dru_start = $opt_start+5; 
+            $dru_len = 1;
+            $dru = substr($servicename,$dru_start,$dru_len);
             $opt_dru = "OPT".$opt." Remote ".$dru;
         }
+
         $listHost = $this->cargarHostList($hostname);
         $listIdDRU = $this->listDRU($opt_dru);
         $listTrama = $this->tramasDRUList();
 
         #$this->addDecorator('HtmlTag', array('tag' => 'fieldset', 'openOnly' => true));
-
         $this->addElement(
             'select',
             'host_remote',
