@@ -232,7 +232,20 @@ class MasterForm extends ConfigForm
                 $dl_real = $dl * 10000 + $i * $cb;
                 $ul_real = $ul * 10000 + $i * $cb;
                 $hex = dechex($dl_real);
-                $hex_code = strtoupper(substr($hex, 4, strlen($hex)) . substr($hex, 2, -2) . substr($hex, 0, -4) . "00");
+                
+                $hex_1 = substr($hex, 4, strlen($hex));
+                $hex_2 = substr($hex, 2, -2);
+                $hex_3 = substr($hex, 0, -4);
+                
+                if($hex_1 == "7f" or $hex_1 == "7e")
+                    $hex_1 ="7d";
+                if($hex_2 == "7f" or $hex_2 == "7e")
+                    $hex_2 = "7d";
+                if($hex_3 == "7e" or $hex_3 == "7f")
+                    $hex_3 = "7d";
+                
+                $hex_code = strtoupper($hex_1 . $hex_2 . $hex_3) . "00";
+                
                 $channel_number = $i;
                 $freq_number_length = 8;
 
@@ -247,7 +260,8 @@ class MasterForm extends ConfigForm
                 $dl_real =  str_pad($dl_real,$freq_number_length,"0", STR_PAD_RIGHT);
 
                 $ch_number = substr(str_repeat(0, $ch_number_length).$channel_number, - $ch_number_length);
-                $list[$hex_code] = "CH " . $ch_number . " - UL [MHZ] : " . $ul_real . " - DL [MHZ] : " . $dl_real;
+                if($hex_code != "")
+                  $list[$hex_code] = "CH " . $ch_number . " - UL [MHZ] : " . $ul_real . " - DL [MHZ] : " . $dl_real;
             }
         }
         return $list;
