@@ -219,9 +219,9 @@ def get_channel_table(responseDict):
         table3 +="<tr align=\"center\" style=font-size:12px>"    
         table3 +="<td>"+responseDict['workingMode']+"</td>"
         
-        table3 +="<td>3</td>"
-        table3 +="<td>417</td>"
-        table3 +="<td>427</td>"
+        table3 +="<td>"+responseDict['Bandwidth']+"</td>"
+        table3 +="<td>"+responseDict['Uplink Start Frequency']+"</td>"
+        table3 +="<td>"+responseDict['Downlink Start Frequency']+"</td>"
         
         
         table3 +="</tr>"

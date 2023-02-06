@@ -63,6 +63,8 @@ DRU_SINGLE_CMD_LENGTH = 4
 
 dl_frec_min = 4270000
 dl_frec_max = 4300000
+workbandwith_vhf = 15
+workbandwith_uhf = 3
 dl_vhf_frec_min = 1450000
 dl_vhf_frec_max = 1700000
 
@@ -1093,7 +1095,7 @@ def druReplyDecode(parameters,reply_data):
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           work_bandwith = (int(byteInvertido,16))
-          parameters["Work Bandwith"] = str(work_bandwith)
+          parameters["Work Bandwid|th"] = str(work_bandwith)
           
     elif cmd_number == "1a0a":
           byte = cmd_value[0:0+8]
@@ -1113,9 +1115,10 @@ def druReplyDecode(parameters,reply_data):
         ch_number = int(cmd_number[1],16)+1
         hex_as_int = 4270000 + (125 * byte0)   
         
-        hexdl,hexup= get_downlink_uplink_freq(hex_as_int)
+        hexdl,hexup,dl_start,up_start,bandwidth= get_downlink_uplink_freq(hex_as_int)
         parameters["channel"+str(ch_number)+"ulFreq"] = hexup
         parameters["channel"+str(ch_number)+"dlFreq"] = hexdl
+
 
     
     elif cmd_number == '160a':
@@ -1224,6 +1227,7 @@ def newBlankDruParameter():
         parameters["Uplink Start Frequency"]= ""
     if("Downlink Start Frequency"not in parameters):
         parameters["Downlink Start Frequency"]=""
+    parameters["Work Bandwidth"]= ""
     for i in range(1,17):
         channel = str(i)
         if("channel"+str(channel)+"Status" not in parameters):
@@ -1258,6 +1262,9 @@ def newBlankDmuParameter():
     parameters['opt2ActivationStatus'] = '-'
     parameters['opt3ActivationStatus'] = '-'
     parameters['opt4ActivationStatus'] = '-'
+    parameters["Uplink Start Frequency"]= '-'
+    parameters["Downlink Start Frequency"]= '-'
+    parameters['Bandwidth']= '-'
 
     channel = 1
     while channel <= 16:
@@ -1359,10 +1366,14 @@ def set_channel_freq_dict(parameter, hex_validated_frame):
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
           
           hex_as_int = int(byteInvertido, 16)
-          
-          hexdl, hexup = get_downlink_uplink_freq(hex_as_int)    
+              
+          hexdl, hexup ,dl_start  ,up_start ,bandwidth = get_downlink_uplink_freq(hex_as_int)    
           parameter["channel"+str(channel)+"ulFreq"] = hexup
           parameter["channel"+str(channel)+"dlFreq"] = hexdl
+          parameter["Uplink Start Frequency"] = up_start
+          parameter["Downlink Start Frequency"] = dl_start
+          parameter["Bandwidth"] = bandwidth
+
           channel += 1
           i += 8
         except:
@@ -1374,22 +1385,26 @@ def get_downlink_uplink_freq(hex_as_int):
     
     if(hex_as_int >= dl_frec_min and hex_as_int <= dl_frec_max):
         dl_up_dif = 10
+        dl_start = dl_frec_min/10000
+        up_start = dl_start-dl_up_dif
+        bandwith = workbandwith_uhf
     elif(hex_as_int >= dl_vhf_frec_min and hex_as_int <= dl_vhf_frec_max):
-        dl_up_dif = dl_vhf_frec_min-dl_vhf_frec_max
+        dl_up_dif = (dl_vhf_frec_min-dl_vhf_frec_max)/10000
+        dl_start = dl_vhf_frec_min/10000
+        up_start = dl_start-dl_up_dif
+        bandwith = workbandwith_vhf
+
     hextodlmhz = hex_as_int/10000
     hextoupmhz =  hextodlmhz - dl_up_dif
-    hexdl = str(hextodlmhz)
-    hexup = str(hextoupmhz)
-    while(len(hexdl) != 8):
-        hexdl = hexdl + "0"
-    while(len(hexup) != 8):
-        hexup = hexup + "0"
-    return hexdl,hexup
+    dl_start = str(dl_start)
+    up_start = str(up_start)
+    bandwith = str(bandwith)
+   
+    hexdl = str(hextodlmhz).ljust(8,"0")
+    hexup = str(hextoupmhz).ljust(8,"0")
+    
+    return hexdl,hexup,dl_start,up_start,bandwith
         
-# def int_to_hexa(vhf_min):
-#     vhf_min=dl_vhf_frec_min
-#     flag=0
-#     while()
 
 def set_power_att_dict(parameter_dict, hex_validated_frame):
     byte01toInt = int(hex_validated_frame[0:2], 16)/4
