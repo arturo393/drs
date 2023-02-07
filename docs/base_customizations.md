@@ -94,21 +94,7 @@ To add direct links to rs485 device configuration module, please add the followi
                             )
                         )
                     );
-                 } //elseif (substr($object->host, 0, 3) === 'dmu') {
-                //     echo $this->qlink(
-                //         $this->translate('Device Configuration'),
-                //         'rs485/master/edit',
-                //         array('host' => $object->getName()),
-                //         array(
-                //             'class' => 'action-link',
-                //             'data-base-target' => '_self',
-                //             'icon' => 'plug',
-                //             'title' => $this->translate(
-                //                 'Master Device Configuration'
-                //             )
-                //         )
-                //     );
-                // }
+                 }
             } else {
                 if (substr($object->service, 0, 6) === 'Master' ) {
                     
