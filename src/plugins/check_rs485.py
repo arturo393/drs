@@ -1095,13 +1095,13 @@ def druReplyDecode(parameters,reply_data):
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           work_bandwith = (int(byteInvertido,16))
-          parameters["Work Bandwid|th"] = str(work_bandwith)
+          parameters["Work Bandwidth"] = str(work_bandwith)
           
     elif cmd_number == "1a0a":
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           channel_bandwith = (int(byteInvertido,16))
-          parameters["Channel Bandwith"] = str(channel_bandwith/10000)
+          parameters["Channel Bandwidth"] = str(channel_bandwith/10000)
           
                     
     elif (cmd_number == '1004' or cmd_number == '1104' or cmd_number == '1204'
