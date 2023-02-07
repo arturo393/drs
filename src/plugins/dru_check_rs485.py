@@ -291,7 +291,7 @@ def create_table(parameter_dic):
 
 def get_channel_freq_table(parameter_dic):
     table3 = "<table width=90%>"
-    table3 += "<thead><tr style=font-size:10px>"
+    table3 += "<thead><tr style=font-size:11px>"
     table3 += "<th width='10%'>Channel</font></th>"
     table3 += "<th width='10%'>Status</font></th>"
     table3 += "<th width='40%'>UpLink Frequency [Mhz]</font></th>"
@@ -300,7 +300,7 @@ def get_channel_freq_table(parameter_dic):
 
     if (parameter_dic['workingMode'] == 'Channel Mode'):
         table3 = "<table width=100%>"
-        table3 += "<thead><tr style=font-size:10px>"
+        table3 += "<thead><tr style=font-size:11px>"
         table3 += "<th width='5%'>Channel</font></th>"
         table3 += "<th width='5%'>Status</font></th>"
         table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
@@ -308,7 +308,7 @@ def get_channel_freq_table(parameter_dic):
         table3 += "</tr></thead><tbody>"
         for i in range(1,17):
             channel = str(i)
-            table3 +="<tr align=\"center\" style=font-size:11px>"
+            table3 +="<tr align=\"center\" style=font-size:12px>"
             table3 +="<td>"+channel+"</td>"
             table3 +="<td>"+parameter_dic["channel"+str(channel)+"Status"]+"</td>"
             table3 +="<td>"+parameter_dic["channel"+str(channel)+"ulFreq"]+"</td>"
@@ -316,15 +316,15 @@ def get_channel_freq_table(parameter_dic):
             table3 +="</tr>"
     else:        
         table3 = "<table width=90%>"
-        table3 += "<thead><tr style=font-size:10px>"
-        table3 += "<th width='30%'>Status</font></th>"
-        table3 += "<th width='10%'>Bandwidth</font></th>"
+        table3 += "<thead><tr style=font-size:12px>"
+        table3 += "<th width='10%'>Status</font></th>"
+        table3 += "<th width='30%'>Work Bandwidth</font></th>"
         table3 += "<th width='30%'>UpLink [Mhz]</font></th>"
         table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
-        table3 +="<tr align=\"center\" style=font-size:10px>"    
+        table3 +="<tr align=\"center\" style=font-size:12px>"    
         table3 +="<td>"+parameter_dic['workingMode']+"</td>"
-        table3 +="<td>"+parameter_dic['Bandwidth']+"</td>"
+        table3 +="<td>"+parameter_dic["Work Bandwidth"]+"</td>"
         table3 +="<td>"+parameter_dic['Uplink Start Frequency']+"</td>"
         table3 +="<td>"+parameter_dic['Downlink Start Frequency']+"</td>"
         table3 +="</tr>"
