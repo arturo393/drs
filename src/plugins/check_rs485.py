@@ -63,6 +63,8 @@ DRU_SINGLE_CMD_LENGTH = 4
 
 dl_frec_min = 4270000
 dl_frec_max = 4300000
+workbandwith_vhf = 15
+workbandwith_uhf = 3
 dl_vhf_frec_min = 1450000
 dl_vhf_frec_max = 1700000
 
@@ -130,249 +132,7 @@ dataDRU = {
     
 }
 
-frequencyDictionary = {
-4270000	 : '000:  417,0000 MHz UL - 427,0000 MHz DL',
-4270125	 : '001:  417,0125 MHz UL - 427,0125 MHz DL',
-4270250	 : '002:  417,0250 MHz UL - 427,0250 MHz DL',
-4270375	 : '003:  417,0375 MHz UL - 427,0375 MHz DL',
-4270500	 : '004:  417,0500 MHz UL - 427,0500 MHz DL',
-4270625	 : '005:  417,0625 MHz UL - 427,0625 MHz DL',
-4270750	 : '006:  417,0750 MHz UL - 427,0750 MHz DL',
-4270875	 : '007:  417,0875 MHz UL - 427,0875 MHz DL',
-4271000	 : '008:  417,1000 MHz UL - 427,1000 MHz DL',
-4271125	 : '009:  417,1125 MHz UL - 427,1125 MHz DL',
-4271250	 : '010:  417,1250 MHz UL - 427,1250 MHz DL',
-4271375	 : '011:  417,1375 MHz UL - 427,1375 MHz DL',
-4271500	 : '012:  417,1500 MHz UL - 427,1500 MHz DL',
-4271625	 : '013:  417,1625 MHz UL - 427,1625 MHz DL',
-4271750	 : '014:  417,1750 MHz UL - 427,1750 MHz DL',
-4271875	 : '015:  417,1875 MHz UL - 427,1875 MHz DL',
-4272000	 : '016:  417,2000 MHz UL - 427,2000 MHz DL',
-4272125	 : '017:  417,2125 MHz UL - 427,2125 MHz DL',
-4272250	 : '018:  417,2250 MHz UL - 427,2250 MHz DL',
-4272375	 : '019:  417,2375 MHz UL - 427,2375 MHz DL',
-4272500	 : '020:  417,2500 MHz UL - 427,2500 MHz DL',
-4272625	 : '021:  417,2625 MHz UL - 427,2625 MHz DL',
-4272750	 : '022:  417,2750 MHz UL - 427,2750 MHz DL',
-4272875	 : '023:  417,2875 MHz UL - 427,2875 MHz DL',
-4273000	 : '024:  417,3000 MHz UL - 427,3000 MHz DL',
-4273125	 : '025:  417,3125 MHz UL - 427,3125 MHz DL',
-4273250	 : '026:  417,3250 MHz UL - 427,3250 MHz DL',
-4273375	 : '027:  417,3375 MHz UL - 427,3375 MHz DL',
-4273500	 : '028:  417,3500 MHz UL - 427,3500 MHz DL',
-4273625	 : '029:  417,3625 MHz UL - 427,3625 MHz DL',
-4273750	 : '030:  417,3750 MHz UL - 427,3750 MHz DL',
-4273875	 : '031:  417,3875 MHz UL - 427,3875 MHz DL',
-4274000	 : '032:  417,4000 MHz UL - 427,4000 MHz DL',
-4274125	 : '033:  417,4125 MHz UL - 427,4125 MHz DL',
-4274250	 : '034:  417,4250 MHz UL - 427,4250 MHz DL',
-4274375	 : '035:  417,4375 MHz UL - 427,4375 MHz DL',
-4274500	 : '036:  417,4500 MHz UL - 427,4500 MHz DL',
-4274625	 : '037:  417,4625 MHz UL - 427,4625 MHz DL',
-4274750	 : '038:  417,4750 MHz UL - 427,4750 MHz DL',
-4274875	 : '039:  417,4875 MHz UL - 427,4875 MHz DL',
-4275000	 : '040:  417,5000 MHz UL - 427,5000 MHz DL',
-4275125	 : '041:  417,5125 MHz UL - 427,5125 MHz DL',
-4275250	 : '042:  417,5250 MHz UL - 427,5250 MHz DL',
-4275375	 : '043:  417,5375 MHz UL - 427,5375 MHz DL',
-4275500	 : '044:  417,5500 MHz UL - 427,5500 MHz DL',
-4275625	 : '045:  417,5625 MHz UL - 427,5625 MHz DL',
-4275750	 : '046:  417,5750 MHz UL - 427,5750 MHz DL',
-4275875	 : '047:  417,5875 MHz UL - 427,5875 MHz DL',
-4276000	 : '048:  417,6000 MHz UL - 427,6000 MHz DL',
-4276125	 : '049:  417,6125 MHz UL - 427,6125 MHz DL',
-4276250	 : '050:  417,6250 MHz UL - 427,6250 MHz DL',
-4276375	 : '051:  417,6375 MHz UL - 427,6375 MHz DL',
-4276500	 : '052:  417,6500 MHz UL - 427,6500 MHz DL',
-4276625	 : '053:  417,6625 MHz UL - 427,6625 MHz DL',
-4276750	 : '054:  417,6750 MHz UL - 427,6750 MHz DL',
-4276875	 : '055:  417,6875 MHz UL - 427,6875 MHz DL',
-4277000	 : '056:  417,7000 MHz UL - 427,7000 MHz DL',
-4277125	 : '057:  417,7125 MHz UL - 427,7125 MHz DL',
-4277250	 : '058:  417,7250 MHz UL - 427,7250 MHz DL',
-4277375	 : '059:  417,7375 MHz UL - 427,7375 MHz DL',
-4277500	 : '060:  417,7500 MHz UL - 427,7500 MHz DL',
-4277625	 : '061:  417,7625 MHz UL - 427,7625 MHz DL',
-4277750	 : '062:  417,7750 MHz UL - 427,7750 MHz DL',
-4277875	 : '063:  417,7875 MHz UL - 427,7875 MHz DL',
-4278000	 : '064:  417,8000 MHz UL - 427,8000 MHz DL',
-4278125	 : '065:  417,8125 MHz UL - 427,8125 MHz DL',
-4278250	 : '066:  417,8250 MHz UL - 427,8250 MHz DL',
-4278375	 : '067:  417,8375 MHz UL - 427,8375 MHz DL',
-4278500	 : '068:  417,8500 MHz UL - 427,8500 MHz DL',
-4278625	 : '069:  417,8625 MHz UL - 427,8625 MHz DL',
-4278750	 : '070:  417,8750 MHz UL - 427,8750 MHz DL',
-4278875	 : '071:  417,8875 MHz UL - 427,8875 MHz DL',
-4279000	 : '072:  417,9000 MHz UL - 427,9000 MHz DL',
-4279125	 : '073:  417,9125 MHz UL - 427,9125 MHz DL',
-4279250	 : '074:  417,9250 MHz UL - 427,9250 MHz DL',
-4279375	 : '075:  417,9375 MHz UL - 427,9375 MHz DL',
-4279500	 : '076:  417,9500 MHz UL - 427,9500 MHz DL',
-4279625	 : '077:  417,9625 MHz UL - 427,9625 MHz DL',
-4279750	 : '078:  417,9750 MHz UL - 427,9750 MHz DL',
-4279875	 : '079:  417,9875 MHz UL - 427,9875 MHz DL',
-4280000	 : '080:  418,0000 MHz UL - 428,0000 MHz DL',
-4280125	 : '081:  418,0125 MHz UL - 428,0125 MHz DL',
-4280250	 : '082:  418,0250 MHz UL - 428,0250 MHz DL',
-4280375	 : '083:  418,0375 MHz UL - 428,0375 MHz DL',
-4280500	 : '084:  418,0500 MHz UL - 428,0500 MHz DL',
-4280625	 : '085:  418,0625 MHz UL - 428,0625 MHz DL',
-4280750	 : '086:  418,0750 MHz UL - 428,0750 MHz DL',
-4280875	 : '087:  418,0875 MHz UL - 428,0875 MHz DL',
-4281000	 : '088:  418,1000 MHz UL - 428,1000 MHz DL',
-4281125	 : '089:  418,1125 MHz UL - 428,1125 MHz DL',
-4281250	 : '090:  418,1250 MHz UL - 428,1250 MHz DL',
-4281375	 : '091:  418,1375 MHz UL - 428,1375 MHz DL',
-4281500	 : '092:  418,1500 MHz UL - 428,1500 MHz DL',
-4281625	 : '093:  418,1625 MHz UL - 428,1625 MHz DL',
-4281750	 : '094:  418,1750 MHz UL - 428,1750 MHz DL',
-4281875	 : '095:  418,1875 MHz UL - 428,1875 MHz DL',
-4282000	 : '096:  418,2000 MHz UL - 428,2000 MHz DL',
-4282125	 : '097:  418,2125 MHz UL - 428,2125 MHz DL',
-4282250	 : '098:  418,2250 MHz UL - 428,2250 MHz DL',
-4282375	 : '099:  418,2375 MHz UL - 428,2375 MHz DL',
-4282500	 : '100:  418,2500 MHz UL - 428,2500 MHz DL',
-4282625	 : '101:  418,2625 MHz UL - 428,2625 MHz DL',
-4282750	 : '102:  418,2750 MHz UL - 428,2750 MHz DL',
-4282875	 : '103:  418,2875 MHz UL - 428,2875 MHz DL',
-4283000	 : '104:  418,3000 MHz UL - 428,3000 MHz DL',
-4283125	 : '105:  418,3125 MHz UL - 428,3125 MHz DL',
-4283250	 : '106:  418,3250 MHz UL - 428,3250 MHz DL',
-4283375	 : '107:  418,3375 MHz UL - 428,3375 MHz DL',
-4283500	 : '108:  418,3500 MHz UL - 428,3500 MHz DL',
-4283625	 : '109:  418,3625 MHz UL - 428,3625 MHz DL',
-4283750	 : '110:  418,3750 MHz UL - 428,3750 MHz DL',
-4283875	 : '111:  418,3875 MHz UL - 428,3875 MHz DL',
-4284000	 : '112:  418,4000 MHz UL - 428,4000 MHz DL',
-4284125	 : '113:  418,4125 MHz UL - 428,4125 MHz DL',
-4284250	 : '114:  418,4250 MHz UL - 428,4250 MHz DL',
-4284375	 : '115:  418,4375 MHz UL - 428,4375 MHz DL',
-4284500	 : '116:  418,4500 MHz UL - 428,4500 MHz DL',
-4284625	 : '117:  418,4625 MHz UL - 428,4625 MHz DL',
-4284750	 : '118:  418,4750 MHz UL - 428,4750 MHz DL',
-4284875	 : '119:  418,4875 MHz UL - 428,4875 MHz DL',
-4285000	 : '120:  418,5000 MHz UL - 428,5000 MHz DL',
-4285125	 : '121:  418,5125 MHz UL - 428,5125 MHz DL',
-4285250	 : '122:  418,5250 MHz UL - 428,5250 MHz DL',
-4285375	 : '123:  418,5375 MHz UL - 428,5375 MHz DL',
-4285500	 : '124:  418,5500 MHz UL - 428,5500 MHz DL',
-4285625	 : '125:  418,5625 MHz UL - 428,5625 MHz DL',
-4285750	 : '126:  418,5750 MHz UL - 428,5750 MHz DL',
-4285875	 : '127:  418,5875 MHz UL - 428,5875 MHz DL',
-4286000	 : '128:  418,6000 MHz UL - 428,6000 MHz DL',
-4286125	 : '129:  418,6125 MHz UL - 428,6125 MHz DL',
-4286250	 : '130:  418,6250 MHz UL - 428,6250 MHz DL',
-4286375	 : '131:  418,6375 MHz UL - 428,6375 MHz DL',
-4286500	 : '132:  418,6500 MHz UL - 428,6500 MHz DL',
-4286625	 : '133:  418,6625 MHz UL - 428,6625 MHz DL',
-4286750	 : '134:  418,6750 MHz UL - 428,6750 MHz DL',
-4286875	 : '135:  418,6875 MHz UL - 428,6875 MHz DL',
-4287000	 : '136:  418,7000 MHz UL - 428,7000 MHz DL',
-4287125	 : '137:  418,7125 MHz UL - 428,7125 MHz DL',
-4287250	 : '138:  418,7250 MHz UL - 428,7250 MHz DL',
-4287375	 : '139:  418,7375 MHz UL - 428,7375 MHz DL',
-4287500	 : '140:  418,7500 MHz UL - 428,7500 MHz DL',
-4287625	 : '141:  418,7625 MHz UL - 428,7625 MHz DL',
-4287750	 : '142:  418,7750 MHz UL - 428,7750 MHz DL',
-4287875	 : '143:  418,7875 MHz UL - 428,7875 MHz DL',
-4288000	 : '144:  418,8000 MHz UL - 428,8000 MHz DL',
-4288125	 : '145:  418,8125 MHz UL - 428,8125 MHz DL',
-4288250	 : '146:  418,8250 MHz UL - 428,8250 MHz DL',
-4288375	 : '147:  418,8375 MHz UL - 428,8375 MHz DL',
-4288500	 : '148:  418,8500 MHz UL - 428,8500 MHz DL',
-4288625	 : '149:  418,8625 MHz UL - 428,8625 MHz DL',
-4288750	 : '150:  418,8750 MHz UL - 428,8750 MHz DL',
-4288875	 : '151:  418,8875 MHz UL - 428,8875 MHz DL',
-4289000	 : '152:  418,9000 MHz UL - 428,9000 MHz DL',
-4289125	 : '153:  418,9125 MHz UL - 428,9125 MHz DL',
-4289250	 : '154:  418,9250 MHz UL - 428,9250 MHz DL',
-4289375	 : '155:  418,9375 MHz UL - 428,9375 MHz DL',
-4289500	 : '156:  418,9500 MHz UL - 428,9500 MHz DL',
-4289625	 : '157:  418,9625 MHz UL - 428,9625 MHz DL',
-4289750	 : '158:  418,9750 MHz UL - 428,9750 MHz DL',
-4289875	 : '159:  418,9875 MHz UL - 428,9875 MHz DL',
-4290000	 : '160:  419,0000 MHz UL - 429,0000 MHz DL',
-4290125	 : '161:  419,0125 MHz UL - 429,0125 MHz DL',
-4290250	 : '162:  419,0250 MHz UL - 429,0250 MHz DL',
-4290375	 : '163:  419,0375 MHz UL - 429,0375 MHz DL',
-4290500	 : '164:  419,0500 MHz UL - 429,0500 MHz DL',
-4290625	 : '165:  419,0625 MHz UL - 429,0625 MHz DL',
-4290750	 : '166:  419,0750 MHz UL - 429,0750 MHz DL',
-4290875	 : '167:  419,0875 MHz UL - 429,0875 MHz DL',
-4291000	 : '168:  419,1000 MHz UL - 429,1000 MHz DL',
-4291125	 : '169:  419,1125 MHz UL - 429,1125 MHz DL',
-4291250	 : '170:  419,1250 MHz UL - 429,1250 MHz DL',
-4291375	 : '171:  419,1375 MHz UL - 429,1375 MHz DL',
-4291500	 : '172:  419,1500 MHz UL - 429,1500 MHz DL',
-4291625	 : '173:  419,1625 MHz UL - 429,1625 MHz DL',
-4291750	 : '174:  419,1750 MHz UL - 429,1750 MHz DL',
-4291875	 : '175:  419,1875 MHz UL - 429,1875 MHz DL',
-4292000	 : '176:  419,2000 MHz UL - 429,2000 MHz DL',
-4292125	 : '177:  419,2125 MHz UL - 429,2125 MHz DL',
-4292250	 : '178:  419,2250 MHz UL - 429,2250 MHz DL',
-4292375	 : '179:  419,2375 MHz UL - 429,2375 MHz DL',
-4292500	 : '180:  419,2500 MHz UL - 429,2500 MHz DL',
-4292625	 : '181:  419,2625 MHz UL - 429,2625 MHz DL',
-4292750	 : '182:  419,2750 MHz UL - 429,2750 MHz DL',
-4292875	 : '183:  419,2875 MHz UL - 429,2875 MHz DL',
-4293000	 : '184:  419,3000 MHz UL - 429,3000 MHz DL',
-4293125	 : '185:  419,3125 MHz UL - 429,3125 MHz DL',
-4293250	 : '186:  419,3250 MHz UL - 429,3250 MHz DL',
-4293375	 : '187:  419,3375 MHz UL - 429,3375 MHz DL',
-4293500	 : '188:  419,3500 MHz UL - 429,3500 MHz DL',
-4293625	 : '189:  419,3625 MHz UL - 429,3625 MHz DL',
-4293750	 : '190:  419,3750 MHz UL - 429,3750 MHz DL',
-4293875	 : '191:  419,3875 MHz UL - 429,3875 MHz DL',
-4294000	 : '192:  419,4000 MHz UL - 429,4000 MHz DL',
-4294125	 : '193:  419,4125 MHz UL - 429,4125 MHz DL',
-4294250	 : '194:  419,4250 MHz UL - 429,4250 MHz DL',
-4294375	 : '195:  419,4375 MHz UL - 429,4375 MHz DL',
-4294500	 : '196:  419,4500 MHz UL - 429,4500 MHz DL',
-4294625	 : '197:  419,4625 MHz UL - 429,4625 MHz DL',
-4294750	 : '198:  419,4750 MHz UL - 429,4750 MHz DL',
-4294875	 : '199:  419,4875 MHz UL - 429,4875 MHz DL',
-4295000	 : '200:  419,5000 MHz UL - 429,5000 MHz DL',
-4295125	 : '201:  419,5125 MHz UL - 429,5125 MHz DL',
-4295250	 : '202:  419,5250 MHz UL - 429,5250 MHz DL',
-4295375	 : '203:  419,5375 MHz UL - 429,5375 MHz DL',
-4295500	 : '204:  419,5500 MHz UL - 429,5500 MHz DL',
-4295625	 : '205:  419,5625 MHz UL - 429,5625 MHz DL',
-4295750	 : '206:  419,5750 MHz UL - 429,5750 MHz DL',
-4295875	 : '207:  419,5875 MHz UL - 429,5875 MHz DL',
-4296000	 : '208:  419,6000 MHz UL - 429,6000 MHz DL',
-4296125	 : '209:  419,6125 MHz UL - 429,6125 MHz DL',
-4296250	 : '210:  419,6250 MHz UL - 429,6250 MHz DL',
-4296375	 : '211:  419,6375 MHz UL - 429,6375 MHz DL',
-4296500	 : '212:  419,6500 MHz UL - 429,6500 MHz DL',
-4296625	 : '213:  419,6625 MHz UL - 429,6625 MHz DL',
-4296750	 : '214:  419,6750 MHz UL - 429,6750 MHz DL',
-4296875	 : '215:  419,6875 MHz UL - 429,6875 MHz DL',
-4297000	 : '216:  419,7000 MHz UL - 429,7000 MHz DL',
-4297125	 : '217:  419,7125 MHz UL - 429,7125 MHz DL',
-4297250	 : '218:  419,7250 MHz UL - 429,7250 MHz DL',
-4297375	 : '219:  419,7375 MHz UL - 429,7375 MHz DL',
-4297500	 : '220:  419,7500 MHz UL - 429,7500 MHz DL',
-4297625	 : '221:  419,7625 MHz UL - 429,7625 MHz DL',
-4297750	 : '222:  419,7750 MHz UL - 429,7750 MHz DL',
-4297875	 : '223:  419,7875 MHz UL - 429,7875 MHz DL',
-4298000	 : '224:  419,8000 MHz UL - 429,8000 MHz DL',
-4298125	 : '225:  419,8125 MHz UL - 429,8125 MHz DL',
-4298250	 : '226:  419,8250 MHz UL - 429,8250 MHz DL',
-4298375	 : '227:  419,8375 MHz UL - 429,8375 MHz DL',
-4298500	 : '228:  419,8500 MHz UL - 429,8500 MHz DL',
-4298625	 : '229:  419,8625 MHz UL - 429,8625 MHz DL',
-4298750	 : '230:  419,8750 MHz UL - 429,8750 MHz DL',
-4298875	 : '231:  419,8875 MHz UL - 429,8875 MHz DL',
-4299000	 : '232:  419,9000 MHz UL - 429,9000 MHz DL',
-4299125	 : '233:  419,9125 MHz UL - 429,9125 MHz DL',
-4299250	 : '234:  419,9250 MHz UL - 429,9250 MHz DL',
-4299375	 : '235:  419,9375 MHz UL - 429,9375 MHz DL',
-4299500	 : '236:  419,9500 MHz UL - 429,9500 MHz DL',
-4299625	 : '237:  419,9625 MHz UL - 429,9625 MHz DL',
-4299750	 : '238:  419,9750 MHz UL - 429,9750 MHz DL',
-4299875	 : '239:  419,9875 MHz UL - 429,9875 MHz DL',
-4300000	 : '240:  420,0000 MHz UL - 430,0000 MHz DL'			
-}
+
 # --------------------------------
 # -- Imprimir mensaje de ayuda
 # --------------------------------
@@ -1335,13 +1095,13 @@ def druReplyDecode(parameters,reply_data):
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           work_bandwith = (int(byteInvertido,16))
-          parameters["Work Bandwith"] = str(work_bandwith)
+          parameters["Work Bandwidth"] = str(work_bandwith)
           
     elif cmd_number == "1a0a":
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           channel_bandwith = (int(byteInvertido,16))
-          parameters["Channel Bandwith"] = str(channel_bandwith/10000)
+          parameters["Channel Bandwidth"] = str(channel_bandwith/10000)
           
                     
     elif (cmd_number == '1004' or cmd_number == '1104' or cmd_number == '1204'
@@ -1355,9 +1115,10 @@ def druReplyDecode(parameters,reply_data):
         ch_number = int(cmd_number[1],16)+1
         hex_as_int = 4270000 + (125 * byte0)   
         
-        hexup,hexdl= get_downlink_uplink_freq(hex_as_int)
+        hexdl,hexup,dl_start,up_start,bandwidth= get_downlink_uplink_freq(hex_as_int)
         parameters["channel"+str(ch_number)+"ulFreq"] = hexup
         parameters["channel"+str(ch_number)+"dlFreq"] = hexdl
+
 
     
     elif cmd_number == '160a':
@@ -1466,6 +1227,7 @@ def newBlankDruParameter():
         parameters["Uplink Start Frequency"]= ""
     if("Downlink Start Frequency"not in parameters):
         parameters["Downlink Start Frequency"]=""
+    parameters["Work Bandwidth"]= ""
     for i in range(1,17):
         channel = str(i)
         if("channel"+str(channel)+"Status" not in parameters):
@@ -1500,6 +1262,9 @@ def newBlankDmuParameter():
     parameters['opt2ActivationStatus'] = '-'
     parameters['opt3ActivationStatus'] = '-'
     parameters['opt4ActivationStatus'] = '-'
+    parameters["Uplink Start Frequency"]= '-'
+    parameters["Downlink Start Frequency"]= '-'
+    parameters['Bandwidth']= '-'
 
     channel = 1
     while channel <= 16:
@@ -1601,10 +1366,14 @@ def set_channel_freq_dict(parameter, hex_validated_frame):
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2]
           
           hex_as_int = int(byteInvertido, 16)
-          
-          hexdl, hexup = get_downlink_uplink_freq(hex_as_int)    
+              
+          hexdl, hexup ,dl_start  ,up_start ,bandwidth = get_downlink_uplink_freq(hex_as_int)    
           parameter["channel"+str(channel)+"ulFreq"] = hexup
           parameter["channel"+str(channel)+"dlFreq"] = hexdl
+          parameter["Uplink Start Frequency"] = up_start
+          parameter["Downlink Start Frequency"] = dl_start
+          parameter["Bandwidth"] = bandwidth
+
           channel += 1
           i += 8
         except:
@@ -1616,22 +1385,26 @@ def get_downlink_uplink_freq(hex_as_int):
     
     if(hex_as_int >= dl_frec_min and hex_as_int <= dl_frec_max):
         dl_up_dif = 10
+        dl_start = dl_frec_min/10000
+        up_start = dl_start-dl_up_dif
+        bandwith = workbandwith_uhf
     elif(hex_as_int >= dl_vhf_frec_min and hex_as_int <= dl_vhf_frec_max):
-        dl_up_dif = dl_vhf_frec_min-dl_vhf_frec_max
+        dl_up_dif = (dl_vhf_frec_min-dl_vhf_frec_max)/10000
+        dl_start = dl_vhf_frec_min/10000
+        up_start = dl_start-dl_up_dif
+        bandwith = workbandwith_vhf
+
     hextodlmhz = hex_as_int/10000
     hextoupmhz =  hextodlmhz - dl_up_dif
-    hexdl = str(hextodlmhz)
-    hexup = str(hextoupmhz)
-    while(len(hexdl) != 8):
-        hexdl = hexdl + "0"
-    while(len(hexup) != 8):
-        hexup = hexup + "0"
-    return hexdl,hexup
+    dl_start = str(dl_start)
+    up_start = str(up_start)
+    bandwith = str(bandwith)
+   
+    hexdl = str(hextodlmhz).ljust(8,"0")
+    hexup = str(hextoupmhz).ljust(8,"0")
+    
+    return hexdl,hexup,dl_start,up_start,bandwith
         
-# def int_to_hexa(vhf_min):
-#     vhf_min=dl_vhf_frec_min
-#     flag=0
-#     while()
 
 def set_power_att_dict(parameter_dict, hex_validated_frame):
     byte01toInt = int(hex_validated_frame[0:2], 16)/4

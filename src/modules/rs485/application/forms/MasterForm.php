@@ -208,12 +208,14 @@ class MasterForm extends ConfigForm
             $dl = 145;
             $ul = 170;
             $wb = 15;
+            $ch_number_length = 4;
         }
         else if ($id == "uhf")
         {
             $dl = 427;
             $ul = 417;
             $wb = 3;
+            $ch_number_length = 3;
         }
         $cb = 125;
 
@@ -230,11 +232,38 @@ class MasterForm extends ConfigForm
                 $dl_real = $dl * 10000 + $i * $cb;
                 $ul_real = $ul * 10000 + $i * $cb;
                 $hex = dechex($dl_real);
-                $hex_code = strtoupper(substr($hex, 4, strlen($hex)) . substr($hex, 2, -2) . substr($hex, 0, -4) . "00");
-                $list[$hex_code] = "CH " . $i . " - UL [MHZ] : " . strval($ul_real / 10000) . " - DL [MHZ] : " . strval($dl_real / 10000);
+                
+                $hex_1 = substr($hex, 4, strlen($hex));
+                $hex_2 = substr($hex, 2, -2);
+                $hex_3 = substr($hex, 0, -4);
+                
+                if($hex_1 == "7f" or $hex_1 == "7e")
+                    $hex_1 ="7d";
+                if($hex_2 == "7f" or $hex_2 == "7e")
+                    $hex_2 = "7d";
+                if($hex_3 == "7e" or $hex_3 == "7f")
+                    $hex_3 = "7d";
+                
+                $hex_code = strtoupper($hex_1 . $hex_2 . $hex_3) . "00";
+                
+                $channel_number = $i;
+                $freq_number_length = 8;
+
+                if(($ul_real) % 10000 == 0){
+                    $ul_real = strval($ul_real / 10000).".";
+                    $dl_real = strval($dl_real / 10000).".";
+                } else {
+                    $ul_real = strval($ul_real / 10000);
+                    $dl_real = strval($dl_real / 10000);
+                }
+                $ul_real =  str_pad($ul_real,$freq_number_length,"0", STR_PAD_RIGHT);
+                $dl_real =  str_pad($dl_real,$freq_number_length,"0", STR_PAD_RIGHT);
+
+                $ch_number = substr(str_repeat(0, $ch_number_length).$channel_number, - $ch_number_length);
+                if($hex_code != "")
+                  $list[$hex_code] = "CH " . $ch_number . " - UL [MHZ] : " . $ul_real . " - DL [MHZ] : " . $dl_real;
             }
         }
-
         return $list;
     }
 

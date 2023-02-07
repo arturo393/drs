@@ -324,7 +324,7 @@ def get_channel_freq_table(parameter_dic):
         table3 += "</tr></thead><tbody>"
         table3 +="<tr align=\"center\" style=font-size:10px>"    
         table3 +="<td>"+parameter_dic['workingMode']+"</td>"
-        table3 +="<td>3</td>"
+        table3 +="<td>"+parameter_dic['Bandwidth']+"</td>"
         table3 +="<td>"+parameter_dic['Uplink Start Frequency']+"</td>"
         table3 +="<td>"+parameter_dic['Downlink Start Frequency']+"</td>"
         table3 +="</tr>"
