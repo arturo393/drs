@@ -1091,13 +1091,13 @@ def druReplyDecode(parameters,reply_data):
           parameters["Downlink Start Frequency"] = str(dl_start_freq/10000)
           
           
-    elif cmd_number == "190a":
+    elif cmd_number == "1a0a":
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           work_bandwith = (int(byteInvertido,16))
-          parameters["Work Bandwidth"] = str(work_bandwith)
+          parameters["Work Bandwidth"] = str(work_bandwith/10000)
           
-    elif cmd_number == "1a0a":
+    elif cmd_number == "1b0a":
           byte = cmd_value[0:0+8]
           byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
           channel_bandwith = (int(byteInvertido,16))
@@ -1111,13 +1111,19 @@ def druReplyDecode(parameters,reply_data):
         or cmd_number == '1c04' or cmd_number == '1d04' or cmd_number == '1e04'
         or cmd_number == '1f04'):
         
-        byte0 = int(cmd_value[0:2], 16)   
-        ch_number = int(cmd_number[1],16)+1
-        hex_as_int = 4270000 + (125 * byte0)   
+
+        if(parameters["Downlink Start Frequency"] != '-'):
+            byte0 = int(cmd_value[0:2], 16)   
+            ch_number = int(cmd_number[1],16)+1
+            dlStartFreq=float(parameters["Downlink Start Frequency"])*10000
+            hex_as_int = dlStartFreq + (125 * byte0)
+            hexdl,hexup,dl_start,up_start,bandwidth= get_downlink_uplink_freq(hex_as_int)
+            parameters["channel"+str(ch_number)+"ulFreq"] = hexup
+            parameters["channel"+str(ch_number)+"dlFreq"] = hexdl
+
+            
         
-        hexdl,hexup,dl_start,up_start,bandwidth= get_downlink_uplink_freq(hex_as_int)
-        parameters["channel"+str(ch_number)+"ulFreq"] = hexup
-        parameters["channel"+str(ch_number)+"dlFreq"] = hexdl
+        
 
 
     
@@ -1224,10 +1230,10 @@ def newBlankDruParameter():
     if('sn' not in parameters):
         parameters['sn'] = '-'
     if("Uplink Start Frequency"not in parameters):
-        parameters["Uplink Start Frequency"]= ""
+        parameters["Uplink Start Frequency"]= '-'
     if("Downlink Start Frequency"not in parameters):
-        parameters["Downlink Start Frequency"]=""
-    parameters["Work Bandwidth"]= ""
+        parameters["Downlink Start Frequency"]= '-'
+    parameters["Work Bandwidth"]= '-'
     for i in range(1,17):
         channel = str(i)
         if("channel"+str(channel)+"Status" not in parameters):
@@ -1393,6 +1399,11 @@ def get_downlink_uplink_freq(hex_as_int):
         dl_start = dl_vhf_frec_min/10000
         up_start = dl_start-dl_up_dif
         bandwith = workbandwith_vhf
+    else:
+        dl_up_dif = 0
+        dl_start = 0
+        up_start = 0
+        bandwith = 0
 
     hextodlmhz = hex_as_int/10000
     hextoupmhz =  hextodlmhz - dl_up_dif
