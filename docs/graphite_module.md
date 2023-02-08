@@ -141,6 +141,10 @@ rs485 = "alias(color($metric$, '#EC5707'), ' $metric$')"
 ensure file permissions are correct:
 `chown -R www-data:icingaweb2 /usr/share/icingaweb2/modules/graphite/templates`
 
+#Copy storage-schemas.conf
+
+`cp REPO/modules/graphite/templates/storage-schemas.confg /opt/graphite/conf`
+
 |                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------- |
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
