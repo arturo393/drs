@@ -346,7 +346,7 @@ class RemoteController extends Controller
             $trama = $this->tramasDRU($this->_getParam('opt29_hidden'));                   
 		    $druCmdLength = '07'; 
             $druCmdCode = '1B0A'; 
-            $druCmdData = $this->obtenerhexinvertido(((int) $this->_getParam('opt28')),10);                  
+            $druCmdData = $this->obtenerhexinvertido(((int) $this->_getParam('opt29')),1);                  
             $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);     
             echo $druCmdData;
             $salida = system($ejecutar . " 2>&1");  

@@ -277,7 +277,7 @@ def get_alarm_from_dict(args, parameter_dict):
 def create_table(parameter_dic):
     table1 = get_power_att_table(parameter_dic)
     table2 = get_vswr_temperature_table(parameter_dic)
-    table3 = get_channel_freq_table(parameter_dic)
+    table3 = get_working_mode(parameter_dic)
     
     table =  ""
     table += '<div class="sigma-container">'
@@ -328,10 +328,22 @@ def get_channel_freq_table(parameter_dic):
         table3 +="<td>"+parameter_dic["Work Bandwidth"]+"</td>"
         table3 +="<td>"+parameter_dic['Uplink Start Frequency']+"</td>"
         table3 +="<td>"+parameter_dic['Downlink Start Frequency']+"</td>"
-        table3 +="</tr>"
+        
 
     table3+="</tbody></table>"
     return table3
+
+def get_working_mode(parameter_dic):
+    table4 = "<table width=90%>"
+    table4 += "<thead><tr style=font-size:12px>"
+    table4 += "<th width='90%'>Status</font></th>"
+    table4 += "</tr></thead><tbody>"
+    table4 +="<tr align=\"center\" style=font-size:12px>"    
+    table4 +="<td>"+parameter_dic['workingMode']+"</td>"
+    table4 +="</tr>"
+    table4+="</tbody></table>"
+    return table4
+
 
 def get_vswr_temperature_table(parameter_dic):
     table2  = "<table width=90%>"
