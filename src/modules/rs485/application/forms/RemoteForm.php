@@ -20,10 +20,10 @@ class RemoteForm extends ConfigForm
         22, #22: Uplink ATT [dB]  - Cmd data 0x04004
         23, #23: Downlink ATT [dB] - Cmd data 0x04104
         25, #25: Choice of working mode - Cmd data 0xEF0B
-         #26: Uplinkg Start Frequency
-         #27: Downlink Start Frequency
-         #28: Work Bandwidth
-         #29: Channel bandwidth
+        26, #26: Uplink Start Frequency
+        27, #27: Downlink Start Frequency
+        28, #28: Work Bandwidth
+        29, #29: Channel bandwidth
         #30  #30: Master/Slave Link Alarm Control
          #31: Device Serial Numner
          #32: MAC Address
@@ -238,17 +238,17 @@ class RemoteForm extends ConfigForm
 
                 }    
             }
-            #26: Uplinkg Start Frequency
+            #26: Uplink Start Frequency
             if ($option == 26 ||  isset($formData['opt26_hidden'])) {
                 $input = 26;
                 $hidden =  isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {      
-                    $listFrecuencia = $this->frecuenciaDMU();         
+        
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);                                    
                     $this->addElement('text', "opt{$input}", [
                         #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}").'   - value between 417[MHz] - 420[MHz]',
+                        'placeholder' => $this->translate("{$descripcion}").'   - Insert frequency[MHz]',
                         'required' => true,
                     ]);  
 
@@ -264,7 +264,7 @@ class RemoteForm extends ConfigForm
                 $descripcion = $this->getDescripcion($input);                                    
                 $this->addElement('text', "opt{$input}", [
                     #'label'       => $this->translate("{$descripcion}"),
-                    'placeholder' => $this->translate("{$descripcion}").'   - value between 427[MHz] - 430[MHz]',
+                    'placeholder' => $this->translate("{$descripcion}").'   - Insert frequency[MHz]',
                     'required' => true,
                 ]);                      
                 }
@@ -279,7 +279,7 @@ class RemoteForm extends ConfigForm
                     $descripcion = $this->getDescripcion($input);                                    
                     $this->addElement('text', "opt{$input}", [
                         #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}").'   - value between 1[MHz] - 3[MHz]',
+                        'placeholder' => $this->translate("{$descripcion}").'   - Insert frequency[MHz]',
                         'required' => true,
                     ]);  
                 }
@@ -296,7 +296,7 @@ class RemoteForm extends ConfigForm
                     $descripcion = $this->getDescripcion($input);                                    
                     $this->addElement('text', "opt{$input}", [
                         #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}").'   - value between 12.5[KHz] - 20[KHz]',
+                        'placeholder' => $this->translate("{$descripcion}").'   - Insert frequency[KHz]',
                         'required' => true,
                     ]);                    
                 }

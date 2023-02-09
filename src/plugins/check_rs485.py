@@ -1115,7 +1115,8 @@ def druReplyDecode(parameters,reply_data):
         if(parameters["Downlink Start Frequency"] != '-'):
             byte0 = int(cmd_value[0:2], 16)   
             ch_number = int(cmd_number[1],16)+1
-            dlStartFreq=float(parameters["Downlink Start Frequency"])*10000
+            float_dl = (float(parameters["Downlink Start Frequency"]))
+            dlStartFreq=float_dl*10000
             hex_as_int = dlStartFreq + (125 * byte0)
             hexdl,hexup,dl_start,up_start,bandwidth= get_downlink_uplink_freq(hex_as_int)
             parameters["channel"+str(ch_number)+"ulFreq"] = hexup

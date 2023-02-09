@@ -149,9 +149,10 @@ def setRs485CmdFrames(args):
     # -- Armando la trama
     #def obtener_trama(Action, Device, DmuDevice1, DmuDevice2, CmdNumber, CmdBodyLenght, CmdData, DruId):
     frame_list.append(rs485.obtener_trama('set'  ,'dru','00','00','094C0B'+mac+'170500'+sn,'22','00',args['opt']+args['dru']))
-    frame_list.append(rs485.obtener_trama('query','dru','00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru']))
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','04010500040305000406050004250500044004000441040004EF0B0005160A0000','23','00', args['opt']+args['dru'])) 
+    frame_list.append(rs485.obtener_trama('query','dru','00','00','07180A0000000007190A00000000071A0A00000000071B0A00000000','1e','00',args['opt']+args['dru'])) 
     frame_list.append(rs485.obtener_trama('query','dru','00','00','0510040000051104000005120400000513040000051404000005150400000516040000051704000005180400000519040000051A040000051B040000051C040000051D040000051E040000051F040000','52','00',args['opt']+args['dru']))
-    frame_list.append(rs485.obtener_trama('query','dru','00','00','07180A0000000007190A00000000071A0A00000000071B0A00000000','1e','00',args['opt']+args['dru']))
+    
     return frame_list
 
 def get_mac_str(args):
