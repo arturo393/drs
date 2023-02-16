@@ -94,7 +94,7 @@ To add direct links to rs485 device configuration module, please add the followi
                             )
                         )
                     );
-                 }
+                 } 
             } else {
                 if (substr($object->service, 0, 6) === 'Master' ) {
                     
@@ -135,8 +135,25 @@ To add direct links to rs485 device configuration module, please add the followi
             ?>
             <?php endif ?>
         </li>
+    </ul>
+</div>
 
 ```
+
+
+
+## To not show feature commands in services tables (Because its not working ) , if want show this uncomment the line 55.
+
+Please comment the line 55 or replace the following code at line 55 to the file `/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml `:
+
+```php 
+
+<!-- <?= $this->render('show/components/flags.phtml') ?> -->
+
+```
+
+
+
 
 ## Change Tab Icon 
 ```
