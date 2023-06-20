@@ -68,7 +68,7 @@ def main():
     replies = rs485.writeSerialQueries(queries,serial)
     reply_time = time.time()-reply_time
     messages =  list(zip(queries,replies))
-    parameters = rs485.getParametersFromDruMessages(messages)
+    parameters = getParametersFromDruMessages(messages)
     #parameters = rs485.getParametersFromDruReplies(queries, replies, query_id)
         
     parameters["rt"] = str(round(reply_time,2))
@@ -375,6 +375,282 @@ def get_power_att_table(parameter_dic):
     table1 +="</tbody></table>"
     return table1
 
+
+def getParametersFromDruMessages(messages):
+    parameters = newBlankDruParameter()
+    reply_errors_count = 0
+    
+    for message in messages:
+        query = message[0]
+        reply = message[1]
+        QUERY_ID_INDEX = 14
+        query_id = query[QUERY_ID_INDEX:QUERY_ID_INDEX+2]
+        logging.debug("[Check] RU"+query_id+ " Query: "+str(query).lower())
+        reply_temp = ''.join(format(x, '02x') for x in reply)
+        logging.debug("[Check] RU"+query_id+ " Reply: "+str(reply_temp))
+        if hasDruReplyError(reply,query_id):
+            reply_errors_count +=1
+        else:
+            updateParametersWithReplyData(parameters, reply)
+    
+    queries_count = len(messages)
+    if reply_errors_count == queries_count:
+        sys.stderr.write("No response")
+        sys.exit(CRITICAL)
+    return parameters
+
+def newBlankDruParameter():
+    parameters = dict()
+    
+    if('dlOutputPower' not in parameters):
+        parameters['dlOutputPower'] = '-'
+    if('ulInputPower' not in parameters):
+        parameters['ulInputPower'] = '-'
+    if('paTemperature' not in parameters):
+        parameters['paTemperature'] = '-'
+    if('dlAtt' not in parameters):
+        parameters['dlAtt'] = '-'
+    if('ulAtt' not in parameters):
+        parameters['ulAtt'] = '-'
+    if('vswr' not in parameters):
+        parameters['vswr'] = '-'
+    if('workingMode' not in parameters):
+        parameters['workingMode'] = '-'
+    if('mac' not in parameters):
+        parameters['mac'] = '-'
+    if('sn' not in parameters):
+        parameters['sn'] = '-'
+    if("Uplink Start Frequency"not in parameters):
+        parameters["Uplink Start Frequency"]= '-'
+    if("Downlink Start Frequency"not in parameters):
+        parameters["Downlink Start Frequency"]= '-'
+    parameters["Work Bandwidth"]= '-'
+    for i in range(1,17):
+        channel = str(i)
+        if("channel"+str(channel)+"Status" not in parameters):
+            parameters["channel"+str(channel)+"Status"] = '-'
+        if("channel"+str(channel)+"ulFreq" not in parameters):
+            parameters["channel"+str(channel)+"ulFreq"] = '-'    
+        if("channel"+str(channel)+"dlFreq" not in parameters):
+            parameters["channel"+str(channel)+"dlFreq"] = '-'
+    
+    return parameters
+
+def druReplyDecode(parameters,reply_data):
+    
+    cmd_number = reply_data[:4]
+    cmd_value = reply_data[4:]
+    
+    if cmd_number =='0105':
+        temperature = s8(int(cmd_value,16))
+        parameters['paTemperature'] = str(temperature)
+                                                                                                                
+    elif cmd_number == '0305':
+        dl_power = s8(int(cmd_value, 16))
+
+        if(int(dl_power) == 0 or int(dl_power) >= 31):
+            parameters['dlOutputPower'] ="-"
+        else:
+            parameters['dlOutputPower'] = str(dl_power)
+        
+    elif cmd_number == '2505':
+        ul_power = s8(int(cmd_value, 16))
+        parameters['ulInputPower'] = str(ul_power)
+                
+    elif cmd_number == '0605':
+        vswr = s8(int(cmd_value, 16))/10
+        parameters['vswr'] = str(round(vswr,2))
+        
+    elif cmd_number == '4004':
+        ul_att = (int(cmd_value, 16))
+        parameters['ulAtt'] = str(ul_att)  
+                                
+    elif cmd_number == '4104':
+        dl_att = (int(cmd_value, 16))
+        parameters['dlAtt'] = str(dl_att)
+        
+    elif cmd_number == 'ef0b':
+        working_mode = (int(cmd_value, 16))
+
+        if working_mode == 2:
+            parameters['workingMode'] = "WideBand Mode"
+        elif working_mode == 3:
+            parameters['workingMode'] = "Channel Mode"
+        else:
+            parameters['workingMode'] = "Unknown"
+    elif cmd_number == "180a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          up_start_freq = (int(byteInvertido,16))
+          parameters["Uplink Start Frequency"] =str(up_start_freq/10000)
+          
+    elif cmd_number == "190a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          dl_start_freq = (int(byteInvertido,16))
+          parameters["Downlink Start Frequency"] = str(dl_start_freq/10000)
+          
+          
+    elif cmd_number == "1a0a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          work_bandwith = (int(byteInvertido,16))
+          parameters["Work Bandwidth"] = str(work_bandwith/10000)
+          
+    elif cmd_number == "1b0a":
+          byte = cmd_value[0:0+8]
+          byteInvertido = byte[6:8] + byte[4:6] + byte[2:4] + byte[0:2] 
+          channel_bandwith = (int(byteInvertido,16))
+          parameters["Channel Bandwidth"] = str(channel_bandwith/10000)
+          
+                    
+    elif (cmd_number == '1004' or cmd_number == '1104' or cmd_number == '1204'
+        or cmd_number == '1304' or cmd_number == '1404' or cmd_number == '1504'
+        or cmd_number == '1604' or cmd_number == '1704' or cmd_number == '1804'
+        or cmd_number == '1904' or cmd_number == '1a04' or cmd_number == '1b04'
+        or cmd_number == '1c04' or cmd_number == '1d04' or cmd_number == '1e04'
+        or cmd_number == '1f04'):
+        
+        if(parameters["Downlink Start Frequency"] != '-'):
+            byte0 = int(cmd_value[0:2], 16)   
+            ch_number = int(cmd_number[1],16)+1
+            float_dl = (float(parameters["Downlink Start Frequency"]))
+            dlStartFreq=float_dl*10000
+            downlinkFrequency = dlStartFreq + (125 * byte0)
+            downlink,uplink,dl_start,up_start,bandwidth= rs485.get_start_freq_and_diff(downlinkFrequency)
+            parameters["channel"+str(ch_number)+"ulFreq"] = uplink
+            parameters["channel"+str(ch_number)+"dlFreq"] = downlink
+
+    elif cmd_number == '160a':
+        byte2 = cmd_value[0:2]
+        byte1 = cmd_value[2:4]
+        res1 = "{0:08b}".format(int(byte1, 16))
+        res2 = "{0:08b}".format(int(byte2, 16))
+        binario = res1 + res2
+        hex_as_int = 0            
+        for i  in binario:
+            hex_as_int += 1                
+            if (i == '1' ):  
+                parameters["channel"+str(hex_as_int)+"Status"] = "ON"                      
+            else:
+                parameters["channel"+str(hex_as_int)+"Status"] = "OFF"  
+    elif cmd_number =='4c0b':
+        mac = cmd_value
+        parameters['mac'] = mac
+    elif cmd_number =='0500':
+        sn = bytearray.fromhex(reply_data)
+        sn = [i for i in sn if i != 0]
+        del sn[0]
+        a_bytearray = bytearray(sn)
+        resultHEX = a_bytearray.hex()
+        sn = bytearray.fromhex(resultHEX).decode()
+        parameters['sn'] = sn
+
+def validateDruReply(reply,cmdNumberlen):
+    
+    reply_size = len(reply)
+           
+    reply_crc = reply[reply_size-3:reply_size-1]
+    reply_clean = reply[1:reply_size-3]                  
+    calculated_crc = rs485.getChecksum2(reply_clean)
+    calculated_crc = bytearray.fromhex(calculated_crc)
+
+    if(reply_crc == calculated_crc or reply_crc == b'\x00\x00' ):
+        reply_data = extractDruReplyData(reply, cmdNumberlen)
+    return reply_data
+
+def extractDruReplyData(reply, cmdNumberlen):
+    
+    reply_data_lenght_index = 14  # Para equipos remotos  de la trama
+    reply_data_lenght = int(reply[reply_data_lenght_index])  
+    if(cmdNumberlen == DRU_MULTIPLE_CMD_LENGTH):
+        reply_data_start_index =  reply_data_lenght_index+1
+        reply_data_end_index = reply_data_start_index + reply_data_lenght - 1
+    else: 
+        reply_data_start_index = reply_data_lenght_index + 3
+        reply_data_end_index = reply_data_start_index + reply_data_lenght - 3
+            
+    reply_data = list()
+    for i in range(reply_data_start_index, reply_data_end_index):
+        reply_data.append(reply[i])
+    return reply_data
+
+def hasDruReplyError(reply,query_id):
+    if rs485.hasReplyError(reply,query_id):
+        return 1
+    if rs485.hasSizeReplyError(reply):
+        return 1
+    if rs485.hastIdReplyError(reply,query_id):
+        return 1
+    return 0
+    
+
+def updateParametersWithReplyData(parameters, reply):
+    
+    try:
+        reply_data = extractDruReplyData(reply, DRU_MULTIPLE_CMD_LENGTH)
+    except Exception as e:
+        logging.debug(str(e)+"- "+str(reply))
+        return 1
+
+    try:
+        reply_datas = splitMultipleReplyData(reply_data)
+    except Exception as e:
+        logging.debug(str(e)+"-"+str(reply_data))
+        return 1      
+    try:
+     for data in reply_datas:
+        druReplyDecode(parameters, data)
+    
+    except Exception as e:
+        logging.debug(str(e)+"- "+str(data))
+        return 1
+    return 0 
+
+def splitMultipleReplyData(reply_data):
+    i = 0
+    j = 0
+    temp = list()
+    dataResult = list()
+    isWriting = False
+
+    try:
+        for i in range(0,len(reply_data)-1):
+            if isWriting == False:
+                dataLen = reply_data[i]
+                isWriting = True
+
+            if j<dataLen-1:
+                temp.append(reply_data[i+1])
+                j = j+1
+            else:
+                isWriting = False
+                j = 0
+                a_bytearray = bytearray(temp)
+                resultHEX = a_bytearray.hex()
+                dataResult.append(resultHEX)
+                temp.clear()
+        return dataResult
+    except Exception as e:
+        print(str(e))
+        return []
+    
+def getParametersFromDruReplies(queries, replies, query_id):
+    parameters = newBlankDruParameter()
+    reply_errors_count = 0
+    for reply in replies:
+        if hasDruReplyError(reply,query_id):
+            reply_errors_count +=1
+        else:
+            updateParametersWithReplyData(parameters, reply)
+    
+    queries_count = len(queries)
+    if reply_errors_count == queries_count:
+        sys.stderr.write("No response")
+        sys.exit(CRITICAL)
+    return parameters
+
+
 if __name__ == "__main__":
     main()
 
@@ -384,4 +660,3 @@ if __name__ == "__main__":
 # 1     WARNING
 # 2     CRITICAL
 # 3     UNKNOWN
-
