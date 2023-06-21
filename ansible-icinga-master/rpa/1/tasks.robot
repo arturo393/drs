@@ -1,6 +1,7 @@
 *** Settings ***
 Documentation       Icingaweb2 setup.
 Library             RPA.Browser.Playwright
+Library    RPA.FileSystem
 
 *** Tasks ***
 Minimal task
