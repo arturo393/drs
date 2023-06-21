@@ -84,6 +84,28 @@
   - debug:
       var: token_creation.stdout_lines[-1]
 
+  - name: Install RCC deps
+    package:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - libnss3
+      - libnspr4
+      - libatk1.0-0
+      - libatk-bridge2.0-0
+      - libdrm2
+      - libxkbcommon0
+      - libatspi2.0-0
+      - libxcomposite1
+      - libxdamage1
+      - libxfixes3
+      - libxrandr2
+      - libgbm1
+      - libpango-1.0-0
+      - libcairo2
+      - libasound2
+    when: ansible_distribution_release == 'bullseye'
+
   - name: Setup Icingaweb2
     command:
       cmd: /usr/local/bin/rcc run
