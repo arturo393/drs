@@ -86,7 +86,7 @@
 
   - name: Setup Icingaweb2
     command:
-      cmd: /usr/local/bin/rcc
+      cmd: /usr/local/bin/rcc run
       chdir: /tmp/sigma-rds/ansible-icinga-master/rpa/1/
     register: output
   - debug:
