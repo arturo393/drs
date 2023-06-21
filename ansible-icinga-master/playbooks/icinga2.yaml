@@ -34,9 +34,17 @@
       src: ido-mysql.conf.j2
       dest: /etc/icinga2/features-available/ido-mysql.conf
 
+  - name: Icinga2 node wizard
+    shell:
+      cmd: echo -ne "n\n\n\n\n\n\n" | icinga2 node wizard
+
   - name: Enable icinga2 ido-mysql feature
     shell:
       cmd: icinga2 feature enable ido-mysql
+
+  - name: Enable icinga2 api feature
+    shell:
+      cmd: icinga2 feature enable api
 
   - name: Restart Icinga2 service
     service:
