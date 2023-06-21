@@ -1,3 +1,4 @@
+testrun/
 output/
 venv/
 temp/
@@ -6,14 +7,10 @@ temp/
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*
 .virtual_documents/
-*/.virtual_documents/*
+*/.ipynb_checkpoints/*
 .vscode
 .DS_Store
 *.pyc
 *.zip
-*/work-items-out/*
-testrun/*
 .~lock*
-*.pkl
-
-challenge.xlsx
+*/work-items-out/*

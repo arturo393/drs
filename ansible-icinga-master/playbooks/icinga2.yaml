@@ -83,3 +83,11 @@
     register: token_creation
   - debug:
       var: token_creation.stdout_lines[-1]
+
+  - name: Setup Icingaweb2
+    command:
+      cmd: /usr/local/bin/rcc
+      chdir: /tmp/sigma-rds/ansible-icinga-master/rpa/1/
+    register: output
+  - debug:
+      var: output.stdout
