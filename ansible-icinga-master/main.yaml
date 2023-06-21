@@ -1,0 +1,18 @@
+---
+
+- name: Install DRS Master Software
+  hosts: all
+  become: true
+  vars_files:
+    - ./vars.yaml
+
+
+- name: "Installing Base Software"
+  import_playbook: playbooks/base.yaml
+- name: "Installing MariaDB Software"
+  import_playbook: playbooks/mariadb.yaml
+- name: "Installing Icinga2"
+  import_playbook: playbooks/icinga2.yaml
+- name: "Sigma Custom Software"
+  import_playbook: playbooks/sigma.yaml
+

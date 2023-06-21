@@ -1,0 +1,26 @@
+# Vagrant.configure("2") do |config|
+#   config.vm.box = "debian/bullseye64"
+# end
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bullseye64"
+  config.vm.network "public_network", bridge: "en0", ip: "192.168.0.108"
+  # config.vm.provider "virtualbox" do |vb|
+  #   vb.memory = "2048"
+  #   vb.cpus = 2
+  # end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    # Create sigmadev user
+    useradd -m -s /bin/bash sigmadev
+    echo 'sigmadev:Admin.123' | chpasswd
+
+    # Add admin user as sudoer
+    echo 'sigmadev ALL=(ALL) ALL' | tee /etc/sudoers.d/sigmadev
+    chmod 440 /etc/sudoers.d/sigmadev
+
+    # Allow ssh password authentication
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    systemctl restart sshd
+  SHELL
+end

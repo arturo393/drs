@@ -1,0 +1,12 @@
+- hosts: icinga_master
+  become: true
+  vars_files:
+       - ../vars.yaml
+  tasks:
+
+  - name: Downloading Sigma Software
+    git:
+      repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/sigma-telecom/sigma-rds.git
+      dest: /tmp/sigma-rds
+      version: development
+      accept_hostkey: true

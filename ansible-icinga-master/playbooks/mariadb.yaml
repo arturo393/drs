@@ -1,0 +1,64 @@
+# Install MiniPC Software
+---
+- name: Install and configure MariaDB
+  hosts: icinga_master
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Install MariaDB packages
+    package:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - mariadb-server
+      - mariadb-client
+
+  - name: Start MariaDB service
+    service:
+      name: mariadb
+      state: started
+
+  - name: Install pip
+    apt:
+      name:
+      - python3-pip
+      - libmariadb-dev
+      state: present
+
+  # - name: Install pexpect module
+  #   pip:
+  #     name: pexpect
+  #     executable: pip3
+  #     state: present
+  - name: Install pexpect and MySQL module for Python 3.x
+    pip:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - pexpect
+      - mysqlclient
+      - pymysql
+
+  - name: Secure MariaDB installation
+    expect:
+      command: mysql_secure_installation
+      responses:
+        'Enter current password for root \(enter for none\):': ''
+        'Switch to unix_socket authentication \[Y/n\] ': 'n'
+        'Change the root password\? \[Y/n\] ': 'Y'  
+        'New password:': "{{ mysql_root_password }}"
+        'Re-enter new password:': "{{ mysql_root_password }}"
+        'Remove anonymous users\? \[Y/n\]': 'Y'
+        'Disallow root login remotely\? \[Y/n\]': 'Y'
+        'Remove test database and access to it\? \[Y/n\]': 'Y'
+        'Reload privilege tables now\? \[Y/n\]': 'Y'
+
+  # - name: Create database
+  #   mysql_db:
+  #     name: prueba
+  #     state: present
+  #     check_implicit_admin: true
+  #     login_user: root
+  #     login_password: "{{ mysql_root_password }}"
