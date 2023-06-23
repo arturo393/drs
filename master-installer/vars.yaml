@@ -8,6 +8,7 @@ icinga2_monitor_user: "sigmadev"
 icinga2_satellite_user: "sigmadev"
 ticket: ""
 # list of additional check plugins
+master_endpoint_name: master
 mysql_root_password: "Admin.123"
 admin_password: "Admin.123"
 

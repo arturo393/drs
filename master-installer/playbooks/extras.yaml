@@ -1,0 +1,179 @@
+# Install MiniPC Software
+---
+- name: Install and configure Icingasweb Extra Modules
+  hosts: icinga_master
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Install icingaweb2-module-director
+    apt:
+      name:
+      - icingaweb2-module-director
+      state: present
+
+  - name: Create director database
+    mysql_db:
+      name: director
+      encoding: utf8
+      state: present
+      check_implicit_admin: true
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+
+  - name: Create director db user
+    mysql_user:
+      name: director
+      password: "{{ mysql_root_password }}"
+      priv: 'director.*:ALL'
+      state: present
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+
+  - name: Install Incubator module
+    git:
+      repo: https://github.com/Icinga/icingaweb2-module-incubator
+      dest: /usr/share/icingaweb2/modules/incubator
+      single_branch: yes
+      version: v0.18.0
+
+  - name: Install reactbundle module
+    git:
+      repo: https://github.com/Icinga/icingaweb2-module-reactbundle
+      dest: /usr/share/icingaweb2/modules/reactbundle
+      single_branch: yes
+      version: v0.9.0
+
+  - name: Remove old director module
+    file:
+      path: /usr/share/icingaweb2/modules/director
+      state: absent
+
+  - name: Install director module
+    git:
+      repo: https://github.com/icinga/icingaweb2-module-director
+      dest: /usr/share/icingaweb2/modules/director
+      single_branch: yes
+      version: master
+
+  - name: Creating icingadirector user
+    user:
+      name: icingadirector
+      group: icingaweb2
+      shell: /bin/false
+      home: /var/lib/icingadirector
+      create_home: true
+
+  - name: Install icingadirector
+    shell:
+      cmd: install -d -o icingadirector -g icingaweb2 -m 0750 /var/lib/icingadirector
+
+  - name: Copy icingadirector service daemon
+    copy:
+      src: /usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service
+      dest: /etc/systemd/system/
+      remote_src: yes
+
+  - name: Just force systemd to reread configs (2.4 and above)
+    systemd:
+      daemon_reload: true
+
+  - name: start director daemon
+    systemd:
+      name: icinga-director
+      state: started
+      enabled: true
+
+  - name: Copy networkmaps module
+    copy:
+      src: /tmp/sigma-rds/src/modules/network_maps
+      dest: /usr/share/icingaweb2/modules
+      remote_src: yes
+
+  - name: Create neytworkmaps directory
+    file:
+      name: /etc/icingaweb2/modules/network_maps
+      state: directory
+  - name: Create network_maps config.ini
+    template:
+      src: network_maps-config-ini.j2
+      dest: /etc/icingaweb2/modules/network_maps/config.ini
+
+  - name: Patch WebUI default URL
+    lineinfile:
+      path: /usr/share/icingaweb2/application/forms/Authentication/LoginForm.php
+      regexp: 'const REDIRECT_URL = '
+      line: const REDIRECT_URL = 'network_maps/module/hierarchy';
+
+
+  - name: Create dependencies database
+    mysql_db:
+      name: dependencies
+      encoding: utf8
+      state: present
+      check_implicit_admin: true
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+
+  - name: Create dependencies db user
+    mysql_user:
+      name: dependencies
+      password: "{{ mysql_root_password }}"
+      priv: 'dependencies.*:ALL'
+      state: present
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+  - name: Import dependencies sql
+    mysql_db:
+      # mysql -U dependencies -D c < /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
+      name: dependencies
+      state: import
+      target: /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
+      login_user: dependencies
+      login_password: "{{ mysql_root_password }}"
+
+# RS485 Write WebUI Module
+  - name: Copy networkmaps module
+    copy:
+      src: /tmp/sigma-rds/src/modules/rs485
+      dest: /usr/share/icingaweb2/modules
+      remote_src: yes
+
+  - name: Import rs485 sql
+    mysql_db:
+      name: director
+      state: import
+      target: /tmp/sigma-rds/src/modules/rs485/schema/mysql.sql
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+#####
+
+  - name: Enable icingaweb2 extra modules
+    shell:
+      cmd: icingacli module enable {{ item }}
+    with_items:
+      - incubator
+      - reactbundle
+      - director
+      - network_maps
+      - rs485
+
+  - name: Fix /usr/share/icingaweb2/ permissions
+    file:
+      path: /usr/share/icingaweb2/
+      owner: "www-data"
+      group: "icingaweb2"
+      recurse: yes
+  - name: Fix /etc/icingaweb2/modules permissions
+    file:
+      path: /etc/icingaweb2/modules
+      owner: "www-data"
+      group: "icingaweb2"
+      recurse: yes
+  - name: Fix /etc/icinga2/conf.d permissions
+    file:
+      path: /etc/icinga2/conf.d
+      owner: "nagios"
+      group: "nagios"
+      recurse: yes

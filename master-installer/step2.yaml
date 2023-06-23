@@ -1,0 +1,13 @@
+---
+
+- name: Install DRS Master Software
+  hosts: all
+  become: true
+  vars_files:
+    - ./vars.yaml
+
+
+- name: "Installing Director Module"
+  import_playbook: playbooks/director_module.yaml
+
+
