@@ -7,7 +7,7 @@
     - ./vars.yaml
 
 
-- name: "Installing Director Module"
-  import_playbook: playbooks/director_module.yaml
+- name: "Installing Extra Modules"
+  import_playbook: playbooks/extras.yaml
 
 

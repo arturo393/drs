@@ -1,0 +1,16 @@
+# Install MiniPC Software
+---
+- name: Restarting extra modules services
+  hosts: icinga_master
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Restart services
+    service:
+      name: {{ item }}
+      state: restarted
+      with_items:
+        - icinga-director
+        - docker-composer

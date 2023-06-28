@@ -1,0 +1,15 @@
+version: '2'
+services:
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    restart: on-failure:5
+    hostname: graphite
+    volumes:
+      - /opt/graphite/conf:/opt/graphite/conf
+      - /opt/graphite/storage:/opt/graphite/storage
+      - /opt/graphite/log/graphite:/var/log/graphite
+      - /opt/graphite/log/carbon:/var/log/carbon
+    ports:
+      - 2003:2003
+      - 8080:80

@@ -2,23 +2,27 @@
 Documentation       Setup Extras.
 
 Library             RPA.Browser.Playwright
-Library    Dialogs
+Library             Dialogs
 
+*** Variables ***
+${host}    %{host}
+${passwd}    %{passwd}
 
 *** Tasks ***
 Setup Extras
     Open Icingaweb2 page
     Login
-    Setup Director Module
+    Pause Execution
+    # Setup Director Module
 
 *** Keywords ***
 Open Icingaweb2 page
     New Browser     headless=${False}
-    New Page    http://192.168.0.108/authentication/login
+    New Page    http://${host}/authentication/login
 
 Login
     Type Text    xpath=/html/body/div[1]/div/div/div/div/form/div[1]/input    admin
-    Type Text    xpath=/html/body/div[1]/div/div/div/div/form/div[2]/input    Admin.123
+    Type Text    xpath=/html/body/div[1]/div/div/div/div/form/div[2]/input    ${passwd}
     Click    xpath=/html/body/div[1]/div/div/div/div/form/div[3]/input
 
 Setup Director Module

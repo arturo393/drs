@@ -7,11 +7,14 @@
     - ../vars.yaml
 
   tasks:
-  - name: Install icingaweb2-module-director
-    apt:
-      name:
-      - icingaweb2-module-director
+  - name: Install dependencies packages
+    package:
+      name: "{{ item }}"
       state: present
+    with_items:
+      - icingaweb2-module-director
+      - docker
+      - docker-compose
 
   - name: Create director database
     mysql_db:
@@ -31,6 +34,16 @@
       login_user: root
       login_password: "{{ mysql_root_password }}"
 
+  - name: Remove old modules
+    file:
+      path: /usr/share/icingaweb2/modules/{{ item }}
+      state: absent
+    with_items:
+      - incubator
+      - reactbundle
+      - director
+      - graphite
+
   - name: Install Incubator module
     git:
       repo: https://github.com/Icinga/icingaweb2-module-incubator
@@ -45,12 +58,7 @@
       single_branch: yes
       version: v0.9.0
 
-  - name: Remove old director module
-    file:
-      path: /usr/share/icingaweb2/modules/director
-      state: absent
-
-  - name: Install director module
+  - name: Reinstall director module
     git:
       repo: https://github.com/icinga/icingaweb2-module-director
       dest: /usr/share/icingaweb2/modules/director
@@ -85,6 +93,7 @@
       state: started
       enabled: true
 
+### NetworkMaps
   - name: Copy networkmaps module
     copy:
       src: /tmp/sigma-rds/src/modules/network_maps
@@ -95,6 +104,7 @@
     file:
       name: /etc/icingaweb2/modules/network_maps
       state: directory
+
   - name: Create network_maps config.ini
     template:
       src: network_maps-config-ini.j2
@@ -147,7 +157,138 @@
       target: /tmp/sigma-rds/src/modules/rs485/schema/mysql.sql
       login_user: root
       login_password: "{{ mysql_root_password }}"
-#####
+
+## Add or remove entries in the form (optional) 
+  - name: Create ssh directory for remote executions
+    file:
+      name: /root/.ssh
+      mode: 700
+      state: directory
+
+  - name: Check if /root/.ssh/key.rsa file already exists
+    stat:
+      path: /root/.ssh/key.rsa
+    register: file_stat
+
+  - name: Create ssh key
+    shell:
+      cmd: ssh-keygen -t rsa -N '' -f /root/.ssh/key.rsa
+    when: not file_stat.stat.exists
+
+  - name: enable SSH forwarding for sudo
+    lineinfile:
+      dest: /etc/sudoers
+      insertafter: '^#?\s*Defaults\s+env_keep\b'
+      line: 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+
+  - name: Add line to sudoers file
+    lineinfile:
+      dest: /etc/sudoers
+      line: "www-data ALL=(sigmadev) NOPASSWD:/usr/bin/ssh"
+      validate: 'visudo -cf %s'
+      state: present
+      backup: yes
+
+## GRAPHITE
+  - name: Create docker-compose directory
+    file:
+      name: /opt/docker-compose
+      state: directory
+
+  - name: Create docker-compose.yml file
+    template:
+      src: docker-compose.j2
+      dest: /opt/docker-compose/docker-compose.yml
+
+  - name: Create docker-compose service file
+    template:
+      src: docker-compose.service.j2
+      dest: /etc/systemd/system/docker-compose.service
+
+  - name: start docker-compose daemon
+    systemd:
+      name: docker-compose
+      state: started
+      enabled: true
+
+  - name: Enable icinga2 graphite feature
+    shell:
+      cmd: icinga2 feature enable graphite
+
+  - name: Create docker-compose service file
+    template:
+      src: graphite.conf.j2
+      dest: /etc/icinga2/features-enabled/graphite.conf
+
+  - name: Install graphite icingaweb2 module
+    git:
+      repo: https://github.com/Icinga/icingaweb2-module-graphite
+      dest: /usr/share/icingaweb2/modules/graphite
+      single_branch: yes
+      version: v1.1.0
+
+  - name: Create rs485 graphite template file
+    template:
+      src: rs485.ini-graphite.j2
+      dest: /usr/share/icingaweb2/modules/graphite/templates/rs485.ini
+
+  - name: Restart Icinga2 service
+    service:
+      name: icinga2
+      state: restarted
+
+## SIGMA Theme
+  - name: Copy sigma theme module
+    copy:
+      src: /tmp/sigma-rds/src/modules/sigma-theme
+      dest: /usr/share/icingaweb2/modules
+      remote_src: yes
+
+  - name: Change favicon
+    copy:
+      src: /tmp/sigma-rds/src/modules/sigma-theme/public/img/favicon.png
+      dest: /usr/share/icingaweb2/public/img/favicon.png
+      remote_src: yes
+
+## Cube Module
+  # - name: Install cube icingaweb2 module
+  #   git:
+  #     repo: https://github.com/Icinga/icingaweb2-module-cube
+  #     dest: /usr/share/icingaweb2/modules/cube
+  #     single_branch: yes
+
+  # - name: Patch Cube Module charset
+  #   shell:
+  #     cmd: sed -i 's/charset = "utf8"/charset = "latin1"/g' /etc/icingaweb2/resources.ini
+
+## Base Customizations
+
+  - name: Links to device configuration
+    template:
+      src: quick-actions.j2
+      dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
+
+  - name: Change Tab Names
+    shell:
+      cmd: sed -i 's/Icinga Web/DRS/g' {{ item }}
+    with_items:
+      - /usr/share/php/Icinga/Web/Controller/ActionController.php
+      - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+
+## Notifications Customization
+  - name: Copy mail-service-notification.sh file
+    copy:
+      src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-service-notification.sh
+      dest: /etc/icinga2/scripts/mail-service-notification.sh
+      mode: 0755
+      remote_src: yes
+  - name: Copy mail-host-notification.sh file
+    copy:
+      src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-host-notification.sh
+      dest: /etc/icinga2/scripts/mail-host-notification.sh
+      mode: 0755
+      remote_src: yes
+##################################################################
 
   - name: Enable icingaweb2 extra modules
     shell:
@@ -158,6 +299,9 @@
       - director
       - network_maps
       - rs485
+      - graphite
+      - sigma-theme
+      # - cube
 
   - name: Fix /usr/share/icingaweb2/ permissions
     file:
