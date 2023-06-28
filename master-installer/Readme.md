@@ -9,15 +9,6 @@ Install ansible locally
 Please refer to:
 [Installing Ansible on specific operating systems](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-specific-operating-systems)
 
-### RCC tool chain for RPA actions
-
-Download `https://downloads.robocorp.com/rcc/releases/v14.6.0/linux64/rcc`
-
-```sh
-sudo mv rcc /usr/local/bin
-sudo chmod a+x /usr/local/bin/rcc
-```
-
 ## Get repository
 
 Download repository from Git `git clone https://gitlab.com/itaum/rdss2.git`
@@ -36,14 +27,12 @@ edit `inventory/hosts.yaml` file and add all miniPCs IPs
 The content should be something like:
 
 ```txt
-miniPCs:
+icinga_master:
   hosts:
-    miniPC1:
-      ansible_host: 165.227.192.32
-    miniPC2:
-      ansible_host: 192.168.60.79
-    miniPC3:
-      ansible_host: 192.168.60.80
+    192.168.0.108:
+    192.168.0.109:
+    192.168.0.110:
+    ...
 ```
 
 ## Provisioning miniPCs

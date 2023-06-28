@@ -2,16 +2,17 @@
 Documentation       Icingaweb2 setup.
 Library             RPA.Browser.Playwright
 Library    RPA.FileSystem
+Library    Dialogs
+
+*** Variables ***
+${host}    %{host}
+${passwd}    %{passwd}
+${token}    %{token}
 
 *** Tasks ***
 Setup Icingaweb2
-    # ToDo: Leer hosts desde inventory
-    # ${token}    Read File    /etc/icingaweb2/setup.token
-    ${token}    Read File    /tmp/setup.token/dev1/etc/icingaweb2/setup.token
-    Log to Console    ${token}
     New Browser     headless=${False}
-    New Page    http://192.168.0.108/setup
-    # Open Browser    http://192.168.0.108/setup
+    New Page    http://${host}/setup
 
     # Setup Token
     Type Text    //input[@name="token"]    ${token}
@@ -36,7 +37,7 @@ Setup Icingaweb2
     Type Text    //input[@name="port"]    3306
     Type Text    //input[@name="dbname"]    icingaweb2
     Type Text    //input[@name="username"]    root
-    Type Text    //input[@name="password"]    Admin.123
+    Type Text    //input[@name="password"]    ${passwd}
     Type Text    //input[@name="charset"]    utf8
     Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div[11]/input
     ${val}    Get Text    //ul[@class="notification-info"]/li
@@ -52,8 +53,8 @@ Setup Icingaweb2
 
     # Administration
     Type Text    //input[@name="new_user"]    admin
-    Type Text    //input[@name="new_user_password"]    Admin.123
-    Type Text    //input[@name="new_user_2ndpass"]    Admin.123
+    Type Text    //input[@name="new_user_password"]    ${passwd}
+    Type Text    //input[@name="new_user_2ndpass"]    ${passwd}
     Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div[5]/button[3]
     Wait Until Network Is Idle
 
@@ -77,7 +78,7 @@ Setup Icingaweb2
     Type Text    //input[@name="port"]    3306
     Type Text    //input[@name="dbname"]    icinga2
     Type Text    //input[@name="username"]    root
-    Type Text    //input[@name="password"]    Admin.123
+    Type Text    //input[@name="password"]    ${passwd}
     Type Text    //input[@name="charset"]    utf8
     Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div[11]/input
     ${val}    Get Text    //ul[@class="notification-info"]/li
@@ -90,7 +91,7 @@ Setup Icingaweb2
     # Command Transport
     Type Text    xpath=/html/body/div[1]/div[1]/div[2]/form/div[4]/input    localhost
     Type Text    //input[@name="username"]    root
-    Type Text    //input[@name="password"]    Admin.123
+    Type Text    //input[@name="password"]    ${passwd}
     Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div[8]/input
     ${val}    Get Text    //ul[@class="notification-info"]/li
     IF    "${val}" != "The configuration has been successfully validated."

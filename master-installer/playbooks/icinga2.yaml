@@ -36,7 +36,7 @@
 
   - name: Icinga2 node wizard
     shell:
-      cmd: echo -ne "n\n{{master_endpoint_name}}\n\n\n\n\n" | icinga2 node wizard
+      cmd: echo -ne "n\n{{ inventory_hostname }}\n\n\n\n\n" | icinga2 node wizard
 
   - name: Enable icinga2 ido-mysql feature
     shell:
@@ -88,7 +88,6 @@
   - name: Create and get setup token
     shell:
       cmd: icingacli setup token create && cat /etc/icingaweb2/setup.token
-    register: token_creation
 
   - name: Fetch a "setup.token" file
     fetch:

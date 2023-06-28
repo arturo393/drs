@@ -2,9 +2,16 @@
 Documentation       Icingaweb2 setup.
 Library             RPA.Browser.Playwright
 Library    RPA.FileSystem
+Library    Dialogs
 
+*** Variables ***
+${host}    %{host}
+${passwd}    %{passwd}
 *** Tasks ***
 Setup Icingaweb2
+    Log To Console    Host: ${host}
+    Log To Console    Pass: ${passwd}
+    Pause Execution
     # ToDo: Leer hosts desde inventory
     # ${token}    Read File    /etc/icingaweb2/setup.token
     ${token}    Read File    /tmp/setup.token/dev1/etc/icingaweb2/setup.token

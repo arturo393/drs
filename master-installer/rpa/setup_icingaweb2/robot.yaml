@@ -7,6 +7,8 @@ tasks:
     shell: python -m robot --report NONE --outputdir output --logtitle "Task log" tasks.robot
   Setup Icingaweb2:
     shell: python -m robot --report NONE --outputdir output --logtitle "Icingaweb2 Setup log" setup_icingaweb2.robot
+  scripting:
+    shell: python -m robot --report NONE --outputdir output --logtitle "Icingaweb2 Setup Scripting log"
 
 condaConfigFile: conda.yaml
 
