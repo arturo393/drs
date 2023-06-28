@@ -1,6 +1,6 @@
 # Install MiniPC Software
 ---
-- name: Install and configure Icingasweb Extra Modules
+- name: Install and configure Icingaweb2 Extra Modules
   hosts: icinga_master
   become: true
   vars_files:
@@ -87,11 +87,11 @@
     systemd:
       daemon_reload: true
 
-  - name: start director daemon
-    systemd:
-      name: icinga-director
-      state: started
-      enabled: true
+  # - name: start director daemon
+  #   systemd:
+  #     name: icinga-director
+  #     state: started
+  #     enabled: true
 
 ### NetworkMaps
   - name: Copy networkmaps module

@@ -11,11 +11,11 @@ Please refer to:
 
 ## Get repository
 
-Download repository from Git `git clone https://gitlab.com/itaum/rdss2.git`
+Download repository from Git `git clone https://gitlab.com/sigma-telecom/sigma-rds.git`
 
 ## Setting up deploy environment
 
-Enter ansible folder ``cd ./rdss2/ansible``
+Enter ansible folder ``cd ./sigma-rds/master-installers``
 
 Edit `vars.yaml` file and change variables with yours
 
@@ -39,8 +39,8 @@ icinga_master:
 
 Just execute:
 
-`install.sh`
+`./install.sh`
 
-### Versions
+### Software Versions
 
 ![Versions](image.png)

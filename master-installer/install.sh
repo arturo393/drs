@@ -32,7 +32,10 @@ for ip_address in "${hosts[@]}"
 do
     echo "\tSeting up Icingaweb2: $ip_address"
     token=$(cat /tmp/setup.token/$ip_address/etc/icingaweb2/setup.token)
-    cd rpa/setup_icingaweb2 && rcc task run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password --variable token:$token setup_icingaweb2.robot && cd ../..
+    echo "\tPlease wait until rcc setup is finish...browser will open..."
+    cd rpa/setup_icingaweb2
+    rcc task run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password --variable token:$token setup_icingaweb2.robot
+    cd ../..
 done
 
 
@@ -41,12 +44,15 @@ done
 ansible-playbook step2.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
 for ip_address in "${hosts[@]}"
 do
-    echo "Configurando Icingaweb2 Extras: $ip_address"
-    cd rpa/setup_extras && rcc run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password tasks.robot && cd ../..
+    echo "Setting up Icingaweb2 Extra Modules: $ip_address"
+    echo "\tPlease wait until rcc setup is finish...browser will open..."
+    cd rpa/setup_extras
+    rcc run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password tasks.robot
+    cd ../..
 done
 
 # Final Step
 #############################################################################
-ansible-playbook playbooks/final_step.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
+ansible-playbook playbooks/final-step.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
 
 
