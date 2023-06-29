@@ -7,10 +7,12 @@
     - ../vars.yaml
 
   tasks:
-  - name: Restart services
+  - name: Restart icinga-director service
     service:
-      name: "{{ item }}"
+      name: icinga-director
       state: restarted
-      with_items:
-        - icinga-director
-        - docker-composer
+
+  - name: Restart docker-composer service
+    service:
+      name: docker-composer
+      state: restarted
