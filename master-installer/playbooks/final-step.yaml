@@ -11,8 +11,3 @@
     service:
       name: icinga-director
       state: restarted
-
-  - name: Restart docker-composer service
-    service:
-      name: docker-composer
-      state: restarted

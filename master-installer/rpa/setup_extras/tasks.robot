@@ -34,7 +34,7 @@ Setup Sigma Theme
     New Page    http://${host}/config/general
 
     Select Options By    xpath=//select[@name="themes_default"]    value    sigma-theme/default
-    Click    css=#form_config_general-npvmijclsxhk > div:nth-child(11) > label > span    # Users Can't Change Theme
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[11]/label/span    # Users Can't Change Theme
     Click    xpath=//input[@name="btn_submit"]   # Save Changes
 
 Setup Graphite Module
@@ -118,7 +118,7 @@ Setup Dependencies Module
     Select Options By    css=#resource-field    value    dependencies
     Type Text    css=#host-field    ${host}
     Type Text    css=#port-field    5665
-    Type Text    css=#user-field    dependencies
+    Type Text    css=#user-field    root
     Type Text    css=#password-field    ${passwd}
 
     Click    css=#button-element > input[type=submit]        # Submit
