@@ -33,19 +33,19 @@ Setup Sigma Theme
     Close Page    CURRENT
     New Page    http://${host}/config/general
 
-    Select Options By    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[10]/select    value    sigma-theme/default
-    Click    /html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[11]/label/span    # Users Can't Change Theme
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[13]/input   # Save Changes
+    Select Options By    xpath=//select[@name="themes_default"]    value    sigma-theme/default
+    Click    css=#form_config_general-npvmijclsxhk > div:nth-child(11) > label > span    # Users Can't Change Theme
+    Click    xpath=//input[@name="btn_submit"]   # Save Changes
 
 Setup Graphite Module
     Close Page    CURRENT
     New Page    http://${host}/graphite/config/backend
 
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[1]/input    http://${host}:8080
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[2]/input    root
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[3]/input    root
+    Type Text    xpath=//input[@name="graphite_url"]    http://${host}:8080
+    Type Text    xpath=//input[@name="graphite_user"]    root
+    Type Text    xpath=//input[@name="graphite_password"]    root
 
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[5]/input    # Save Changes
+    Click    xpath=//input[@name="btn_submit"]    # Save Changes
 Setup RS485 Module
     Create Resource
                 ...    rs485_db
@@ -56,9 +56,9 @@ Setup RS485 Module
     Close Page    CURRENT
     New Page    http://${host}/rs485/config/backend
 
-    Select Options By    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[1]/select    value    rs485_db
+    Select Options By    xpath=//select[@name="backend_resource"]    value    rs485_db
 
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/div[2]/input            # Save Changes
+    Click    xpath=//input[@name="btn_submit"]            # Save Changes
 Setup Director Module
     Create Resource
                 ...    director_db
@@ -68,16 +68,17 @@ Setup Director Module
                 ...    utf8
 
     ###########################################################################################################################
-    Click    xpath=/html/body/div[1]/div[2]/div[1]/div[3]/nav/ul/li[4]/a                # Director Nav Menu
-    Select Options By    /html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset/dl/dd/select    value    director_db
+    Close Page    CURRENT
+    New Page    http://${host}/director
+    Select Options By    css=#resource    value    director_db
+    Sleep    1    # just in case
+    Click    css=#Createschema        # Create Schema
 
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/dd/dl/input        # Create Schema
-
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd[1]/input    ${host}
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd[2]/input    ${host}
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd[4]/input    root
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd[5]/input    ${passwd}
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/dd/dl/input        # Run Import
+    Type Text    css=#endpoint    ${host}
+    Type Text    css=#host    ${host}
+    Type Text    css=#username    root
+    Type Text    css=#password    ${passwd}
+    Click    css=#Runimport        # Run Import
 
     Wait Until Network Is Idle
     ###########################################################################################################################
@@ -114,13 +115,13 @@ Setup Dependencies Module
 
     Close Page    CURRENT
     New Page    http://${host}/network_maps/module/kickstart
-    Select Options By    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form[1]/fieldset/dl/dd/select    value    dependencies
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form[2]/fieldset/dl/dd[1]/input    ${host}
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form[2]/fieldset/dl/dd[2]/input    5665
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form[2]/fieldset/dl/dd[3]/input    dependencies
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form[2]/fieldset/dl/dd[4]/input    ${passwd}
+    Select Options By    css=#resource-field    value    dependencies
+    Type Text    css=#host-field    ${host}
+    Type Text    css=#port-field    5665
+    Type Text    css=#user-field    dependencies
+    Type Text    css=#password-field    ${passwd}
 
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form[2]/fieldset/dd/input        # Submit
+    Click    css=#button-element > input[type=submit]        # Submit
 
 Create Resource
     [Arguments]
@@ -133,15 +134,15 @@ Create Resource
     Close Page    CURRENT
     New Page    http://${host}/config/createresource
 
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[3]/input    ${resource_name}     # Resource Name
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[7]/input    ${database_name}        # Database Name
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[8]/input    ${username}        # Username
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[9]/input    ${passwd}       # Password
-    Type Text    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[10]/input    ${charset}           # Character Set
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[12]/input[2]
-    ${val}    Get Text    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[2]/ul/li/ul/li
+    Type Text    xpath=//input[@name="name"]    ${resource_name}     # Resource Name
+    Type Text    xpath=//input[@name="dbname"]    ${database_name}        # Database Name
+    Type Text    xpath=//input[@name="username"]    ${username}        # Username
+    Type Text    xpath=//input[@name="password"]    ${passwd}       # Password
+    Type Text    xpath=//input[@name="charset"]    ${charset}           # Character Set
+    Click    xpath=//input[@name="resource_validation"]
+    ${val}    Get Text    xpath=//ul[@class="notification-info"]/li
     IF    "${val}" != "The configuration has been successfully validated."
         Fail    Error al crear el recurso ${resource_name}
     END
 
-    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[2]/div[2]/form/div[13]/input[1]        # Save Changes
+    Click    xpath=//input[@name="btn_submit"]        # Save Changes
