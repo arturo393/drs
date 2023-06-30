@@ -22,7 +22,7 @@ Setup Extras
 
 *** Keywords ***
 Open Icingaweb2 page
-    New Browser     headless=${False}
+    New Browser     headless=${True}
     New Page    http://${host}/authentication/login
 
 Login

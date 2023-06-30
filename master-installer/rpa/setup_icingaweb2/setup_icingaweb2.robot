@@ -13,6 +13,7 @@ ${token}    %{token}
 Setup Icingaweb2
     Log To Console    ---
     New Browser     headless=${True}
+    # Set Browser Timeout    1m 30 seconds
     New Page    http://${host}/setup
 
     # Setup Token
@@ -130,16 +131,16 @@ Setup Icingaweb2
     # Monitoring Security
     Log To Console    Monitoring Security
     # Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div[3]/button[3]
-    Click    xpath=//button[@name="btn_next" and @class="control-button btn-primary"]
+    Click    xpath=//button[@name="btn_next" and @value="setup_monitoring_summary" and @class="control-button btn-primary"]
     Wait Until Network Is Idle
 
     # You've configured the monitoring module successfully
     # Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div/button[3]
-    Click    xpath=//button[@name="btn_next" and @class="control-button btn-primary"]
+    
+    Click    xpath=//button[@name="btn_next" and @class="control-button btn-primary finish"]
     Wait Until Network Is Idle
 
     # # Finish
-    # ${val}    Get Text    //*[@id="setup-finish"]/h2//*[@id="setup-finish"]/h2
-    # Log To Console    ${val}
-
+    ${val}    Get Text    css=#setup-finish > h2
+    Log To Console    ${val}
 
