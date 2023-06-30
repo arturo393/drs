@@ -22,7 +22,8 @@ Setup Extras
 
 *** Keywords ***
 Open Icingaweb2 page
-    New Browser     headless=${True}
+    New Browser     headless=${False}
+    Set Browser Timeout    1m 30 seconds
     New Page    http://${host}/authentication/login
 
 Login

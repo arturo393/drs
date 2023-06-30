@@ -2,7 +2,7 @@
 
 # Install RCC
 #############################################################################
-rcc_url="https://downloads.robocorp.com/rcc/releases/v14.6.0/linux64/rcc"
+rcc_url="https://downloads.robocorp.com/rcc/releases/latest/linux64/rcc"
 rcc_target_directory="/usr/local/bin"
 rcc_file_name="rcc"
 # Check if the file already exists in the target directory

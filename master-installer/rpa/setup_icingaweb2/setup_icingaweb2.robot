@@ -12,8 +12,8 @@ ${token}    %{token}
 *** Tasks ***
 Setup Icingaweb2
     Log To Console    ---
-    New Browser     headless=${True}
-    # Set Browser Timeout    1m 30 seconds
+    New Browser     headless=${False}
+    Set Browser Timeout    1m 30 seconds
     New Page    http://${host}/setup
 
     # Setup Token
@@ -81,8 +81,8 @@ Setup Icingaweb2
     Wait Until Network Is Idle
 
     # You've configured Icinga Web 2 successfully.
-    # Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div/button[3]
-    Click    xpath=//button[@name="btn_next" and @class="control-button btn-primary finish"]
+    Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div/button[3]
+    # Click    xpath=//button[@name="btn_next" and @class="control-button btn-primary finish"]
     Wait Until Network Is Idle
 
     # Welcome to the configuration of the monitoring module for Icinga Web 2!

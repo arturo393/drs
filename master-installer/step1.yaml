@@ -15,6 +15,6 @@
   import_playbook: playbooks/mariadb.yaml
 - name: "Installing Icinga2"
   import_playbook: playbooks/icinga2.yaml
-- name: "Sigma Custom Software"
-  import_playbook: playbooks/sigma.yaml
+# - name: "Sigma Custom Software"
+#   import_playbook: playbooks/sigma.yaml
 
