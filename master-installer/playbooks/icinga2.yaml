@@ -85,6 +85,10 @@
       name: apache2
       state: restarted
 
+  - name: enable icingaweb2 setup module
+    shell:
+      cmd: icingacli module enable setup
+
   - name: Create and get setup token
     shell:
       cmd: icingacli setup token create && cat /etc/icingaweb2/setup.token

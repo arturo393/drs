@@ -44,6 +44,13 @@
       - director
       - graphite
 
+  - name: Removing Dependencies database
+    mysql_db:
+      name: dependencies
+      state: absent
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+
   - name: Install Incubator module
     git:
       repo: https://github.com/Icinga/icingaweb2-module-incubator
