@@ -1,5 +1,5 @@
-#!/bin/sh
-
+#!/bin/bash
+clear
 # Install RCC
 #############################################################################
 rcc_url="https://downloads.robocorp.com/rcc/releases/latest/linux64/rcc"
