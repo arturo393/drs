@@ -234,10 +234,15 @@
       single_branch: yes
       version: v1.1.0
 
-  - name: Create rs485 graphite template file
+  - name: Create default graphite template file
     template:
-      src: rs485.ini-graphite.j2
-      dest: /usr/share/icingaweb2/modules/graphite/templates/rs485.ini
+      src: default.ini-graphite.j2
+      dest: /usr/share/icingaweb2/modules/graphite/templates/default.ini
+
+  - name: Create hostalive graphite template file
+    template:
+      src:  hostalive.ini-graphite.j2
+      dest: /usr/share/icingaweb2/modules/graphite/templates/hostalive.ini
 
   - name: Restart Icinga2 service
     service:
