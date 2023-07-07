@@ -11,3 +11,6 @@
     service:
       name: icinga-director
       state: restarted
+
+  - name: Deploying The Changes
+    command: icingacli director config deploy

@@ -19,7 +19,8 @@ Setup Extras
     Setup RS485 Module
     Setup Graphite Module
     Setup Sigma Theme
-
+    Deploy
+    
 *** Keywords ***
 Open Icingaweb2 page
     New Browser     headless=${False}
@@ -170,3 +171,10 @@ Create Resource
     END
 
     Click    xpath=//input[@name="btn_submit"]        # Save Changes
+
+Deploy
+    Log To Console    Deploy changes
+    Close Page    CURRENT
+    New Page    http://${host}/director/config/activities
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[1]/div/form/input[3]
+    Wait Until Network Is Idle

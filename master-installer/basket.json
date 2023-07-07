@@ -1,0 +1,1678 @@
+{
+    "Command": {
+        "dmu-command": {
+            "arguments": [],
+            "command": null,
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 26,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 27,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 28,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 29,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "imports": [
+                "dmu-command-template"
+            ],
+            "is_string": null,
+            "methods_execute": "PluginCheck",
+            "object_name": "dmu-command",
+            "object_type": "object",
+            "timeout": "5",
+            "vars": {
+                "highLevelCriticalDownlink": "41",
+                "highLevelCriticalUplink": "38",
+                "highLevelWarningDownlink": "41",
+                "highLevelWarningUplink": "38"
+            },
+            "zone": null
+        },
+        "dmu-dru-command": {
+            "arguments": [],
+            "command": null,
+            "disabled": false,
+            "fields": [],
+            "imports": [
+                "dmu-dru-command-template"
+            ],
+            "is_string": null,
+            "methods_execute": "PluginCheck",
+            "object_name": "dmu-dru-command",
+            "object_type": "object",
+            "timeout": null,
+            "vars": {},
+            "zone": null
+        },
+        "mail-host-notification-command": {
+            "arguments": {
+                "-4": {
+                    "required": false,
+                    "value": "$address$"
+                },
+                "-b": {
+                    "required": false,
+                    "value": "$notification.author$"
+                },
+                "-c": {
+                    "required": false,
+                    "value": "$notification.comment$"
+                },
+                "-d": {
+                    "required": true,
+                    "value": "$icinga.long_date_time$"
+                },
+                "-f": {
+                    "required": false,
+                    "value": "$notification_mailfrom$"
+                },
+                "-i": "$notification_icingaweb2url$",
+                "-l": {
+                    "required": true,
+                    "value": "$host.name$"
+                },
+                "-n": {
+                    "required": true,
+                    "value": "$host.display_name$"
+                },
+                "-o": {
+                    "required": true,
+                    "value": "$host.output$"
+                },
+                "-r": {
+                    "required": true,
+                    "value": "$user.email$"
+                },
+                "-s": {
+                    "required": true,
+                    "value": "$host.state$"
+                },
+                "-t": {
+                    "required": true,
+                    "value": "$notification.type$"
+                }
+            },
+            "command": "\/etc\/icinga2\/scripts\/mail-host-notification.sh",
+            "disabled": false,
+            "fields": [],
+            "imports": [],
+            "is_string": null,
+            "methods_execute": "PluginNotification",
+            "object_name": "mail-host-notification-command",
+            "object_type": "object",
+            "timeout": null,
+            "vars": {},
+            "zone": null
+        },
+        "mail-service-notification-command": {
+            "arguments": {
+                "-4": {
+                    "required": false,
+                    "value": "$address$"
+                },
+                "-b": {
+                    "required": false,
+                    "value": "$notification.author$"
+                },
+                "-c": {
+                    "required": false,
+                    "value": "$notification.comment$"
+                },
+                "-d": {
+                    "required": true,
+                    "value": "$icinga.long_date_time$"
+                },
+                "-e": "$service.name$",
+                "-f": {
+                    "required": false,
+                    "value": "$notification_mailfrom$"
+                },
+                "-i": {
+                    "required": false,
+                    "value": "$notification_icingaweb2url$"
+                },
+                "-l": {
+                    "required": true,
+                    "value": "$host.name$"
+                },
+                "-n": {
+                    "required": true,
+                    "value": "$host.display_name$"
+                },
+                "-o": {
+                    "required": true,
+                    "value": "$service.output$"
+                },
+                "-r": {
+                    "required": true,
+                    "value": "$user.email$"
+                },
+                "-s": {
+                    "required": true,
+                    "value": "$service.state$"
+                },
+                "-t": {
+                    "required": true,
+                    "value": "$notification.type$"
+                },
+                "-u": "$service.display_name$"
+            },
+            "command": "\/etc\/icinga2\/scripts\/mail-service-notification.sh",
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 38,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 40,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 39,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "imports": [],
+            "is_string": null,
+            "methods_execute": "PluginNotification",
+            "object_name": "mail-service-notification-command",
+            "object_type": "object",
+            "timeout": null,
+            "vars": {},
+            "zone": null
+        },
+        "dru_discovery": {
+            "arguments": [],
+            "command": "\/usr\/lib\/monitoring-plugins\/dru_discovery.py",
+            "disabled": false,
+            "fields": [],
+            "imports": [],
+            "is_string": null,
+            "methods_execute": "PluginCheck",
+            "object_name": "dru_discovery",
+            "object_type": "object",
+            "timeout": null,
+            "vars": {},
+            "zone": null
+        }
+    },
+    "CommandTemplate": {
+        "dmu-command-template": {
+            "arguments": {
+                "-hlcd": "$highLevelCriticalDownlink$",
+                "-hlcu": "$highLevelCriticalUplink$",
+                "-hlwd": "$highLevelWarningDownlink$",
+                "-hlwu": "$highLevelWarningUplink$"
+            },
+            "command": "\/usr\/lib\/monitoring-plugins\/dmu_check_rs485.py",
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 26,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 27,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 28,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 29,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "imports": [],
+            "is_string": null,
+            "methods_execute": "PluginCheck",
+            "object_name": "dmu-command-template",
+            "object_type": "template",
+            "timeout": "5",
+            "vars": {
+                "highLevelCriticalDownlink": "41",
+                "highLevelCriticalUplink": "38",
+                "highLevelWarningDownlink": "41",
+                "highLevelWarningUplink": "38"
+            },
+            "zone": null
+        },
+        "dmu-dru-command-template": {
+            "arguments": {
+                "-d": {
+                    "required": true,
+                    "value": "$dru$"
+                },
+                "-hlcd": "$highLevelCriticalDownlink$",
+                "-hlcu": "$highLevelCriticalUplink$",
+                "-hltc": "$highLevelTemperatureCritical$",
+                "-hltw": "$highLevelTemperatureWarning$",
+                "-hlwd": "$highLevelWarningDownlink$",
+                "-hlwu": "$highLevelWarningUplink$",
+                "-m": "$mac$",
+                "-o": {
+                    "required": true,
+                    "value": "$opt$"
+                },
+                "-s": "$sn$"
+            },
+            "command": "\/usr\/lib\/monitoring-plugins\/dru_check_rs485.py",
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 20,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 26,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 27,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 30,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 31,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 28,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 29,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 41,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 21,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 42,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "imports": [],
+            "is_string": null,
+            "methods_execute": "PluginCheck",
+            "object_name": "dmu-dru-command-template",
+            "object_type": "template",
+            "timeout": "5",
+            "vars": {
+                "highLevelCriticalDownlink": "41",
+                "highLevelCriticalUplink": "38",
+                "highLevelTemperatureCritical": "50",
+                "highLevelTemperatureWarning": "45",
+                "highLevelWarningDownlink": "41",
+                "highLevelWarningUplink": "38"
+            },
+            "zone": null
+        },
+        "dmu-dru-service-command-template": {
+            "arguments": {
+                "-a": {
+                    "required": true,
+                    "value": "$action$"
+                },
+                "-c": "$cmdData$",
+                "-d": {
+                    "required": true,
+                    "value": "$device$"
+                },
+                "-hc": "$highLevelCritical$",
+                "-hw": "$highLevelWarning$",
+                "-i": "$druID$",
+                "-l": {
+                    "skip_key": false,
+                    "value": "$cmdBodyLength$"
+                },
+                "-n": "$cmdNumber$",
+                "-p": {
+                    "required": true,
+                    "value": "$port$"
+                },
+                "-x": "$dmuDevice1$",
+                "-y": "$dmuDevice2$"
+            },
+            "command": "\/usr\/lib\/monitoring-plugins\/check_rs485.py",
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 4,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 35,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 36,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "imports": [],
+            "is_string": null,
+            "methods_execute": "PluginCheck",
+            "object_name": "dmu-dru-service-command-template",
+            "object_type": "template",
+            "timeout": "5",
+            "vars": {},
+            "zone": null
+        }
+    },
+    "HostTemplate": {
+        "dmu-host-template": {
+            "accept_config": null,
+            "action_url": null,
+            "address": null,
+            "address6": null,
+            "api_key": null,
+            "check_command": "hostalive",
+            "check_interval": "60",
+            "check_period": null,
+            "check_timeout": "5",
+            "command_endpoint": null,
+            "custom_endpoint_name": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": true,
+            "enable_event_handler": null,
+            "enable_flapping": true,
+            "enable_notifications": true,
+            "enable_passive_checks": true,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "30",
+            "flapping_threshold_low": "25",
+            "groups": [],
+            "has_agent": false,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "master_should_connect": null,
+            "max_check_attempts": "5",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "dmu-host-template",
+            "object_type": "template",
+            "retry_interval": "15",
+            "template_choice": null,
+            "vars": {
+                "addToMap": true,
+                "device": "dmu",
+                "highLevelCriticalDL": "41",
+                "highLevelCriticalUL": "41",
+                "highLevelWaningUL": "38",
+                "highLevelWarningDL": "38",
+                "parents": [
+                    "Sigmaweb"
+                ]
+            },
+            "volatile": null,
+            "zone": "master"
+        },
+        "dmu-opt-dru-host-template": {
+            "accept_config": null,
+            "action_url": null,
+            "address": null,
+            "address6": null,
+            "api_key": null,
+            "check_command": "dmu-dru-command",
+            "check_interval": "300",
+            "check_period": null,
+            "check_timeout": "3",
+            "command_endpoint": null,
+            "custom_endpoint_name": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": true,
+            "enable_event_handler": null,
+            "enable_flapping": true,
+            "enable_notifications": null,
+            "enable_passive_checks": true,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "80",
+            "flapping_threshold_low": "20",
+            "groups": [],
+            "has_agent": false,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "master_should_connect": null,
+            "max_check_attempts": "5",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "dmu-opt-dru-host-template",
+            "object_type": "template",
+            "retry_interval": "10",
+            "template_choice": null,
+            "vars": {
+                "addToMap": true,
+                "device": "dru"
+            },
+            "volatile": null,
+            "zone": null
+        },
+        "Master": {
+            "accept_config": null,
+            "action_url": null,
+            "address": null,
+            "address6": null,
+            "api_key": null,
+            "check_command": "cluster",
+            "check_interval": null,
+            "check_period": null,
+            "check_timeout": null,
+            "command_endpoint": null,
+            "custom_endpoint_name": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": null,
+            "enable_event_handler": null,
+            "enable_flapping": null,
+            "enable_notifications": null,
+            "enable_passive_checks": null,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [],
+            "flapping_threshold_high": null,
+            "flapping_threshold_low": null,
+            "groups": [],
+            "has_agent": null,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "master_should_connect": null,
+            "max_check_attempts": null,
+            "notes": null,
+            "notes_url": null,
+            "object_name": "Master",
+            "object_type": "template",
+            "retry_interval": null,
+            "template_choice": null,
+            "vars": {},
+            "volatile": null,
+            "zone": "master"
+        },
+        "hostalive-template": {
+            "accept_config": null,
+            "action_url": null,
+            "address": null,
+            "address6": null,
+            "api_key": null,
+            "check_command": "hostalive",
+            "check_interval": null,
+            "check_period": null,
+            "check_timeout": null,
+            "command_endpoint": null,
+            "custom_endpoint_name": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": null,
+            "enable_event_handler": null,
+            "enable_flapping": null,
+            "enable_notifications": null,
+            "enable_passive_checks": null,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [],
+            "flapping_threshold_high": null,
+            "flapping_threshold_low": null,
+            "groups": [],
+            "has_agent": null,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [
+                "dmu-host-template"
+            ],
+            "master_should_connect": null,
+            "max_check_attempts": null,
+            "notes": null,
+            "notes_url": null,
+            "object_name": "hostalive-template",
+            "object_type": "template",
+            "retry_interval": null,
+            "template_choice": null,
+            "vars": {},
+            "volatile": null,
+            "zone": "master"
+        },
+        "host-template": {
+            "accept_config": null,
+            "action_url": null,
+            "address": null,
+            "address6": null,
+            "api_key": null,
+            "check_command": "hostalive",
+            "check_interval": "60",
+            "check_period": null,
+            "check_timeout": "5",
+            "command_endpoint": null,
+            "custom_endpoint_name": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": true,
+            "enable_event_handler": null,
+            "enable_flapping": true,
+            "enable_notifications": null,
+            "enable_passive_checks": true,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "80",
+            "flapping_threshold_low": "20",
+            "groups": [],
+            "has_agent": false,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "master_should_connect": null,
+            "max_check_attempts": "5",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "host-template",
+            "object_type": "template",
+            "retry_interval": "15",
+            "template_choice": null,
+            "vars": {
+                "addToMap": true,
+                "device": "dmu",
+                "highLevelCriticalDL": "41",
+                "highLevelCriticalUL": "41",
+                "highLevelWaningUL": "38",
+                "highLevelWarningDL": "38",
+                "parents": [
+                    "Sigmaweb"
+                ]
+            },
+            "volatile": null,
+            "zone": "master"
+        },
+        "dru-host-dummy-template": {
+            "accept_config": null,
+            "action_url": null,
+            "address": null,
+            "address6": null,
+            "api_key": null,
+            "check_command": "hostalive",
+            "check_interval": "60",
+            "check_period": null,
+            "check_timeout": "5",
+            "command_endpoint": null,
+            "custom_endpoint_name": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": true,
+            "enable_event_handler": null,
+            "enable_flapping": true,
+            "enable_notifications": null,
+            "enable_passive_checks": true,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "80",
+            "flapping_threshold_low": "20",
+            "groups": [],
+            "has_agent": false,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "master_should_connect": null,
+            "max_check_attempts": "5",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "dru-host-dummy-template",
+            "object_type": "template",
+            "retry_interval": "15",
+            "template_choice": null,
+            "vars": {
+                "addToMap": true,
+                "device": "dmu",
+                "highLevelCriticalDL": "41",
+                "highLevelCriticalUL": "41",
+                "highLevelWaningUL": "38",
+                "highLevelWarningDL": "38",
+                "parents": [
+                    "Sigmaweb"
+                ]
+            },
+            "volatile": null,
+            "zone": "master"
+        }
+    },
+    "ServiceTemplate": {
+        "dmu-command-service-template": {
+            "action_url": null,
+            "apply_for": null,
+            "assign_filter": null,
+            "check_command": "dmu-command",
+            "check_interval": "10",
+            "check_period": null,
+            "check_timeout": "65",
+            "command_endpoint": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": null,
+            "enable_event_handler": null,
+            "enable_flapping": true,
+            "enable_notifications": null,
+            "enable_passive_checks": null,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 11,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "30",
+            "flapping_threshold_low": "25",
+            "groups": [],
+            "host": null,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "max_check_attempts": "10",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "dmu-command-service-template",
+            "object_type": "template",
+            "retry_interval": "1",
+            "service_set": null,
+            "template_choice": null,
+            "use_agent": true,
+            "use_var_overrides": null,
+            "vars": {
+                "addToMap": false,
+                "isOPTPort": false
+            },
+            "volatile": null,
+            "zone": null
+        },
+        "dmu-dru-command-service-template": {
+            "action_url": null,
+            "apply_for": null,
+            "assign_filter": null,
+            "check_command": "dmu-dru-command",
+            "check_interval": "30",
+            "check_period": null,
+            "check_timeout": "0",
+            "command_endpoint": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": null,
+            "enable_event_handler": true,
+            "enable_flapping": true,
+            "enable_notifications": true,
+            "enable_passive_checks": null,
+            "enable_perfdata": true,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 20,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 41,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 21,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 42,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "30",
+            "flapping_threshold_low": "25",
+            "groups": [],
+            "host": null,
+            "icon_image": "dru.png",
+            "icon_image_alt": null,
+            "imports": [],
+            "max_check_attempts": "30",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "dmu-dru-command-service-template",
+            "object_type": "template",
+            "retry_interval": "3",
+            "service_set": null,
+            "template_choice": null,
+            "use_agent": true,
+            "use_var_overrides": null,
+            "vars": {
+                "addToMap": true
+            },
+            "volatile": null,
+            "zone": null
+        },
+        "dru-discovery-service-template": {
+            "action_url": null,
+            "apply_for": null,
+            "assign_filter": null,
+            "check_command": "dru_discovery",
+            "check_interval": "300",
+            "check_period": null,
+            "check_timeout": "65",
+            "command_endpoint": null,
+            "disabled": false,
+            "display_name": null,
+            "enable_active_checks": true,
+            "enable_event_handler": null,
+            "enable_flapping": null,
+            "enable_notifications": false,
+            "enable_passive_checks": true,
+            "enable_perfdata": null,
+            "event_command": null,
+            "fields": [
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "flapping_threshold_high": "30",
+            "flapping_threshold_low": "25",
+            "groups": [],
+            "host": null,
+            "icon_image": null,
+            "icon_image_alt": null,
+            "imports": [],
+            "max_check_attempts": "10",
+            "notes": null,
+            "notes_url": null,
+            "object_name": "dru-discovery-service-template",
+            "object_type": "template",
+            "retry_interval": "1",
+            "service_set": null,
+            "template_choice": null,
+            "use_agent": true,
+            "use_var_overrides": null,
+            "vars": {
+                "addToMap": false
+            },
+            "volatile": null,
+            "zone": null
+        }
+    },
+    "UserTemplate": {
+        "user-email-template": {
+            "disabled": false,
+            "display_name": null,
+            "email": null,
+            "enable_notifications": true,
+            "fields": [],
+            "groups": [],
+            "imports": [],
+            "object_name": "user-email-template",
+            "object_type": "template",
+            "pager": null,
+            "period": null,
+            "states": [
+                "Down"
+            ],
+            "types": [
+                "Problem"
+            ],
+            "vars": {},
+            "zone": null
+        }
+    },
+    "User": {
+        "arturo": {
+            "disabled": false,
+            "display_name": "Arturo",
+            "email": "arturo@sigma-telecom.com",
+            "enable_notifications": null,
+            "fields": [],
+            "groups": [],
+            "imports": [
+                "user-email-template"
+            ],
+            "object_name": "arturo",
+            "object_type": "object",
+            "pager": null,
+            "period": null,
+            "states": [
+                "Critical",
+                "Down",
+                "OK",
+                "Unknown",
+                "Up",
+                "Warning"
+            ],
+            "types": [
+                "Custom",
+                "Problem",
+                "Recovery"
+            ],
+            "vars": {},
+            "zone": null
+        },
+        "admin": {
+            "disabled": false,
+            "display_name": "admin",
+            "email": "admin@uqomm.com",
+            "enable_notifications": false,
+            "fields": [],
+            "groups": [],
+            "imports": [
+                "user-email-template"
+            ],
+            "object_name": "admin",
+            "object_type": "object",
+            "pager": null,
+            "period": null,
+            "states": [
+                "Critical",
+                "Down",
+                "OK",
+                "Unknown",
+                "Up",
+                "Warning"
+            ],
+            "types": [
+                "Custom",
+                "Problem",
+                "Recovery"
+            ],
+            "vars": {},
+            "zone": null
+        }
+    },
+    "NotificationTemplate": {
+        "mail-host-notification-template": {
+            "apply_to": null,
+            "assign_filter": null,
+            "command": "mail-host-notification-command",
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 38,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 39,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "host": null,
+            "imports": [],
+            "notification_interval": "0",
+            "object_name": "mail-host-notification-template",
+            "object_type": "template",
+            "period": null,
+            "service": null,
+            "states": null,
+            "times_begin": null,
+            "times_end": null,
+            "types": null,
+            "user_groups": [],
+            "users": [
+                "admin"
+            ],
+            "vars": {},
+            "zone": null
+        },
+        "mail-service-notification-template": {
+            "apply_to": null,
+            "assign_filter": null,
+            "command": "mail-service-notification-command",
+            "disabled": false,
+            "fields": [
+                {
+                    "datafield_id": 38,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 40,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 39,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "host": null,
+            "imports": [],
+            "notification_interval": null,
+            "object_name": "mail-service-notification-template",
+            "object_type": "template",
+            "period": null,
+            "service": null,
+            "states": null,
+            "times_begin": null,
+            "times_end": null,
+            "types": null,
+            "user_groups": [],
+            "users": [
+                "admin"
+            ],
+            "vars": {},
+            "zone": null
+        }
+    },
+    "Notification": {
+        "mail-dmu-notification": {
+            "apply_to": "host",
+            "assign_filter": "host.templates=%22dmu%2A%22",
+            "command": null,
+            "disabled": false,
+            "fields": [],
+            "host": null,
+            "imports": [
+                "mail-host-notification-template"
+            ],
+            "notification_interval": null,
+            "object_name": "mail-dmu-notification",
+            "object_type": "apply",
+            "period": null,
+            "service": null,
+            "states": [
+                "Down"
+            ],
+            "times_begin": null,
+            "times_end": null,
+            "types": [
+                "FlappingEnd"
+            ],
+            "user_groups": [],
+            "users": [
+                "admin"
+            ],
+            "vars": {
+                "notification_mailfrom": "notification@uqomm.com"
+            },
+            "zone": null
+        },
+        "mail-host-notification": {
+            "apply_to": "host",
+            "assign_filter": "host.templates!=%22dmu%2A%22",
+            "command": null,
+            "disabled": false,
+            "fields": [],
+            "host": null,
+            "imports": [
+                "mail-host-notification-template"
+            ],
+            "notification_interval": "0",
+            "object_name": "mail-host-notification",
+            "object_type": "apply",
+            "period": null,
+            "service": null,
+            "states": [
+                "Down"
+            ],
+            "times_begin": null,
+            "times_end": null,
+            "types": [
+                "FlappingEnd",
+                "FlappingStart"
+            ],
+            "user_groups": [],
+            "users": [
+                "admin"
+            ],
+            "vars": {
+                "notification_mailfrom": "notification@uqomm.com"
+            },
+            "zone": null
+        },
+        "mail-service-notification": {
+            "apply_to": "service",
+            "assign_filter": "service.check_command=%22dmu%2A%22",
+            "command": null,
+            "disabled": false,
+            "fields": [],
+            "host": null,
+            "imports": [
+                "mail-service-notification-template"
+            ],
+            "notification_interval": "0",
+            "object_name": "mail-service-notification",
+            "object_type": "apply",
+            "period": null,
+            "service": null,
+            "states": [
+                "Critical",
+                "Unknown",
+                "Warning"
+            ],
+            "times_begin": null,
+            "times_end": null,
+            "types": [
+                "FlappingEnd",
+                "Problem"
+            ],
+            "user_groups": [],
+            "users": [
+                "admin"
+            ],
+            "vars": {
+                "notification_mailfrom": "notification@uqomm.com"
+            },
+            "zone": null
+        }
+    },
+    "DataList": {
+        "deviceDataList": {
+            "list_name": "deviceDataList",
+            "owner": "admin",
+            "originalId": "2",
+            "entries": [
+                {
+                    "entry_name": "dmu",
+                    "entry_value": "Device Master Unit",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "dru",
+                    "entry_value": "Device Remote Unit",
+                    "format": "string",
+                    "allowed_roles": null
+                }
+            ]
+        },
+        "frequencies": {
+            "list_name": "frequencies",
+            "owner": "admin",
+            "originalId": "6",
+            "entries": [
+                {
+                    "entry_name": "uhf",
+                    "entry_value": "uhf",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "vhf",
+                    "entry_value": "vhf",
+                    "format": "string",
+                    "allowed_roles": null
+                }
+            ]
+        },
+        "druIDDataList": {
+            "list_name": "druIDDataList",
+            "owner": "admin",
+            "originalId": "7",
+            "entries": [
+                {
+                    "entry_name": "11",
+                    "entry_value": "OPT1 Remote 1",
+                    "format": "string",
+                    "allowed_roles": [
+                        "Normal User"
+                    ]
+                },
+                {
+                    "entry_name": "12",
+                    "entry_value": "OPT1 Remote 2",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "13",
+                    "entry_value": "OPT1 Remote 3",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "14",
+                    "entry_value": "OPT1 Remote 4",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "15",
+                    "entry_value": "OPT1 Remote 5",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "16",
+                    "entry_value": "OPT1 Remote 6",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "17",
+                    "entry_value": "OPT1 Remote 7",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "18",
+                    "entry_value": "OPT1 Remote 5",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "21",
+                    "entry_value": "OPT2 Remote 1",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "22",
+                    "entry_value": "OPT2 Remote 2",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "23",
+                    "entry_value": "OPT2 Remote 3",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "24",
+                    "entry_value": "OPT2 Remote 4",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "25",
+                    "entry_value": "OPT2 Remote 5",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "26",
+                    "entry_value": "OPT2 Remote 6",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "27",
+                    "entry_value": "OPT2 Remote 7",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "28",
+                    "entry_value": "OPT2 Remote 8",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "31",
+                    "entry_value": "OPT3 Remote 1",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "32",
+                    "entry_value": "OPT3 Remote 2",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "33",
+                    "entry_value": "OPT3 Remote 3",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "34",
+                    "entry_value": "OPT3 Remote 4",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "35",
+                    "entry_value": "OPT3 Remote 5",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "36",
+                    "entry_value": "OPT3 Remote 6",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "37",
+                    "entry_value": "OPT3 Remote 7",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "38",
+                    "entry_value": "OPT3 Remote 8",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "41",
+                    "entry_value": "OPT4 Remote 1",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "42",
+                    "entry_value": "OPT4 Remote 2",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "43",
+                    "entry_value": "OPT4 Remote 3",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "44",
+                    "entry_value": "OPT4 Remote 4",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "45",
+                    "entry_value": "OPT4 Remote 5",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "46",
+                    "entry_value": "OPT4 Remote 6",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "47",
+                    "entry_value": "OPT4 Remote 7",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "48",
+                    "entry_value": "OPT4 Remote 8",
+                    "format": "string",
+                    "allowed_roles": null
+                }
+            ]
+        }
+    },
+    "DirectorJob": {
+        "Deploy config": {
+            "job_name": "Deploy config",
+            "job_class": "Icinga\\Module\\Director\\Job\\ConfigJob",
+            "disabled": "n",
+            "run_interval": "600",
+            "originalId": "5",
+            "settings": {
+                "deploy_when_changed": "y",
+                "force_generate": "n",
+                "grace_period": "60"
+            }
+        }
+    },
+    "Basket": {
+        "all-items-basket": {
+            "basket_name": "all-items-basket",
+            "objects": {
+                "Command": true,
+                "CommandTemplate": true,
+                "HostGroup": true,
+                "HostTemplate": true,
+                "ServiceGroup": true,
+                "ServiceTemplate": true,
+                "ServiceSet": true,
+                "UserTemplate": true,
+                "User": true,
+                "NotificationTemplate": true,
+                "Notification": true,
+                "Dependency": true,
+                "DataList": true,
+                "ImportSource": true,
+                "SyncRule": true,
+                "DirectorJob": true,
+                "Basket": true
+            },
+            "owner_type": "user",
+            "owner_value": "admin"
+        }
+    },
+    "Datafield": {
+        "26": {
+            "varname": "highLevelCriticalDownlink",
+            "caption": "HighLevelCriticalDownlinkAlert",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "26",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "27": {
+            "varname": "highLevelCriticalUplink",
+            "caption": "HighLevelCriticalUplinkAlert",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "27",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "28": {
+            "varname": "highLevelWarningDownlink",
+            "caption": "HighLevelWarningDownlinkAlert",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "28",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "29": {
+            "varname": "highLevelWarningUplink",
+            "caption": "HighLevelWarningUplinkAlert",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "29",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "38": {
+            "varname": "address",
+            "caption": "address",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "38",
+            "settings": {},
+            "category": null
+        },
+        "40": {
+            "varname": "notification_icingaweb2url",
+            "caption": "notification_icingaweb2url",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "40",
+            "settings": {},
+            "category": null
+        },
+        "39": {
+            "varname": "notification_mailfrom",
+            "caption": "notification_mailfrom",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "39",
+            "settings": {},
+            "category": null
+        },
+        "20": {
+            "varname": "dru",
+            "caption": "RemoteNumber",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "20",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "30": {
+            "varname": "highLevelTemperatureCritical",
+            "caption": "HighLevelTemperatureCriticalAlert",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "30",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "31": {
+            "varname": "highLevelTemperatureWarning",
+            "caption": "HighLevelTemperatureWarningAlert",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "31",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "41": {
+            "varname": "mac",
+            "caption": "MAC address",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "41",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "21": {
+            "varname": "opt",
+            "caption": "OpticalPort",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "21",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "42": {
+            "varname": "sn",
+            "caption": "S\/N",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "42",
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "4": {
+            "varname": "device",
+            "caption": "Device type",
+            "description": "dmu\r\ndru",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
+            "format": null,
+            "originalId": "4",
+            "settings": {
+                "data_type": "string",
+                "datalist": "deviceDataList"
+            },
+            "category": null
+        },
+        "35": {
+            "varname": "highLevelCritical",
+            "caption": "High Critical Threshold",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "35",
+            "settings": {},
+            "category": null
+        },
+        "36": {
+            "varname": "highLevelWarning",
+            "caption": "High Warning Threshold",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "originalId": "36",
+            "settings": {},
+            "category": null
+        },
+        "12": {
+            "varname": "addToMap",
+            "caption": "AddToMap",
+            "description": "If you want to show this host or service in the network or hierarchy map",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "originalId": "12",
+            "settings": {},
+            "category": null
+        },
+        "1": {
+            "varname": "parents",
+            "caption": "parents",
+            "description": "Parents Host Array",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "originalId": "1",
+            "settings": {},
+            "category": null
+        },
+        "11": {
+            "varname": "isOPTPort",
+            "caption": "isOPTPort",
+            "description": "If a DMU port that connects RDUs",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "originalId": "11",
+            "settings": {
+                "rename_vars": "y"
+            },
+            "category": null
+        }
+    }
+}
