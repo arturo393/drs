@@ -39,6 +39,8 @@ Setup Icingaweb2
     # Authentication
     Log To Console    Authentication
     # Click    xpath=/html/body/div[1]/div[1]/div[2]/form/div[3]/button[3]
+    Sleep    1s
+    Wait Until Network Is Idle
     Click    xpath=//button[@name="btn_next" and @class="control-button btn-primary"]
     Wait Until Network Is Idle
 
