@@ -68,32 +68,43 @@
           - pyserial
           - config
           - requests
+          - logging
 
 - hosts: icinga_monitor
   vars_files:
     - ../vars.yaml
 
   tasks:
-  - name: Fetch The SSH Public Key From The Icinga Monitor
+  - name: Fetch The SSH Public Key From  The Icinga Monitor
     fetch:
-      src: /home/{{ icinga2_monitor_user }}/.ssh/id_rsa.pub
+      src: ~/.ssh/id_rsa.pub
       dest: /tmp/id_rsa.pub
       flat: yes
-      server: "{{ icinga2_monitor_host }}"
+      server: "{{ icinga2_monitor_host }}"   
 
-- hosts: all
+- hosts: icinga_satellite
   vars_files:
     - ../vars.yaml
 
   tasks:
+  - name: Create destination folder {{ssh_key_folder}}
+    file:
+      path: "{{ssh_key_folder}}"
+      state: directory
+
   - name: Copy The SSH Public Key To The Inventory Hosts
     copy:
       src: /tmp/id_rsa.pub
-      dest: ~/.ssh/id_rsa.pub
-
+      dest: "{{ssh_key_folder}}/id_rsa.pub"
+  
   - name: Add The SSH Public Key To The Authorized Keys On The Inventory Host
     authorized_key:
       user: "{{icinga2_satellite_user }}"
       key: "{{ lookup('file', '/tmp/id_rsa.pub') }}"
+
+
+
+
+
 
 
