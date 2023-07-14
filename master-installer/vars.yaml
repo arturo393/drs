@@ -2,8 +2,8 @@
 gitlabuser: arturo33
 gitlabpassword: gitlab393
 # icinga2 master, which is also the default endpoint
-icinga2_monitor_host: "192.168.60.77"
-icinga2_monitor_hostname: "rds-m-4"
+icinga2_monitor_host: "192.168.60.76"
+icinga2_monitor_hostname: "rds-m-5"
 icinga2_monitor_user: "sigmadev"
 icinga2_satellite_user: "sigmadev"
 ticket: ""
@@ -16,10 +16,11 @@ admin_password: "Admin.123"
 local_basket_file: ../basket.json
 remote_basket_file: /home/sigmadev/basket.json
 
+ssh_key_folder: ~/.ssh
+ssh_user_folder: /home/sigmadev/
 
-
-icinga_api_username: "admin"
-icinga_api_password: "Admin.123"
+director_api_username: "admin"
+director_api_password: "Admin.123"
 apply_services:
       - name: "Master Status"
         imports: "dmu-command-service-template"

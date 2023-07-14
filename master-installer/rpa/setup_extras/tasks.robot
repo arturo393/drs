@@ -8,6 +8,7 @@ Library    RPA.RobotLogListener
 *** Variables ***
 ${host}    %{host}
 ${passwd}    %{passwd}
+${hostname}    %{hostname}
 
 *** Tasks ***
 Setup Extras
@@ -91,8 +92,8 @@ Setup Director Module
         Sleep    1    # just in case
         Click    css=#Createschema        # Create Schema
 
-        Type Text    css=#endpoint    ${host}
-        Type Text    css=#host    ${host}
+        Type Text    css=#endpoint    ${hostname}
+        Type Text    css=#host    localhost
         Type Text    css=#username    root
         Type Text    css=#password    ${passwd}
         Click    css=#Runimport        # Run Import
