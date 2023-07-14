@@ -34,6 +34,20 @@
       src: ido-mysql.conf.j2
       dest: /etc/icinga2/features-available/ido-mysql.conf
 
+  - name: Update hostname to {{inventory_hostname}} in /etc/hosts
+    become: true
+    blockinfile:
+        path: /etc/hosts
+        create: yes
+        block: |
+          127.0.0.1 {{inventory_hostname}}
+          {{ hostvars[inventory_hostname].ansible_host }} {{inventory_hostname}}
+  
+  - name: Change hostname to {{inventory_hostname}}
+    become: true
+    shell:
+      cmd: hostnamectl set-hostname {{ inventory_hostname }}
+    
   - name: Icinga2 node wizard
     shell:
       cmd: echo -ne "n\n{{ inventory_hostname }}\n\n\n\n\n" | icinga2 node wizard
@@ -50,80 +64,3 @@
     service:
       name: icinga2
       state: restarted
-
-
-
-# IcingaWeb2
-  - name: Create apache root page
-    shell:
-      cmd: echo {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }} > /var/www/html/index.html
-  - name: Enable rewrite apache module
-    shell:
-      cmd: a2enmod rewrite
-
-  - name: Modify /etc/icingaweb2/ permissions
-    file:
-      path: /etc/icingaweb2/
-      owner: "www-data"
-      group: "icingaweb2"
-      recurse: yes
-
-  - name: Modify /usr/share/icingaweb2/ permissions
-    file:
-      path: /usr/share/icingaweb2/
-      owner: "www-data"
-      group: "icingaweb2"
-      recurse: yes
-
-  - name: Modify apache default site config
-    template:
-      src: apache-site.j2
-      dest: /etc/apache2/sites-enabled/000-default.conf
-
-  - name: Restart Apache service
-    service:
-      name: apache2
-      state: restarted
-
-  - name: enable icingaweb2 setup module
-    shell:
-      cmd: icingacli module enable setup
-
-  - name: Create and get setup token
-    shell:
-      cmd: icingacli setup token create && cat /etc/icingaweb2/setup.token
-
-  - name: Fetch a "setup.token" file
-    fetch:
-      src: /etc/icingaweb2/setup.token
-      dest: /tmp/setup.token
-
-  # - name: Install RCC deps
-  #   package:
-  #     name: "{{ item }}"
-  #     state: present
-  #   with_items:
-  #     - libnss3
-  #     - libnspr4
-  #     - libatk1.0-0
-  #     - libatk-bridge2.0-0
-  #     - libdrm2
-  #     - libxkbcommon0
-  #     - libatspi2.0-0
-  #     - libxcomposite1
-  #     - libxdamage1
-  #     - libxfixes3
-  #     - libxrandr2
-  #     - libgbm1
-  #     - libpango-1.0-0
-  #     - libcairo2
-  #     - libasound2
-  #   when: ansible_distribution_release == 'bullseye'
-
-  # - name: Setup Icingaweb2
-  #   command:
-  #     cmd: /usr/local/bin/rcc run --silent
-  #     chdir: /tmp/sigma-rds/ansible-icinga-master/rpa/1/
-  #   register: output
-  # - debug:
-  #     var: output.stdout
