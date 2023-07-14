@@ -14,15 +14,7 @@
             - monitoring-plugins
         state: present
     
-          
-  - name: Install Kernel Sources And Compilation Tools 
-    apt:
-        name:
-            - dpkg-dev
-            - linux-image-{{ansible_kernel}}
-            - linux-headers-{{ansible_kernel}}
-        state: present
-
+      
   - name: Clean Artifact Path
     file:
       state: absent

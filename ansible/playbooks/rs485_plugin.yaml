@@ -8,8 +8,9 @@
     git:
       repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/sigma-telecom/sigma-rds.git
       dest: /tmp/sigma-rds
-      version: development
+      version: development      
       accept_hostkey: true
+      update: yes
       
   - name: Create Installation Directory
     file:

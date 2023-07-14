@@ -9,20 +9,7 @@
     
 
   tasks:
-  - name: First Create The Zones In Icinga Director
-    command: icingacli director zone create {{item}} --parent "master"
-    with_items: "{{ groups['icinga_satellite']}}" 
-
-  - name: Create The Endpoints In Icinga Director
-    command: icingacli director endpoint create {{item}} 
-    with_items: "{{ groups['icinga_satellite']}}"
-
-  - name: Create The Hosts In Icinga Director
-    command: icingacli director host create {{item}} --imports "dmu-host-template" --address {{hostvars[item].ansible_host}} --vars.safed_profile '3' 
-    with_items: "{{ groups['icinga_satellite']}}"
-
-  - name: Deploying The Changes
-    command: icingacli director config deploy
+  
     
   - name: Get Provisioning Ticket
     command: icinga2 pki ticket --cn {{item}}
