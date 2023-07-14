@@ -55,21 +55,21 @@
     git:
       repo: https://github.com/Icinga/icingaweb2-module-incubator
       dest: /usr/share/icingaweb2/modules/incubator
-      single_branch: yes
+      #single_branch: yes
       version: v0.18.0
 
   - name: Install reactbundle module
     git:
       repo: https://github.com/Icinga/icingaweb2-module-reactbundle
       dest: /usr/share/icingaweb2/modules/reactbundle
-      single_branch: yes
+      #single_branch: yes
       version: v0.9.0
 
   - name: Reinstall director module
     git:
       repo: https://github.com/icinga/icingaweb2-module-director
       dest: /usr/share/icingaweb2/modules/director
-      single_branch: yes
+      #single_branch: yes
       version: master
 
   - name: Creating icingadirector user
@@ -168,19 +168,34 @@
 ## Add or remove entries in the form (optional) 
   - name: Create ssh directory for remote executions
     file:
-      name: /root/.ssh
-      mode: 700
+      name: "{{ssh_key_folder}}"
+      mode: "a+r"
       state: directory
 
-  - name: Check if /root/.ssh/key.rsa file already exists
-    stat:
-      path: /root/.ssh/key.rsa
-    register: file_stat
+  - name: Generate SSH key pair
+    openssh_keypair:
+      path: "{{ssh_key_folder}}/id_rsa"
+      type: rsa
+      size: 2048
+      state: present
+      force: true      
 
-  - name: Create ssh key
-    shell:
-      cmd: ssh-keygen -t rsa -N '' -f /root/.ssh/key.rsa
-    when: not file_stat.stat.exists
+  - name: Create destination folder /home/sigmadev/.ssh
+    file:
+      path: /home/sigmadev/.ssh
+      state: directory
+
+  - name: Copy The SSH Public Key To The Inventory Hosts
+    copy:
+      remote_src: yes
+      src: "{{ssh_key_folder}}/id_rsa.pub"
+      dest: /home/sigmadev/.ssh/id_rsa.pub
+
+  - name: Copy The SSH Public Key To The Inventory Hosts
+    copy:
+      remote_src: yes
+      src: "{{ssh_key_folder}}/id_rsa"
+      dest: /home/sigmadev/.ssh/id_rsa
 
   - name: enable SSH forwarding for sudo
     lineinfile:
@@ -231,7 +246,7 @@
     git:
       repo: https://github.com/Icinga/icingaweb2-module-graphite
       dest: /usr/share/icingaweb2/modules/graphite
-      single_branch: yes
+      #single_branch: yes
       version: v1.1.0
 
   - name: Create default graphite template file
@@ -261,19 +276,8 @@
       src: /tmp/sigma-rds/src/modules/sigma-theme/public/img/favicon.png
       dest: /usr/share/icingaweb2/public/img/favicon.png
       remote_src: yes
-
-## Cube Module
-  # - name: Install cube icingaweb2 module
-  #   git:
-  #     repo: https://github.com/Icinga/icingaweb2-module-cube
-  #     dest: /usr/share/icingaweb2/modules/cube
-  #     single_branch: yes
-
-  # - name: Patch Cube Module charset
-  #   shell:
-  #     cmd: sed -i 's/charset = "utf8"/charset = "latin1"/g' /etc/icingaweb2/resources.ini
-
-## Base Customizations
+      
+      ## Base Customizations
 
   - name: Links to device configuration
     template:
@@ -333,3 +337,6 @@
       owner: "nagios"
       group: "nagios"
       recurse: yes
+
+  
+        
