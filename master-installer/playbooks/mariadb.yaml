@@ -26,12 +26,7 @@
       - python3-pip
       - libmariadb-dev
       state: present
-
-  # - name: Install pexpect module
-  #   pip:
-  #     name: pexpect
-  #     executable: pip3
-  #     state: present
+      
   - name: Install pexpect and MySQL module for Python 3.x
     pip:
       name: "{{ item }}"
@@ -54,11 +49,3 @@
         'Disallow root login remotely\? \[Y/n\]': 'Y'
         'Remove test database and access to it\? \[Y/n\]': 'Y'
         'Reload privilege tables now\? \[Y/n\]': 'Y'
-
-  # - name: Create database
-  #   mysql_db:
-  #     name: prueba
-  #     state: present
-  #     check_implicit_admin: true
-  #     login_user: root
-  #     login_password: "{{ mysql_root_password }}"

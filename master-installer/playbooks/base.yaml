@@ -30,9 +30,4 @@
       dest: /tmp/sigma-rds
       version: development
       accept_hostkey: true
-
-  # - name: Install RCC tool
-  #   get_url:
-  #     url: https://downloads.robocorp.com/rcc/releases/v14.6.0/linux64/rcc
-  #     dest: /usr/local/bin/rcc
-  #     mode: '0755'
+      update: yes
