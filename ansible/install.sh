@@ -23,9 +23,9 @@ else
 fi
 #############################################################################
 hosts=($(./get_hosts.sh inventory/hosts.yaml))
-ansible_user="sigmadev"
-admin_password="Admin.123"
-
+ansible_user=$(./read_yaml.sh vars.yaml icinga2_monitor_user| sed 's/"//g')
+admin_password=$(./read_yaml.sh vars.yaml admin_password| sed 's/"//g')
+host=$(./read_yaml.sh vars.yaml icinga2_monitor_host| sed 's/"//g')
 
 
 ansible-playbook main.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
@@ -34,7 +34,6 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     # Extract hostname and IP address from the result variable
     hostname=${hosts[i]}
     address=${hosts[i+1]}
-    host="192.168.60.78"
     echo "Setting up Director: $host"
     echo "\tPlease wait until rcc setup is finished...browser will open..."
     cd rpa/setup_extras

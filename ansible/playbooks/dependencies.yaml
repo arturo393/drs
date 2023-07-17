@@ -3,11 +3,6 @@
 - name: Install Debian Image Dependencies   
   hosts: icinga_satellite
   become: true
-  roles:
-  - role: gantsign.oh-my-zsh
-    users:
-      - username: sigmadev
-      - username: root
 
   tasks:
 
