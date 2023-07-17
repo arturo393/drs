@@ -1,0 +1,66 @@
+# Install MiniPC Software
+---
+- name: Install Icinga2 Master
+  hosts: icinga_master
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Install Icinga packages
+    package:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - icinga2
+      - monitoring-plugins
+      - icinga2-ido-mysql
+      - icingaweb2
+      - icingacli
+      - apache2
+      - libapache2-mod-php
+      - icingaweb2-module-director
+      - icingaweb2-module-ipl
+    when: ansible_distribution_release == 'bullseye'
+
+# Icinga2
+  - name: Apply API user Template
+    template:
+      src: api-users.conf.j2
+      dest: /etc/icinga2/conf.d/api-users.conf
+
+  - name: Apply IDO Mysql Template
+    template:
+      src: ido-mysql.conf.j2
+      dest: /etc/icinga2/features-available/ido-mysql.conf
+
+  - name: Update hostname to {{inventory_hostname}} in /etc/hosts
+    become: true
+    blockinfile:
+        path: /etc/hosts
+        create: yes
+        block: |
+          127.0.0.1 {{inventory_hostname}}
+          {{ hostvars[inventory_hostname].ansible_host }} {{inventory_hostname}}
+  
+  - name: Change hostname to {{inventory_hostname}}
+    become: true
+    shell:
+      cmd: hostnamectl set-hostname {{ inventory_hostname }}
+    
+  - name: Icinga2 node wizard
+    shell:
+      cmd: echo -ne "n\n{{ inventory_hostname }}\n\n\n\n\n" | icinga2 node wizard
+
+  - name: Enable icinga2 ido-mysql feature
+    shell:
+      cmd: icinga2 feature enable ido-mysql
+
+  - name: Enable icinga2 api feature
+    shell:
+      cmd: icinga2 feature enable api
+
+  - name: Restart Icinga2 service
+    service:
+      name: icinga2
+      state: restarted

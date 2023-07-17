@@ -1,0 +1,30 @@
+[default-host.metrics_filters]
+value = "$host_name_template$.perfdata.$perfdata$.value"
+
+[default-host.urlparams]
+areaAlpha = "0.5"
+areaMode = "none"
+lineWidth = "2"
+title = "$perfdata$"
+yUnitSystem = "none"
+bgcolor = "white"
+fgcolor = "black"
+
+[default-host.functions]
+value = "alias(color($metric$, '#011240'), 'value default')"
+
+
+[default-service.metrics_filters]
+value = "$service_name_template$.perfdata.$perfdata$.value"
+
+[default-service.urlparams]
+areaAlpha = "0.5"
+areaMode = "none"
+lineWidth = "2"
+title = "$perfdata$"
+yUnitSystem = "none"
+bgcolor = "white"
+fgcolor = "black"
+
+[default-service.functions]
+value = "alias(color($metric$, '#ffffff'), 'value default')"

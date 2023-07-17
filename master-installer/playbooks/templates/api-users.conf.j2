@@ -1,0 +1,12 @@
+object ApiUser "root" {
+  password = "{{ admin_password }}"
+  permissions = [ "*" ]
+}
+object ApiUser "icingaweb2" {
+  password = "{{ admin_password }}"
+  permissions = [ "status/query", "actions/*", "objects/modify/*", "objects/query/*" ]
+}
+object ApiUser "dependencies" {
+  password = "{{ admin_password }}"
+  permissions = [ "status/query", "objects/query/*" ]
+}

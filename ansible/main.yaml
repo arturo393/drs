@@ -1,0 +1,24 @@
+---
+
+- name: Install DRS Satellite Software
+  hosts: all
+  become: true
+  vars_files:
+    - ./vars.yaml
+
+
+- name: "Installing Dependencies"
+  import_playbook: playbooks/dependencies.yaml
+
+- name: "Installing Oh My Zsh"
+  import_playbook: playbooks/oh-my-zsh.yaml
+
+- name: "Installing Icinga2 Software"
+  import_playbook: playbooks/icinga2.yaml
+
+- name: "Configure Icinga2 Software"
+  import_playbook: playbooks/icinga2config.yaml
+  
+- name: "Plugin Installation"
+  import_playbook: playbooks/rs485_plugin.yaml
+

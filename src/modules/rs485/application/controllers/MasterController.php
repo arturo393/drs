@@ -21,7 +21,7 @@ class MasterController extends Controller
 
     public function init()
     {
-        $this->assertPermission('config/modules');
+        //$this->assertPermission('config/modules');
         parent::init();
     }
 

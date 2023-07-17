@@ -1,0 +1,104 @@
+---
+- name: Remove Icinga 2
+  hosts: dmu4
+  become: yes
+
+  tasks:
+    - name: Stop Icinga 2 service
+      systemd:
+        name: icinga2
+        state: stopped
+
+    - name: Remove Icinga 2 packages
+      apt:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - icinga2
+        - icingaweb2
+        - icingacli
+
+    - name: Remove Icinga 2 configuration files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/icinga2
+
+    - name: Remove Icinga Web 2 configuration files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/icingaweb2
+
+    - name: Remove Icinga Web 2 data directory
+      file:
+        path: /var/lib/icingaweb2
+        state: absent
+
+    - name: Remove Icinga Web 2 log directory
+      file:
+        path: /var/log/icingaweb2
+        state: absent
+
+    - name: Remove Icinga Web 2 Apache configuration
+      file:
+        path: /etc/apache2/conf-enabled/icingaweb2.conf
+        state: absent
+
+    - name: Remove Icinga Web 2 Apache site configuration
+      file:
+        path: /etc/apache2/sites-enabled/icingaweb2.conf
+        state: absent
+
+    - name: Remove Icinga Web 2 Apache log directory
+      file:
+        path: /var/log/apache2/icingaweb2
+        state: absent
+
+    - name: Remove Icinga Web 2 Apache error log file
+      file:
+        path: /var/log/apache2/error.log.icingaweb2
+        state: absent
+
+    - name: Remove Icinga Web 2 Apache access log file
+      file:
+        path: /var/log/apache2/access.log.icingaweb2
+        state: absent
+
+    - name: Remove Icinga DB configuration files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/icinga2/features-available/ido*
+        - /etc/icinga2/features-enabled/ido*
+        - /etc/icinga2/features-available/ido-mysql*
+        - /etc/icinga2/features-enabled/ido-mysql*
+
+    - name: Remove Apache and PHP log files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /var/log/apache2/error.log
+        - /var/log/apache2/access.log
+        - /var/log/apache2/other_vhosts_access.log
+        - /var/log/php/*.log
+
+    - name: Restart Apache service
+      systemd:
+        name: apache2
+        state: restarted
+
+    - name: Remove Icinga DB database and user
+      mysql_user:
+        name: icinga2
+        state: absent
+        login_user: root
+        login_password: your_root_password
+
+    - name: Print removal message
+      debug:
+        msg: "Icinga 2 software and configurations have been removed."

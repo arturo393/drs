@@ -1,0 +1,102 @@
+# Install MiniPC Software 
+---
+- name: Install Icinga2 Satellite
+  hosts: icinga_satellite
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Install Icinga2 Satellites
+    apt:
+        name:
+            - icinga2
+            - monitoring-plugins
+        state: present
+    
+      
+  - name: Clean Artifact Path
+    file:
+      state: absent
+      path: /tmp/sigma-rds
+
+  - name: Install Python, Dev And Pip
+    apt:
+        name:
+            - python3 
+            - python3-dev
+            - python3-pip
+        state: present
+
+  - name: Adding User Sigmadev To Dialout , Nagios, Adm  and www-data
+    user: name=sigmadev
+          groups=dialout,adm,nagios,www-data
+          append=yes
+
+  - name: Adding User Nagios To Dialout  
+    user: name=nagios
+          groups=dialout
+          append=yes        
+
+  - name: Create a Symbolic Link Python3
+    ansible.builtin.file:
+      src: /usr/bin/python3
+      dest: /usr/bin/python
+      state: link   
+      force: yes
+
+  - name: Create a Symbolic Link Pip3
+    ansible.builtin.file:
+      src: /usr/bin/pip3
+      dest: /usr/bin/pip
+      state: link   
+      force : yes
+
+  - name: Install Bottle Python Package
+    ansible.builtin.pip:
+      name: 
+          - crccheck
+          - serial
+          - pyserial
+          - config
+          - requests
+          - logging
+
+- hosts: icinga_monitor
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Fetch The SSH Public Key From  The Icinga Monitor
+    fetch:
+      src: ~/.ssh/id_rsa.pub
+      dest: /tmp/id_rsa.pub
+      flat: yes
+      server: "{{ icinga2_monitor_host }}"   
+
+- hosts: icinga_satellite
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+  - name: Create destination folder {{ssh_key_folder}}
+    file:
+      path: "{{ssh_key_folder}}"
+      state: directory
+
+  - name: Copy The SSH Public Key To The Inventory Hosts
+    copy:
+      src: /tmp/id_rsa.pub
+      dest: "{{ssh_key_folder}}/id_rsa.pub"
+  
+  - name: Add The SSH Public Key To The Authorized Keys On The Inventory Host
+    authorized_key:
+      user: "{{icinga2_satellite_user }}"
+      key: "{{ lookup('file', '/tmp/id_rsa.pub') }}"
+
+
+
+
+
+
+

@@ -182,20 +182,23 @@ def create_table(responseDict):
     table3 = get_channel_table(responseDict)
 
     table =  ""
-    table += '<div class="sigma-container">'
+    table += '<div class="sigma-container" >'
     table += table1+table2+table3
     table += "</div>"
+    # tableport = '<div class="port-container" >'+table1+"</div>"
+    # powertable = '<div class="port-container2" >'+table2+"</div>"
+    # channeltable = '<div class="port-container3" >'+table3+"</div>"
     return table
 
 def get_channel_table(responseDict):
     
     if (responseDict['workingMode'] == 'Channel Mode'):
-        table3 = "<table width=40%>"
+        table3 = "<table width=80% >"
         table3 += "<thead><tr style=font-size:11px>"
-        table3 += "<th width='10%'><font color=\"#046c94\">Channel</font></th>"
-        table3 += "<th width='10%'><font color=\"#046c94\">Status</font></th>"
-        table3 += "<th width='40%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-        table3 += "<th width='40%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 += "<th width='10%'>Channel</font></th>"
+        table3 += "<th width='10%'>Status</font></th>"
+        table3 += "<th width='40%'>UpLink [Mhz]</font></th>"
+        table3 += "<th width='40%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         for i in range(1,17):
             channel = str(i)
@@ -206,18 +209,21 @@ def get_channel_table(responseDict):
             table3 +="<td>"+responseDict["channel"+str(channel)+"dlFreq"]+"</td>"
             table3 +="</tr>"
     else:        
-        table3 = "<table width=40%>"
-        table3 += "<thead><tr style=font-size:11px>"
-        table3 += "<th width='30%'><font color=\"#046c94\">Status</font></th>"
-        table3 += "<th width='10%'><font color=\"#046c94\">Bandwidth</font></th>"
-        table3 += "<th width='30%'><font color=\"#046c94\">UpLink Frequency</font></th>"
-        table3 += "<th width='30%'><font color=\"#046c94\">Downlink Frequency</font></th>"
+        table3 = "<table width=80%>"
+        table3 += "<thead><tr style=font-size:12px>"
+        table3 += "<th width='40%'>Status</font></th>"
+        table3 += "<th width='10%'>Bandwidth [Mhz]</font></th>"
+        table3 += "<th width='40%'>UpLink [Mhz]</font></th>"
+        table3 += "<th width='40%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
-        table3 +="<tr align=\"center\" style=font-size:11px>"    
+        table3 +="<tr align=\"center\" style=font-size:12px>"    
         table3 +="<td>"+responseDict['workingMode']+"</td>"
-        table3 +="<td>3[MHz]</td>"
-        table3 +="<td>417[MHz]</td>"
-        table3 +="<td>427[MHz]</td>"
+        
+        table3 +="<td>"+responseDict['Bandwidth']+"</td>"
+        table3 +="<td>"+responseDict['Uplink Start Frequency']+"</td>"
+        table3 +="<td>"+responseDict['Downlink Start Frequency']+"</td>"
+        
+        
         table3 +="</tr>"
 
     table3 +="</tbody></table>"
@@ -229,9 +235,9 @@ def get_power_table(responseDict):
     table2 = "<table width=250>"
     table2 += "<thead>"
     table2 += "<tr  align=\"center\" style=font-size:12px>"
-    table2 += "<th width='12%'><font color=\"#046c94\">Link</font></th>"
-    table2 += "<th width='33%'><font color=\"#046c94\">Power</font> </th>"
-    table2 += "<th width='35%'><font color=\"#046c94\">Attenuation</font></th>"
+    table2 += "<th width='12%'>Link</font></th>"
+    table2 += "<th width='33%'>Power</font> </th>"
+    table2 += "<th width='35%'>Attenuation</font></th>"
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
@@ -244,10 +250,10 @@ def get_opt_status_table(responseDict):
     table1 = "<table width=280>"
     table1 += "<thead>"
     table1 += "<tr align=\"center\" style=font-size:12px>"
-    table1 += "<th width='12%'><font color=\"#046c94\">Port</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Activation Status</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Connected Remotes</font></th>"
-    table1 += "<th width='22%'><font color=\"#046c94\">Transmission Status</font></th>"
+    table1 += "<th width='12%'>Port</font></th>"
+    table1 += "<th width='22%'>Activation Status</font></th>"
+    table1 += "<th width='22%'>Connected Remotes</font></th>"
+    table1 += "<th width='20%'>Transmission Status</font></th>"
     table1 += "</tr>"
     table1 += "</thead>"
     table1 +="<tbody>"

@@ -1,0 +1,30 @@
+---
+gitlabuser: arturo33
+gitlabpassword: gitlab393
+# icinga2 master, which is also the default endpoint
+icinga2_monitor_host: "192.168.60.76"
+icinga2_monitor_hostname: "rds-m-5"
+icinga2_monitor_user: "sigmadev"
+icinga2_satellite_user: "sigmadev"
+ticket: ""
+# list of additional check plugins
+master_endpoint_name: master
+mysql_root_password: "Admin.123"
+admin_password: "Admin.123"
+
+
+local_basket_file: ../basket.json
+remote_basket_file: /home/sigmadev/basket.json
+
+ssh_key_folder: ~/.ssh
+ssh_user_folder: /home/sigmadev/
+
+director_api_username: "admin"
+director_api_password: "Admin.123"
+apply_services:
+      - name: "Master Status"
+        imports: "dmu-command-service-template"
+        assign_where: "host.templates.contains('dmu-host-template')"
+      - name: "RU Discovery"
+        imports: "dru-discovery-service-template"
+        assign_where: "host.templates.contains('dmu-host-template')"

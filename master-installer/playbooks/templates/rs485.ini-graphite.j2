@@ -1,0 +1,18 @@
+[rs485.graph]
+check_command = "check_rs485"
+
+[rs485.metrics_filters]
+rs485 = "$service_name_template$.perfdata.$perfdata_label$.value"
+
+[rs485.urlparams]
+areaAlpha = "0.5"
+areaMode = "none"
+lineWidth = "2"
+title = $perfdata_label$
+#min = "0"
+yUnitSystem = "none"
+bgcolor = "white"
+fgcolor = "black"
+
+[rs485.functions]
+rs485 = "alias(color($metric$, '#EC5707'), ' $metric$')"

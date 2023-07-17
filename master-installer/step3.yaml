@@ -1,0 +1,13 @@
+---
+
+- name: Create Service Apply Rules
+  hosts: all
+  become: true
+  vars_files:
+    - ./vars.yaml
+
+
+- name: "Director Configuration"
+  import_playbook: playbooks/director_config.yaml
+
+

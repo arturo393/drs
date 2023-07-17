@@ -1,0 +1,96 @@
+# Install MiniPC Software 
+---
+- name: Install Debian Image Dependencies   
+  hosts: icinga_satellite
+  become: true
+
+  tasks:
+
+  - name: Create sigmadev user and configure SSH
+    become: yes
+    user:
+      name: sigmadev
+      password: "{{ 'Admin.123' | password_hash('sha512') }}"
+      shell: /bin/bash
+    register: user_created
+
+  - name: Create sudoers.d directory
+    become: yes
+    file:
+      path: /etc/sudoers.d
+      state: directory
+
+  - name: Touch /etc/sudoers.d/sigmadev
+    become: yes
+    file:
+      path: /etc/sudoers.d/sigmadev
+      state: touch
+
+  - name: Add sigmadev to sudoers
+    become: yes
+    lineinfile:
+      path: /etc/sudoers.d/sigmadev
+      line: 'sigmadev ALL=(ALL) ALL'
+      mode: '0440'
+    when: user_created.changed
+
+  - name: Allow SSH password authentication
+    become: yes
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^PasswordAuthentication'
+      line: 'PasswordAuthentication yes'
+    notify: Restart SSH
+
+  - name: Ensure SSH services running
+    become: yes
+    service:
+      name: sshd
+      state: started
+    notify: Restart SSH
+
+  - name: Wait for SSH service to restart
+    become: yes
+    wait_for:
+      port: 22
+      delay: 5
+      timeout: 300
+
+  - name: Update And upgrade Apt Packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+      cache_valid_time: 86400 #One day
+
+  - name: Dependencies
+    apt:
+        name:
+            - htop
+            - git
+            - curl
+            - zsh
+            - vim
+        state: present
+    register: output
+
+  - name: Install zsh-autosuggestions plugin for all users
+    git:
+      repo: "https://github.com/zsh-users/zsh-autosuggestions"
+      dest: "/usr/share/oh-my-zsh/custom/plugins/zsh-autosuggestions"
+      clone: yes
+      version: master
+
+  - name: Install zsh-syntax-highlighting plugin for all users
+    git:
+      repo: "https://github.com/zsh-users/zsh-syntax-highlighting"
+      dest: "/usr/share/oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+      clone: yes
+      version: master
+
+  handlers:
+
+  - name: Restart SSH
+    become: yes
+    service:
+      name: sshd
+      state: restarted
