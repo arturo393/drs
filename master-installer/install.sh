@@ -2,6 +2,35 @@
 set -e -o nounset
 start_time=$(date +%s) # Start timestamp
 clear
+
+# Comprueba si Google Chrome ya está instalado
+if [ $(dpkg-query -W -f='${Status}' google-chrome-stable 2>/dev/null | grep -c "ok installed") -eq 0 ]
+then
+    # Verifica si el archivo ya se ha descargado
+    if [ -f google-chrome-stable_current_amd64.deb ]; then
+        echo "El archivo ya se ha descargado."
+    else
+        # Descarga el último paquete .deb de Google Chrome usando wget
+        echo "Descargando Google Chrome"
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    fi
+
+    # Cambia la propiedad del archivo para que sea accesible por el usuario '_apt'
+    echo "Cambiando la propiedad del archivo"
+    sudo chown _apt /home/sigmadev/sigma-rds/master-installer/google-chrome-stable_current_amd64.deb
+
+    # Instala las dependencias necesarias usando apt
+    echo "Instalando dependencias"
+    sudo apt install ./google-chrome-stable_current_amd64.deb -y
+
+    # Elimina el archivo de paquete descargado
+    echo "Eliminando el archivo de paquete descargado"
+    rm -f google-chrome-stable_current_amd64.deb
+
+else
+    echo "Google Chrome ya está instalado"
+fi
+
 #Install RCC
 #############################################################################
 rcc_url="https://downloads.robocorp.com/rcc/releases/latest/linux64/rcc"
