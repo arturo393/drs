@@ -25,7 +25,8 @@ import time
 import binascii
 import logging
 
-path = "/var/log/icinga2/"
+path ="./"
+#path = "/var/log/icinga2/"
 filename = "check_rs485.log"
 try:
     logging.basicConfig(format='%(asctime)s %(message)s',filename=path+filename, level=logging.DEBUG)
@@ -951,24 +952,26 @@ def setSerial(port, baudrate):
             s = serial.Serial(port, baudrate)
             s.timeout = 0.1
             s.exclusive = True
+            return s
 
         except serial.SerialException as e:
             logging.debug(
                 "WARNING - "+str(times)+" "+str(e)+" "+str(port))
             #sys.stderr.write(str(e))
             time.sleep(1)
-    return s
-    logging.debug(
-        "CRITICAL - No Connection to "+str(port))
-    sys.stderr.write("CRITICAL - No Connection to "+str(port))
-    sys.exit(CRITICAL)
+            if times == 2:
+                logging.debug(
+                    "CRITICAL - No Connection to " + str(port))
+                sys.stderr.write("CRITICAL - "+(e.args.__str__()) + str(port))
+                sys.exit(CRITICAL)
 
 def read_serial_frame(s):
     hexadecimal_string = ''
     rcvHexArray = list()
     isDataReady = False
     rcvcount = 0
-    while not isDataReady:
+    count = 2
+    while not isDataReady and count > 0:
         try:
             Response = s.read()
         except serial.SerialException as e:
@@ -985,8 +988,15 @@ def read_serial_frame(s):
             rcvcount = rcvcount + 1
             if(rcvHex == '7e' or rcvHex == '7f'):
                 isDataReady = True
+            elif rcvcount > 100:
+                return ""
         elif rcvHex == '':
+            write_serial_frame('7E',s)
             return ""
+            count = count - 1
+            time.sleep(1)
+    if  count == 0:
+        return ""
             
     s.reset_input_buffer()
     hexResponse = bytearray.fromhex(hexadecimal_string)
@@ -1029,10 +1039,8 @@ def writeSerialQueries(queries,serial):
         reply = read_serial_frame(serial)
         replies.append(reply)
         tmp = time.time() - start_time
-        logging.debug("time - "+str(round(tmp,2)))                
-        if tmp > response_time:
-            response_time = tmp
-        time.sleep(response_time)
+        logging.debug("time - "+str(round(tmp,2)))   
+        time.sleep(tmp)
     serial.close()
     return replies
 
