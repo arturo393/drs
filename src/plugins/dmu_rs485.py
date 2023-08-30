@@ -49,44 +49,76 @@ class ResponseFlag(IntEnum):
 
 class SettingCommand(IntEnum):
     COMMAND_ERROR_RETURN_TYPE = 0x00
-    S_AD5662 = 0x04
-    S_AFC = 0x06
-    S_DATT = 0x08
-    S_RESTORE_FACTORY_CONFIGURATION = 0x0a
-    S_RESTORING_CONSISTENCY = 0x14
-    S_5662_TEMPERATURE_COMPENSATION = 0x19
-    S_VCXO_COMPENSATION_ENABLE_STEP_DELAY_REFERENCE_VALUE = 0x1d
-    S_DAC0 = 0x25
-    S_DAC1 = 0x27
-    S_9524 = 0x29
-    S_1197A = 0x2b
-    S_1197B = 0x2d
-    S_TEST_CONTROL_REGISTER = 0xc9
-    S_ETH_IP_ADDRESS = 0xcb
-    S_MODULE_EQUIPMENT_NUMBER = 0x16
-    S_BROADBAND_SWITCHING_DIGITAL_FREQUENCY_SELECTION_AND_SUBBAND_SELECTION = 0x80
+    AD5662 = 0x04
+    AFC = 0x06
+    DATT = 0x08
+    RESTORE_FACTORY_CONFIGURATION = 0x0a
+    RESTORING_CONSISTENCY = 0x14
+    _5662_TEMPERATURE_COMPENSATION = 0x19
+    VCXO_COMPENSATION_ENABLE_STEP_DELAY_REFERENCE_VALUE = 0x1d
+    DAC0 = 0x25
+    DAC1 = 0x27
+    _9524 = 0x29
+    _1197A = 0x2b
+    _1197B = 0x2d
+    TEST_CONTROL_REGISTER = 0xc9
+    ETH_IP_ADDRESS = 0xcb
+    MODULE_EQUIPMENT_NUMBER = 0x16
+    BROADBAND_SWITCHING_DIGITAL_FREQUENCY_SELECTION_AND_SUBBAND_SELECTION = 0x80
 
 
 class QueryCommand(IntEnum):
-    Q_VERSION_NUMBER = 0x01
-    Q_TEMPERATURE = 0x02
-    Q_HARDWARE_STATUS = 0x03
-    Q_AD5662 = 0x05
-    Q_AFC = 0x07
-    Q_DATT = 0x09
-    Q_VCXO_MANUAL = 0x0e
-    Q_VCXO_COMPENSATION_ENABLE_STEP_DELAY_REFERENCE_VALUE = 0x1e
-    Q_RX0_BROADBAND_POWER = 0x20
-    Q_RX1_BROADBAND_POWER = 0x21
-    Q_DAC0 = 0x26
-    Q_DAC1 = 0x28
-    Q_9524 = 0x2a
-    Q_1197A = 0x2c
-    Q_1197B = 0x2e
-    Q_TEST_CONTROL_REGISTER = 0xca
-    Q_ETH_IP_ADDRESS = 0xcc
-    Q_MODULE_EQUIPMENT_NUMBER = 0xce
-    Q_BROADBAND_SWITCHING = 0x81
+    VERSION_NUMBER = 0x01
+    TEMPERATURE = 0x02
+    HARDWARE_STATUS = 0x03
+    AD5662 = 0x05
+    AFC = 0x07
+    DATT = 0x09
+    VCXO_MANUAL = 0x0e
+    VCXO_COMPENSATION_ENABLE_STEP_DELAY_REFERENCE_VALUE = 0x1e
+    RX0_BROADBAND_POWER = 0x20
+    RX1_BROADBAND_POWER = 0x21
+    #    Q_DAC0 = 0x26
+    DAC1 = 0x28
+    _9524 = 0x2a
+    _1197A = 0x2c
+    _1197B = 0x2e
+    TEST_CONTROL_REGISTER = 0xca
+    ETH_IP_ADDRESS = 0xcc
+    #  Q_MODULE_EQUIPMENT_NUMBER = 0xce
+    BROADBAND_SWITCHING = 0x81
+
+
+class NearEndSettingCommandNumber(IntEnum):
+    OPTICAL_PORT_SWITCH = 0x90
+    NETWORK_MODE_CONFIG = 0x92
+    MAC_ADDRESS = 0x94
+    DEVICE_ID = 0x96
+    DELAY_TARGET_POSITION = 0x98
+    # Add more setting command numbers
+
+
+class NearEndQueryCommandNumber(IntEnum):
+    OPTICAL_PORT_SWITCH = 0x91
+    NETWORK_MODE_CONFIG = 0x93
+    MAC_ADDRESS = 0x95
+    DEVICE_ID = 0x97
+    DELAY_TARGET_POSITION = 0x99
+    OPTICAL_PORT_STATUS = 0x9a
+    OPTICAL_PORT_TOPOLOGY = 0x9b
+    ACTUAL_DELAY_OPTICAL_PORT = 0x9c
+    OPTICAL_PORT_MAC_TOPOLOGY = 0x9d
+    OPTICAL_PORT_TOPOLOGY_2 = 0x9e
+    ACTUAL_DELAY_OPTICAL_PORT_2 = 0x9f
+    OPTICAL_PORT_MAC_TOPOLOGY_2 = 0xa0
+    OPTICAL_PORT_TOPOLOGY_3 = 0xa1
+    ACTUAL_DELAY_OPTICAL_PORT_3 = 0xa2
+    OPTICAL_PORT_MAC_TOPOLOGY_3 = 0xa3
+    OPTICAL_PORT_TOPOLOGY_4 = 0xa4
+    ACTUAL_DELAY_OPTICAL_PORT_4 = 0xa5
+    OPTICAL_PORT_MAC_TOPOLOGY_4 = 0xa6
+    OPTICAL_MODULE_HW_PARAMETERS = 0xa7
+    # Add more query command numbers
 
 
 class DigitalBoardCommand(IntEnum):
@@ -101,12 +133,6 @@ class DigitalBoardCommand(IntEnum):
     GAIN_POWER_CONTROLL_ATT = 0xef
     OPTICAL_PORT_STATE = 0x91
     OPTICAL_PORT_STATUS_QUERY = 0x9a
-
-
-class IfBoardSetCmd(IntEnum):
-    RESTORE_FACTORY_CONFIG = 0x0a
-    VERSION_NUMBER = 0x01
-    RESTORE_CONSISTENCY = 0x14
 
 
 DONWLINK_MODULE = 0 << 7
@@ -144,6 +170,9 @@ def get_checksum(cmd):
     return checksum_new
 
 
+    # Add more query command functions
+
+
 class CommandData:
     START_FLAG = "7E"
     END_FLAG = "7F"
@@ -172,6 +201,7 @@ class CommandData:
         self.command_body_length = command_body_length
         self.command_data = command_data
         self.reply = ""
+        self.reply_command_data = ""
 
         if command_number in [cmd_name.value for cmd_name in SettingCommand]:
             cmd_unit = self.cmd_unit_set()
@@ -251,7 +281,7 @@ class CommandData:
             return f"Unknown message ({response_flag})"
 
     def extract_data_and_decode(self):
-            """Extract data from a bytearray and decode it.
+        """Extract data from a bytearray and decode it.
 
             Args:
                 data: The bytearray to extract data from.
@@ -259,75 +289,132 @@ class CommandData:
             Returns:
                 The decoded data.
             """
-            start_index = 0
-            module_function_index = 1
-            module_addr_index = 2
-            data_type_index = 3
-            cmd_number_index = 4
-            respond_flag_index = 5
-            cmd_body_length_index = 6
-            cmd_data_index = 7
+        start_index = 0
+        module_function_index = 1
+        module_addr_index = 2
+        data_type_index = 3
+        cmd_number_index = 4
+        respond_flag_index = 5
+        cmd_body_length_index = 6
+        cmd_data_index = 7
 
-            module_function = self.reply[module_function_index]
-            data_type = self.reply[data_type_index]
-            command_number = self.reply[cmd_number_index]
-            response_flag = self.reply[respond_flag_index]
-            command_body_length = self.reply[cmd_body_length_index]
-            command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
+        module_function = self.reply[module_function_index]
+        data_type = self.reply[data_type_index]
+        command_number = self.reply[cmd_number_index]
+        response_flag = self.reply[respond_flag_index]
+        command_body_length = self.reply[cmd_body_length_index]
+        command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
 
-            if response_flag != ResponseFlag.SUCCESS:
-                return ""
-                # Decode the command body
-            elif command_number == QueryCommand.Q_VERSION_NUMBER:
-                fpga_version_number = command_body[:4]
-                fpga_version_number = self.decode_version(fpga_version_number)
-                software_version_number = command_body[4:]
-                software_version_number = self.decode_version(software_version_number)
-                return f"FPGA version number: {fpga_version_number}, Software version number: {software_version_number}"
-            elif command_number == QueryCommand.Q_TEMPERATURE:
-                val = int.from_bytes(command_body, byteorder='little')
-                if val > 125000:
-                    temp = ((val * 2 / 1000) & 0xff) / 2
-                else:
-                    temp = val / 1000
-                return f"Temperature: {temp} \℃"
-            elif command_number == QueryCommand.Q_HARDWARE_STATUS:
-                status = ["Locked" if i else "Loss of lock" for i in command_body]
-                return f"Hardware status: {status}"
-            elif command_number == QueryCommand.Q_AD5662:
-                parameter = int.from_bytes(command_body[:2], byteorder='little')
-                mode = "Automatic" if command_body[2] == 0 else "Manual"
-                return f"AD5662: parameter {parameter}, mode {mode}"
-            elif command_number == QueryCommand.Q_AFC:
-                mode = "Automatic" if command_body[0] == 0 else "Manual"
-                automatic_mode_optical_port = command_body[1]
-                manual_mode_optical_port = command_body[2]
-                return f"AFC: mode {mode}, automatic mode optical port {automatic_mode_optical_port}, manual mode optical port {manual_mode_optical_port}"
-            elif command_number == QueryCommand.Q_DATT:
-                channels = [i / 4 for i in command_body]
-                return f"DATT: channels {channels}"
-
-            elif command_number == QueryCommand.Q_ETH_IP_ADDRESS:
-                ip_addr = self.decode_ip_address(command_body[:4])
-                return ip_addr
-    def decode_version(self,data):
-
-        if len(data) == 5:
-            year = data[4]
-            month = data[3]
-            day = data[2]
-            version_number = data[1]
-            module_type = data[0]
+        if response_flag != ResponseFlag.SUCCESS:
+            self.reply_command_data = ""
         else:
-            year = data[3]
-            month = data[2]
-            day = data[1]
-            version_number = data[0]
-            module_type = 0x00
-        # Convert year to full year format
+            self.reply_command_data = command_body
+            # Decode the command body
+
+
+class Settings:
+    @staticmethod
+    def optical_port_switch(data):
+        switch_signal = data[0]
+        switch_status = "On" if switch_signal == 0 else "Off"
+        return f"Optical Port Switch Status: {switch_status}"
+
+    @staticmethod
+    def network_mode_config(data):
+        network_mode = data[0]
+        configuration = {
+            0: "Automatic Switching",
+            1: "Selective Light 1",
+            2: "Selective Light 2",
+            3: "Selective Light 3",
+        }
+        return f"Network Mode Configuration: {configuration.get(network_mode, 'Unknown')}"
+    # Add more setting command functions
+
+
+class Queries:
+
+    @staticmethod
+    def decode(command_number, command_body):
+
+        if command_body == "":
+            return "no data"
+        elif command_number == QueryCommand.VERSION_NUMBER:
+            fpga_version_number, software_version_number = version_number(command_body)
+            return f"FPGA version number: {fpga_version_number}, Software version number: {software_version_number}"
+        elif command_number == QueryCommand.TEMPERATURE:
+            val = int.from_bytes(command_body, byteorder='little')
+            if val > 125000:
+                temp = ((val * 2 / 1000) & 0xff) / 2
+            else:
+                temp = val / 1000
+            return f"Temperature: {temp} \?"
+        elif command_number == QueryCommand.HARDWARE_STATUS:
+            status = ["Locked" if i else "Loss of lock" for i in command_body]
+            return f"Hardware status: {status}"
+        elif command_number == QueryCommand.AD5662:
+            parameter = int.from_bytes(command_body[:2], byteorder='little')
+            mode = "Automatic" if command_body[2] == 0 else "Manual"
+            return f"AD5662: parameter {parameter}, mode {mode}"
+        elif command_number == QueryCommand.AFC:
+            mode = "Automatic" if command_body[0] == 0 else "Manual"
+            automatic_mode_optical_port = command_body[1]
+            manual_mode_optical_port = command_body[2]
+            return f"AFC: mode {mode}, automatic mode optical port {automatic_mode_optical_port}, manual mode optical port {manual_mode_optical_port}"
+        elif command_number == QueryCommand.DATT:
+            channels = [i / 4 for i in command_body]
+            return f"DATT: channels {channels}"
+        elif command_number == QueryCommand.ETH_IP_ADDRESS:
+            ip_addr = eth_ip_address(command_body[:4])
+            return ip_addr
+        elif command_number == QueryCommand.BROADBAND_SWITCHING:
+            if command_body[0] == 2:
+                return "broadband"
+            elif command_body[0] == 3:
+                return "narrowband"
+            else:
+                return "unknown"
+
+
+    @staticmethod
+    def optical_port_switch(data):
+        switch_signal = data[0]
+        switch_status = "On" if switch_signal == 0 else "Off"
+        return f"Optical Port Switch Status: {switch_status}"
+
+    @staticmethod
+    def network_mode_config(data):
+        network_mode = data[0]
+        configuration = {
+            0: "Automatic Switching",
+            1: "Selective Light 1",
+            2: "Selective Light 2",
+            3: "Selective Light 3",
+        }
+        return f"Network Mode Configuration: {configuration.get(network_mode, 'Unknown')}"
+        # Add more query command functions
+    @staticmethod
+    def eth_ip_address(data):
+        ip_address = ".".join(str(b) for b in data)
+        return ip_address
+
+    @staticmethod
+    def version_number(data):
+
+        fpga_data = data[:4]
+        year = fpga_data[3]
+        month = fpga_data[2]
+        day = fpga_data[1]
+        version_number = fpga_data[0]
         year += 2000
+        fpga_version_number = f"Year: {year}, Month: {month}, Day: {day}, Version Number: {version_number}"
 
-
+        software_data = data[4:]
+        year = software_data[4]
+        month = software_data[3]
+        day = software_data[2]
+        version_number = software_data[1]
+        module_type = software_data[0]
         # Convert module type to string
         if module_type == 0x0a:
             module_type = "near end machine"
@@ -335,13 +422,13 @@ class CommandData:
             module_type = "remote end machine"
         else:
             module_type = "unknown"
+            return
 
-        return f"Year: {year}, Month: {month}, Day: {day}, Version Number: {version_number}, Module Type: {module_type}"
+        software_version_number = f"Year: {year}, Month: {month}, Day: {day}, Version Number: {version_number}, Module type: {module_type}"
+        # Convert year to full year format
 
-    def decode_ip_address(self,
-                          data):
-        ip_address = ".".join(str(b) for b in data)
-        return ip_address
+        return fpga_version_number, software_version_number
+
 OK = 0
 WARNING = 1
 CRITICAL = 2
@@ -410,6 +497,8 @@ def main():
     hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl = analizar_argumentos()
 
     cmd_list = list()
+    query = Queries()
+    setting = Settings()
     # Create a list of command data objects.
     # Create a list of command data objects.
     for cmd_name in QueryCommand:
@@ -445,11 +534,9 @@ def main():
         print(cmd)
 
         replies.append(cmd.reply)
-        tmp = time.time() - start_time
-        time.sleep(tmp)
+        #    tmp = time.time() - start_time
+        #    time.sleep(tmp)
         query = bytearray.fromhex(cmd.query)
-
-
 
     #     try:
     #         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
