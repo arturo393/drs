@@ -21,6 +21,9 @@ import getopt
 import serial
 from crccheck.crc import Crc16Xmodem
 import argparse
+
+from tables.flavor import converter_map
+
 import check_rs485 as rs485
 import os
 # import dru_discovery as discovery
@@ -464,6 +467,8 @@ class Queries:
 
     @staticmethod
     def _decode_version_number(command_body):
+        if len(command_body) == 0:
+            return ""
         #    fpga_version_number = int.from_bytes(command_body[:2], byteorder='little')
         #    software_version_number = int.from_bytes(command_body[2:], byteorder='little')
 
@@ -497,6 +502,8 @@ class Queries:
 
     @staticmethod
     def _decode_temperature(command_body):
+        if len(command_body) == 0:
+            return ""
         val = int.from_bytes(command_body, byteorder='little')
         if val > 125000:
             temp = ((val * 2 / 1000) & 0xff) / 2
@@ -506,17 +513,23 @@ class Queries:
 
     @staticmethod
     def _decode_hardware_status(command_body):
+        if len(command_body) == 0:
+            return ""
         status = ["Locked" if i else "Loss of lock" for i in command_body]
         return f"Hardware status: {status}"
 
     @staticmethod
     def _decode_ad5662(command_body):
+        if len(command_body) == 0:
+            return ""
         parameter = int.from_bytes(command_body[:2], byteorder='little')
         mode = "Automatic" if command_body[2] == 0 else "Manual"
         return f"AD5662: parameter {parameter}, mode {mode}"
 
     @staticmethod
     def _decode_afc(command_body):
+        if len(command_body) == 0:
+            return ""
         mode = "Automatic" if command_body[0] == 0 else "Manual"
         automatic_mode_optical_port = command_body[1]
         manual_mode_optical_port = command_body[2]
@@ -524,41 +537,49 @@ class Queries:
 
     @staticmethod
     def _decode_daatt(command_body):
+        if len(command_body) == 0:
+            return ""
         channels = [i / 4 for i in command_body]
         return f"DATT: channels {channels}"
 
     @staticmethod
     def _decode_eth_ip_address(command_body):
+        if len(command_body) == 0:
+            return ""
         ip_address = ".".join(str(b) for b in command_body)
         return ip_address
 
     @staticmethod
     def _decode_broadband_switching(command_body):
-        if command_body[0] == 2:
-            return "broadband"
-        elif command_body[0] == 3:
-            return "narrowband"
-        else:
-            return "unknown"
+        """Decodes the broadband switching command."""
+        if len(command_body) == 0:
+            return ""
+        working_mode = {
+            2: "Channel Mode",
+            3: "WideBand Mode",
+        }
+        return {"workingMode": working_mode.get(command_body[0], "Unknown Mode")}
 
     @staticmethod
     def _decode_optical_port_devices_connected_1(command_body):
-        return "opt1: "+Queries.decode_optical_port_devices_connected(command_body)
+        return {"opt1ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_2(command_body):
-        return "opt2: "+Queries.decode_optical_port_devices_connected(command_body)
+        return {"opt2ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_3(command_body):
-        return "opt3: "+Queries.decode_optical_port_devices_connected(command_body)
+        return {"opt3ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_4(command_body):
-        return "opt4: "+Queries.decode_optical_port_devices_connected(command_body)
+        return {"opt4ConnectedRemotes":Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def decode_optical_port_devices_connected(command_body):
+        if len(command_body) == 0:
+            return ""
         return str(command_body[0])
 
     @staticmethod
@@ -584,6 +605,9 @@ class Queries:
     @staticmethod
     def decode_optical_port_device_id_topology(command_body):
         """Decodes the opticalportx_topology_id command."""
+
+        if len(command_body) == 0:
+            return ""
         port_number = command_body[0]
         device_ids = []
         for i in range(0, len(command_body), 2):
@@ -624,6 +648,103 @@ class Queries:
         except IndexError:
             print("Error: The command body is empty.")
             return ""
+
+    @staticmethod
+    def _decode_channel_switch(command_body):
+        if len(command_body) == 0:
+            return ""
+        i = 1
+        channels = {}
+        for channel in command_body:
+            status = "ON" if channel == 0 else "OFF"
+            channels["channel" + str(i) + "Status"] = status
+            i = i + 1
+        return channels
+
+    @staticmethod
+    def _decode_input_and_output_power(command_body):
+        if len(command_body) == 0:
+            return ""
+
+        downlink_power = Queries.power_convert(command_body[2:])
+        uplink_power = Queries.power_convert(command_body)
+        return {'dlOutputPower': str(downlink_power), 'ulInputPower': str(uplink_power)}
+
+    @staticmethod
+    def power_convert(command_body):
+        data0 = command_body[0]
+        data1 = command_body[1]
+        value = ((data0 | data1 << 8))
+        value = -(value & 0x8000) | (value & 0x7fff)
+        uplink_power = value / 256
+        uplink_power = round(uplink_power, 2)
+        return uplink_power
+
+    @staticmethod
+    def _decode_channel_frequency_configuration(command_body):
+        if len(command_body) == 0:
+            return ""
+        ch = 1
+        channels = {}
+        for i in range(0, 64, 4):
+            number = command_body[i:i + 4]
+            number = int.from_bytes(number, byteorder="little")
+            channels["channel" + str(ch) + "ulFreq"] = str(number)
+            ch = ch + 1
+        return channels
+
+    @staticmethod
+    def _decode_gain_power_control_att(command_body):
+        if len(command_body) == 0:
+            return ""
+        input_att = command_body[0] / 4
+        output_att = command_body[1] / 4
+        return {'dlAtt': str(output_att), 'ulAtt': str(input_att)}
+
+    @staticmethod
+    def _decode_optical_port_switch(command_body):
+        if len(command_body) == 0:
+            return ""
+        message = ""
+        port = 1
+        parameter = {}
+        for opt_port in command_body:
+            status = "ON" if opt_port == 0 else "OFF"
+            key = "opt" + str(port) + "ActivationStatus"
+            parameter[key] = status
+            port = port + 1
+        return parameter
+
+    @staticmethod
+    def _decode_optical_port_status(command_body):
+        if len(command_body) == 0:
+            return ""
+        hex_as_int = command_body[0]
+        hex_as_binary = bin(hex_as_int)
+        padded_binary = hex_as_binary[2:].zfill(8)
+        opt = 1
+        temp = []
+        for bit in reversed(padded_binary):
+            if bit == '0' and opt <= 4:
+                temp.append('Connected ')
+            elif bit == '1' and opt <= 4:
+                temp.append('Disconnected ')
+            elif bit == '0' and opt > 4:
+                temp.append('Normal')
+            elif bit == '1' and opt > 4:
+                temp.append('Failure')
+            opt = opt + 1
+        parameter_dict = dict()
+
+        parameter_dict['opt1ConnectionStatus'] = temp[0]
+        parameter_dict['opt2ConnectionStatus'] = temp[1]
+        parameter_dict['opt3ConnectionStatus'] = temp[2]
+        parameter_dict['opt4ConnectionStatus'] = temp[3]
+        parameter_dict['opt1TransmissionStatus'] = temp[4]
+        parameter_dict['opt2TransmissionStatus'] = temp[5]
+        parameter_dict['opt3TransmissionStatus'] = temp[6]
+        parameter_dict['opt4TransmissionStatus'] = temp[7]
+        return parameter_dict
 
 
 OK = 0
@@ -898,11 +1019,12 @@ def main():
                 cmd_name.reply = data_received
         except Exception as e:
             print(e)
-
+    parameters = rs485.newBlankDmuParameter()
     for cmd_name in cmd_list:
         print(cmd_name)
         cmd_name.extract_data()
         message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
+        parameters.update(message)
         print(message)
 
     #   messages =  list(zip(queries,str_replies))
@@ -910,15 +1032,14 @@ def main():
     #   parameters = rs485.getParametersFromDmuMessages(messages)
     #    parameters = rs485.getParametersFromDmuReplies(queries, replies)
 
-    #    response_time = time.time() - start_time
-    # parameters["rt"] = str(response_time)
-    # alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
-    # parameter_html_table = create_table(parameters)
-    # graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
+    parameters["rt"] = str(time.time() - start_time)
+    alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
+    parameter_html_table = create_table(parameters)
+    graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
 
-    # sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
-    return 0
-    if (alarm != ""):
+    sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
+
+    if alarm != "":
         sys.exit(1)
     else:
         sys.exit(0)
