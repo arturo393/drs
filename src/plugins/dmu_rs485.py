@@ -26,6 +26,7 @@ import os
 # import dru_discovery as discovery
 import time
 import socket
+import codecs
 
 from enum import IntEnum
 
@@ -67,26 +68,26 @@ class SettingCommand(IntEnum):
     BROADBAND_SWITCHING_DIGITAL_FREQUENCY_SELECTION_AND_SUBBAND_SELECTION = 0x80
 
 
-class QueryCommand(IntEnum):
-    VERSION_NUMBER = 0x01
-    TEMPERATURE = 0x02
-    HARDWARE_STATUS = 0x03
-    AD5662 = 0x05
-    AFC = 0x07
-    DATT = 0x09
-    VCXO_MANUAL = 0x0e
-    VCXO_COMPENSATION_ENABLE_STEP_DELAY_REFERENCE_VALUE = 0x1e
-    RX0_BROADBAND_POWER = 0x20
-    RX1_BROADBAND_POWER = 0x21
-    #    Q_DAC0 = 0x26
-    DAC1 = 0x28
+class HardwarePeripheralDeviceParameterCommand(IntEnum):
+    version_number = 0x01
+    temperature = 0x02
+    hardware_status = 0x03
+    ad5662 = 0x05
+    afc = 0x07
+    datt = 0x09
+    vcxo_manual = 0x0e
+    vcxo_compensation_enable_step_delay_reference_value = 0x1e
+    rx0_broadband_power = 0x20
+    rx1_broadband_power = 0x21
+    #    q_dac0 = 0x26
+    dac1 = 0x28
     _9524 = 0x2a
-    _1197A = 0x2c
-    _1197B = 0x2e
-    TEST_CONTROL_REGISTER = 0xca
-    ETH_IP_ADDRESS = 0xcc
-    #  Q_MODULE_EQUIPMENT_NUMBER = 0xce
-    BROADBAND_SWITCHING = 0x81
+    _1197a = 0x2c
+    _1197b = 0x2e
+    test_control_register = 0xca
+    eth_ip_address = 0xcc
+    #  q_module_equipment_number = 0xce
+    broadband_switching = 0x81
 
 
 class NearEndSettingCommandNumber(IntEnum):
@@ -99,40 +100,155 @@ class NearEndSettingCommandNumber(IntEnum):
 
 
 class NearEndQueryCommandNumber(IntEnum):
-    OPTICAL_PORT_SWITCH = 0x91
-    NETWORK_MODE_CONFIG = 0x93
-    MAC_ADDRESS = 0x95
-    DEVICE_ID = 0x97
-    DELAY_TARGET_POSITION = 0x99
-    OPTICAL_PORT_STATUS = 0x9a
-    OPTICAL_PORT_TOPOLOGY = 0x9b
-    ACTUAL_DELAY_OPTICAL_PORT = 0x9c
-    OPTICAL_PORT_MAC_TOPOLOGY = 0x9d
-    OPTICAL_PORT_TOPOLOGY_2 = 0x9e
-    ACTUAL_DELAY_OPTICAL_PORT_2 = 0x9f
-    OPTICAL_PORT_MAC_TOPOLOGY_2 = 0xa0
-    OPTICAL_PORT_TOPOLOGY_3 = 0xa1
-    ACTUAL_DELAY_OPTICAL_PORT_3 = 0xa2
-    OPTICAL_PORT_MAC_TOPOLOGY_3 = 0xa3
-    OPTICAL_PORT_TOPOLOGY_4 = 0xa4
-    ACTUAL_DELAY_OPTICAL_PORT_4 = 0xa5
-    OPTICAL_PORT_MAC_TOPOLOGY_4 = 0xa6
-    OPTICAL_MODULE_HW_PARAMETERS = 0xa7
-    # Add more query command numbers
+    optical_port_switch = 0x91
+    network_mode_config = 0x93
+    mac_address = 0x95
+    device_id = 0x97
+    delay_target_position = 0x99
+    optical_port_status = 0x9a
+    optical_port_device_id_topology_1 = 0x9b
+    actual_delay_optical_port_1 = 0x9c
+    optical_port_mac_topology_1 = 0x9d
+    optical_port_device_id_topology_2 = 0x9e
+    actual_delay_optical_port_2 = 0x9f
+    optical_port_mac_topology_2 = 0xa0
+    optical_port_device_id_topology_3 = 0xa1
+    actual_delay_optical_port_3 = 0xa2
+    optical_port_mac_topology_3 = 0xa3
+    optical_port_device_id_topology_4 = 0xa4
+    actual_delay_optical_port_4 = 0xa5
+    optical_port_mac_topology_4 = 0xa6
+    optical_module_hw_parameters = 0xa7
+
+
+# Add more query command numbers
+class RemoteQueryCommandNumber(IntEnum):
+    # Queries
+    optical_port_switch = 0xb1
+    network_mode = 0xb3
+    mac_address = 0xb5
+    device_id = 0xb7
+    delay = 0xb9
+    gain_compensation = 0xbb
+    optical_port_status = 0xbc
+    near_end_port_location = 0xbd
+    channel_0_optical_network_mode = 0xbe
+    channel_1_optical_network_mode = 0xbf
+    optical_module_hardware_parameters = 0xc0
+    own_topology_id = 0xfe
+
+
+class RemoteSettingCommandNumber(IntEnum):
+    optical_port_switch = 0xb0
+    network_mode = 0xb2
+    mac_address = 0xb4
+    device_id = 0xb6
+    delay = 0xb8
+    gain_compensation = 0xba
+
+
+class Rx0QueryCmd(IntEnum):
+    broadband_power = 0x20
+    central_frequency_point = 0x22
+    channel_frequency_configuration = 0x36
+    alc = 0x38
+    carrier_search_results = 0x39
+    carrier_power_value_after_carrier_search = 0x3a
+    compensation_enable_switch = 0x3c
+    gain_compensation = 0x3e
+    temperature_compensation_table = 0x40
+    channel_switch = 0x42
+    filter_compensation = 0x43
+    frequency_point_compensation = 0x45
+    bottom_noise = 0x47
+    input_power_peak = 0x49
+    alc_control_difference_threshold = 0x4c
+    baseband_gain = 0x4e
+    central_frequency_point_2 = 0xeb
+    subband_bandwidth = 0xed
+    bottom_noise_channel_switch = 0xf1
+    uplink_noise_suppression_switch = 0xf4
+    uplink_noise_suppression_threshold = 0xf6
+    uplink_noise_suppression_threshold_correction_value = 0xfc
+    mean_exp_search_num = 0x83
+    frequency_synchronization_switch = 0x85
+    rx0_iir_bandwidth = 0xf6
+
+
+class Rx0SettingCmd(IntEnum):
+    central_frequency_point = 0x22
+    channel_frequency_configuration = 0x35
+    alc = 0x37
+    compensation_enable_switch = 0x3b
+    gain_compensation = 0x3d
+    temperature_compensation_table = 0x3f
+    channel_switch = 0x41
+    filter_compensation = 0x43
+    frequency_point_compensation = 0x45
+    bottom_noise = 0x47
+    alc_control_difference_threshold = 0x4b
+    baseband_gain = 0x4d
+    subband_bandwidth = 0xd0
+    bottom_noise_channel_switch = 0xf2
+    uplink_noise_suppression_switch = 0xf5
+    uplink_noise_suppression_threshold = 0xf7
+    uplink_noise_suppression_threshold_correction_value = 0xfd
+    mean_exp_search_num = 0x82
+    frequency_synchronization_switch = 0x84
+    rx0_iir_bandwidth = 0xed
+
+
+class Tx0QueryCmd:
+    compensation_enable_switch = 0x71
+    gain_compensation = 0x73
+    temperature_compensation_table = 0x75
+    filter_compensation = 0x79
+    peak_output_power = 0x7a
+    downlink_output_power = 0xe5
+    gain_power_control_att = 0xef
+    power_offset = 0xea
+    input_and_output_power = 0xf3
+
+
+class Tx0SettingCmd:
+    compensation_enable_switch = 0x70
+    gain_compensation = 0x71
+    temperature_compensation_table = 0x74
+    filter_compensation = 0x78
+    peak_output_power = 0x7a
+    gain_power_control_att = 0xe7
+
+
+class Tx1QueryCmd:
+    compensation_enable_switch = 0x80
+    gain_compensation = 0x82
+    temperature_compensation_table = 0x84
+    filter_compensation = 0x88
+    peak_output_power = 0x8a
+    gain_power_control_att = 0xe8
+
+
+class Tx1SettingCmd:
+    compensation_enable_switch = 0x80
+    gain_compensation = 0x82
+    temperature_compensation_table = 0x84
+    filter_compensation = 0x88
+    peak_output_power = 0x8a
+    gain_power_control_att = 0xe8
 
 
 class DigitalBoardCommand(IntEnum):
-    DRU_NUMBER_OPT1 = 0xf8
-    DRU_NUMBER_OPT2 = 0xf9
-    DRU_NUMBER_OPT3 = 0xfa
-    DRU_NUMBER_OPT4 = 0xfb
-    INPUT_POWER = 0xf3
-    CHANNEL_ACTIVATION_STATUS = 0x42
-    CHANEL_FREQUENCY_POINT_CONFIGURATION = 0x36
-    WORKING_MODE = 0x81
-    GAIN_POWER_CONTROLL_ATT = 0xef
-    OPTICAL_PORT_STATE = 0x91
-    OPTICAL_PORT_STATUS_QUERY = 0x9a
+    optical_port_devices_connected_1 = 0xf8
+    optical_port_devices_connected_2 = 0xf9
+    optical_port_devices_connected_3 = 0xfa
+    optical_port_devices_connected_4 = 0xfb
+    input_and_output_power = Tx0QueryCmd.input_and_output_power
+    channel_switch = Rx0QueryCmd.channel_switch
+    channel_frequency_configuration = Rx0QueryCmd.channel_frequency_configuration
+    broadband_switching = HardwarePeripheralDeviceParameterCommand.broadband_switching
+    gain_power_control_att = Tx0QueryCmd.gain_power_control_att
+    optical_port_switch = NearEndQueryCommandNumber.optical_port_switch
+    optical_port_status = NearEndQueryCommandNumber.optical_port_status
 
 
 DONWLINK_MODULE = 0 << 7
@@ -168,7 +284,6 @@ def get_checksum(cmd):
     checksum_new = checksum.replace('7F', '5E7E')
 
     return checksum_new
-
 
     # Add more query command functions
 
@@ -207,10 +322,26 @@ class CommandData:
             cmd_unit = self.cmd_unit_set()
             crc = get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
-        elif command_number in [cmd_name.value for cmd_name in QueryCommand]:
+        elif command_number in [cmd_name.value for cmd_name in HardwarePeripheralDeviceParameterCommand]:
             cmd_unit = self.cmd_unit_query()
             crc = get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+        elif command_number in [cmd_name.value for cmd_name in NearEndQueryCommandNumber]:
+            cmd_unit = self.cmd_unit_query()
+            crc = get_checksum(cmd_unit)
+            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+
+        elif command_number in [cmd_name.value for cmd_name in RemoteQueryCommandNumber]:
+            cmd_unit = self.cmd_unit_query()
+            crc = get_checksum(cmd_unit)
+            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+        elif command_number in [cmd_name.value for cmd_name in DigitalBoardCommand]:
+            cmd_unit = self.cmd_unit_query()
+            crc = get_checksum(cmd_unit)
+            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+
+
+
         else:
             self.query = ""
 
@@ -218,13 +349,13 @@ class CommandData:
         if self.reply:
             reply = bytearray_to_hex(self.reply)
             message = self.get_reply_message()
-            decode = self.extract_data_and_decode()
+
         else:
             reply = "No reply"
             message = ""
             decode = ""
 
-        return f"{self.query} -  {reply} - {message} - {decode}"
+        return f"{self.query} -  {reply} - {message}"
 
     def set_command(self, command_number, command_body_length):
         self.command_number = command_number
@@ -280,23 +411,17 @@ class CommandData:
         else:
             return f"Unknown message ({response_flag})"
 
-    def extract_data_and_decode(self):
-        """Extract data from a bytearray and decode it.
-
-            Args:
-                data: The bytearray to extract data from.
-
-            Returns:
-                The decoded data.
-            """
-        start_index = 0
+    def extract_data(self):
         module_function_index = 1
-        module_addr_index = 2
         data_type_index = 3
         cmd_number_index = 4
         respond_flag_index = 5
         cmd_body_length_index = 6
         cmd_data_index = 7
+
+        if not self.reply:
+            self.reply_command_data = ""
+            return
 
         module_function = self.reply[module_function_index]
         data_type = self.reply[data_type_index]
@@ -305,11 +430,7 @@ class CommandData:
         command_body_length = self.reply[cmd_body_length_index]
         command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
 
-        if response_flag != ResponseFlag.SUCCESS:
-            self.reply_command_data = ""
-        else:
-            self.reply_command_data = command_body
-            # Decode the command body
+        self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
 
 
 class Settings:
@@ -334,74 +455,19 @@ class Settings:
 
 class Queries:
 
-    @staticmethod
     def decode(command_number, command_body):
-
-        if command_body == "":
-            return "no data"
-        elif command_number == QueryCommand.VERSION_NUMBER:
-            fpga_version_number, software_version_number = version_number(command_body)
-            return f"FPGA version number: {fpga_version_number}, Software version number: {software_version_number}"
-        elif command_number == QueryCommand.TEMPERATURE:
-            val = int.from_bytes(command_body, byteorder='little')
-            if val > 125000:
-                temp = ((val * 2 / 1000) & 0xff) / 2
-            else:
-                temp = val / 1000
-            return f"Temperature: {temp} \?"
-        elif command_number == QueryCommand.HARDWARE_STATUS:
-            status = ["Locked" if i else "Loss of lock" for i in command_body]
-            return f"Hardware status: {status}"
-        elif command_number == QueryCommand.AD5662:
-            parameter = int.from_bytes(command_body[:2], byteorder='little')
-            mode = "Automatic" if command_body[2] == 0 else "Manual"
-            return f"AD5662: parameter {parameter}, mode {mode}"
-        elif command_number == QueryCommand.AFC:
-            mode = "Automatic" if command_body[0] == 0 else "Manual"
-            automatic_mode_optical_port = command_body[1]
-            manual_mode_optical_port = command_body[2]
-            return f"AFC: mode {mode}, automatic mode optical port {automatic_mode_optical_port}, manual mode optical port {manual_mode_optical_port}"
-        elif command_number == QueryCommand.DATT:
-            channels = [i / 4 for i in command_body]
-            return f"DATT: channels {channels}"
-        elif command_number == QueryCommand.ETH_IP_ADDRESS:
-            ip_addr = eth_ip_address(command_body[:4])
-            return ip_addr
-        elif command_number == QueryCommand.BROADBAND_SWITCHING:
-            if command_body[0] == 2:
-                return "broadband"
-            elif command_body[0] == 3:
-                return "narrowband"
-            else:
-                return "unknown"
-
+        """Decodes a command number."""
+        try:
+            return getattr(Queries, f"_decode_{command_number.name}")(command_body)
+        except AttributeError:
+            return f"Command number {command_number:02X} is not supported."
 
     @staticmethod
-    def optical_port_switch(data):
-        switch_signal = data[0]
-        switch_status = "On" if switch_signal == 0 else "Off"
-        return f"Optical Port Switch Status: {switch_status}"
+    def _decode_version_number(command_body):
+        #    fpga_version_number = int.from_bytes(command_body[:2], byteorder='little')
+        #    software_version_number = int.from_bytes(command_body[2:], byteorder='little')
 
-    @staticmethod
-    def network_mode_config(data):
-        network_mode = data[0]
-        configuration = {
-            0: "Automatic Switching",
-            1: "Selective Light 1",
-            2: "Selective Light 2",
-            3: "Selective Light 3",
-        }
-        return f"Network Mode Configuration: {configuration.get(network_mode, 'Unknown')}"
-        # Add more query command functions
-    @staticmethod
-    def eth_ip_address(data):
-        ip_address = ".".join(str(b) for b in data)
-        return ip_address
-
-    @staticmethod
-    def version_number(data):
-
-        fpga_data = data[:4]
+        fpga_data = command_body[:4]
         year = fpga_data[3]
         month = fpga_data[2]
         day = fpga_data[1]
@@ -409,7 +475,7 @@ class Queries:
         year += 2000
         fpga_version_number = f"Year: {year}, Month: {month}, Day: {day}, Version Number: {version_number}"
 
-        software_data = data[4:]
+        software_data = command_body[4:]
         year = software_data[4]
         month = software_data[3]
         day = software_data[2]
@@ -428,6 +494,137 @@ class Queries:
         # Convert year to full year format
 
         return fpga_version_number, software_version_number
+
+    @staticmethod
+    def _decode_temperature(command_body):
+        val = int.from_bytes(command_body, byteorder='little')
+        if val > 125000:
+            temp = ((val * 2 / 1000) & 0xff) / 2
+        else:
+            temp = val / 1000
+        return f"Temperature: {temp} \?"
+
+    @staticmethod
+    def _decode_hardware_status(command_body):
+        status = ["Locked" if i else "Loss of lock" for i in command_body]
+        return f"Hardware status: {status}"
+
+    @staticmethod
+    def _decode_ad5662(command_body):
+        parameter = int.from_bytes(command_body[:2], byteorder='little')
+        mode = "Automatic" if command_body[2] == 0 else "Manual"
+        return f"AD5662: parameter {parameter}, mode {mode}"
+
+    @staticmethod
+    def _decode_afc(command_body):
+        mode = "Automatic" if command_body[0] == 0 else "Manual"
+        automatic_mode_optical_port = command_body[1]
+        manual_mode_optical_port = command_body[2]
+        return f"AFC: mode {mode}, automatic mode optical port {automatic_mode_optical_port}, manual mode optical port {manual_mode_optical_port}"
+
+    @staticmethod
+    def _decode_daatt(command_body):
+        channels = [i / 4 for i in command_body]
+        return f"DATT: channels {channels}"
+
+    @staticmethod
+    def _decode_eth_ip_address(command_body):
+        ip_address = ".".join(str(b) for b in command_body)
+        return ip_address
+
+    @staticmethod
+    def _decode_broadband_switching(command_body):
+        if command_body[0] == 2:
+            return "broadband"
+        elif command_body[0] == 3:
+            return "narrowband"
+        else:
+            return "unknown"
+
+    @staticmethod
+    def _decode_optical_port_devices_connected_1(command_body):
+        return "opt1: "+Queries.decode_optical_port_devices_connected(command_body)
+
+    @staticmethod
+    def _decode_optical_port_devices_connected_2(command_body):
+        return "opt2: "+Queries.decode_optical_port_devices_connected(command_body)
+
+    @staticmethod
+    def _decode_optical_port_devices_connected_3(command_body):
+        return "opt3: "+Queries.decode_optical_port_devices_connected(command_body)
+
+    @staticmethod
+    def _decode_optical_port_devices_connected_4(command_body):
+        return "opt4: "+Queries.decode_optical_port_devices_connected(command_body)
+
+    @staticmethod
+    def decode_optical_port_devices_connected(command_body):
+        return str(command_body[0])
+
+    @staticmethod
+    def _decode_optical_port_device_id_topology_1(command_body):
+        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        return device_ids
+
+    @staticmethod
+    def _decode_optical_port_device_id_topology_2(command_body):
+        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        return device_ids
+
+    @staticmethod
+    def _decode_optical_port_device_id_topology_3(command_body):
+        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        return device_ids
+
+    @staticmethod
+    def _decode_optical_port_device_id_topology_4(command_body):
+        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        return device_ids
+
+    @staticmethod
+    def decode_optical_port_device_id_topology(command_body):
+        """Decodes the opticalportx_topology_id command."""
+        port_number = command_body[0]
+        device_ids = []
+        for i in range(0, len(command_body), 2):
+            device_id = command_body[i] + command_body[i + 1] * 256
+            device_ids.append(device_id)
+        return device_ids
+
+    @staticmethod
+    def _decode_optical_port_mac_topology_1(command_body):
+        return Queries.decode_optical_port_mac_topology(command_body)
+
+    @staticmethod
+    def _decode_optical_port_mac_topology_2(command_body):
+        return Queries.decode_optical_port_mac_topology(command_body)
+
+    @staticmethod
+    def _decode_optical_port_mac_topology_3(command_body):
+        return Queries.decode_optical_port_mac_topology(command_body)
+
+    @staticmethod
+    def _decode_optical_port_mac_topology_4(command_body):
+        return Queries.decode_optical_port_mac_topology(command_body)
+
+    @staticmethod
+    def decode_optical_port_mac_topology(command_body):
+        """Decodes the opticalportx_mac_topology command."""
+        try:
+            port_number = command_body[0]
+            device_macs = []
+            for i in range(1, len(command_body), 4):
+                device_mac = command_body[i:i + 4]
+                mac_address = ""
+                for byte in device_mac:
+                    mac_address += f"{byte:02X}:"
+                device_macs.append(mac_address)
+
+            return device_macs
+        except IndexError:
+            print("Error: The command body is empty.")
+            return ""
+
 
 OK = 0
 WARNING = 1
@@ -487,93 +684,6 @@ def analizar_argumentos():
     HighLevelCriticalDL = int(args['highLevelCriticalDownlink'])
 
     return HighLevelWarningUL, HighLevelCriticalUL, HighLevelWarningDL, HighLevelCriticalDL
-
-
-# ----------------------
-#   MAIN
-# ----------------------
-def main():
-    # -- Analizar los argumentos pasados por el usuario
-    hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl = analizar_argumentos()
-
-    cmd_list = list()
-    query = Queries()
-    setting = Settings()
-    # Create a list of command data objects.
-    # Create a list of command data objects.
-    for cmd_name in QueryCommand:
-        cmd_data = CommandData(
-            module_address=0,
-            module_link=DONWLINK_MODULE,
-            module_function=0x07,
-            command_type=DataType.DATA_INITIATION,
-            command_number=cmd_name,
-            command_body_length=0x00,
-            command_data=0x00,
-            response_flag=ResponseFlag.SUCCESS
-        )
-        if cmd_data.query != "":
-            cmd_list.append(cmd_data)
-
-    # queries = getQueries()
-    start_time = time.time()
-    response_time = 0
-    # serial = rs485.setSerial('/dev/ttyS0',19200)
-    serial = rs485.setSerial('COM4', 19200)
-    # Create a socket
-    # Define the target IP address and port
-    target_ip = '192.168.11.22'  # Replace with the actual IP address
-    target_port = 80  # Replace with the actual port number
-
-    replies = list()
-
-    for cmd in cmd_list:
-        start_time = time.time()
-        rs485.write_serial_frame(cmd.query, serial)
-        cmd.reply = rs485.read_serial_frame(serial)
-        print(cmd)
-
-        replies.append(cmd.reply)
-        #    tmp = time.time() - start_time
-        #    time.sleep(tmp)
-        query = bytearray.fromhex(cmd.query)
-
-    #     try:
-    #         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #         client_socket.settimeout(1)
-    #         client_socket.connect((target_ip, target_port))
-    #         client_socket.send(query)
-    #         reply_data = client_socket.recv(1024)  # You can adjust the buffer size
-
-    #         # Print the received data
-    #         print("Received data:", reply_data.hex())
-
-    #     except socket.timeout:
-    #         print("Timeout occurred: No response received within the specified timeout.")
-
-    #     except socket.error as e:
-    #         print("Socket error:", e)
-
-    # client_socket.close()
-    serial.close()
-
-    # messages =  list(zip(queries,str_replies))
-
-    #     parameters = rs485.getParametersFromDmuMessages(messages)
-    #    parameters = rs485.getParametersFromDmuReplies(queries, replies)
-
-    #    response_time = time.time() - start_time
-    # parameters["rt"] = str(response_time)
-    # alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
-    # parameter_html_table = create_table(parameters)
-    # graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
-
-    # sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
-    return 0
-    if (alarm != ""):
-        sys.exit(1)
-    else:
-        sys.exit(0)
 
 
 def get_ltel_queries():
@@ -737,6 +847,81 @@ def get_opt_status_table(responseDict):
     table1 += "</tbody>"
     table1 += "</table>"
     return table1
+
+
+# ----------------------
+#   MAIN
+# ----------------------
+def main():
+    # -- Analizar los argumentos pasados por el usuario
+    hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl = analizar_argumentos()
+
+    cmd_list = list()
+    query = Queries()
+    setting = Settings()
+    # Create a list of command data objects.
+    # Create a list of command data objects.
+    for cmd_name in DigitalBoardCommand:
+        cmd_data = CommandData(
+            module_address=0,
+            module_link=DONWLINK_MODULE,
+            module_function=0x07,
+            command_type=DataType.DATA_INITIATION,
+            command_number=cmd_name,
+            command_body_length=0x00,
+            command_data=0x00,
+            response_flag=ResponseFlag.SUCCESS
+        )
+        if cmd_data.query != "":
+            cmd_list.append(cmd_data)
+
+    # queries = getQueries()
+    start_time = time.time()
+    response_time = 0
+    # serial = rs485.setSerial('/dev/ttyS0',19200)
+    serial = rs485.setSerial('COM4', 19200)
+    # Create a socket
+    # Define the target IP address and port
+    target_ip = '192.168.11.60'  # Replace with the actual IP address
+    target_port = 65050  # Replace with the actual port number
+
+    replies = list()
+    for cmd_name in cmd_list:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((target_ip, target_port))
+                sock.settimeout(1)
+                data_bytes = bytearray.fromhex(cmd_name.query)
+                sock.sendall(data_bytes)
+                data_received = sock.recv(1024)
+                sock.close()
+                cmd_name.reply = data_received
+        except Exception as e:
+            print(e)
+
+    for cmd_name in cmd_list:
+        print(cmd_name)
+        cmd_name.extract_data()
+        message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
+        print(message)
+
+    #   messages =  list(zip(queries,str_replies))
+
+    #   parameters = rs485.getParametersFromDmuMessages(messages)
+    #    parameters = rs485.getParametersFromDmuReplies(queries, replies)
+
+    #    response_time = time.time() - start_time
+    # parameters["rt"] = str(response_time)
+    # alarm = get_alarm_from_dict(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
+    # parameter_html_table = create_table(parameters)
+    # graphite = get_graphite_str(hl_warning_ul, hl_critical_ul, hl_warning_dl, hl_critical_dl, parameters)
+
+    # sys.stderr.write(alarm+parameter_html_table+"|"+graphite)
+    return 0
+    if (alarm != ""):
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 
 if __name__ == "__main__":
