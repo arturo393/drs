@@ -143,7 +143,6 @@ class RemoteSettingCommandNumber(IntEnum):
 
 class Rx0QueryCmd(IntEnum):
     broadband_power = 0x20
-    central_frequency_point = 0x22
     channel_frequency_configuration = 0x36
     alc = 0x38
     carrier_search_results = 0x39
@@ -158,7 +157,7 @@ class Rx0QueryCmd(IntEnum):
     input_power_peak = 0x49
     alc_control_difference_threshold = 0x4c
     baseband_gain = 0x4e
-    central_frequency_point_2 = 0xeb
+    central_frequency_point = 0xeb
     subband_bandwidth = 0xed
     bottom_noise_channel_switch = 0xf1
     uplink_noise_suppression_switch = 0xf4
@@ -239,10 +238,15 @@ class DRSMasterCommand(IntEnum):
     input_and_output_power = Tx0QueryCmd.input_and_output_power
     channel_switch = Rx0QueryCmd.channel_switch
     channel_frequency_configuration = Rx0QueryCmd.channel_frequency_configuration
+    central_frequency_point = Rx0QueryCmd.central_frequency_point
     broadband_switching = HardwarePeripheralDeviceParameterCommand.broadband_switching
     gain_power_control_att = Tx0QueryCmd.gain_power_control_att
     optical_port_switch = NearEndQueryCommandNumber.optical_port_switch
     optical_port_status = NearEndQueryCommandNumber.optical_port_status
+    subband_bandwidth = Rx0QueryCmd.subband_bandwidth
+    rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
+    rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
+    optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
 
 
 class DRSRemoteCommand(IntEnum):
@@ -250,10 +254,15 @@ class DRSRemoteCommand(IntEnum):
     input_and_output_power = Tx0QueryCmd.input_and_output_power
     channel_switch = Rx0QueryCmd.channel_switch
     channel_frequency_configuration = Rx0QueryCmd.channel_frequency_configuration
+    central_frequency_point = Rx0QueryCmd.central_frequency_point
     broadband_switching = HardwarePeripheralDeviceParameterCommand.broadband_switching
     gain_power_control_att = Tx0QueryCmd.gain_power_control_att
     optical_port_switch = NearEndQueryCommandNumber.optical_port_switch
     optical_port_status = NearEndQueryCommandNumber.optical_port_status
+    subband_bandwidth = Rx0QueryCmd.subband_bandwidth
+    rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
+    rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
+    optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
 
 
 DONWLINK_MODULE = 0 << 7
@@ -472,6 +481,100 @@ class Queries:
             print(f"Command number {command_number:02X} is not supported.")
             return {}
 
+
+    @staticmethod
+    def _decode_optical_module_hw_parameters(array):
+        parameters = {}
+        step = 8
+
+        # The order of the parameters in the array is:
+        #
+        #    Fb0_ Temp 4byte temperature
+        #    Fb0_ Rx_ Pwr 2byte Received power
+        #    Fb0_ Tx_ Pwr 2byte Transmission power
+        #    Fb1_ Temp 4byte temperature
+        #    Fb1_ Rx_ Pwr 2byte Received power
+        #    Fb1_ Tx_ Pwr 2byte Transmission power
+        #    Fb2_ Temp 4byte temperature
+        #    Fb2_ Rx_ Pwr 2byte Received power
+        #    Fb2_ Tx_ Pwr 2byte Transmission power
+        #    Fb3_ Temp 4byte temperature
+        #    Fb3_ Rx_ Pwr 2byte Received power
+        #    Fb3_ Tx_ Pwr 2byte Transmission power
+
+        for i in range(0, len(array), step):
+            test = array[i:i + step]
+            fb_number = i // step
+            temp = array[i:i + 4]
+            rx_pwr = array[i+4:i+6]
+            tx_pwr = array[i+6:i+step]
+            temp = round(int.from_bytes(temp, byteorder="little")*0.001,2)
+            rx_pwr = Queries.optic_module_power_convert(rx_pwr)
+            tx_pwr = Queries.optic_module_power_convert(tx_pwr)
+            parameter_name = "Fb{}_Temp".format(
+                fb_number,
+            )
+            parameters[parameter_name] = temp
+            parameter_name = "Fb{}_Rx_Pwr".format(
+                fb_number,
+            )
+            parameters[parameter_name] = rx_pwr
+            parameter_name = "Fb{}_Tx_Pwr".format(
+                fb_number,
+            )
+            parameters[parameter_name] = tx_pwr
+
+        return parameters
+    @staticmethod
+    def _decode_rx0_broadband_power(command_body):
+        """Decodes the broadband power query command."""
+        if len(command_body) < 2:
+            return {}
+
+        rx0_broadband_power = Queries.power_convert(command_body)
+
+        return {
+            "rx0_broadband_power": rx0_broadband_power,
+        }
+
+    @staticmethod
+    def _decode_rx1_broadband_power(command_body):
+        """Decodes the broadband power query command."""
+        if len(command_body) < 2:
+            return {}
+
+        rx1_broadband_power = Queries.power_convert(command_body)
+
+        return {
+            "rx1_broadband_power": rx1_broadband_power,
+        }
+
+    @staticmethod
+    def _decode_subband_bandwidth(command_body):
+        if len(command_body) < 6:
+            return {}
+        else:
+            ch = 1
+            subband_bandwidth = {}
+            for i in range(0, 32, 2):
+                number = command_body[i:i + 2]
+                number = int.from_bytes(number, byteorder="little")
+                subband_bandwidth["channel" + str(ch) + "_subband_bandwidth"] = str(number)
+                ch = ch + 1
+            return subband_bandwidth
+
+    @staticmethod
+    def _decode_central_frequency_point(command_body):
+        """Decodes the central frequency point query command."""
+        if len(command_body) < 0:
+            return {}
+        number = command_body[0:4]
+        number = int.from_bytes(number, byteorder="little")
+
+        return {
+            "central_frequency_point": number,
+        }
+
     @staticmethod
     def _decode_network_mode_config(command_body):
         """Decodes the network mode config command."""
@@ -524,15 +627,6 @@ class Queries:
             return {}
         return {
             "actual_delay_optical_port_4": command_body,
-        }
-
-    @staticmethod
-    def _decode_optical_module_hw_parameters(command_body):
-        """Decodes the optical module hw parameters command."""
-        if len(command_body) == 0:
-            return {}
-        return {
-            "optical_module_hw_parameters": command_body.hex(),
         }
 
     @staticmethod
@@ -759,7 +853,7 @@ class Queries:
     @staticmethod
     def decode_optical_port_devices_connected(command_body):
         if len(command_body) == 0:
-            return {}
+            return "0"
         return str(command_body[0])
 
     @staticmethod
@@ -865,6 +959,17 @@ class Queries:
         uplink_power = value / 256
         uplink_power = round(uplink_power, 2)
         return uplink_power
+    @staticmethod
+    def optic_module_power_convert(command_body):
+        if len(command_body) < 2:
+            return {}
+        data0 = command_body[0]
+        data1 = command_body[1]
+        value = (data0 | data1 << 8)
+        value = -(value & 0x8000) | (value & 0x7fff)
+        power = value*0.1
+        power = round(power, 2)
+        return power
 
     @staticmethod
     def _decode_channel_frequency_configuration(command_body):
@@ -876,12 +981,13 @@ class Queries:
             number = command_body[i:i + 4]
             number = int.from_bytes(number, byteorder="little")
             channels["channel" + str(ch) + "ulFreq"] = str(number)
+            channels["channel_" + str(ch) + "_freq"] = str(number)
             ch = ch + 1
         return channels
 
     @staticmethod
     def _decode_gain_power_control_att(command_body):
-        if len(command_body) == 0:
+        if len(command_body) < 2:
             return {}
         input_att = command_body[0] / 4
         output_att = command_body[1] / 4
@@ -1164,6 +1270,7 @@ def blank_channel_dict(parameters):
         parameters["channel" + str(channel) + "Status"] = "-"
         parameters["channel" + str(channel) + "ulFreq"] = "-"
         parameters["channel" + str(channel) + "dlFreq"] = "-"
+        parameters["channel_" + str(channel) + "_freq"] = "-"
         channel += 1
 
 
@@ -1252,12 +1359,12 @@ def display_alarm(args, parameters):
     if temperature >= hl_critical_temperature:
         alarm += "<h3><font color=\"#ff5566\">Temperature Level Critical "
         alarm += parameters['temperature']
-        alarm += " [°C]]!</font></h3>"
+        alarm += " [&deg;C]]!</font></h3>"
 
     elif temperature >= hl_warning_temperature:
         alarm += "<h3><font color=\"#ffaa44\">Temperature Level Warning "
         alarm += parameters['temperature']
-        alarm += " [°C]]!</font></h3>"
+        alarm += " [&deg;C]]!</font></h3>"
 
     return alarm
 
@@ -1284,8 +1391,9 @@ def get_channel_freq_table(parameter_dic):
             table3 += "<tr align=\"center\" style=font-size:12px>"
             table3 += "<td>" + channel + "</td>"
             table3 += "<td>" + parameter_dic["channel" + str(channel) + "Status"] + "</td>"
-            table3 += "<td>" + parameter_dic["channel" + str(channel) + "ulFreq"] + "</td>"
-            table3 += "<td>" + parameter_dic["channel" + str(channel) + "dlFreq"] + "</td>"
+            table3 += "<td>" + parameter_dic["channel_" + str(channel) + "_freq"] + "</td>"
+#            table3 += "<td>" + parameter_dic["channel" + str(channel) + "ulFreq"] + "</td>"
+#            table3 += "<td>" + parameter_dic["channel" + str(channel) + "dlFreq"] + "</td>"
             table3 += "</tr>"
     else:
         table3 = "<table width=90%>"
@@ -1298,8 +1406,9 @@ def get_channel_freq_table(parameter_dic):
         table3 += "<tr align=\"center\" style=font-size:12px>"
         table3 += "<td>" + parameter_dic['workingMode'] + "</td>"
         table3 += "<td>" + parameter_dic["Work Bandwidth"] + "</td>"
-        table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
-        table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
+        #table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
+        #table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
+        table3 += "<td>" + parameter_dic['central_frequency_point'] + "</td>"
 
     table3 += "</tbody></table>"
     return table3
@@ -1326,7 +1435,7 @@ def get_vswr_temperature_table(parameter_dic):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>" + parameter_dic['temperature'] + " [°C]</td><td>" + \
+    table2 += "<tr align=\"center\" style=font-size:12px><td>" + parameter_dic['temperature'] + " [&deg;C]</td><td>" + \
               parameter_dic['vswr'] + "</td></tr>"
     table2 += "</tbody></table>"
     return table2
@@ -1377,9 +1486,8 @@ def reply_decode(cmd_list, device):
         message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
         if len(message) != 0:
             parameters.update(message)
-            print(message)
-        else:
-            print(message)
+
+#        print(message)
     return parameters
 
 
@@ -1409,9 +1517,7 @@ def main():
 
     query_cmd_name_query = DRSMasterCommand if device == 'dmu' else DRSRemoteCommand
     # query_cmd_name_query = HardwarePeripheralDeviceParameterCommand
-
     cmd_list = query_cmd_list(query_cmd_name_query)
-
     start_time = time.time()
     target_port = 65050  # Replace with the actual port number
     transmit_and_receive(address, cmd_list, target_port)
@@ -1421,7 +1527,6 @@ def main():
     parameter_html_table = create_table(device, parameters)
     graphite = get_graphite(args, parameters)
     sys.stderr.write(alarm + parameter_html_table + "|" + graphite)
-    sys.exit(0)
     if alarm != "":
         sys.exit(1)
     else:
