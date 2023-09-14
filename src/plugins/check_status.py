@@ -21,8 +21,20 @@ import argparse
 # import dru_discovery as discovery
 import time
 import socket
-
+import json
+import requests
 from enum import IntEnum
+
+OK = 0
+WARNING = 1
+CRITICAL = 2
+UNKNOWN = 3
+fix_ip_start = 0xC0
+fix_ip_end = 0x16
+fix_ip_end_opt_1 = 0x64
+fix_ip_end_opt_2 = 0x78
+fix_ip_end_opt_3 = 0x8C
+fix_ip_end_opt_4 = 0xA0
 
 
 class DataType(IntEnum):
@@ -265,8 +277,118 @@ class DRSRemoteCommand(IntEnum):
     optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
 
 
+class DiscoveryCommand(IntEnum):
+    optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_1
+    optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_2
+    optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_3
+    optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
+    eth_ip_address = HardwarePeripheralDeviceParameterCommand.eth_ip_address
+    device_id = NearEndQueryCommandNumber.device_id
+    optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
+    optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
+    optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
+    optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
+
+
 DONWLINK_MODULE = 0 << 7
 UPLINK_MODULE = 1 << 7
+
+
+class DRU:
+    def __init__(self, position, port, mac, sn, device_id, master_hostname, ip_addr, parent):
+        self.position = position
+        self.port = port
+        self.mac = mac
+        self.sn = sn
+        self.device_id = device_id
+        self.hostname = f"dru{device_id}"
+        self.master_hostname = master_hostname
+        self.ip_addr = ip_addr
+        self.parent = parent
+        self.name = f"Remote {port}{position}"
+
+    def __repr__(self):
+        return "DRU()"
+
+    def __str__(self):
+        response = ""
+        response += f"RU{self.port}{self.position} "
+        response += f"device_id:{self.device_id} "
+        response += f"master_hostname:{self.master_hostname} "
+        response += f"hostname: {self.hostname} "
+        response += f"ip_addr: {self.ip_addr} "
+        response += f"parent:{self.parent}"
+        return response
+
+    def __eq__(self, other):
+        return self.position == other.position and self.port == other.position and self.mac == other.mac and self.sn == other.sn
+
+
+class Director:
+    director_api_login = "admin"
+    director_api_password = "Admin.123"
+
+    def __init__(self, master_host):
+        self.master_host = master_host
+
+    def deploy(self):
+        director_url = "http://" + self.master_host + "/director/config/deploy"
+        director_headers = {
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'POST'
+        }
+
+        try:
+            q = requests.post(director_url,
+                              headers=director_headers,
+                              auth=(self.director_api_login, self.director_api_password),
+                              verify=False,
+                              timeout=1)
+        except requests.exceptions.RequestException as e:
+            print("no connection")
+            sys.exit(0)
+
+        return q
+
+    def create_dru_host(self, dru: DRU):
+
+        director_query = {
+            'object_name': dru.hostname,
+            "object_type": "object",
+            "address": dru.ip_addr,
+            "imports": ["check_status_template"],
+            "display_name": dru.name,
+            "vars": {
+                "opt": str(dru.port),
+                "dru": str(dru.position),
+                "parents": [str(dru.parent)],
+                "device": "dru"
+
+            }
+        }
+
+        request_url = "http://" + self.master_host + "/director/host"
+        headers = {
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'POST'
+        }
+
+        try:
+            q = requests.post(request_url,
+                              headers=headers,
+                              data=json.dumps(director_query),
+                              auth=(self.director_api_login, self.director_api_password),
+                              verify=False,
+                              timeout=1)
+            sys.stderr.write(f"{q}")
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e} {q}")
+            sys.exit(CRITICAL)
+        except requests.exceptions.ConnectTimeout as e:
+            sys.stderr.write(f"WARNING - {e} {q}")
+            sys.exit(WARNING)
+        # print(json.dumps(q.json(),indent=2))
+        return q
 
 
 def bytearray_to_hex(byte_array):
@@ -307,19 +429,6 @@ class CommandData:
 
     def __init__(self, module_address, module_link, module_function, command_number, command_data, command_type,
                  response_flag, command_body_length):
-        """
-        Initialize the command data object.
-
-        Args:
-            module_address: The module address.
-            module_link: The module link.
-            module_function: The module function.
-            command_number: The command number.
-            command_data: The command data.
-            command_type: The command type.
-            response_flag: The response flag.
-            command_body_length: The command body length.
-        """
 
         self.module_address = module_link | module_address
         self.module_function = module_function
@@ -357,7 +466,10 @@ class CommandData:
             cmd_unit = self.cmd_unit_query()
             crc = get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
-
+        elif command_number in [cmd_name.value for cmd_name in DiscoveryCommand]:
+            cmd_unit = self.cmd_unit_query()
+            crc = get_checksum(cmd_unit)
+            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
 
         else:
@@ -481,7 +593,6 @@ class Queries:
             print(f"Command number {command_number:02X} is not supported.")
             return {}
 
-
     @staticmethod
     def _decode_optical_module_hw_parameters(array):
         parameters = {}
@@ -506,9 +617,9 @@ class Queries:
             test = array[i:i + step]
             fb_number = i // step
             temp = array[i:i + 4]
-            rx_pwr = array[i+4:i+6]
-            tx_pwr = array[i+6:i+step]
-            temp = round(int.from_bytes(temp, byteorder="little")*0.001,2)
+            rx_pwr = array[i + 4:i + 6]
+            tx_pwr = array[i + 6:i + step]
+            temp = round(int.from_bytes(temp, byteorder="little") * 0.001, 2)
             rx_pwr = Queries.optic_module_power_convert(rx_pwr)
             tx_pwr = Queries.optic_module_power_convert(tx_pwr)
             parameter_name = "Fb{}_Temp".format(
@@ -525,6 +636,7 @@ class Queries:
             parameters[parameter_name] = tx_pwr
 
         return parameters
+
     @staticmethod
     def _decode_rx0_broadband_power(command_body):
         """Decodes the broadband power query command."""
@@ -572,7 +684,7 @@ class Queries:
         number = int.from_bytes(number, byteorder="little")
 
         return {
-            "central_frequency_point": number,
+            "central_frequency_point": str(number / 10000),
         }
 
     @staticmethod
@@ -658,12 +770,13 @@ class Queries:
 
     @staticmethod
     def _decode_device_id(command_body):
-        """Decodes the device ID command."""
-        if len(command_body) == 0:
+
+        """Decodes the opticalportx_mac_topology command."""
+        if len(command_body) < 2:
             return {}
-        return {
-            "device_id": command_body.hex(),
-        }
+        device_id = f"{command_body[0]}.{command_body[1]}"
+
+        return {"device_id": device_id}
 
     @staticmethod
     def _decode_delay(command_body):
@@ -821,7 +934,7 @@ class Queries:
         if len(command_body) == 0:
             return {}
         ip_address = ".".join(str(b) for b in command_body)
-        return ip_address
+        return {'eth_ip_address': ip_address}
 
     @staticmethod
     def _decode_broadband_switching(command_body):
@@ -836,25 +949,25 @@ class Queries:
 
     @staticmethod
     def _decode_optical_port_devices_connected_1(command_body):
-        return {"opt1ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_1": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_2(command_body):
-        return {"opt2ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_2": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_3(command_body):
-        return {"opt3ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_3": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_4(command_body):
-        return {"opt4ConnectedRemotes": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_4": Queries.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def decode_optical_port_devices_connected(command_body):
         if len(command_body) == 0:
             return "0"
-        return str(command_body[0])
+        return command_body[0]
 
     @staticmethod
     def _decode_optical_port_device_id_topology_1(command_body):
@@ -959,6 +1072,7 @@ class Queries:
         uplink_power = value / 256
         uplink_power = round(uplink_power, 2)
         return uplink_power
+
     @staticmethod
     def optic_module_power_convert(command_body):
         if len(command_body) < 2:
@@ -967,7 +1081,7 @@ class Queries:
         data1 = command_body[1]
         value = (data0 | data1 << 8)
         value = -(value & 0x8000) | (value & 0x7fff)
-        power = value*0.1
+        power = value * 0.1
         power = round(power, 2)
         return power
 
@@ -980,8 +1094,8 @@ class Queries:
         for i in range(0, 64, 4):
             number = command_body[i:i + 4]
             number = int.from_bytes(number, byteorder="little")
-            channels["channel" + str(ch) + "ulFreq"] = str(number)
-            channels["channel_" + str(ch) + "_freq"] = str(number)
+            channels["channel" + str(ch) + "ulFreq"] = str(number / 10000)
+            channels["channel_" + str(ch) + "_freq"] = str(number / 10000)
             ch = ch + 1
         return channels
 
@@ -1051,6 +1165,7 @@ def cmd_help():
     opciones:
     -a, --address 192.168.11.22
     -d, --device  dmu, dru
+    -h, --hostname dmu
     -hlwu, --highLevelWarningUplink
     -hlcu, --highLevelCriticalUplink
     -hlwd, --highLevelWarningDownlink
@@ -1062,28 +1177,26 @@ def args_check():
     ap = argparse.ArgumentParser()
     # Add the arguments to the parser
     # ap.add_argument("-h", "--help", required=False,  help="help")
-    ap.add_argument("-a", "--address", required=True, help="address es requerido",
-                    default=200)
-    ap.add_argument("-d", "--device", required=True, help="device es requerido",
-                    default=200)
-    ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
-                    default=200)
-    ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False, help="highLevelCriticalUplink es requerido",
-                    default=200)
-    ap.add_argument("-hlwd", "--highLevelWarningDownlink", required=False, help="highLevelWarningDownlink es requerido",
-                    default=200)
-    ap.add_argument("-hlcd", "--highLevelCriticalDownlink", required=False,
-                    help="highLevelCriticalDownlink es requerido", default=200)
-
-    ap.add_argument("-hlwt", "--highLevelWarningTemperature", required=False,
-                    help="highLevelWarningTemperature es requerido",
-                    default=200)
-    ap.add_argument("-hlct", "--highLevelCriticalTemperature", required=False,
-                    help="highLevelCriticalTemperature es requerido", default=200)
-
     try:
-        args = vars(ap.parse_args())
+        ap.add_argument("-a", "--address", required=True, help="address es requerido", default="192.168.11.22")
+        ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
+        ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
+        ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
+                        default=200)
+        ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
+                        help="highLevelCriticalUplink es requerido",
+                        default=200)
+        ap.add_argument("-hlwd", "--highLevelWarningDownlink", required=False,
+                        help="highLevelWarningDownlink es requerido",
+                        default=200)
+        ap.add_argument("-hlcd", "--highLevelCriticalDownlink", required=False,
+                        help="highLevelCriticalDownlink es requerido", default=200)
+        ap.add_argument("-hlwt", "--highLevelWarningTemperature", required=False,
+                        help="highLevelWarningTemperature es requerido", default=200)
+        ap.add_argument("-hlct", "--highLevelCriticalTemperature", required=False,
+                        help="highLevelCriticalTemperature es requerido", default=200)
 
+        args = vars(ap.parse_args())
         # Check if the high level warning uplink value exists.
         if "highLevelWarningUL" not in args:
             args["highLevelWarningUL"] = 41
@@ -1108,11 +1221,11 @@ def args_check():
         if "highLevelCriticalTemperature" not in args:
             args["highLevelCriticalTemperature"] = 45
 
-    except getopt.GetoptError as e:
+    except Exception as e:
         # print help information and exit:
-        print(e.msg)
+        sys.stderr.write("CRITICAL - " + str(e) + "\n")
         cmd_help()
-        sys.exit(1)
+        sys.exit(CRITICAL)
 
     return args
 
@@ -1139,8 +1252,9 @@ def get_dmu_graphite_str(args, parameter_dict):
 
 
 def create_table(device, parameters):
-    device_table = dmu_table(parameters) if device == 'dmu' else dru_table(parameters)
-    channel_table = get_channel_table(parameters)
+    # device_table = dmu_table(parameters) if device == 'dmu' else dru_table(parameters)
+    device_table = if_board_table(parameters)
+    channel_table = get_channel_freq_table(parameters)
     table = ""
     table += '<div class="sigma-container">'
     table += device_table + channel_table
@@ -1149,7 +1263,7 @@ def create_table(device, parameters):
 
 
 def dru_table(parameters):
-    power_att_table = get_power_att_table(parameters)
+    power_att_table = get_power_table(parameters)
     vswr_temperature_table = get_vswr_temperature_table(parameters)
     return power_att_table + vswr_temperature_table
 
@@ -1158,6 +1272,13 @@ def dmu_table(parameters):
     opt_status_table = get_opt_status_table(parameters)
     power_table = get_power_table(parameters)
     return opt_status_table + power_table
+
+
+def if_board_table(parameters):
+    opt_status_table = get_opt_status_table(parameters)
+    power_att_table = get_power_table(parameters)
+    vswr_temperature_table = get_vswr_temperature_table(parameters)
+    return opt_status_table + power_att_table + vswr_temperature_table
 
 
 def get_channel_table(responseDict):
@@ -1229,11 +1350,13 @@ def get_opt_status_table(responseDict):
     table1 += "<tbody>"
 
     for i in range(1, 5):
+        connected_name = "optical_port_devices_connected_"
         opt = str(i)
+        connected = str(responseDict[f"{connected_name}{opt}"])
         table1 += "<tr align=\"center\" style=font-size:12px>"
         table1 += "<td>opt" + opt + "</td>"
         table1 += "<td>" + responseDict['opt' + opt + 'ActivationStatus'] + "</td>"
-        table1 += "<td>" + responseDict['opt' + opt + 'ConnectedRemotes'] + "</td>"
+        table1 += "<td>" + connected + "</td>"
         table1 += "<td>" + responseDict['opt' + opt + 'TransmissionStatus'] + "</td>"
         table1 += "</tr>"
 
@@ -1242,29 +1365,114 @@ def get_opt_status_table(responseDict):
     return table1
 
 
+def get_channel_freq_table(parameter_dic):
+    table3 = "<table width=90%>"
+    table3 += "<thead><tr style=font-size:11px>"
+    table3 += "<th width='10%'>Channel</font></th>"
+    table3 += "<th width='10%'>Status</font></th>"
+    table3 += "<th width='40%'>UpLink Frequency [Mhz]</font></th>"
+    table3 += "<th width='40%'>Downlink Frequency [Mhz]</font></th>"
+    table3 += "</tr></thead><tbody>"
+
+    if (parameter_dic['workingMode'] == 'Channel Mode'):
+        table3 = "<table width=100%>"
+        table3 += "<thead><tr style=font-size:11px>"
+        table3 += "<th width='5%'>Channel</font></th>"
+        table3 += "<th width='5%'>Status</font></th>"
+        #        table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
+        table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
+        table3 += "</tr></thead><tbody>"
+        for i in range(1, 17):
+            channel = str(i)
+            table3 += "<tr align=\"center\" style=font-size:12px>"
+            table3 += "<td>" + channel + "</td>"
+            table3 += "<td>" + parameter_dic["channel" + str(channel) + "Status"] + "</td>"
+            table3 += "<td>" + parameter_dic["channel_" + str(channel) + "_freq"] + "</td>"
+            #            table3 += "<td>" + parameter_dic["channel" + str(channel) + "ulFreq"] + "</td>"
+            #            table3 += "<td>" + parameter_dic["channel" + str(channel) + "dlFreq"] + "</td>"
+            table3 += "</tr>"
+    else:
+        table3 = "<table width=90%>"
+        table3 += "<thead><tr style=font-size:12px>"
+        table3 += "<th width='10%'>Status</font></th>"
+        table3 += "<th width='30%'>Work Bandwidth</font></th>"
+        table3 += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
+        #       table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
+        table3 += "</tr></thead><tbody>"
+        table3 += "<tr align=\"center\" style=font-size:12px>"
+        table3 += "<td>" + parameter_dic['workingMode'] + "</td>"
+        table3 += "<td>" + parameter_dic["Work Bandwidth"] + "</td>"
+        # table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
+        # table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
+        table3 += "<td>" + parameter_dic['central_frequency_point'] + "</td>"
+
+    table3 += "</tbody></table>"
+    return table3
+
+
+def get_vswr_temperature_table(parameter_dic):
+    table2 = "<table width=90%>"
+    table2 += "<thead>"
+    table2 += "<tr  style=font-size:12px>"
+    table2 += "<th width='40%'>Temperature</font></th>"
+    table2 += "<th width='40%'>VSWR</font></th>"
+    table2 += "</tr>"
+    table2 += "</thead>"
+    table2 += "<tbody>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>" + parameter_dic['temperature'] + " [&deg;C]</td><td>" + \
+              parameter_dic['vswr'] + "</td></tr>"
+    table2 += "</tbody></table>"
+    return table2
+
+
 def blank_parameter(device):
-    if device == 'dru':
-        parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
+    parameters = {}
+    dru_parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
                       'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
                       "Downlink Start Frequency": '-', "Work Bandwidth": '-'}
-        blank_channel_dict(parameters)
-        return parameters
 
-    elif device == 'dmu':
-        parameters = {'opt1ConnectedRemotes': "-", 'opt2ConnectedRemotes': "-", 'opt3ConnectedRemotes': "-",
-                      'opt4ConnectedRemotes': "-", 'opt1ConnectionStatus': "-", 'opt2ConnectionStatus': "-",
+    dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
+                      'optical_port_devices_connected_3': "-",
+                      'optical_port_devices_connected_4': "-", 'opt1ConnectionStatus': "-", 'opt2ConnectionStatus': "-",
                       'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
                       'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
                       'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                       'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                       'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
                       'Work Bandwidth': '-', 'temperature': '-', }
-        blank_channel_dict(parameters)
+
+    channel_parameters = blank_channel_dict()
+
+    parameters.update(dru_parameters)
+    parameters.update(dmu_parameters)
+    parameters.update(channel_parameters)
+    return parameters
+
+
+def blank_parameter_old(device):
+    if device == 'dru':
+        parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
+                      'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
+                      "Downlink Start Frequency": '-', "Work Bandwidth": '-'}
+        blank_channel_dict_old(parameters)
+        return parameters
+
+    elif device == 'dmu':
+        parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
+                      'optical_port_devices_connected_3': "-",
+                      'optical_port_devices_connected_4': "-", 'opt1ConnectionStatus': "-", 'opt2ConnectionStatus': "-",
+                      'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
+                      'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
+                      'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
+                      'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
+                      'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
+                      'Work Bandwidth': '-', 'temperature': '-', }
+        blank_channel_dict_old(parameters)
         return parameters
     return {}
 
 
-def blank_channel_dict(parameters):
+def blank_channel_dict_old(parameters):
     channel = 1
     while channel <= 16:
         parameters["channel" + str(channel) + "Status"] = "-"
@@ -1272,6 +1480,18 @@ def blank_channel_dict(parameters):
         parameters["channel" + str(channel) + "dlFreq"] = "-"
         parameters["channel_" + str(channel) + "_freq"] = "-"
         channel += 1
+
+
+def blank_channel_dict():
+    parameters = {}
+    channel = 1
+    while channel <= 16:
+        parameters["channel" + str(channel) + "Status"] = "-"
+        parameters["channel" + str(channel) + "ulFreq"] = "-"
+        parameters["channel" + str(channel) + "dlFreq"] = "-"
+        parameters["channel_" + str(channel) + "_freq"] = "-"
+        channel += 1
+    return parameters
 
 
 def get_graphite(args, parameter):
@@ -1338,7 +1558,7 @@ def display_alarm(args, parameters):
 
     if dlPower >= hl_critical_downlink:
         alarm += "<h3><font color=\"#ff5566\">Downlink Power Level Critical "
-        alarm += parameters['dlOutpuPower']
+        alarm += parameters['dlOutputPower']
         alarm += " [dBn]!</font></h3>"
 
     elif dlPower >= hl_warning_downlink:
@@ -1369,96 +1589,6 @@ def display_alarm(args, parameters):
     return alarm
 
 
-def get_channel_freq_table(parameter_dic):
-    table3 = "<table width=90%>"
-    table3 += "<thead><tr style=font-size:11px>"
-    table3 += "<th width='10%'>Channel</font></th>"
-    table3 += "<th width='10%'>Status</font></th>"
-    table3 += "<th width='40%'>UpLink Frequency [Mhz]</font></th>"
-    table3 += "<th width='40%'>Downlink Frequency [Mhz]</font></th>"
-    table3 += "</tr></thead><tbody>"
-
-    if (parameter_dic['workingMode'] == 'Channel Mode'):
-        table3 = "<table width=100%>"
-        table3 += "<thead><tr style=font-size:11px>"
-        table3 += "<th width='5%'>Channel</font></th>"
-        table3 += "<th width='5%'>Status</font></th>"
-        table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
-        table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
-        table3 += "</tr></thead><tbody>"
-        for i in range(1, 17):
-            channel = str(i)
-            table3 += "<tr align=\"center\" style=font-size:12px>"
-            table3 += "<td>" + channel + "</td>"
-            table3 += "<td>" + parameter_dic["channel" + str(channel) + "Status"] + "</td>"
-            table3 += "<td>" + parameter_dic["channel_" + str(channel) + "_freq"] + "</td>"
-#            table3 += "<td>" + parameter_dic["channel" + str(channel) + "ulFreq"] + "</td>"
-#            table3 += "<td>" + parameter_dic["channel" + str(channel) + "dlFreq"] + "</td>"
-            table3 += "</tr>"
-    else:
-        table3 = "<table width=90%>"
-        table3 += "<thead><tr style=font-size:12px>"
-        table3 += "<th width='10%'>Status</font></th>"
-        table3 += "<th width='30%'>Work Bandwidth</font></th>"
-        table3 += "<th width='30%'>UpLink [Mhz]</font></th>"
-        table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
-        table3 += "</tr></thead><tbody>"
-        table3 += "<tr align=\"center\" style=font-size:12px>"
-        table3 += "<td>" + parameter_dic['workingMode'] + "</td>"
-        table3 += "<td>" + parameter_dic["Work Bandwidth"] + "</td>"
-        #table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
-        #table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
-        table3 += "<td>" + parameter_dic['central_frequency_point'] + "</td>"
-
-    table3 += "</tbody></table>"
-    return table3
-
-
-def get_working_mode(parameter_dic):
-    table4 = "<table width=90%>"
-    table4 += "<thead><tr style=font-size:12px>"
-    table4 += "<th width='90%'>Status</font></th>"
-    table4 += "</tr></thead><tbody>"
-    table4 += "<tr align=\"center\" style=font-size:12px>"
-    table4 += "<td>" + parameter_dic['workingMode'] + "</td>"
-    table4 += "</tr>"
-    table4 += "</tbody></table>"
-    return table4
-
-
-def get_vswr_temperature_table(parameter_dic):
-    table2 = "<table width=90%>"
-    table2 += "<thead>"
-    table2 += "<tr  style=font-size:12px>"
-    table2 += "<th width='40%'>Temperature</font></th>"
-    table2 += "<th width='40%'>VSWR</font></th>"
-    table2 += "</tr>"
-    table2 += "</thead>"
-    table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>" + parameter_dic['temperature'] + " [&deg;C]</td><td>" + \
-              parameter_dic['vswr'] + "</td></tr>"
-    table2 += "</tbody></table>"
-    return table2
-
-
-def get_power_att_table(parameter_dic):
-    table1 = "<table width=90%>"
-    table1 += "<thead>"
-    table1 += "<tr  align=\"center\" style=font-size:12px>"
-    table1 += "<th width='30%'>Link</font></th>"
-    table1 += "<th width='35%'>Power</font> </th>"
-    table1 += "<th width='35%'>Attenuation</font></th>"
-    table1 += "</tr>"
-    table1 += "</thead>"
-    table1 += "<tbody>"
-    table1 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>" + parameter_dic[
-        'ulInputPower'] + " [dBm]</td><td>" + parameter_dic['ulAtt'] + " [dB]</td></tr>"
-    table1 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>" + parameter_dic[
-        'dlOutputPower'] + " [dBm]</td><td>" + parameter_dic['dlAtt'] + " [dB]</td></tr>"
-    table1 += "</tbody></table>"
-    return table1
-
-
 def query_cmd_list(query_command_numnber):
     cmd_list = []
     for cmd_name in query_command_numnber:
@@ -1487,7 +1617,7 @@ def reply_decode(cmd_list, device):
         if len(message) != 0:
             parameters.update(message)
 
-#        print(message)
+    #        print(message)
     return parameters
 
 
@@ -1503,7 +1633,8 @@ def transmit_and_receive(address, cmd_list, target_port):
                 sock.close()
                 cmd_name.reply = data_received
         except Exception as e:
-            print(e)
+            sys.stderr.write("Critical - " + str(e))
+            sys.exit(CRITICAL)
 
 
 # ----------------------
@@ -1514,23 +1645,97 @@ def main():
     args = args_check()
     address = args['address']
     device = args['device']
+    hostname = args['hostname']
 
-    query_cmd_name_query = DRSMasterCommand if device == 'dmu' else DRSRemoteCommand
+    query_cmd_name_query = DiscoveryCommand
+    if device == 'dmu':
+        query_cmd_name_query = DRSMasterCommand
+    elif device == 'dru':
+        query_cmd_name_query = DRSRemoteCommand
+    elif device == 'discovery':
+        query_cmd_name_query = DiscoveryCommand
+    else:
+        sys.stderr.write("CRITICAL - no device")
+        sys.exit(CRITICAL)
+
     # query_cmd_name_query = HardwarePeripheralDeviceParameterCommand
     cmd_list = query_cmd_list(query_cmd_name_query)
     start_time = time.time()
-    target_port = 65050  # Replace with the actual port number
-    transmit_and_receive(address, cmd_list, target_port)
-    parameters = reply_decode(cmd_list, device)
-    parameters["rt"] = str(time.time() - start_time)
-    alarm = display_alarm(args, parameters)
-    parameter_html_table = create_table(device, parameters)
-    graphite = get_graphite(args, parameters)
-    sys.stderr.write(alarm + parameter_html_table + "|" + graphite)
-    if alarm != "":
-        sys.exit(1)
+    if_board_query_port = 65050  # Replace with the actual port number
+    remote_external_device_query_port = 65053  # Replace with the actual port number
+    transmit_and_receive(address, cmd_list, if_board_query_port)
+    if device == "dru" or device == "dmu":
+        parameters = reply_decode(cmd_list, device)
     else:
-        sys.exit(0)
+        parameters = blank_parameter(device)
+        for cmd_name in cmd_list:
+            #            print(cmd_name)
+            cmd_name.extract_data()
+            message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
+            if len(message) != 0:
+                parameters.update(message)
+            sys.stderr.write(str(message) + "\n")
+
+    parameters["rt"] = str(time.time() - start_time)
+    start_time = time.time()
+    if device == "dru" or device == "dmu":
+        alarm = display_alarm(args, parameters)
+        parameter_html_table = create_table(device, parameters)
+        graphite = get_graphite(args, parameters)
+        sys.stderr.write(alarm + parameter_html_table + "|" + graphite)
+        if alarm != "":
+            sys.exit(1)
+        else:
+            sys.exit(0)
+
+    else:
+        dru_connected = {}
+        fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
+        for opt in range(1, 4):
+            port_name = f"optical_port_devices_connected_{opt}"
+            net = parameters["device_id"]
+            optical_port_connected_ip_addr = {}
+            dru_connected[f"opt{opt}"] = []
+            for connected in range(1, parameters[port_name] + 1):
+                connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
+                id_key = f"optical_port_device_id_topology_{opt}"
+                device_id = parameters[id_key][f"id_{connected}"]
+                parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
+                sys.stderr.write(ip + "\n")
+                d = DRU(connected, opt, 0, 0, device_id, hostname, ip, parent)
+                dru_connected[f"opt{opt}"].append(d)
+                parameters[connected_ip_addr_name] = ip
+                sys.stderr.write(connected_ip_addr_name + ": " + ip + "\n")
+                sys.stderr.write(str(d) + "\n")
+        hostname = socket.gethostname()
+        master_host = socket.gethostbyname(hostname)
+        director = Director(master_host)
+        deploy = 0
+        for opt in dru_connected:
+            for dru in dru_connected[opt]:
+                response = director.create_dru_host(dru)
+                deploy = 1 if response.status_code == 200 else 0
+
+        if deploy:
+            director.deploy()
+
+        parameters["dt"] = str(time.time() - start_time)
+
+        rt = parameters['rt']
+        dt = parameters['dt']
+
+        rt_str = "RT=" + rt
+        rt_str += ";" + str(1)
+        rt_str += ";" + str(1)
+
+        dt_str = "DT=" + dt
+        dt_str += ";" + str(2)
+        dt_str += ";" + str(2)
+        graphite = rt_str + " " + dt_str
+        sys.stderr.write("\nSummary - " + "discovery_str")
+        sys.stderr.write("|" + graphite)
+        sys.exit(OK)
 
 
 if __name__ == "__main__":
