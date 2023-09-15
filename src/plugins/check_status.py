@@ -259,6 +259,8 @@ class DRSMasterCommand(IntEnum):
     rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
     rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
     optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
+    rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
+    temperature = HardwarePeripheralDeviceParameterCommand.temperature
 
 
 class DRSRemoteCommand(IntEnum):
@@ -275,6 +277,11 @@ class DRSRemoteCommand(IntEnum):
     rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
     rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
     optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
+    optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_1
+    optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_2
+    optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_3
+    optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
+    rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
 
 
 class DiscoveryCommand(IntEnum):
@@ -295,11 +302,9 @@ UPLINK_MODULE = 1 << 7
 
 
 class DRU:
-    def __init__(self, position, port, mac, sn, device_id, master_hostname, ip_addr, parent):
+    def __init__(self, position, port, device_id, master_hostname, ip_addr, parent):
         self.position = position
         self.port = port
-        self.mac = mac
-        self.sn = sn
         self.device_id = device_id
         self.hostname = f"dru{device_id}"
         self.master_hostname = master_hostname
@@ -361,7 +366,7 @@ class Director:
             "vars": {
                 "opt": str(dru.port),
                 "dru": str(dru.position),
-                "parents": [str(dru.parent)],
+                "parents": [dru.parent],
                 "device": "dru"
 
             }
@@ -380,12 +385,37 @@ class Director:
                               auth=(self.director_api_login, self.director_api_password),
                               verify=False,
                               timeout=1)
-            sys.stderr.write(f"{q}")
+            sys.stderr.write(f"{q.status_code} {q.text}")
+
+            # parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+
+            if q.status_code == 422:
+                update_query = {
+                    "object_type": "object",
+                    "address": dru.ip_addr,
+                    "imports": ["check_status_template"],
+                    "vars": {
+                        "opt": str(dru.port),
+                        "dru": str(dru.position),
+                        "parents": [dru.parent],
+                        "device": "dru"
+
+                    }
+                }
+                request_url = "http://" + self.master_host + "/director/host?name=" + dru.hostname
+                q = requests.post(request_url,
+                                  headers=headers,
+                                  data=json.dumps(update_query),
+                                  auth=(self.director_api_login, self.director_api_password),
+                                  verify=False,
+                                  timeout=1)
+                sys.stderr.write(f"{q.status_code} {q.text}")
+
         except requests.exceptions.RequestException as e:
-            sys.stderr.write(f"CRITICAL - {e} {q}")
+            sys.stderr.write(f"CRITICAL - {e}")
             sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
-            sys.stderr.write(f"WARNING - {e} {q}")
+            sys.stderr.write(f"WARNING - {e}")
             sys.exit(WARNING)
         # print(json.dumps(q.json(),indent=2))
         return q
@@ -896,7 +926,7 @@ class Queries:
             temp = (int(temp) & 0xff) / 2
         else:
             temp = val / 1000
-        return {'temperature': str(temp)}
+        return {'temperature': temp}
 
     @staticmethod
     def _decode_hardware_status(command_body):
@@ -1000,7 +1030,7 @@ class Queries:
         id = 1
         for i in range(0, len(command_body), 2):
             device_id = command_body[i] + command_body[i + 1] * 256
-            device_ids["id_" + str(id)] = str(device_id)
+            device_ids["id_" + str(id)] = device_id
             id = id + 1
         return device_ids
 
@@ -1165,7 +1195,8 @@ def cmd_help():
     opciones:
     -a, --address 192.168.11.22
     -d, --device  dmu, dru
-    -h, --hostname dmu
+    -n, --hostname dmu
+    -p, --port 1
     -hlwu, --highLevelWarningUplink
     -hlcu, --highLevelCriticalUplink
     -hlwd, --highLevelWarningDownlink
@@ -1181,6 +1212,7 @@ def args_check():
         ap.add_argument("-a", "--address", required=True, help="address es requerido", default="192.168.11.22")
         ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
         ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
+        ap.add_argument("-p", "--port", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
         ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
@@ -1230,28 +1262,7 @@ def args_check():
     return args
 
 
-def get_dmu_graphite_str(args, parameter_dict):
-    high_level_warning_ul = int(args['highLevelWarningUplink'])
-    high_level_critical_ul = int(args['highLevelCriticalUplink'])
-    high_level_warning_dl = int(args['highLevelWarningDownlink'])
-    high_level_critical_dl = int(args['highLevelCriticalDownlink'])
-    address = args['address']
-    device = args['device']
-
-    rt = parameter_dict['rt']
-
-    rt_str = "RT=" + rt
-    rt_str += ";" + str(1000)
-    rt_str += ";" + str(2000)
-
-    dl_str = "Downlink=" + parameter_dict['dlOutputPower']
-    dl_str += ";" + str(high_level_warning_dl)
-    dl_str += ";" + str(high_level_critical_dl)
-    graphite = rt_str + " " + dl_str
-    return graphite
-
-
-def create_table(device, parameters):
+def create_table(parameters):
     # device_table = dmu_table(parameters) if device == 'dmu' else dru_table(parameters)
     device_table = if_board_table(parameters)
     channel_table = get_channel_freq_table(parameters)
@@ -1411,6 +1422,7 @@ def get_channel_freq_table(parameter_dic):
 
 
 def get_vswr_temperature_table(parameter_dic):
+    temperature = str(parameter_dic['temperature'])
     table2 = "<table width=90%>"
     table2 += "<thead>"
     table2 += "<tr  style=font-size:12px>"
@@ -1419,7 +1431,7 @@ def get_vswr_temperature_table(parameter_dic):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>" + parameter_dic['temperature'] + " [&deg;C]</td><td>" + \
+    table2 += "<tr align=\"center\" style=font-size:12px><td>" + temperature + " [&deg;C]</td><td>" + \
               parameter_dic['vswr'] + "</td></tr>"
     table2 += "</tbody></table>"
     return table2
@@ -1494,52 +1506,52 @@ def blank_channel_dict():
     return parameters
 
 
-def get_graphite(args, parameter):
-    hl_warning_uplink = int(args['highLevelWarningUL'])
-    hl_critical_uplink = int(args['highLevelCriticalUL'])
-    hl_warning_downlink = int(args['highLevelWarningDL'])
-    hl_critical_downlink = int(args['highLevelCriticalDL'])
-    hl_warning_temperature = int(args['highLevelWarningTemperature'])
-    hl_critical_temperature = int(args['highLevelCriticalTemperature'])
-    downlink_power = parameter['dlOutputPower']
-    uplink_power = parameter['ulInputPower']
-    temperature = parameter['temperature']
-
-    if args['device'] == 'dmu':
-        dl_str = "Downlink=" + parameter['dlOutputPower']
+def get_graphite(parameters):
+    hl_warning_uplink = parameters['highLevelWarningUL']
+    hl_critical_uplink = parameters['highLevelCriticalUL']
+    hl_warning_downlink = parameters['highLevelWarningDL']
+    hl_critical_downlink = parameters['highLevelCriticalDL']
+    hl_warning_temperature = parameters['highLevelWarningTemperature']
+    hl_critical_temperature = parameters['highLevelCriticalTemperature']
+    downlink_power = parameters['dlOutputPower']
+    uplink_power = parameters['ulInputPower']
+    temperature = parameters['temperature']
+    graphite = ""
+    if parameters['device'] == 'dmu':
+        dl_str = "Downlink=" + parameters['dlOutputPower']
         dl_str += ";" + str(hl_warning_downlink)
         dl_str += ";" + str(hl_critical_downlink)
-        rt_str = "RT=" + parameter['rt'] + ";1000;2000"
+        rt_str = "RT=" + parameters['rt'] + ";1000;2000"
         graphite = rt_str + " " + dl_str
-    elif args['device'] == 'dru':
+    elif parameters['device'] == 'dru':
         if downlink_power == 0.0:
             downlink_power = "-"
         else:
             downlink_power = str(downlink_power)
 
-        pa_temperature = "Temperature=" + parameter['temperature']
+        pa_temperature = "Temperature=" + str(parameters['temperature'])
         pa_temperature += ";" + str(hl_warning_temperature)
         pa_temperature += ";" + str(hl_critical_temperature)
-        downlink_power = "Downlink=" + parameter['dlOutputPower']
+        downlink_power = "Downlink=" + parameters['dlOutputPower']
         downlink_power += ";" + str(hl_warning_downlink)
         downlink_power += ";" + str(hl_critical_downlink)
-        vswr = "VSWR=" + parameter['vswr']
-        uplink_power = "Uplink=" + parameter['ulInputPower']
+        vswr = "VSWR=" + parameters['vswr']
+        uplink_power = "Uplink=" + parameters['ulInputPower']
         uplink_power += ";" + str(hl_warning_uplink)
         uplink_power += ";" + str(hl_critical_uplink)
-        rt = "RT=" + parameter['rt'] + ";1000;2000"
+        rt = "RT=" + parameters['rt'] + ";1000;2000"
 
         graphite = rt + " " + pa_temperature + " " + downlink_power + " " + vswr + " " + uplink_power
     return graphite
 
 
-def display_alarm(args, parameters):
-    hl_warning_uplink = int(args['highLevelWarningUL'])
-    hl_critical_uplink = int(args['highLevelCriticalUL'])
-    hl_warning_downlink = int(args['highLevelWarningDL'])
-    hl_critical_downlink = int(args['highLevelCriticalDL'])
-    hl_warning_temperature = int(args['highLevelWarningTemperature'])
-    hl_critical_temperature = int(args['highLevelCriticalTemperature'])
+def display_alarm(parameters):
+    hl_warning_uplink = parameters['highLevelWarningUL']
+    hl_critical_uplink = parameters['highLevelCriticalUL']
+    hl_warning_downlink = parameters['highLevelWarningDL']
+    hl_critical_downlink = parameters['highLevelCriticalDL']
+    hl_warning_temperature = parameters['highLevelWarningTemperature']
+    hl_critical_temperature = parameters['highLevelCriticalTemperature']
 
     if parameters['dlOutputPower'] != '-':
         dlPower = float(parameters['dlOutputPower'])
@@ -1617,7 +1629,7 @@ def reply_decode(cmd_list, device):
         if len(message) != 0:
             parameters.update(message)
 
-    #        print(message)
+            #        print(message)
     return parameters
 
 
@@ -1646,8 +1658,110 @@ def main():
     address = args['address']
     device = args['device']
     hostname = args['hostname']
+    port = int(args['port'])
 
-    query_cmd_name_query = DiscoveryCommand
+    cmd_name_query = get_cmd_name_query(device)
+    cmd_list = query_cmd_list(cmd_name_query)
+    start_time = time.time()
+    if_board_query_port = 65050  # Replace with the actual port number
+    remote_external_device_query_port = 65053  # Replace with the actual port number
+    transmit_and_receive(address, cmd_list, if_board_query_port)
+    parameters = reply_decode(cmd_list, device)
+    parameters["rt"] = str(time.time() - start_time)
+    start_time = time.time()
+    update_parameters_with_args(args, parameters)
+    if device == "dru" or device == "dmu":
+        device_host_plugin_ouput(parameters)
+    elif 1 < port < 5:
+        discovery(parameters)
+
+        parameters["dt"] = str(time.time() - start_time)
+
+        discovery_plugin_output(parameters)
+
+    else:
+        sys.stderr.write("\nOK - " + "no command")
+        sys.exit(OK)
+
+
+def discovery(parameters):
+    opt = parameters['port']
+    hostname = parameters['hostname']
+    net = parameters["device_id"]
+    dru_connected = {}
+    fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
+    port_name = f"optical_port_devices_connected_{opt}"
+    optical_port_connected_ip_addr = {}
+    dru_connected[f"opt{opt}"] = []
+    last_connected = parameters[port_name]
+    for connected in range(1, parameters[port_name] + 1):
+        connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
+        id_key = f"optical_port_device_id_topology_{opt}"
+        device_id = parameters[id_key][f"id_{connected}"]
+        # if connected == last_connected and last_connected > 1 and False:
+        #    parent = [hostname, dru_connected[f"opt{opt}"][connected - 2].hostname]
+        # else:
+        parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+        ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
+        sys.stderr.write(ip + "\n")
+        if device_id != 0:
+            d = DRU(connected, opt, device_id, hostname, ip, parent)
+            dru_connected[f"opt{opt}"].append(d)
+            parameters[connected_ip_addr_name] = ip
+            sys.stderr.write(connected_ip_addr_name + ": " + ip + "\n")
+            sys.stderr.write(str(d) + "\n")
+    hostname = socket.gethostname()
+    master_host = socket.gethostbyname(hostname)
+    director = Director(master_host)
+    deploy = 0
+    for opt in dru_connected:
+        for dru in dru_connected[opt]:
+            response = director.create_dru_host(dru)
+            deploy = 1 if response.status_code == 201 else 0
+    if deploy:
+        director.deploy()
+
+
+def discovery_plugin_output(parameters):
+    rt = parameters['rt']
+    dt = parameters['dt']
+    rt_str = "RT=" + rt
+    rt_str += ";" + str(1)
+    rt_str += ";" + str(1)
+    dt_str = "DT=" + dt
+    dt_str += ";" + str(2)
+    dt_str += ";" + str(2)
+    graphite = rt_str + " " + dt_str
+    sys.stderr.write("\nSummary - " + "discovery_str")
+    sys.stderr.write("|" + graphite)
+    sys.exit(OK)
+
+
+def update_parameters_with_args(args, parameters):
+    parameters['address'] = args['address']
+    parameters['device'] = args['device']
+    parameters['hostname'] = args['hostname']
+    parameters['port'] = int(args['port'])
+    parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
+    parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
+    parameters['highLevelWarningDL'] = int(args['highLevelWarningDL'])
+    parameters['highLevelCriticalDL'] = int(args['highLevelCriticalDL'])
+    parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
+    parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
+
+
+def device_host_plugin_ouput(parameters):
+    alarm = display_alarm(parameters)
+    parameter_html_table = create_table(parameters)
+    graphite = get_graphite(parameters)
+    sys.stderr.write(alarm + parameter_html_table + "|" + graphite)
+    if alarm != "":
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
+
+def get_cmd_name_query(device):
     if device == 'dmu':
         query_cmd_name_query = DRSMasterCommand
     elif device == 'dru':
@@ -1657,85 +1771,7 @@ def main():
     else:
         sys.stderr.write("CRITICAL - no device")
         sys.exit(CRITICAL)
-
-    # query_cmd_name_query = HardwarePeripheralDeviceParameterCommand
-    cmd_list = query_cmd_list(query_cmd_name_query)
-    start_time = time.time()
-    if_board_query_port = 65050  # Replace with the actual port number
-    remote_external_device_query_port = 65053  # Replace with the actual port number
-    transmit_and_receive(address, cmd_list, if_board_query_port)
-    if device == "dru" or device == "dmu":
-        parameters = reply_decode(cmd_list, device)
-    else:
-        parameters = blank_parameter(device)
-        for cmd_name in cmd_list:
-            #            print(cmd_name)
-            cmd_name.extract_data()
-            message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
-            if len(message) != 0:
-                parameters.update(message)
-            sys.stderr.write(str(message) + "\n")
-
-    parameters["rt"] = str(time.time() - start_time)
-    start_time = time.time()
-    if device == "dru" or device == "dmu":
-        alarm = display_alarm(args, parameters)
-        parameter_html_table = create_table(device, parameters)
-        graphite = get_graphite(args, parameters)
-        sys.stderr.write(alarm + parameter_html_table + "|" + graphite)
-        if alarm != "":
-            sys.exit(1)
-        else:
-            sys.exit(0)
-
-    else:
-        dru_connected = {}
-        fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
-        for opt in range(1, 4):
-            port_name = f"optical_port_devices_connected_{opt}"
-            net = parameters["device_id"]
-            optical_port_connected_ip_addr = {}
-            dru_connected[f"opt{opt}"] = []
-            for connected in range(1, parameters[port_name] + 1):
-                connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
-                id_key = f"optical_port_device_id_topology_{opt}"
-                device_id = parameters[id_key][f"id_{connected}"]
-                parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
-                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
-                sys.stderr.write(ip + "\n")
-                d = DRU(connected, opt, 0, 0, device_id, hostname, ip, parent)
-                dru_connected[f"opt{opt}"].append(d)
-                parameters[connected_ip_addr_name] = ip
-                sys.stderr.write(connected_ip_addr_name + ": " + ip + "\n")
-                sys.stderr.write(str(d) + "\n")
-        hostname = socket.gethostname()
-        master_host = socket.gethostbyname(hostname)
-        director = Director(master_host)
-        deploy = 0
-        for opt in dru_connected:
-            for dru in dru_connected[opt]:
-                response = director.create_dru_host(dru)
-                deploy = 1 if response.status_code == 200 else 0
-
-        if deploy:
-            director.deploy()
-
-        parameters["dt"] = str(time.time() - start_time)
-
-        rt = parameters['rt']
-        dt = parameters['dt']
-
-        rt_str = "RT=" + rt
-        rt_str += ";" + str(1)
-        rt_str += ";" + str(1)
-
-        dt_str = "DT=" + dt
-        dt_str += ";" + str(2)
-        dt_str += ";" + str(2)
-        graphite = rt_str + " " + dt_str
-        sys.stderr.write("\nSummary - " + "discovery_str")
-        sys.stderr.write("|" + graphite)
-        sys.exit(OK)
+    return query_cmd_name_query
 
 
 if __name__ == "__main__":
