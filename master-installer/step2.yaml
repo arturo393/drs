@@ -10,4 +10,7 @@
 - name: "Installing Extra Modules"
   import_playbook: playbooks/extras.yaml
 
+- name: "Plugin Installation"
+  import_playbook: playbooks/rs485_plugin.yaml
+
 

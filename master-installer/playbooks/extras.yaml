@@ -338,8 +338,6 @@
         group: "nagios"
         recurse: yes
 
-    - name: "Plugin Installation"
-      import_playbook: playbooks/rs485_plugin.yaml
 
   
         
