@@ -7,336 +7,339 @@
     - ../vars.yaml
 
   tasks:
-  - name: Install dependencies packages
-    package:
-      name: "{{ item }}"
-      state: present
-    with_items:
-      - icingaweb2-module-director
-      - docker
-      - docker-compose
+    - name: Install dependencies packages
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - icingaweb2-module-director
+        - docker
+        - docker-compose
 
-  - name: Create director database
-    mysql_db:
-      name: director
-      encoding: utf8
-      state: present
-      check_implicit_admin: true
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
+    - name: Create director database
+      mysql_db:
+        name: director
+        encoding: utf8
+        state: present
+        check_implicit_admin: true
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
 
-  - name: Create director db user
-    mysql_user:
-      name: director
-      password: "{{ mysql_root_password }}"
-      priv: 'director.*:ALL'
-      state: present
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
+    - name: Create director db user
+      mysql_user:
+        name: director
+        password: "{{ mysql_root_password }}"
+        priv: 'director.*:ALL'
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
 
-  - name: Remove old modules
-    file:
-      path: /usr/share/icingaweb2/modules/{{ item }}
-      state: absent
-    with_items:
-      - incubator
-      - reactbundle
-      - director
-      - graphite
+    - name: Remove old modules
+      file:
+        path: /usr/share/icingaweb2/modules/{{ item }}
+        state: absent
+      with_items:
+        - incubator
+        - reactbundle
+        - director
+        - graphite
 
-  - name: Removing Dependencies database
-    mysql_db:
-      name: dependencies
-      state: absent
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
+    - name: Removing Dependencies database
+      mysql_db:
+        name: dependencies
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
 
-  - name: Install Incubator module
-    git:
-      repo: https://github.com/Icinga/icingaweb2-module-incubator
-      dest: /usr/share/icingaweb2/modules/incubator
-      #single_branch: yes
-      version: v0.18.0
+    - name: Install Incubator module
+      git:
+        repo: https://github.com/Icinga/icingaweb2-module-incubator
+        dest: /usr/share/icingaweb2/modules/incubator
+        #single_branch: yes
+        version: v0.20.0
 
-  - name: Install reactbundle module
-    git:
-      repo: https://github.com/Icinga/icingaweb2-module-reactbundle
-      dest: /usr/share/icingaweb2/modules/reactbundle
-      #single_branch: yes
-      version: v0.9.0
+    - name: Install reactbundle module
+      git:
+        repo: https://github.com/Icinga/icingaweb2-module-reactbundle
+        dest: /usr/share/icingaweb2/modules/reactbundle
+        #single_branch: yes
+        version: v0.9.0
 
-  - name: Reinstall director module
-    git:
-      repo: https://github.com/icinga/icingaweb2-module-director
-      dest: /usr/share/icingaweb2/modules/director
-      #single_branch: yes
-      version: master
+    - name: Reinstall director module
+      git:
+        repo: https://github.com/icinga/icingaweb2-module-director
+        dest: /usr/share/icingaweb2/modules/director
+        #single_branch: yes
+        version: master
 
-  - name: Creating icingadirector user
-    user:
-      name: icingadirector
-      group: icingaweb2
-      shell: /bin/false
-      home: /var/lib/icingadirector
-      create_home: true
+    - name: Creating icingadirector user
+      user:
+        name: icingadirector
+        group: icingaweb2
+        shell: /bin/false
+        home: /var/lib/icingadirector
+        create_home: true
 
-  - name: Install icingadirector
-    shell:
-      cmd: install -d -o icingadirector -g icingaweb2 -m 0750 /var/lib/icingadirector
+    - name: Install icingadirector
+      shell:
+        cmd: install -d -o icingadirector -g icingaweb2 -m 0750 /var/lib/icingadirector
 
-  - name: Copy icingadirector service daemon
-    copy:
-      src: /usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service
-      dest: /etc/systemd/system/
-      remote_src: yes
+    - name: Copy icingadirector service daemon
+      copy:
+        src: /usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service
+        dest: /etc/systemd/system/
+        remote_src: yes
 
-  - name: Just force systemd to reread configs (2.4 and above)
-    systemd:
-      daemon_reload: true
+    - name: Just force systemd to reread configs (2.4 and above)
+      systemd:
+        daemon_reload: true
 
-  # - name: start director daemon
-  #   systemd:
-  #     name: icinga-director
-  #     state: started
-  #     enabled: true
+    # - name: start director daemon
+    #   systemd:
+    #     name: icinga-director
+    #     state: started
+    #     enabled: true
 
-### NetworkMaps
-  - name: Copy networkmaps module
-    copy:
-      src: /tmp/sigma-rds/src/modules/network_maps
-      dest: /usr/share/icingaweb2/modules
-      remote_src: yes
+    ### NetworkMaps
+    - name: Copy networkmaps module
+      copy:
+        src: /tmp/sigma-rds/src/modules/network_maps
+        dest: /usr/share/icingaweb2/modules
+        remote_src: yes
 
-  - name: Create neytworkmaps directory
-    file:
-      name: /etc/icingaweb2/modules/network_maps
-      state: directory
+    - name: Create neytworkmaps directory
+      file:
+        name: /etc/icingaweb2/modules/network_maps
+        state: directory
 
-  - name: Create network_maps config.ini
-    template:
-      src: network_maps-config-ini.j2
-      dest: /etc/icingaweb2/modules/network_maps/config.ini
+    - name: Create network_maps config.ini
+      template:
+        src: network_maps-config-ini.j2
+        dest: /etc/icingaweb2/modules/network_maps/config.ini
 
-  - name: Patch WebUI default URL
-    lineinfile:
-      path: /usr/share/icingaweb2/application/forms/Authentication/LoginForm.php
-      regexp: 'const REDIRECT_URL = '
-      line: const REDIRECT_URL = 'network_maps/module/hierarchy';
+    - name: Patch WebUI default URL
+      lineinfile:
+        path: /usr/share/icingaweb2/application/forms/Authentication/LoginForm.php
+        regexp: 'const REDIRECT_URL = '
+        line: const REDIRECT_URL = 'network_maps/module/hierarchy';
 
 
-  - name: Create dependencies database
-    mysql_db:
-      name: dependencies
-      encoding: utf8
-      state: present
-      check_implicit_admin: true
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
+    - name: Create dependencies database
+      mysql_db:
+        name: dependencies
+        encoding: utf8
+        state: present
+        check_implicit_admin: true
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
 
-  - name: Create dependencies db user
-    mysql_user:
-      name: dependencies
-      password: "{{ mysql_root_password }}"
-      priv: 'dependencies.*:ALL'
-      state: present
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-  - name: Import dependencies sql
-    mysql_db:
-      # mysql -U dependencies -D c < /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
-      name: dependencies
-      state: import
-      target: /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
-      login_user: dependencies
-      login_password: "{{ mysql_root_password }}"
+    - name: Create dependencies db user
+      mysql_user:
+        name: dependencies
+        password: "{{ mysql_root_password }}"
+        priv: 'dependencies.*:ALL'
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+    - name: Import dependencies sql
+      mysql_db:
+        # mysql -U dependencies -D c < /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
+        name: dependencies
+        state: import
+        target: /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
+        login_user: dependencies
+        login_password: "{{ mysql_root_password }}"
 
-# RS485 Write WebUI Module
-  - name: Copy networkmaps module
-    copy:
-      src: /tmp/sigma-rds/src/modules/rs485
-      dest: /usr/share/icingaweb2/modules
-      remote_src: yes
+    # RS485 Write WebUI Module
+    - name: Copy networkmaps module
+      copy:
+        src: /tmp/sigma-rds/src/modules/rs485
+        dest: /usr/share/icingaweb2/modules
+        remote_src: yes
 
-  - name: Import rs485 sql
-    mysql_db:
-      name: director
-      state: import
-      target: /tmp/sigma-rds/src/modules/rs485/schema/mysql.sql
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
+    - name: Import rs485 sql
+      mysql_db:
+        name: director
+        state: import
+        target: /tmp/sigma-rds/src/modules/rs485/schema/mysql.sql
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
 
-## Add or remove entries in the form (optional) 
-  - name: Create ssh directory for remote executions
-    file:
-      name: "{{ssh_key_folder}}"
-      mode: "a+r"
-      state: directory
+    ## Add or remove entries in the form (optional)
+    - name: Create ssh directory for remote executions
+      file:
+        name: "{{ssh_key_folder}}"
+        mode: "a+r"
+        state: directory
 
-  - name: Generate SSH key pair
-    openssh_keypair:
-      path: "{{ssh_key_folder}}/id_rsa"
-      type: rsa
-      size: 2048
-      state: present
-      force: true      
+    - name: Generate SSH key pair
+      openssh_keypair:
+        path: "{{ssh_key_folder}}/id_rsa"
+        type: rsa
+        size: 2048
+        state: present
+        force: true
 
-  - name: Create destination folder /home/sigmadev/.ssh
-    file:
-      path: /home/sigmadev/.ssh
-      state: directory
+    - name: Create destination folder /home/sigmadev/.ssh
+      file:
+        path: /home/sigmadev/.ssh
+        state: directory
 
-  - name: Copy The SSH Public Key To The Inventory Hosts
-    copy:
-      remote_src: yes
-      src: "{{ssh_key_folder}}/id_rsa.pub"
-      dest: /home/sigmadev/.ssh/id_rsa.pub
+    - name: Copy The SSH Public Key To The Inventory Hosts
+      copy:
+        remote_src: yes
+        src: "{{ssh_key_folder}}/id_rsa.pub"
+        dest: /home/sigmadev/.ssh/id_rsa.pub
 
-  - name: Copy The SSH Public Key To The Inventory Hosts
-    copy:
-      remote_src: yes
-      src: "{{ssh_key_folder}}/id_rsa"
-      dest: /home/sigmadev/.ssh/id_rsa
+    - name: Copy The SSH Public Key To The Inventory Hosts
+      copy:
+        remote_src: yes
+        src: "{{ssh_key_folder}}/id_rsa"
+        dest: /home/sigmadev/.ssh/id_rsa
 
-  - name: enable SSH forwarding for sudo
-    lineinfile:
-      dest: /etc/sudoers
-      insertafter: '^#?\s*Defaults\s+env_keep\b'
-      line: 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+    - name: enable SSH forwarding for sudo
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: '^#?\s*Defaults\s+env_keep\b'
+        line: 'Defaults    env_keep += "SSH_AUTH_SOCK"'
 
-  - name: Add line to sudoers file
-    lineinfile:
-      dest: /etc/sudoers
-      line: "www-data ALL=(sigmadev) NOPASSWD:/usr/bin/ssh"
-      validate: 'visudo -cf %s'
-      state: present
-      backup: yes
+    - name: Add line to sudoers file
+      lineinfile:
+        dest: /etc/sudoers
+        line: "www-data ALL=(sigmadev) NOPASSWD:/usr/bin/ssh"
+        validate: 'visudo -cf %s'
+        state: present
+        backup: yes
 
-## GRAPHITE
-  - name: Create docker-compose directory
-    file:
-      name: /opt/docker-compose
-      state: directory
+    ## GRAPHITE
+    - name: Create docker-compose directory
+      file:
+        name: /opt/docker-compose
+        state: directory
 
-  - name: Create docker-compose.yml file
-    template:
-      src: docker-compose.j2
-      dest: /opt/docker-compose/docker-compose.yml
+    - name: Create docker-compose.yml file
+      template:
+        src: docker-compose.j2
+        dest: /opt/docker-compose/docker-compose.yml
 
-  - name: Create docker-compose service file
-    template:
-      src: docker-compose.service.j2
-      dest: /etc/systemd/system/docker-compose.service
+    - name: Create docker-compose service file
+      template:
+        src: docker-compose.service.j2
+        dest: /etc/systemd/system/docker-compose.service
 
-  - name: start docker-compose daemon
-    systemd:
-      name: docker-compose
-      state: started
-      enabled: true
+    - name: start docker-compose daemon
+      systemd:
+        name: docker-compose
+        state: started
+        enabled: true
 
-  - name: Enable icinga2 graphite feature
-    shell:
-      cmd: icinga2 feature enable graphite
+    - name: Enable icinga2 graphite feature
+      shell:
+        cmd: icinga2 feature enable graphite
 
-  - name: Create docker-compose service file
-    template:
-      src: graphite.conf.j2
-      dest: /etc/icinga2/features-enabled/graphite.conf
+    - name: Create docker-compose service file
+      template:
+        src: graphite.conf.j2
+        dest: /etc/icinga2/features-enabled/graphite.conf
 
-  - name: Install graphite icingaweb2 module
-    git:
-      repo: https://github.com/Icinga/icingaweb2-module-graphite
-      dest: /usr/share/icingaweb2/modules/graphite
-      #single_branch: yes
-      version: v1.1.0
+    - name: Install graphite icingaweb2 module
+      git:
+        repo: https://github.com/Icinga/icingaweb2-module-graphite
+        dest: /usr/share/icingaweb2/modules/graphite
+        #single_branch: yes
+        version: v1.1.0
 
-  - name: Create default graphite template file
-    template:
-      src: default.ini-graphite.j2
-      dest: /usr/share/icingaweb2/modules/graphite/templates/default.ini
+    - name: Create default graphite template file
+      template:
+        src: default.ini-graphite.j2
+        dest: /usr/share/icingaweb2/modules/graphite/templates/default.ini
 
-  - name: Create hostalive graphite template file
-    template:
-      src:  hostalive.ini-graphite.j2
-      dest: /usr/share/icingaweb2/modules/graphite/templates/hostalive.ini
+    - name: Create hostalive graphite template file
+      template:
+        src: hostalive.ini-graphite.j2
+        dest: /usr/share/icingaweb2/modules/graphite/templates/hostalive.ini
 
-  - name: Restart Icinga2 service
-    service:
-      name: icinga2
-      state: restarted
+    - name: Restart Icinga2 service
+      service:
+        name: icinga2
+        state: restarted
 
-## SIGMA Theme
-  - name: Copy sigma theme module
-    copy:
-      src: /tmp/sigma-rds/src/modules/sigma-theme
-      dest: /usr/share/icingaweb2/modules
-      remote_src: yes
+    ## SIGMA Theme
+    - name: Copy sigma theme module
+      copy:
+        src: /tmp/sigma-rds/src/modules/sigma-theme
+        dest: /usr/share/icingaweb2/modules
+        remote_src: yes
 
-  - name: Change favicon
-    copy:
-      src: /tmp/sigma-rds/src/modules/sigma-theme/public/img/favicon.png
-      dest: /usr/share/icingaweb2/public/img/favicon.png
-      remote_src: yes
-      
-      ## Base Customizations
+    - name: Change favicon
+      copy:
+        src: /tmp/sigma-rds/src/modules/sigma-theme/public/img/favicon.png
+        dest: /usr/share/icingaweb2/public/img/favicon.png
+        remote_src: yes
 
-  - name: Links to device configuration
-    template:
-      src: quick-actions.j2
-      dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
+        ## Base Customizations
 
-  - name: Change Tab Names
-    shell:
-      cmd: sed -i 's/Icinga Web/DRS/g' {{ item }}
-    with_items:
-      - /usr/share/php/Icinga/Web/Controller/ActionController.php
-      - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+    - name: Links to device configuration
+      template:
+        src: quick-actions.j2
+        dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
 
-## Notifications Customization
-  - name: Copy mail-service-notification.sh file
-    copy:
-      src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-service-notification.sh
-      dest: /etc/icinga2/scripts/mail-service-notification.sh
-      mode: 0755
-      remote_src: yes
-  - name: Copy mail-host-notification.sh file
-    copy:
-      src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-host-notification.sh
-      dest: /etc/icinga2/scripts/mail-host-notification.sh
-      mode: 0755
-      remote_src: yes
-##################################################################
+    - name: Change Tab Names
+      shell:
+        cmd: sed -i 's/Icinga Web/DRS/g' {{ item }}
+      with_items:
+        - /usr/share/php/Icinga/Web/Controller/ActionController.php
+        - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
 
-  - name: Enable icingaweb2 extra modules
-    shell:
-      cmd: icingacli module enable {{ item }}
-    with_items:
-      - incubator
-      - reactbundle
-      - director
-      - network_maps
-      - rs485
-      - graphite
-      - sigma-theme
-      # - cube
+    ## Notifications Customization
+    - name: Copy mail-service-notification.sh file
+      copy:
+        src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-service-notification.sh
+        dest: /etc/icinga2/scripts/mail-service-notification.sh
+        mode: 0755
+        remote_src: yes
+    - name: Copy mail-host-notification.sh file
+      copy:
+        src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-host-notification.sh
+        dest: /etc/icinga2/scripts/mail-host-notification.sh
+        mode: 0755
+        remote_src: yes
+    ##################################################################
 
-  - name: Fix /usr/share/icingaweb2/ permissions
-    file:
-      path: /usr/share/icingaweb2/
-      owner: "www-data"
-      group: "icingaweb2"
-      recurse: yes
-  - name: Fix /etc/icingaweb2/modules permissions
-    file:
-      path: /etc/icingaweb2/modules
-      owner: "www-data"
-      group: "icingaweb2"
-      recurse: yes
-  - name: Fix /etc/icinga2/conf.d permissions
-    file:
-      path: /etc/icinga2/conf.d
-      owner: "nagios"
-      group: "nagios"
-      recurse: yes
+    - name: Enable icingaweb2 extra modules
+      shell:
+        cmd: icingacli module enable {{ item }}
+      with_items:
+        - incubator
+        - reactbundle
+        - director
+        - network_maps
+        - rs485
+        - graphite
+        - sigma-theme
+        # - cube
+
+    - name: Fix /usr/share/icingaweb2/ permissions
+      file:
+        path: /usr/share/icingaweb2/
+        owner: "www-data"
+        group: "icingaweb2"
+        recurse: yes
+    - name: Fix /etc/icingaweb2/modules permissions
+      file:
+        path: /etc/icingaweb2/modules
+        owner: "www-data"
+        group: "icingaweb2"
+        recurse: yes
+    - name: Fix /etc/icinga2/conf.d permissions
+      file:
+        path: /etc/icinga2/conf.d
+        owner: "nagios"
+        group: "nagios"
+        recurse: yes
+
+    - name: "Plugin Installation"
+      import_playbook: playbooks/rs485_plugin.yaml
 
   
         
