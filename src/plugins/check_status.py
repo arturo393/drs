@@ -1718,8 +1718,8 @@ def update_parameters_with_args(args, parameters):
 
 
 def device_host_plugin_ouput(parameters):
-    downlink_power = float(parameters['dlOutputPower'])
-    uplink_power = float(parameters['ulInputPower'])
+    downlink_power = float(parameters['dlOutputPower']) if parameters['dlOutputPower'] != "-" else 100.0
+    uplink_power = float(parameters['ulInputPower']) if parameters['ulInputPower'] != "-" else 100.0
     temperature = parameters['temperature']
 
     graphite = ""
