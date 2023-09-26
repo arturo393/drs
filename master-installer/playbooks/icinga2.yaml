@@ -35,6 +35,10 @@
       ansible.builtin.pip:
         name:
           - requests
+
+    - name: Install Bottle Python Package
+      ansible.builtin.pip:
+        name:
           - logging
 
       # Icinga2

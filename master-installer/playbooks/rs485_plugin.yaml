@@ -1,4 +1,4 @@
-- hosts: icinga_satellite
+- hosts: icinga_master
   become: true
   vars_files:
     - ../vars.yaml
@@ -12,5 +12,5 @@
 
     - name: Add +x permission to check_status.py
       file:
-        path: /usr/lib/nagios/plugin/check_status.py
+        path: /usr/lib/nagios/plugins/check_status.py
         mode: +x

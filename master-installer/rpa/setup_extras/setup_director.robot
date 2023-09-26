@@ -17,6 +17,10 @@ Setup Service Apply Rules
     Login
     Add Director Service Apply Data    Master Status    dmu-command-service-template    host.templates    contains    dmu-host-template
     Add Director Service Apply Data    RU Discovery    dru-discovery-service-template    host.templates    contains    dmu-host-template
+    Add Director OPT Service Apply Data    opt1    discovery-service-template    host.templates    contains    host-template    1
+    Add Director OPT Service Apply Data    opt2    discovery-service-template    host.templates    contains    host-template    2
+    Add Director OPT Service Apply Data    opt3    discovery-service-template    host.templates    contains    host-template    3
+    Add Director OPT Service Apply Data    opt4    discovery-service-template    host.templates    contains    host-template    4
     Add Sigmaweb host     Sigmaweb    host-template    Monitor
     Add UqommWeb host    UqommWeb    host-template    Master
     Add Master host    ${hostname}    master-template    ${hostname}
@@ -49,6 +53,25 @@ Add Director Service Apply Data
     Select Options By    css=#assign_filter-id_1-sign    label    ${assign_filter-id_1-sign}
     Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/div/input
     Type Text    css=#assign_filter-id_1-value    ${assign_filter-id_1-value}
+    Click    css=#Add
+    Wait Until Network Is Idle
+
+Add Director OPT Service Apply Data
+    [Arguments]    ${object_name}    ${imports}    ${assign_filter-id_1-column}    ${assign_filter-id_1-sign}    ${assign_filter-id_1-value}    ${port}
+    Log To Console    Add Director Custom Field ${object_name}
+    Close Page    CURRENT
+    New Page    http://${host}/director/service/add?type=apply
+    Type Text    css=#object_name    ${object_name}
+    Type Text    css=#imports    ${imports}
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/input[1]
+    Type Text    css=#assign_filter-id_1-column    ${assign_filter-id_1-column}
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/select
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/select
+    Select Options By    css=#assign_filter-id_1-sign    label    ${assign_filter-id_1-sign}
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/div/input
+    Type Text    css=#assign_filter-id_1-value    ${assign_filter-id_1-value}
+    Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[3]/legend/span
+    Type Text    css=#var_port    ${port}
     Click    css=#Add
     Wait Until Network Is Idle
 
@@ -95,5 +118,3 @@ Add Master host
     Type Text    css=#address    ${host}
     Click    css=#Add
     Wait Until Network Is Idle
-
-
