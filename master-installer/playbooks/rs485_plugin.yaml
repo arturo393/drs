@@ -4,7 +4,7 @@
     - ../vars.yaml
   tasks:
 
-    - name: Installing Plugins
+    - name: Installing Status Plugin
       copy:
         remote_src: true
         src: /tmp/sigma-rds/src/plugins/check_status.py
@@ -13,4 +13,16 @@
     - name: Add +x permission to check_status.py
       file:
         path: /usr/lib/nagios/plugins/check_status.py
+        mode: +x
+
+
+    - name: Installing Memory Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_memory
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_memory
+      file:
+        path: /usr/lib/nagios/plugins/check_memory
         mode: +x
