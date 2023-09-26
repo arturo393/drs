@@ -16856,8 +16856,7 @@
                 "parents": [
                     "Sigmaweb"
                 ]
-            },
-            "zone": "dmu4"
+            }
         },
         "host-template": {
             "check_command": "hostalive",
@@ -17141,8 +17140,9 @@
         }
     },
     "ServiceSet": {
-        "host-base-service-set": {
-            "object_name": "host-base-service-set",
+        "host-service-set": {
+            "assign_filter": "host.templates=%22host-template%22",
+            "object_name": "host-service-set",
             "object_type": "template",
             "services": [
                 {
@@ -17179,6 +17179,7 @@
             "uuid": "be4c2d11-34a5-46e9-8a1e-10ba1bd7f1f9"
         },
         "master-service-set": {
+            "assign_filter": "host.templates=%22master-template%22",
             "object_name": "master-service-set",
             "object_type": "template",
             "services": [
