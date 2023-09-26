@@ -8,6 +8,7 @@ Library             RPA.RobotLogListener
 *** Variables ***
 ${host}    %{host}
 ${passwd}    %{passwd}
+${hostname}    %{hostname}
 
 *** Tasks ***
 Setup Service Apply Rules
@@ -16,7 +17,9 @@ Setup Service Apply Rules
     Login
     Add Director Service Apply Data    Master Status    dmu-command-service-template    host.templates    contains    dmu-host-template
     Add Director Service Apply Data    RU Discovery    dru-discovery-service-template    host.templates    contains    dmu-host-template
-    Add Sigmaweb host     Sigmaweb    Master    Monitor            
+    Add Sigmaweb host     Sigmaweb    Master    Monitor
+    Add UqommWeb host    UqommWeb    host-template    Master
+    Add Master host    ${hostname}    master-template    ${hostname}
     Deploy
 
 *** Keywords ***
@@ -68,4 +71,29 @@ Add Sigmaweb host
     Type Text    css=#address    ${host}
     Click    css=#Add
     Wait Until Network Is Idle
+
+Add UqommWeb host
+    [Arguments]    ${object_name}    ${imports}    ${display_name}
+    Log To Console    Add Director Custom Field ${object_name}
+    Close Page    CURRENT
+    New Page    http://${host}/director/host/add?type=object
+    Select Options By    css=#imports    label    ${imports}
+    Type Text    css=#object_name    ${object_name}
+    Type Text    css=#display_name    ${display_name}
+    Type Text    css=#address    ${host}
+    Click    css=#Add
+    Wait Until Network Is Idle
+
+Add Master host
+    [Arguments]    ${object_name}    ${imports}    ${display_name}
+    Log To Console    Add Director Custom Field ${object_name}
+    Close Page    CURRENT
+    New Page    http://${host}/director/host/add?type=object
+    Select Options By    css=#imports    label    ${imports}
+    Type Text    css=#object_name    ${object_name}
+    Type Text    css=#display_name    ${display_name}
+    Type Text    css=#address    ${host}
+    Click    css=#Add
+    Wait Until Network Is Idle
+
 
