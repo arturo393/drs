@@ -65,7 +65,7 @@ Add Sigmaweb host
     Log To Console    Add Director Custom Field ${object_name}
     Close Page    CURRENT
     New Page    http://${host}/director/host/add?type=object
-    Select Options By    css=#imports.autosubmit    label    ${imports}
+    Select Options By    css=#imports    value    ${imports}
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
     Type Text    css=#address    ${host}
@@ -77,7 +77,7 @@ Add UqommWeb host
     Log To Console    Add Director Custom Field ${object_name}
     Close Page    CURRENT
     New Page    http://${host}/director/host/add?type=object
-    Select Options By    css=#imports    label    ${imports}
+    Select Options By    css=#imports    value    ${imports}
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
     Type Text    css=#address    ${host}
@@ -89,7 +89,7 @@ Add Master host
     Log To Console    Add Director Custom Field ${object_name}
     Close Page    CURRENT
     New Page    http://${host}/director/host/add?type=object
-    Select Options By    css=#imports    label    ${imports}
+    Select Options By    css=#imports    value    ${imports}
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
     Type Text    css=#address    ${host}
