@@ -17,7 +17,7 @@ Setup Service Apply Rules
     Login
     Add Director Service Apply Data    Master Status    dmu-command-service-template    host.templates    contains    dmu-host-template
     Add Director Service Apply Data    RU Discovery    dru-discovery-service-template    host.templates    contains    dmu-host-template
-    Add Sigmaweb host     Sigmaweb    Master    Monitor
+    Add Sigmaweb host     Sigmaweb    host-template    Monitor
     Add UqommWeb host    UqommWeb    host-template    Master
     Add Master host    ${hostname}    master-template    ${hostname}
     Deploy
@@ -65,7 +65,7 @@ Add Sigmaweb host
     Log To Console    Add Director Custom Field ${object_name}
     Close Page    CURRENT
     New Page    http://${host}/director/host/add?type=object
-    Select Options By    css=#imports    label    ${imports}
+    Select Options By    css=#imports.autosubmit    label    ${imports}
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
     Type Text    css=#address    ${host}

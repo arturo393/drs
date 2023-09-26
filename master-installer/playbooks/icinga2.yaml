@@ -34,10 +34,6 @@
     - name: Install Bottle Python Package
       ansible.builtin.pip:
         name:
-          - time
-          - socket
-          - json
-          - config
           - requests
           - logging
 
