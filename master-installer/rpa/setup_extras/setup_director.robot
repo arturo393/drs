@@ -15,12 +15,12 @@ Setup Service Apply Rules
     Log To Console    ---
     Open Icingaweb2 page
     Login
-#    Add Director Service Apply Data    Master Status    dmu-command-service-template    host.templates    contains    dmu-host-template
-#    Add Director Service Apply Data    RU Discovery    dru-discovery-service-template    host.templates    contains    dmu-host-template
-#    Add Director OPT Service Apply Data    opt1    discovery-service-template    host.templates    contains    master-template    1
-#    Add Director OPT Service Apply Data    opt2    discovery-service-template    host.templates    contains    master-template    2
-#    Add Director OPT Service Apply Data    opt3    discovery-service-template    host.templates    contains    master-template    3
-#    Add Director OPT Service Apply Data    opt4    discovery-service-template    host.templates    contains    master-template    4
+    Add Director Service Apply Data    Master Status    dmu-command-service-template    host.templates    contains    dmu-host-template
+    Add Director Service Apply Data    RU Discovery    dru-discovery-service-template    host.templates    contains    dmu-host-template
+    Add Director OPT Service Apply Data    opt1    discovery-service-template    host.templates    contains    master-template    1
+    Add Director OPT Service Apply Data    opt2    discovery-service-template    host.templates    contains    master-template    2
+    Add Director OPT Service Apply Data    opt3    discovery-service-template    host.templates    contains    master-template    3
+    Add Director OPT Service Apply Data    opt4    discovery-service-template    host.templates    contains    master-template    4
     Add Director host Service Apply Data   load    monitor-service-template    host.templates    contains    host-template    check_load
     Add Director host Service Apply Data   memory    monitor-service-template    host.templates    contains    host-template    check_memory
     Add Director host Service Apply Data   disk    monitor-service-template    host.templates    contains    host-template    check_disk
@@ -85,7 +85,6 @@ Add Director host Service Apply Data
     New Page    http://${host}/director/service/add?type=apply
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#imports    ${imports}
-    Type Text    css=#check_command    ${cmd}
     Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/input[1]
     Type Text    css=#assign_filter-id_1-column    ${assign_filter-id_1-column}
     Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/select
@@ -93,6 +92,8 @@ Add Director host Service Apply Data
     Select Options By    css=#assign_filter-id_1-sign    label    ${assign_filter-id_1-sign}
     Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[2]/form/fieldset[2]/dl/dd/ul/div/div/input
     Type Text    css=#assign_filter-id_1-value    ${assign_filter-id_1-value}
+    Type Text    css=#check_command    ${cmd}
+    Click    css=#Add
     Click    css=#Add
     Wait Until Network Is Idle
 
