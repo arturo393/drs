@@ -56,7 +56,15 @@
       ansible.builtin.pip:
         name:
           - logging
+
+    - name: Install Bottle Python Package
+      ansible.builtin.pip:
+        name:
           - psutil
+  
+    - name: Install Bottle Python Package
+      ansible.builtin.pip:
+        name:
           - crccheck
 
       # Icinga2
