@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: iso-8859-15 -*-
 
 # dmu_check_rs485.py  Ejemplo de manejo del puerto serie desde python utilizando la

@@ -56,6 +56,7 @@
       ansible.builtin.pip:
         name:
           - logging
+          - psutil
 
       # Icinga2
     - name: Apply API user Template

@@ -19,10 +19,32 @@
     - name: Installing Memory Plugin
       copy:
         remote_src: true
-        src: /tmp/sigma-rds/src/plugins/check_memory
+        src: /tmp/sigma-rds/src/plugins/check_memory.py
         dest: /usr/lib/nagios/plugins/
 
-    - name: Add +x permission to check_memory
+    - name: Add +x permission to check_memory.py
       file:
-        path: /usr/lib/nagios/plugins/check_memory
+        path: /usr/lib/nagios/plugins/check_memory.py
+        mode: +x
+
+    - name: Installing Disk Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_disk.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_disk.py
+      file:
+        path: /usr/lib/nagios/plugins/check_disk.py
+        mode: +x
+
+    - name: Installing Load Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_load.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_disk.py
+      file:
+        path: /usr/lib/nagios/plugins/check_load.py
         mode: +x
