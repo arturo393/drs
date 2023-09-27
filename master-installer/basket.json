@@ -193,6 +193,11 @@
                     "required": true,
                     "value": "$address$"
                 },
+                "-b": {
+                    "description": "work bandwidth",
+                    "required": true,
+                    "value": "$bandwidth$"
+                },
                 "-d": {
                     "description": "Device",
                     "required": true,
@@ -219,16 +224,6 @@
             "uuid": "8a430168-df46-49eb-9cd8-eb432a7afc6b",
             "zone": "master"
         },
-        "discovery": {
-            "command": "/usr/lib/nagios/plugins/discovery.py",
-            "fields": [],
-            "methods_execute": "PluginCheck",
-            "object_name": "discovery",
-            "object_type": "object",
-            "timeout": 5,
-            "uuid": "4b775ab3-6633-4a4e-9df2-f30d6bafa555",
-            "zone": "master"
-        },
         "free": {
             "command": "free",
             "fields": [],
@@ -238,13 +233,57 @@
             "object_type": "object",
             "uuid": "8b9e3670-72ce-4bc3-a129-5806128a1692"
         },
-        "memory": {
-            "command": "check_memory",
+        "check_memory": {
+            "command": "/usr/lib/nagios/plugins/check_memory.py",
             "fields": [],
             "methods_execute": "PluginCheck",
-            "object_name": "memory",
+            "object_name": "check_memory",
             "object_type": "object",
-            "uuid": "9c20008e-991b-4af2-a9c3-3a13f55696fc"
+            "timeout": 1,
+            "uuid": "9c20008e-991b-4af2-a9c3-3a13f55696fc",
+            "zone": "master"
+        },
+        "check_load": {
+            "command": "/usr/lib/nagios/plugins/check_load.py",
+            "fields": [],
+            "methods_execute": "PluginCheck",
+            "object_name": "check_load",
+            "object_type": "object",
+            "timeout": 1,
+            "uuid": "0c32b31b-a9d5-4b1c-943d-2f388fc8b504",
+            "zone": "master"
+        },
+        "check_disk": {
+            "arguments": {
+                "-a": {
+                    "required": true,
+                    "value": "$address$"
+                },
+                "-d": {
+                    "description": "Device",
+                    "required": true,
+                    "skip_key": false,
+                    "value": "$device$"
+                },
+                "-n": {
+                    "description": "hostnam",
+                    "required": true,
+                    "value": "$host.name$"
+                },
+                "-p": {
+                    "description": "Optical Port Number",
+                    "required": false,
+                    "value": "$port$"
+                }
+            },
+            "command": "/usr/lib/nagios/plugins/check_disk.py",
+            "fields": [],
+            "methods_execute": "PluginCheck",
+            "object_name": "check_disk",
+            "object_type": "object",
+            "timeout": 1,
+            "uuid": "249626d0-2b1c-403b-a1ee-c05918178156",
+            "zone": "master"
         }
     },
     "ExternalCommand": {
@@ -16913,6 +16952,11 @@
                     "var_filter": null
                 },
                 {
+                    "datafield_id": 49,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
                     "datafield_id": 46,
                     "is_required": "n",
                     "var_filter": null
@@ -16932,7 +16976,8 @@
             "retry_interval": 2,
             "uuid": "22ca49a8-3548-4a9a-a0c0-a8f06a0ea9a5",
             "vars": {
-                "addToMap": true
+                "addToMap": true,
+                "bandwidth": "10"
             },
             "zone": "master"
         },
@@ -17137,102 +17182,6 @@
                 "isOPTPort": false
             },
             "zone": "master"
-        }
-    },
-    "ServiceSet": {
-        "host-service-set": {
-            "assign_filter": "host.templates=%22host-template%22",
-            "object_name": "host-service-set",
-            "object_type": "template",
-            "services": [
-                {
-                    "check_command": "disk",
-                    "fields": [],
-                    "imports": [
-                        "monitor-service-template"
-                    ],
-                    "object_name": "disk",
-                    "object_type": "object",
-                    "uuid": "5652157b-f4b2-4f65-9887-ecf02fa07ba0"
-                },
-                {
-                    "check_command": "load",
-                    "fields": [],
-                    "imports": [
-                        "monitor-service-template"
-                    ],
-                    "object_name": "load",
-                    "object_type": "object",
-                    "uuid": "016824c1-98e4-419e-898b-2b6b87cd641c"
-                },
-                {
-                    "check_command": "memory",
-                    "fields": [],
-                    "imports": [
-                        "monitor-service-template"
-                    ],
-                    "object_name": "memory",
-                    "object_type": "object",
-                    "uuid": "18a323cf-010d-42e9-8a16-f945b8d993db"
-                }
-            ],
-            "uuid": "be4c2d11-34a5-46e9-8a1e-10ba1bd7f1f9"
-        },
-        "master-service-set": {
-            "assign_filter": "host.templates=%22master-template%22",
-            "object_name": "master-service-set",
-            "object_type": "template",
-            "services": [
-                {
-                    "fields": [],
-                    "imports": [
-                        "discovery-service-template"
-                    ],
-                    "object_name": "opt1",
-                    "object_type": "object",
-                    "uuid": "efde7893-7c7d-4bfd-a435-b6135fea8755",
-                    "vars": {
-                        "port": "1"
-                    }
-                },
-                {
-                    "fields": [],
-                    "imports": [
-                        "discovery-service-template"
-                    ],
-                    "object_name": "opt2",
-                    "object_type": "object",
-                    "uuid": "f6d055da-f234-4f0b-bca8-1d19d57a3c63",
-                    "vars": {
-                        "port": "2"
-                    }
-                },
-                {
-                    "fields": [],
-                    "imports": [
-                        "discovery-service-template"
-                    ],
-                    "object_name": "opt3",
-                    "object_type": "object",
-                    "uuid": "b02030ff-c7c9-40f7-ac98-22397102a507",
-                    "vars": {
-                        "port": "3"
-                    }
-                },
-                {
-                    "fields": [],
-                    "imports": [
-                        "discovery-service-template"
-                    ],
-                    "object_name": "opt4",
-                    "object_type": "object",
-                    "uuid": "aba126f6-307f-4858-a385-d8eeb81e62d7",
-                    "vars": {
-                        "port": "4"
-                    }
-                }
-            ],
-            "uuid": "540c590e-b51a-43ab-a71c-067de8128d24"
         }
     },
     "UserTemplate": {
@@ -17926,6 +17875,18 @@
             "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
             "format": null,
             "settings": {},
+            "category": null
+        },
+        "49": {
+            "uuid": "e756c2ea-e140-4678-b840-ae00f92cf44b",
+            "varname": "bandwidth",
+            "caption": "bandwidth",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
             "category": null
         },
         "46": {
