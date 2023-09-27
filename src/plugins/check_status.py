@@ -1197,6 +1197,7 @@ def cmd_help():
     -d, --device  dmu, dru
     -n, --hostname dmu
     -p, --port 1
+    -b, --bandwidth 10
     -hlwu, --highLevelWarningUplink
     -hlcu, --highLevelCriticalUplink
     -hlwd, --highLevelWarningDownlink
@@ -1213,6 +1214,7 @@ def args_check():
         ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
         ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
         ap.add_argument("-p", "--port", required=False, help="hostname es requerido", default="0")
+        ap.add_argument("-b", "--bandwidth", required=True, help="bandwidth es requerido", default="0")
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
         ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
@@ -1320,7 +1322,7 @@ def get_channel_table(responseDict):
         table3 += "<tr align=\"center\" style=font-size:12px>"
         table3 += "<td>" + responseDict['workingMode'] + "</td>"
 
-        table3 += "<td>" + responseDict['Work Bandwidth'] + "</td>"
+        table3 += "<td>" + responseDict['work_bandwidth'] + "</td>"
         table3 += "<td>" + responseDict['Uplink Start Frequency'] + "</td>"
         table3 += "<td>" + responseDict['Downlink Start Frequency'] + "</td>"
 
@@ -1405,14 +1407,14 @@ def get_channel_freq_table(parameter_dic):
     else:
         table3 = "<table width=90%>"
         table3 += "<thead><tr style=font-size:12px>"
-        table3 += "<th width='10%'>Status</font></th>"
-        table3 += "<th width='30%'>Work Bandwidth</font></th>"
+        table3 += "<th width='10%'>Mode</font></th>"
+        table3 += "<th width='30%'>Work Bandwidth [Mhz]</font></th>"
         table3 += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
         #       table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         table3 += "<tr align=\"center\" style=font-size:12px>"
         table3 += "<td>" + parameter_dic['workingMode'] + "</td>"
-        table3 += "<td>" + parameter_dic["Work Bandwidth"] + "</td>"
+        table3 += "<td>" + str(parameter_dic["work_bandwidth"]) + "</td>"
         # table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
         # table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
         table3 += "<td>" + parameter_dic['central_frequency_point'] + "</td>"
@@ -1441,7 +1443,7 @@ def blank_parameter(device):
     parameters = {}
     dru_parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
                       'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
-                      "Downlink Start Frequency": '-', "Work Bandwidth": '-'}
+                      "Downlink Start Frequency": '-'}
 
     dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
                       'optical_port_devices_connected_3': "-",
@@ -1451,7 +1453,7 @@ def blank_parameter(device):
                       'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                       'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                       'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                      'Work Bandwidth': '-', 'temperature': '-', }
+                      'temperature': '-', }
 
     channel_parameters = blank_channel_dict()
 
@@ -1465,7 +1467,7 @@ def blank_parameter_old(device):
     if device == 'dru':
         parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
                       'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
-                      "Downlink Start Frequency": '-', "Work Bandwidth": '-'}
+                      "Downlink Start Frequency": '-', "work_bandwidth": '-'}
         blank_channel_dict_old(parameters)
         return parameters
 
@@ -1478,7 +1480,7 @@ def blank_parameter_old(device):
                       'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                       'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                       'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                      'Work Bandwidth': '-', 'temperature': '-', }
+                      'work_bandwidth': '-', 'temperature': '-', }
         blank_channel_dict_old(parameters)
         return parameters
     return {}
@@ -1709,6 +1711,7 @@ def update_parameters_with_args(args, parameters):
     parameters['device'] = args['device']
     parameters['hostname'] = args['hostname']
     parameters['port'] = int(args['port'])
+    parameters['work_bandwidth'] = int(args['bandwidth'])
     parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
     parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
     parameters['highLevelWarningDL'] = int(args['highLevelWarningDL'])
