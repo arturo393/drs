@@ -57,6 +57,7 @@
         name:
           - logging
           - psutil
+          - crccheck
 
       # Icinga2
     - name: Apply API user Template
