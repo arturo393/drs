@@ -9,6 +9,7 @@ Library             RPA.RobotLogListener
 ${host}    %{host}
 ${passwd}    %{passwd}
 ${hostname}    %{hostname}
+${master_host}    %{master_host}
 
 *** Tasks ***
 Setup Service Apply Rules
@@ -137,6 +138,6 @@ Add Master host
     Select Options By    css=#imports    value    ${imports}
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
-    Type Text    css=#address    ${host}
+    Type Text    css=#address    ${master_host}
     Click    css=#Add
     Wait Until Network Is Idle
