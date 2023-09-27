@@ -102,7 +102,7 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     echo "Setting up Director Service Apply Rules: $ip_address"
     echo "\tPlease wait until rcc setup is finished...browser will open..."
     cd rpa/setup_extras
-     rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host etup_director.robot
+     rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host setup_director.robot
     cd ../..
 done
 
