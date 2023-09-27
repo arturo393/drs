@@ -56,7 +56,7 @@ class DRU:
     def __str__(self):
          return "RU"+str(self.opt)+str(self.dru)+" mac:"+str(self.mac)+" sn:"+str(self.sn)
     def __eq__(self, other):
-        return self.dru == other.dru and self.opt == other.dru and self.mac == other.mac and self.sn == other.sn
+        return self.dru == other.position and self.opt == other.position and self.mac == other.mac and self.sn == other.sn
 
 DRU_NAME_LENGHT = 4
 
@@ -172,10 +172,10 @@ def getNewListFromConnectedEqualCreated(connected_dru, created_dru):
         not_in_created = True
         for created in created_dru:
             if(dru_compare_mac_and_sn(connected,created)):
-                if (connected.opt != created.opt):    
+                if (connected.port != created.port):
                     ru_created_name = "RU" + \
-                        str(created.opt)+str(created.dru)
-                    ru_found_name = "RU"+str(connected.opt)+str(connected.dru)
+                                      str(created.port) + str(created.position)
+                    ru_found_name = "RU" + str(connected.port) + str(connected.position)
                     if(created.name.find(ru_created_name) == -1):
                         name = created.name +"-"+ru_found_name
                     else:
@@ -189,16 +189,16 @@ def getNewListFromConnectedEqualCreated(connected_dru, created_dru):
                                 new.name = name
                     if (not_in_new):
                         new_dru.append(
-                            DRU(connected.dru, connected.opt, connected.mac,connected.sn, name))
+                            DRU(connected.position, connected.port, connected.mac, connected.sn, name))
 
                     not_in_created = False
                 else:
-                    if (connected.dru == created.dru):
+                    if (connected.position == created.position):
                         not_in_created = False
 
         if (not_in_created):
-            name = "RU"+str(connected.opt)+str(connected.dru)
-            new_dru.append(DRU(connected.dru, connected.opt, connected.mac,connected.sn,name))
+            name = "RU" + str(connected.port) + str(connected.position)
+            new_dru.append(DRU(connected.position, connected.port, connected.mac, connected.sn, name))
     return new_dru
 
 def createSumaryMessage(connected_dru, new_dru, created_dru):
@@ -223,8 +223,8 @@ def removeFromNewEqualOptConnectedAndCreated(connected_dru, new_dru, created_dru
     for connected in connected_dru:
         for created in created_dru:
             if (dru_compare_mac_and_sn(connected,created)):
-                if (connected.opt == created.opt):
-                    if (connected.dru == created.dru):
+                if (connected.port == created.port):
+                    if (connected.position == created.position):
                         for new in new_dru:
                             if (new.mac == connected.mac and new.sn == connected.sn):
                                 new_dru.remove(new)
@@ -330,8 +330,8 @@ def director_create_dru_service(service):
 
     hostname = socket.gethostname()
     master_host = get_master_host()
-    opt = service.opt
-    dru = service.dru
+    opt = service.port
+    dru = service.position
     mac = service.mac
     name = service.name
     display_name = "RU"+str(opt)+str(dru)
