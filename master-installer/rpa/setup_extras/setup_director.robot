@@ -26,7 +26,7 @@ Setup Service Apply Rules
     Add Director host Service Apply Data   memory    monitor-service-template    host.templates    contains    host-template    check_memory
     Add Director host Service Apply Data   disk    monitor-service-template    host.templates    contains    host-template    check_disk
     Add Sigmaweb host     Sigmaweb    host-template    Monitor
-    Add UqommWeb host    UqommWeb    host-template    Master
+    Add UqommWeb host    Uqommweb    host-template    Master
     Add Master host    ${hostname}    master-template    ${hostname}
     Deploy
 
