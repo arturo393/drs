@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+<head> 
+	<meta charset="utf-8"> 
+	<title>Config Page</title> 
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/public.js"></script>
+	<script src="/js/ssfb.js"></script>
+	<link rel="shortcut icon" href="/images/santone.ico">
+	<script src="/layui/layui.js"></script>
+	<link rel="stylesheet" href="/layui/css/layui.css">
+</head>
+
+<body style="height:1200px;">
+	<div class="layui-row layui-col-space15">
+		<div class="layui-col-xs3">                   
+			<div class="grid-demo grid-demo-bg1">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Fiber Status</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:1px;">
+								<tr>
+									<td><span id="span_fb1">FB1</span></td>
+									<td><span id="span_fb2">FB2</span></td>
+									<td><span id="span_fb3">FB3</span></td>
+									<td><span id="span_fb4">FB4</span></td>
+								</tr>
+								<tr>
+									<td><div style="height:25px;width:25px;background-color:DarkGray;" id="div_fb1"></div></td>
+									<td><div style="height:25px;width:25px;background-color:DarkGray;" id="div_fb2"></div></td>
+									<td><div style="height:25px;width:25px;background-color:DarkGray;" id="div_fb3"></div></td>
+									<td><div style="height:25px;width:25px;background-color:DarkGray;" id="div_fb4"></div></td>
+								</tr>
+							</table>	
+						</div>
+					</div>
+
+					<div class="layui-colla-item" id="yanshihtml">
+						<h2 class="layui-colla-title" >Delay Config</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:1px;">
+								<tr>
+									<td>channel&nbsp;0&nbsp;&nbsp;delay&nbsp;</td>
+									<td>
+										<select id="select_ch0DelayMode">
+											<option>Auto</option>
+											<option>Manual</option>
+										</select>
+									</td>
+									<td>val</td>
+									<td style=""><input type="text" style="width:80px;" id="textbox_ch0Delay"/></td>
+									<td><button style="" onclick="writeRemoteDelay()">write</button></td>
+								</tr>
+								<tr>
+									<td>channel&nbsp;1&nbsp;&nbsp;delay&nbsp;</td>
+									<td>
+										<select id="select_ch1DelayMode">
+											<option>Auto</option>
+											<option>Manual</option>
+										</select>
+									</td>
+									<td>val</td>
+									<td ><input type="text" style="width:80px;" id="textbox_ch1Delay"/></td>
+								</tr>
+							</table>		
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Fiber Gain(0.50~1.99)</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:1px;">
+								<tr>
+									<td>channel&nbsp;0&nbsp;fb&nbsp;gain&nbsp;</td>
+									<td style=""><input type="text" style="width:50px;" id="textbox_ch0FbGain" maxlength=4 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+								</tr>
+								<tr>
+									<td>channel&nbsp;1&nbsp;fb&nbsp;gain&nbsp;</td>
+									<td style=""><input type="text" style="width:50px;" id="textbox_ch1FbGain" maxlength=4 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+									<td><button style="" onclick="writeChFbGain()">write</button></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Fiber Config</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:1px;">
+								<tr>
+									<td>Port&nbsp;1&nbsp;&nbsp;&nbsp;</td>
+									<td>
+										<select id="select_fb1">
+											<option>On</option>
+											<option>Off</option>
+										</select>
+									</td>
+									<td>Port&nbsp;3&nbsp;&nbsp;&nbsp;</td>
+									<td>
+										<select id="select_fb3">
+											<option>On</option>
+											<option>Off</option>
+										</select>
+									</td>
+									<td><button style="" onclick="writeFb()">write</button></td>
+								</tr>
+								<tr>
+									<td>Fiber&nbsp;2&nbsp;&nbsp;&nbsp;</td>
+									<td>
+										<select id="select_fb2">
+											<option>On</option>
+											<option>Off</option>
+										</select>
+									</td>
+									<td>Port&nbsp;4&nbsp;&nbsp;&nbsp;</td>
+									<td>
+										<select id="select_fb4">
+											<option>On</option>
+											<option>Off</option>
+										</select>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-xs3">
+			<div class="grid-demo">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Netting Style</h2>
+						<div class="layui-colla-content layui-show">
+							<select style="" id="select_ssNetMode">
+								<option>Auto</option>
+								<option>Port 1,2</option>
+								<option>Port 3,4</option>
+								<option>Overlap</option>
+							</select>
+							<button style="" onclick="writeNetMode()">write</button>
+							<button style="margin-left: 5%;color:Red;" onclick="initRemoteFb()">Init Remote</button>
+						</div>
+					</div>	
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Remote Net Positon</h2>
+						<div class="layui-colla-content layui-show">
+							<input type="text" style="margin-top:7%;" readonly="true" id="textbox_localMaster"/>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Mac Addr</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:1px;">
+								<tr>
+									<td style=""><input type="text" style="width:50px;ime-mode:disabled;" id="textbox_remoteMAC0" maxlength=2 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 97 && event.keyCode <= 102) || (event.keyCode >= 65 && event.keyCode <= 70)"></td>
+									<td style=""><input type="text" style="width:50px;ime-mode:disabled;" id="textbox_remoteMAC1" maxlength=2 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 97 && event.keyCode <= 102) || (event.keyCode >= 65 && event.keyCode <= 70)"></td>
+									<td style=""><input type="text" style="width:50px;ime-mode:disabled;" id="textbox_remoteMAC2" maxlength=2 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 97 && event.keyCode <= 102) || (event.keyCode >= 65 && event.keyCode <= 70)"></td>
+									<td style=""><input type="text" style="width:50px;ime-mode:disabled;" id="textbox_remoteMAC3" maxlength=2 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 97 && event.keyCode <= 102) || (event.keyCode >= 65 && event.keyCode <= 70)"></td>
+									<td><button onclick="writeMAC()">write</button></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Port Net-Addr</h2>
+						<div class="layui-colla-content layui-show">
+							<span style="">Port 0&nbsp;&nbsp;&nbsp;</span>
+							<input type="text" style="width:50px" readonly="true" id="textbox_ch0RecNetMode"/>
+							<span style="">Port 1&nbsp;&nbsp;&nbsp;</span>
+							<input type="text" style="width:50px;" readonly="true" id="textbox_ch1RecNetMode"/>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Fiber ID</h2>
+						<div class="layui-colla-content layui-show">
+							<input type="text" style="width:50px;me-mode:disabled;" id="textbox_ssId" maxlength=5 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57)"/>
+							<button style="" onclick="writeSsId()">write</button>
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+
+		<div class="layui-col-xs3">
+			<div class="grid-demo">
+				<button style="display:none;" onclick="readSsFb()">read</button>
+			</div>
+		</div>
+	</div>
+
+	<div style="width: 100%;height:200px;position: fixed;bottom: 0px;z-index:10;background-color: rgb(255,255,255);">
+
+		<div class="layui-colla-item">
+			
+			<h2 class="layui-colla-title" style="height: 30px;line-height:30px">DEBUG
+				<button style="margin-left: 25px;width: 50px;height: 25;" onclick="txtClear()">Clear</button> 
+			</h2>
+			<div class="layui-colla-content layui-show">
+				
+				<div class="layui-col-md12">
+					<div class="grid-demo grid-demo-bg1">
+						<div style="height:150px;width:100%;border:1px solid Gainsboro;overflow:auto;" contenteditable="true" id="textarea_Debug">
+						</div>
+					</div>
+				</div>
+	
+			</div>
+		</div>
+	 </div>
+	<script>
+		layui.use(['element', 'layer'], function(){
+			var element = layui.element;
+			var layer = layui.layer;
+
+			//监听折叠
+			element.on('collapse(test)', function(data){
+			});
+		});
+	</script>	
+</body>
+</html>

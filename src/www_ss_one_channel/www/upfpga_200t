@@ -1,0 +1,91 @@
+#!/bin/sh
+echo
+
+up_file=""
+
+if [ ! -f "/tmp/update" ]; then
+
+    if [ ! -f "/tmp/Images/TTNET_DSA.bin" ]; then
+
+        IP=`/sbin/ifconfig br0 | sed -n -e 's/^.*inet addr:\([0-9][0-9\.]*\).*$/\1/p'`
+        if [ "$IP" == "" ]; then
+            echo "IP error! goto reinitial bridge..."
+            rmbr
+            mkbr
+        fi
+
+        if [ "`df |sed -n -e 's/mnt//p'`" == "" ]; then
+            mount -t nfs -o nolock 192.168.31.200:/home/SambaDir/Public/S17P3_V2_shareDir /mnt
+            if [ $? == 0 ]; then
+                cp /mnt/Images /tmp/ -a
+                umount /mnt
+            else
+                echo "Error:: nfs mounting failed! Pls check ethernet connection or IP configuration!"
+                exit 1
+            fi
+        fi
+
+        if [ ! -f "/tmp/Images/TTNET_DSA.bin" ]; then
+            echo "Error:: TTNET_DSA.bin not exist!"
+            rm -rf /tmp/Images > /dev/null 2>&1
+            exit 2
+        else
+		            up_file="/tmp/Images/TTNET_DSA.bin"                                               
+        fi                                       
+    fi                                                                                
+else                                                                                                  
+    up_file="/tmp/update"                                                                             
+fi                                                                                                    
+                                                                                      
+if [ "$up_file" == "" ]; then                               
+    exit 1                                                  
+fi                                                          
+                                                                                              
+FPGA_sta=`cat /sys/bus/spi/drivers/FPGActrl/spi1.1/pro_done`                                  
+if [ "$FPGA_sta" == "0" ];then                                                                
+    echo 0 > /sys/bus/spi/drivers/FPGActrl/spi1.1/pro_b                                       
+fi                                                                                            
+                                                                                                      
+echo "FPGA flash partition info:"   
+if [ ! -e /dev/mtd5 ];then                       
+	rm -rf /tmp/update > /dev/null 2>&1                         
+	rm -rf /tmp/Images > /dev/null 2>&1 
+	exit 1
+fi                                                                  
+mtd_debug info /dev/mtd5
+                                                                                                      
+echo "Erasing FPGA partition(10M)..."
+flash_erase /dev/mtd5 0 160 > /dev/null                          
+                                                           
+echo                                                       
+echo "Writing FPGA image..."                               
+flashcp $up_file /dev/mtd5                                  
+                                                            
+if [ $? == 0 ];then                                         
+    #echo 1 > /sys/bus/spi/drivers/FPGActrl/spi1.1/reprogram
+    echo "FPGA update success!"
+else                                                                                          
+    echo "Error:: FPGA update failed! do again..."                                        
+    flash_erase /dev/mtd5 0 160 > /dev/null                                                            
+	flashcp $up_file /dev/mtd5                                                                        
+    if [ $? == 0 ];then                                                                           
+    	#echo 1 > /sys/bus/spi/drivers/FPGActrl/spi1.1/reprogram                                       
+    	echo "FPGA update success!"                                                           
+    else                                                                                          
+    	echo "Error:: FPGA update failed!"   
+    fi                                                 
+fi
+#backup fpga file
+if [ ! -d "/fpga" ];then
+	mkdir /fpga
+fi
+mount -t jffs2 /dev/mtdblock4 /fpga
+if [ $? == 0 ]; then
+	mv /tmp/update /fpga/fpga_recover.bin
+	umount /fpga
+fi
+
+rm -rf /tmp/update > /dev/null 2>&1                         
+rm -rf /tmp/Images > /dev/null 2>&1                         
+                                                            
+echo

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+<head> 
+	<meta charset="utf-8"> 
+	<title>Config Page</title> 
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/public.js"></script>
+	<script src="/js/hwconfig.js"></script>
+	<script src="/js/FileSaver.min.js"></script>
+	<link rel="shortcut icon" href="/images/santone.ico">
+	<script src="/layui/layui.js"></script>
+	<link rel="stylesheet" href="/layui/css/layui.css">
+</head>
+
+<body  style="height: 1200px">
+	<div class="layui-row">
+		<div class="layui-col-xs2">
+			<div class="grid-demo grid-demo-bg1">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Hw LockStatus</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:10px;">
+								<tr>
+									<td>9524 PLL2</td>
+									<td><div style="height:16px;width:16px;background-color:DarkGray;" id="div_9524PLL2"></div></td>
+								</tr>
+								<tr >
+									<td>HMC1197A</td>
+									<td><div style="height:16px;width:16px;background-color:DarkGray;" id="div_HMC1197A"></div></td>
+								</tr>
+								<tr style="display:none;">
+									<td>HMC1197B</td>
+									<td><div style="height:16px;width:16px;background-color:DarkGray;" id="div_HMC1197B"></div></td>
+								</tr>
+								<tr>
+									<td>AFC</td>
+									<td><div style="height:16px;width:16px;background-color:DarkGray;" id="div_AFC"></div></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Module Temp</h2>
+						<div class="layui-colla-content layui-show">
+							<input type="text" style="width: 50px;" id="textBox_temp" readonly="true"/>
+							
+							<span >℃</span>	
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">DA Out Peak</h2>
+						<div class="layui-colla-content layui-show">
+							<span style="">1</span>
+							<input type="text" style="width: 50px;" id="textBox_adcMaxOutputTx0" readonly="true"/>
+							<span style="display:none;">0</span>
+							<input type="text" style="width: 50px;display:none;" id="textBox_adcMaxOutputTx1" readonly="true"/>	
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">AD In Peak</h2>
+						<div class="layui-colla-content layui-show">
+							<span style="">0</span>
+							<input type="text" style="width: 50px;" id="textBox_adcMaxInputRx0" readonly="true"/>
+							<span style="display:none;">1</span>
+							<input type="text" style="width: 50px;display:none;" id="textBox_adcMaxInputRx1" readonly="true"/>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Self-excited Warm</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:10px;">
+								<tr>
+									<td>0</td>
+									<td><div style="height:16px;width:16px;background-color:DarkGray;" id="div_selfAlarmRx0"></div></td>
+								</tr>
+								<tr style="display:none;">
+									<td>1</td>
+									<td><div style="height:16px;width:16px;background-color:DarkGray;" id="div_selfAlarmRx1"></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-xs3">
+			<div class="grid-demo">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Fiber Power</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:10px;">
+								<tr>
+									<td style="">tx1 : <span id="span_fbTx1Power">n/a</span></td>
+									<td style="">rx1 : <span id="span_fbRx1Power">n/a</span></td>
+								</tr>
+								<tr>
+									<td>tx2 : <span id="span_fbTx2Power">n/a</span></td>
+									<td>rx2 : <span id="span_fbRx2Power">n/a</span></td>
+								</tr>
+								<tr>
+									<td>tx3 : <span id="span_fbTx3Power">n/a</span></td>
+									<td>rx3 : <span id="span_fbRx3Power">n/a</span></td>
+								</tr>
+								<tr>
+									<td>tx4 : <span id="span_fbTx4Power">n/a</span></td>
+									<td>rx4 : <span id="span_fbRx4Power">n/a</span></td>
+								</tr>
+							</table>	
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Fiber Temp</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:10px;">
+								<tr>
+									<td style="">port1 : <span id="span_fbTemp1">n/a</span></td>
+								</tr>
+								<tr>
+									<td style="">port2 : <span id="span_fbTemp2">n/a</span></td>
+								</tr>
+								<tr>
+									<td style="">port3 : <span id="span_fbTemp3">n/a</span></td>
+								</tr>
+								<tr>
+									<td style="">port4 : <span id="span_fbTemp4">n/a</span></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Version</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:5px;">
+								<tr>
+									<td style="width: 60%;">FPGA:<span id="span_fpgaVersion"></span></td>
+									<td style="">Software:<span id="span_softVersion"></span></td>
+								</tr>
+								<tr>
+									<td style="visibility:hidden;">Hardware:<span id="span_hwVersion"></span></td>
+									<td style="">Kernel:<span id="span_kernelVersion"></span></td>
+								</tr>
+							</table>	
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-col-xs3" id="admindisplay1" style="display: none">
+			<div class="grid-demo">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item" id="newware">
+					 <h2 class="layui-colla-title">Write Paremeter</h2>
+					  <div class="layui-colla-content layui-show">
+							<table>	
+								<tr>
+									<td>
+										<input type="file" style="display:none;" id="file_peripheralHw" onchange="peripheralHw()"/>
+										<button style="width: 80px;" onclick="initPeripheralHw()">Import All</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="file" style="display:none;" id="file_ad9524" onchange="ad9524()"/>
+										<button style="width: 80px;" onclick="document.getElementById('file_ad9524').click()">Import 9524</button>
+										<button style="width: 80px;" onclick="readAd9524()">Read 9524</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="file" style="display:none;" id="file_dac" onchange="dac()"/>
+										<button style="width: 80px;" onclick="initDac()">Import DAC</button>
+										<button style="width: 80px;display:none;" onclick="readDac0()">Read DAC1</button>
+			 							<button style="width: 80px;"onclick="readDac1()">Read DAC0</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="file" style="display:none;" id="file_hmc1197" onchange="hmc1197()"/>
+										<button style="width: 80px;" onclick="initHmc1197()">Import HMC</button>
+										<button style="width: 80px;" onclick="readHmc0()">Read HMC0</button>
+			 							<button style="width: 80px;display:none;" onclick="readHmc1()">Read HMC1</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input type="file" style="display:none;" id="file_temprature" onchange="temprature()"/>
+										<button style="width: 80px;" onclick="initTemprature()">Import Temp Comp</button>
+									</td>
+								</tr>
+						</table>	
+					  </div>
+				 </div>
+
+				<div class="layui-colla-item" id="dowconfig">
+					<h2 class="layui-colla-title">Download Config</h2>
+					<div class="layui-colla-content layui-show">
+						<button style="" onclick="downloadConfigFile()">All </button>
+						<button style="" onclick="downloadTempFile()">Temp Comp</button>	   
+					</div>
+				</div>
+
+				<div class="layui-colla-item" id="DAChtml">
+					<h2 class="layui-colla-title">DAC</h2>
+					 <div class="layui-colla-content layui-show">
+						<table style="border-collapse:separate; border-spacing:7px;">
+							<tr>
+								<tr style="display:none;">
+									<td style="">DAC&nbsp;1&nbsp;I:</td>
+									<td style=""><input type="text" style="width:50px;" id="textbox_dac0I"/></td>
+									<td>Q:</td>
+									<td style=""><input type="text" style="width:50px;" id="textbox_dac0Q"/></td>
+									<td><button style="width: 50px;height: 25px;" onclick="writeDac0()">write</button></td>
+								</tr>
+								<tr>
+									<div style="border:1px solid Gainsboro;display:none;">
+										<label><input type="radio" name="radio0" value="normal" id="radio_dac0Normal" checked="true"/>Normal</label>
+										<label><input type="radio" name="radio0" value="powerdown" id="radio_dac0Powerdown"/>Powerdown</label>
+									</div>
+								</tr>	
+							</tr>
+						</table>
+						<table style="border-collapse:separate; border-spacing:7px;">
+							<tr>
+								<tr>
+									<td style="">DAC&nbsp;0&nbsp;I:</td>
+									<td style=""><input type="text" style="width:50px;" id="textbox_dac1I"/></td>
+									<td>Q:</td>
+									<td style=""><input type="text" style="width:50px;" id="textbox_dac1Q"/></td>
+									<td><button style="width: 50px;height: 25px;" onclick="writeDac1()">write</button></td>
+								</tr>
+								<tr>
+									<div style="border:1px solid Gainsboro;">
+										<label><input type="radio" name="radio1" value="normal" id="radio_dac1Normal" checked="true"/>Normal</label>
+										<label><input type="radio" name="radio1" value="powerdown" id="radio_dac1Powerdown"/>Powerdown</label>
+									</div>
+								</tr>
+							</tr>
+						</table>  
+					 </div>
+				</div>
+
+				<div class="layui-colla-item" id="outputpowerhtml">
+					<h2 class="layui-colla-title">In/Out Power</h2>
+					<div class="layui-colla-content layui-show">
+						<table style="margin-top:0%;border-collapse:separate;border-spacing:5px;">
+							<tr>
+								<td style="">Rx Up</td>
+								<td style=""><input type="text" id="textbox_input_power_rx0" maxlength=3 value="0" readonly="true" style="width: 50px;"/></td>
+								<td style="">offset</td>
+								<td style=""><input type="text" onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==45" id="textbox_input_power_rx0_offset" maxlength=4 value="0" style="width: 50px;"/></td>
+								<td><button style="width: 50px;height: 25px;" onclick="writeInputPower()">write</button></td>	
+							</tr>
+							<tr style="display: none">	
+								<td>Rx Down</td>
+								<td><input type="text" id="textbox_input_power_rx1" maxlength=3 value="0" readonly="true" style="width: 50px;"/></td>
+								<td>offset</td>
+								<td><input type="text" onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==45" id="textbox_input_power_rx1_offset" maxlength=4 value="0" style="width: 50px;"/></td>
+							</tr>
+						</table>
+						<table style="margin-top:2%;border-collapse:separate;border-spacing:5px;">	
+							<tr>
+								<td style="">Tx Up</td>
+								<td style=""><input type="text" id="textbox_output_power_tx0" maxlength=3 value="0" readonly="true" style="width: 50px;"/></td>
+								<td style="">offset</td>
+								<td style=""><input type="text" onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==45" id="textbox_output_power_tx0_offset" maxlength=4 value="0" style="width: 50px;"/></td>
+								<td><button style="width: 50px;height: 25px;" onclick="writeOutputPower()">write</button></td>								
+							</tr>
+							<tr style="display: none">	
+								<td>Tx Down</td>
+								<td><input type="text" id="textbox_output_power_tx1" maxlength=3 value="0" readonly="true" style="width: 50px;"/></td>
+								<td>offset</td>
+								<td><input type="text" onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==45" id="textbox_output_power_tx1_offset" maxlength=4 value="0" style="width: 50px;"/></td>
+							</tr>
+						</table>	
+					 </div>
+				</div>
+			 </div>
+		 </div>	
+	 </div>
+
+		<div class="layui-col-xs3" id="admindisplay2" style="display: none">
+			<div class="grid-demo">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item"id="Datthtml">
+						<h2 class="layui-colla-title">Attenuation(0~31.5)</h2>
+						<div class="layui-colla-content layui-show">
+							<table style="border-collapse:separate; border-spacing:2px;">
+								<tr style="display: none">
+									<td style="">Up Link In</td>
+									<td style=""><input type="text" style="width:55px;" id="textbox_dattRx00" maxlength=5 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+									<td>db</td>
+								</tr>
+								<tr>
+									<td style="">Up Link ALC</td>
+									<td style=""><input type="text" style="width:55px;" id="textbox_dattRx01" readonly="true"/></td>
+									<td>db</td>
+								</tr>
+								<tr style="display: none">
+									<td style="">Down Link In</td>
+									<td style=""><input type="text" style="width:55px;" id="textbox_dattRx10" maxlength=5 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+									<td>db</td>
+								</tr>
+								<tr style="display: none">
+									<td style="">Down Link ALC</td>
+									<td style=""><input type="text" style="width:55px;" id="textbox_dattRx11" readonly="true"/></td>
+									<td>db</td>
+								</tr>
+								<tr style="display: none">
+									<td style="">Down Link  Out</td>
+									<td style=""><input type="text" style="width:55px;" id="textbox_dattTx0" maxlength=5 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+									<td>db</td>
+								</tr>
+								<tr>
+									<td style="">Up Link Out</td>
+									<td style=""><input type="text" style="width:55px;" id="textbox_dattTx1" maxlength=5 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+									<td>db</td>
+								</tr>
+							</table>
+							<button style="width: 50px;height: 25px;" onclick="writeDatt()">write</button>	
+						</div>
+					</div>
+
+					<div class="layui-colla-item" id="ad5662html">
+						<h2 class="layui-colla-title">ad5662</h2>
+						<div class="layui-colla-content layui-show">
+							<div style="">
+								<select id="select_ad5662Manual">
+									<option>Auto</option>
+									<option>Manual</option>
+								</select>
+								<input type="text" style="width: 50px;" id="textbox_ad5662Val"/>
+								<button style="width: 50px;height: 25px;" onclick="writeAd5662()">write</button>
+								<div class="method-1-wrap" style="">
+									<fieldset class="layui-elem-field ">AFC(Under 5662-Auto)
+										<table style="border-collapse:separate; border-spacing:5px;">
+											<tr>
+												<td>AFC Mode</td>
+												<td style="">
+													<select style="" id="select_afcMode">
+														<option>Auto</option>
+														<option>Manual</option>
+														<option>Calib</option>
+													</select>
+												</td>
+												<td><button id="button_afcRst" onclick="afcReset()">Reset</button></td>
+											</tr>
+											<tr>
+												<td>AFC Auto Fiber-Port</td>
+												<td style="">
+													<select style="" id="select_afcAuto">
+														<option>ALL</option>
+														<option>1,2</option>
+														<option>3,4</option>
+													</select>
+												</td>
+												<td></td>
+											</tr>
+											<tr>
+												<td>AFC Manual Fiber-port</td>
+												<td style="">
+													<select style="" id="select_afcHand">
+														<option>1</option>
+														<option>2</option>
+														<option>3</option>
+														<option>4</option>
+													</select>
+												</td>
+												<td><button style="width: 50px;height: 25px;" onclick="writeAfc()">write</button></td>
+											</tr>
+										</table>
+									</fieldset>
+								</div>
+								<div style="">
+									<table style="border-collapse:separate; border-spacing:2px; ">
+										<tr>
+											<td style="">VCXO Realtime</td>
+											<td style="">VCXO Destinate</td>
+										</tr>
+										<tr>
+											<td style=""><input type="text" style="width: 50px;" id="textbox_vcxoTrueValue"/></td>
+											<td style=""><input type="text" style="width: 50px;" id="textbox_vcxoTargetValue"/></td>
+										</tr>
+									</table>
+						 		</div>
+							</div>
+			 			</div>
+					</div>
+
+					<div class="layui-colla-item" id="switchhtml">
+						<h2 class="layui-colla-title">Rf Key</h2>
+						 <div class="layui-colla-content layui-show">
+							<div class="method-1-wrap" style="">
+								<label style="" ><input type="radio" name="radioRF" value="open" id="radio_RFOpen"/>On</label>
+								<label style=""><input type="radio" name="radioRF" value="close" id="radio_RFClose"/>Off</label>
+								<button style="width: 50px;height: 25px;" onclick="writeRFSwitch()">write</button>
+							</div>		
+						 </div>
+					</div>
+				</div>		
+			</div>
+		</div>				
+	</div>
+
+	<div style="width: 100%;height:200px;position: fixed;bottom: 0px;z-index:10;background-color: rgb(255,255,255);">
+
+		<div class="layui-colla-item">
+			
+			<h2 class="layui-colla-title" style="height: 30px;line-height:30px">DEBUG
+				<button style="margin-left: 25px;width: 50px;height: 25px;" onclick="txtClear()">Clear</button> 
+			</h2>
+			<div class="layui-colla-content layui-show">
+				
+				<div class="layui-col-md12">
+					<div class="grid-demo grid-demo-bg1">
+						<div style="height:150px;width:100%;border:1px solid Gainsboro;overflow:auto;" contenteditable="true" id="textarea_Debug">
+						</div>
+					</div>
+				</div>
+	
+			</div>
+		</div>
+	 </div>
+	
+	<script>
+	layui.use(['element', 'layer'], function(){
+	  var element = layui.element;
+	  var layer = layui.layer;
+	  
+	  //监听折叠
+	  element.on('collapse(test)', function(data){
+		
+	  });
+	});
+	</script>	
+</body>
+</html>

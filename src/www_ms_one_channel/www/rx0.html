@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+<head> 
+	<meta charset="utf-8"> 
+	<title>Config Page</title> 
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/public.js"></script>
+	<script src="/js/rx0.js"></script>
+	<link rel="shortcut icon" href="/images/santone.ico">
+	<script src="/layui/layui.js"></script>
+	<link rel="stylesheet" href="/layui/css/layui.css">
+</head>
+
+<body  style="height: 1200px">
+	<div class="layui-row layui-col-space15">
+		<div class="layui-col-xs6" id="msrediv">                   
+			<div class="grid-demo grid-demo-bg1">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item">
+						<h2 class="layui-colla-title">Receive</h2>
+						<div class="layui-colla-content layui-show">
+							<div class="layui-row layui-col-space15">
+								<div class="layui-col-xs4">                   
+									<div class="grid-demo grid-demo-bg1">
+										<div class="layui-collapse" lay-filter="test">
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">ALC</h2>
+												<div class="layui-colla-content layui-show">
+													<table style="border-collapse:separate; border-spacing:1px;">
+														<tr>
+															<td style="">mean&nbsp;exp</td>
+															<td><input type="text" style="width:60px" id="textbox_rx0MeanExp"/></td>
+														</tr>
+														<tr>
+															<td style="">search&nbsp;num</td>
+															<td><input type="text" style="width:60px;" id="textbox_rx0SearchNum"/></td>
+														</tr>
+														<tr>
+															<td style="">switch</td>
+															<td>
+																<select style="width: 60px;" id="select_rx0Switch">
+																	<option>Off</option>
+																	<option>On</option>
+																</select>
+															</td>
+														</tr>
+														<tr>
+															<td style="">manual&nbsp;datt</td>
+															<td><input type="text" style="width:60px" id="textbox_rx0ManualDatt"/></td>
+														</tr>
+														<tr>
+															<td style="">offset&nbsp;datt</td>
+															<td><input type="text" style="width:60px" id="textbox_rx0OffsetDatt"/></td>
+														</tr>
+														<tr>
+															<td style="">target&nbsp;db</td>
+															<td><input type="text" style="width:60px" id="textbox_rx0Target"/></td>
+														</tr>
+														<tr>
+															<td style="">delay&nbsp;time</td>
+															<td><input type="text" style="width:60px" id="textbox_rx0DelayTime"/></td>
+														</tr>
+													</table>
+													<button style="width: 50px;height: 25px;" onclick="writeRx0Alc()">write</button>	
+												</div>
+											</div>
+
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">alc ctrl limite(0~63)</h2>
+												<div class="layui-colla-content layui-show">
+													<table style="border-collapse:separate; border-spacing:5px;">
+														<tr>
+															<td>
+																<select id="select_rx0AlcThresholdEn">
+																	<option>Disable</option>
+																	<option>Enable</option>
+																</select>
+															</td>
+														</tr>
+														<tr>
+															<td>
+																<input type="text" style="width:50px;" id="textbox_rx0AlcThresholdVal" maxlength=2 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57)"/>
+																<button style="width: 50px;height: 25px;" onclick="writeRx0AlcCtrlThreshold()">write</button>
+															</td>
+														</tr>
+													</table>
+												</div>
+											</div>
+
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">Base Gain</h2>
+												<div class="layui-colla-content layui-show">
+													<table style="border-collapse:separate; border-spacing:5px;">
+														<tr>
+															<td style="">Base Peak</td>
+															<td><input type="text" style="width:50px;" id="textbox_rx0MaxVal"/></td>
+														</tr>
+														<tr>
+															<td style="">Compensation</td>
+															<td><input type="text" style="width:50px" id="textbox_rx0BbComp"/></td>
+														</tr>
+														<tr>
+															<td></td>
+															<td><button style="width: 50px;height: 25px;" onclick="writeRx0BbComp()">write</button></td>
+														</tr>
+													</table>
+												</div>
+											</div>
+									   	</div>
+									</div>
+								</div>
+								<div class="layui-col-xs8">
+									<div class="grid-demo">
+										<div class="layui-collapse" lay-filter="test">
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">BackGround Noise</h2>
+												<div class="layui-colla-content layui-show">
+													<table style="border-collapse:separate; border-spacing:3px;">
+														<tr>
+															<td>mean&nbsp;exp</td>
+															<td style=""><input type="text" style="width:43px;" id="textbox_rx0NoiseMeanExp"/></td>
+															<td></td>
+															<td>search&nbsp;num</td>
+															<td style=""><input type="text" style="width:43px;" id="textbox_rx0NoiseSearchNum"/></td>
+															<td></td>
+															<td>low&nbsp;noise</td>
+															<td style="">
+																<select style="" id="select_rx0LowNoise">
+																	<option>Off</option>
+																	<option>On</option>
+																</select>
+															</td>
+															<td></td>
+														</tr>
+													</table>
+													<nobr id="rx0nobr1">
+													<span>manual&nbsp;&nbsp;&nbsp;</span>
+													<span  id="rx0Manual0" style=""><label>1<input type="checkbox" name="manual" value="manual1" id="checkbox_rx0Manual1"/></label></span>
+													<span  id="rx0Manual1"  style=""><label>2<input type="checkbox" name="manual" value="manual2" id="checkbox_rx0Manual2"/></label></span>
+													<span  id="rx0Manual2"  style=""><label>3<input type="checkbox" name="manual" value="manual3" id="checkbox_rx0Manual3"/></label></span>
+													<span  id="rx0Manual3"  style=""><label>4<input type="checkbox" name="manual" value="manual4" id="checkbox_rx0Manual4"/></label></span>
+													<span  id="rx0Manual4"  style=""><label>5<input type="checkbox" name="manual" value="manual5" id="checkbox_rx0Manual5"/></label></span>
+													<span  id="rx0Manual5"  style=""><label>6<input type="checkbox" name="manual" value="manual6" id="checkbox_rx0Manual6"/></label></span>
+													<span  id="rx0Manual6"  style=""><label>7<input type="checkbox" name="manual" value="manual7" id="checkbox_rx0Manual7"/></label></span>
+													<span  id="rx0Manual7"  style=""><label>8<input type="checkbox" name="manual" value="manual8" id="checkbox_rx0Manual8"/></label></span>
+													</nobr>
+													</br>
+													<nobr id="rx0nobr2">
+													<span  id="rx0Manual8"  style=""><label>9<input type="checkbox" name="manual" value="manual9" id="checkbox_rx0Manual9"/></label></span>
+													<span  id="rx0Manual9"  style=""><label>10<input type="checkbox" name="manual" value="manual10" id="checkbox_rx0Manual10"/></label></span>
+													<span  id="rx0Manual10"  style=""><label>11<input type="checkbox" name="manual" value="manual11" id="checkbox_rx0Manual11"/></label></span>
+													<span  id="rx0Manual11"  style=""><label>12<input type="checkbox" name="manual" value="manual12" id="checkbox_rx0Manual12"/></label></span>
+													<span  id="rx0Manual12"  style=""><label>13<input type="checkbox" name="manual" value="manual13" id="checkbox_rx0Manual13"/></label></span>
+													<span  id="rx0Manual13"  style=""><label>14<input type="checkbox" name="manual" value="manual14" id="checkbox_rx0Manual14"/></label></span>
+													<span  id="rx0Manual14"  style=""><label>15<input type="checkbox" name="manual" value="manual15" id="checkbox_rx0Manual15"/></label></span>
+													<span  id="rx0Manual15"  style=""><label>16<input type="checkbox" name="manual" value="manual16" id="checkbox_rx0Manual16"/></label></span>
+													</nobr>
+													</br>
+													<nobr id="rx0nobr3" >
+													<span  id="rx0Manual16"  style=""><label>17<input type="checkbox" name="manual" value="manual17" id="checkbox_rx0Manual17"/></label></span>
+													<span  id="rx0Manual17"  style=""><label>18<input type="checkbox" name="manual" value="manual18" id="checkbox_rx0Manual18"/></label></span>
+													<span  id="rx0Manual18"  style=""><label>19<input type="checkbox" name="manual" value="manual19" id="checkbox_rx0Manual19"/></label></span>
+													<span  id="rx0Manual19"  style=""><label>20<input type="checkbox" name="manual" value="manual20" id="checkbox_rx0Manual20"/></label></span>
+													<span  id="rx0Manual20"  style=""><label>21<input type="checkbox" name="manual" value="manual21" id="checkbox_rx0Manual21"/></label></span>
+													<span  id="rx0Manual21"  style=""><label>22<input type="checkbox" name="manual" value="manual22" id="checkbox_rx0Manual22"/></label></span>
+													<span  id="rx0Manual22"  style=""><label>23<input type="checkbox" name="manual" value="manual23" id="checkbox_rx0Manual23"/></label></span>
+													<span  id="rx0Manual23"  style=""><label>24<input type="checkbox" name="manual" value="manual24" id="checkbox_rx0Manual24"/></label></span>
+													</nobr>
+													</br>
+													<nobr id="rx0nobr4" >
+													<span  id="rx0Manual24"  style=""><label>25<input type="checkbox" name="manual" value="manual25" id="checkbox_rx0Manual25"/></label></span>
+													<span  id="rx0Manual25"  style=""><label>26<input type="checkbox" name="manual" value="manual26" id="checkbox_rx0Manual26"/></label></span>
+													<span  id="rx0Manual26"  style=""><label>27<input type="checkbox" name="manual" value="manual27" id="checkbox_rx0Manual27"/></label></span>
+													<span  id="rx0Manual27"  style=""><label>28<input type="checkbox" name="manual" value="manual28" id="checkbox_rx0Manual28"/></label></span>
+													<span  id="rx0Manual28"  style=""><label>29<input type="checkbox" name="manual" value="manual29" id="checkbox_rx0Manual29"/></label></span>
+													<span  id="rx0Manual29"  style=""><label>30<input type="checkbox" name="manual" value="manual30" id="checkbox_rx0Manual30"/></label></span>
+													<span  id="rx0Manual30"  style=""><label>31<input type="checkbox" name="manual" value="manual31" id="checkbox_rx0Manual31"/></label></span>
+													<span  id="rx0Manual31"  style=""><label>32<input type="checkbox" name="manual" value="manual32" id="checkbox_rx0Manual32"/></label></span>
+													</nobr>
+													<table style="border-collapse:separate; border-spacing:3px;">
+														<tr>
+															<td>high&nbsp;level</td>
+															<td style=""><input type="text" style="width:43px;" id="textbox_rx0HighLevel"/></td>
+															<td></td>
+															<td>low&nbsp;level</td>
+															<td style=""><input type="text" style="width:43px;" id="textbox_rx0LowLevel"/></td>
+															<td></td>
+															<td>low&nbsp;pw&nbsp;cnt</td>
+															<td style=""><input type="text" style="width:43px;" id="textbox_rx0LowPwCnt"/></td>
+															<td></td>
+														</tr>
+													</table>
+													<span style="">level&nbsp;offset</span><input type="text" style="width:60px;" id="textbox_rx0LevelOffset"/>
+													<button style="width: 50px;height: 25px;" onclick="writeRx0Noise()">write</button>
+												</div>
+											</div>
+
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">Enable</h2>
+												<div class="layui-colla-content layui-show">
+													<label style=""><input type="checkbox" name="switch" value="gainComp" id="checkbox_rx0GainCompSwitch"/>Gain Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="tempComp" id="checkbox_rx0TempCompSwitch"/>Temp Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="dattComp" id="checkbox_rx0DattCompSwitch"/>Datt Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="coeComp" id="checkbox_rx0CoeCompSwitch"/>Filter Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="chRfPoint" id="checkbox_rx0ChRfPointSwitch"/>ChlFreq Comp</label>
+													</br>
+													<button style="width: 50px;height: 25px;" onclick="writeRx0EnSwitch()">write</button>	
+												</div>
+											</div>
+
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">Temp Comp</h2>
+												<div class="layui-colla-content layui-show">
+													<span style="">Current Temp Comp&nbsp;&nbsp;&nbsp;</span>
+													<span style="" id="span_rx0TempCompVal">N/A</span>
+													<table style="border-collapse:separate; border-spacing:5px;">
+														<tr>
+															<td style="">Gain Comp</td>
+															<td style=""><input type="text" style="width:50px;" id="textbox_rx0GainVal" maxlength=4 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+															<td><button style="width: 50px;height: 25px;" onclick="writeRx0GainVal()">write</button></td>
+															<td style="">Temp Comp Table</td>
+															<td><input type="file" style="display:none;" id="file_rx0TempTable" onchange="rx0TempTable()"/><button style="width: 50px;height: 25px;" onclick="writeRx0TempTable()">write</button></td>
+														</tr>
+														<tr>
+															<td style="visibility:hidden;">Flat Comp</td>
+															<td style="visibility:hidden;">
+																<select style="" id="select_rx0Coe">
+																	<option>0</option>
+																	<option>1</option>
+																	<option>2</option>
+																	<option>3</option>
+																	<option>4</option>
+																	<option>5</option>
+																	<option>6</option>
+																	<option>7</option>
+																</select>
+															</td>
+															<td><button onclick="writeRx0Coe()" disabled="disabled" style="visibility:hidden;">write</button></td>
+															<td style="">Filter Coff</td>
+															<td><input type="file" style="display:none;" id="file_rx0Filter" onchange="rx0Filter()"/><button style="width: 50px;height: 25px;" onclick="writeRx0Filter()">write</button></td>
+														</tr>
+													</table>	
+												</div>
+											</div>
+										</div>	
+									</div>
+								</div>
+							</div>	
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-xs6" id="mssediv">
+			<div class="grid-demo">
+				<div class="layui-collapse" lay-filter="test">
+					<div class="layui-colla-item">
+					<h2 class="layui-colla-title">Send</h2>
+						<div class="layui-colla-content layui-show">
+							<div class="layui-row layui-col-space15">
+								<div class="layui-col-xs3">                   
+									<div class="grid-demo grid-demo-bg1">
+
+										<div class="layui-collapse" lay-filter="test">
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">Enable</h2>
+												<div class="layui-colla-content layui-show">
+													<label style=""><input type="checkbox" name="switch" value="gainComp" id="checkbox_tx0GainCompSwitch"/>Gain Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="tempComp" id="checkbox_tx0TempCompSwitch"/>Temp Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="dattComp" id="checkbox_tx0DattCompSwitch"/>Datt Comp</label></br>
+													<label style=""><input type="checkbox" name="switch" value="coeComp" id="checkbox_tx0CoeCompSwitch"/>Filter Comp</label></br>
+													</br>
+													<button style="width: 50px;height: 25px;" onclick="writeTx0ComeEn()">write</button>		
+												</div>
+											</div>
+										</div>	
+									</div>
+								</div>
+								<div class="layui-col-xs9">
+									<div class="grid-demo">
+										<div class="layui-collapse" lay-filter="test">
+											<div class="layui-colla-item">
+												<h2 class="layui-colla-title" style="height: 25px;line-height: 25px;">Temp Comp</h2>
+												<div class="layui-colla-content layui-show">
+													<span style="">Current Temp Comp&nbsp;&nbsp;&nbsp;</span>
+													<span style="" id="span_tx0TempCompVal">N/A</span>
+													<table style="border-collapse:separate; border-spacing:5px;">
+														<tr>
+															<td style="">Gain Comp</td>
+															<td style=""><input type="text" style="width:50px;" id="textbox_tx0GainVal" maxlength=4 onkeypress="return (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode==46"/></td>
+															<td><button style="width: 50px;height: 25px;" onclick="writeTx0GainVal()">write</button></td>
+															<td style="">Temp Comp Table</td>
+															<td><input type="file" style="display:none;" id="file_tx0TempTable" onchange="tx0TempTable()"/><button style="width: 50px;height: 25px;" onclick="writeTx0TempTable()">write</button></td>
+														</tr>
+														<tr>
+															<td style="visibility:hidden;">Flat Comp</td>
+															<td style="visibility:hidden;">
+																<select style="" id="select_tx0Coe">
+																	<option>0</option>
+																	<option>1</option>
+																	<option>2</option>
+																	<option>3</option>
+																	<option>4</option>
+																	<option>5</option>
+																	<option>6</option>
+																	<option>7</option>
+																</select>
+															</td>
+															<td><button onclick="writeTx0Coe()" disabled="disabled" style="visibility:hidden;">write</button></td>
+															<td style="">Filter Comp</td>
+															<td><input type="file" style="display:none;" id="file_tx0Filter" onchange="tx0Filter()"/><button style="width: 50px;height: 25px;" onclick="writeTx0Filter()">write</button></td>
+														</tr>
+													</table>			
+												</div>
+											</div>
+										</div>
+									</div>					
+								</div>
+							</div>
+						</div>		
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div style="width: 100%;height:200px;position: fixed;bottom: 0px;z-index:10;background-color: rgb(255,255,255);">
+
+		<div class="layui-colla-item">
+			
+			<h2 class="layui-colla-title" style="height: 30px;line-height:30px">DEBUG
+				<button style="margin-left: 25px;width: 50px;height: 25px;" onclick="txtClear()">Clear</button> 
+			</h2>
+			<div class="layui-colla-content layui-show">
+				
+				<div class="layui-col-md12">
+					<div class="grid-demo grid-demo-bg1">
+						<div style="height:150px;width:100%;border:1px solid Gainsboro;overflow:auto;" contenteditable="true" id="textarea_Debug">
+						</div>
+					</div>
+				</div>
+	
+			</div>
+		</div>
+	 </div>
+
+	<script>
+		layui.use(['element', 'layer'], function(){
+			var element = layui.element;
+			var layer = layui.layer;
+
+			//监听折叠
+			element.on('collapse(test)', function(data){
+			});
+		});
+	</script>	
+	<script>
+		$(document).ready(function() { 
+			var receive=$("#receive",parent.document).val();
+			var send=$("#send",parent.document).val();
+			var s_receive=$("#receive",parent.document).attr("disabled");
+			var s_send=$("#send",parent.document).attr("disabled");
+			var number=$("#chnumber",parent.document).val();
+
+			if(receive=="零收" && s_receive=="disabled")
+			{
+				$("#msrediv").hide();
+			}
+
+			if(send=="零发" && s_send=="disabled")
+			{
+				$("#mssediv").hide();
+			}
+
+			if(number<9 && s_receive=="disabled")
+	        {
+				$("#rx0nobr1").show();
+				$("#rx0nobr2").hide();
+                $("#rx0nobr3").hide();
+                $("#rx0nobr4").hide();
+                for(var i=number;i<8;i++)
+                {
+                    if(i==8)
+						return false;
+                    var  x=i.toString();
+                    var y="#"+"rx0Manual"+x;
+                    $(y).hide();
+                }
+	        }
+
+			if(number>=9 && number<17  && s_receive=="disabled")
+	        {
+				$("#rx0nobr1").show();
+				$("#rx0nobr2").show();
+                $("#rx0nobr3").hide();
+                $("#rx0nobr4").hide();
+                for(var i=number;i<17;i++)
+                {
+                    if(i==16)
+                        return false;
+                    var  x=i.toString();
+                    var y="#"+"rx0Manual"+x;
+                    $(y).hide();
+                }
+	        }
+
+			if(number>=17 && number<25 && s_receive=="disabled" )
+            {
+				$("#rx0nobr1").show();
+				$("#rx0nobr2").show();
+                $("#rx0nobr3").show();
+                $("#rx0nobr4").hide();
+                for(var i=number;i<25;i++)
+                {
+                    if(i==24)
+						return false;
+                    var  x=i.toString();
+                    var y="#"+"rx0Manual"+x;
+                    $(y).hide();
+                }
+            }
+
+			f(number>=25 && number<32 && s_receive=="disabled" )
+            {
+				$("#rx0nobr1").show();
+				$("#rx0nobr2").show();
+                $("#rx0nobr3").show();
+                $("#rx0nobr4").show();
+                for(var i=number;i<32;i++)
+                {
+                    if(i==32)
+						return false;
+                    var  x=i.toString();
+                    var y="#"+"rx0Manual"+x;
+                    $(y).hide();
+                }
+            }
+
+		});
+	</script>	
+</body>
+</html>

@@ -1,0 +1,41 @@
+#!/bin/sh
+echo "mount proc..."
+/bin/mount -t proc none /proc
+
+echo "mount sys..."
+/bin/mount -t sysfs sysfs /sys
+
+echo "mount tmp..."
+/bin/mount -t ramfs /tmp
+
+echo "make devs..."
+/bin/echo > /dev/mdev.seq
+/bin/echo /bin/mdev > /proc/sys/kernel/hotplug
+/sbin/mdev -s
+
+if [ ! -d "/fpga" ];then
+	mkdir /fpga
+fi
+size=`df /home/`
+if [ ${size:92:5} -ge 24576 ];then
+    echo "rootfs size is ${size:92:5} bytes."
+else
+	mount -t jffs2 /dev/mtdblock4 /fpga
+fi
+
+boalog_path="/var/log/boa"
+if [ -d $boalog_path ]; then
+	rm $boalog_path/*log
+fi
+
+mkbr
+cp /sbin/boa_200t /sbin/boa
+cp /var/www/cgi-bin/copy_update.cgi /var/www/cgi-bin/update.cgi
+cp /var/www/cgi-bin/copy_module.cgi /var/www/cgi-bin/module.cgi
+
+	echo "---------start init--------------"
+	init_module
+	boa
+	daemon
+	auto_topo_ip > /dev/null 2>&1 &
+	#led > /dev/null 2>&1 &

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="f2b63812-d8c7-45e4-8745-ace555f89345" name="drs-server">
+        <fileTransfer rootFolder="/usr/lib/nagios/plugins" accessType="SFTP" host="192.168.60.78" port="22" sshConfigId="00dc55f5-e9c6-408b-a2a3-76e06228b8fc" sshConfig="root@192.168.60.78:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="53bea0fb-6a52-4c6a-9043-522ff90b5adb" name="WSL" url="http://localhost">
+        <fileTransfer mountedRoot="\\wsl$\Ubuntu\home\sigmadev\sigma-rds\master-installer" accessType="MOUNT" port="0" />
+      </webServer>
+    </option>
+  </component>
+</project>

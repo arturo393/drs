@@ -1,0 +1,14 @@
+#!/bin/sh
+
+	fpga_path="/fpga"
+	fpga_name="FPGA.bin"
+	upfile="/tmp/update"
+
+	if [ ! -d $fpga_path ]; then
+		mkdir -p $fpga_path
+	fi
+	if [ -d $fpga_path ] && [ -f $upfile ]; then
+		cp $upfile $fpga_path/$fpga_name
+		rm $upfile
+	fi
+
