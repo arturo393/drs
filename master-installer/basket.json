@@ -224,15 +224,6 @@
             "uuid": "8a430168-df46-49eb-9cd8-eb432a7afc6b",
             "zone": "master"
         },
-        "free": {
-            "command": "free",
-            "fields": [],
-            "is_string": false,
-            "methods_execute": "PluginCheck",
-            "object_name": "free",
-            "object_type": "object",
-            "uuid": "8b9e3670-72ce-4bc3-a129-5806128a1692"
-        },
         "check_memory": {
             "command": "/usr/lib/nagios/plugins/check_memory.py",
             "fields": [],
@@ -16804,56 +16795,6 @@
                 "highLevelWarningDownlink": "41",
                 "highLevelWarningUplink": "38"
             }
-        },
-        "dmu-dru-service-command-template": {
-            "arguments": {
-                "-a": {
-                    "required": true,
-                    "value": "$action$"
-                },
-                "-c": "$cmdData$",
-                "-d": {
-                    "required": true,
-                    "value": "$device$"
-                },
-                "-hc": "$highLevelCritical$",
-                "-hw": "$highLevelWarning$",
-                "-i": "$druID$",
-                "-l": {
-                    "skip_key": false,
-                    "value": "$cmdBodyLength$"
-                },
-                "-n": "$cmdNumber$",
-                "-p": {
-                    "required": true,
-                    "value": "$port$"
-                },
-                "-x": "$dmuDevice1$",
-                "-y": "$dmuDevice2$"
-            },
-            "command": "/usr/lib/monitoring-plugins/check_rs485.py",
-            "fields": [
-                {
-                    "datafield_id": 4,
-                    "is_required": "y",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 35,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 36,
-                    "is_required": "n",
-                    "var_filter": null
-                }
-            ],
-            "methods_execute": "PluginCheck",
-            "object_name": "dmu-dru-service-command-template",
-            "object_type": "template",
-            "timeout": 5,
-            "uuid": "ba4e95af-8ae4-4162-9e49-b8a759f11331"
         }
     },
     "HostTemplate": {
@@ -16893,7 +16834,7 @@
                 "highLevelWaningUL": "38",
                 "highLevelWarningDL": "38",
                 "parents": [
-                    "Sigmaweb"
+                    "Uqommweb"
                 ]
             }
         },
@@ -16932,7 +16873,7 @@
                 "highLevelWaningUL": "38",
                 "highLevelWarningDL": "38",
                 "parents": [
-                    "Sigmaweb"
+                    "Uqommweb"
                 ]
             },
             "zone": "master"
@@ -16990,7 +16931,10 @@
             "object_type": "template",
             "uuid": "d8b95c14-b984-4225-8ee0-ce48f2948eb8",
             "vars": {
-                "device": "dmu"
+                "device": "dmu",
+                "parents": [
+                    "Uqommweb"
+                ]
             }
         }
     },
@@ -17822,39 +17766,6 @@
             "settings": {
                 "visibility": "visible"
             },
-            "category": null
-        },
-        "4": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c00000004",
-            "varname": "device",
-            "caption": "Device type",
-            "description": "dmu\r\ndru",
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
-            "format": null,
-            "settings": {
-                "data_type": "string",
-                "datalist": "deviceDataList"
-            },
-            "category": null
-        },
-        "35": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c00000023",
-            "varname": "highLevelCritical",
-            "caption": "High Critical Threshold",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {},
-            "category": null
-        },
-        "36": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c00000024",
-            "varname": "highLevelWarning",
-            "caption": "High Warning Threshold",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {},
             "category": null
         },
         "12": {
