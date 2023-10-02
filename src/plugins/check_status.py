@@ -36,6 +36,9 @@ fix_ip_end_opt_2 = 0x78
 fix_ip_end_opt_3 = 0x8C
 fix_ip_end_opt_4 = 0xA0
 
+SET = 1
+QUERY = 0
+
 
 class DataType(IntEnum):
     DATA_INITIATION = 0x00
@@ -71,7 +74,7 @@ class SettingCommand(IntEnum):
     TEST_CONTROL_REGISTER = 0xc9
     ETH_IP_ADDRESS = 0xcb
     MODULE_EQUIPMENT_NUMBER = 0x16
-    BROADBAND_SWITCHING_DIGITAL_FREQUENCY_SELECTION_AND_SUBBAND_SELECTION = 0x80
+    broadband_switching = 0x80
 
 
 class HardwarePeripheralDeviceParameterCommand(IntEnum):
@@ -1198,6 +1201,9 @@ def cmd_help():
     -n, --hostname dmu
     -p, --port 1
     -b, --bandwidth 10
+    -l, --cmd_body_length
+    -c, --cmd_name
+    -cd, --cmd_data
     -hlwu, --highLevelWarningUplink
     -hlcu, --highLevelCriticalUplink
     -hlwd, --highLevelWarningDownlink
@@ -1215,6 +1221,10 @@ def args_check():
         ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
         ap.add_argument("-p", "--port", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-b", "--bandwidth", required=True, help="bandwidth es requerido", default="0")
+        ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
+        ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido", default="0")
+        ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="0")
+        ap.add_argument("-t", "--type", required=False, help="bandwidth es requerido", default="0")
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
         ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
@@ -1231,6 +1241,7 @@ def args_check():
                         help="highLevelCriticalTemperature es requerido", default=200)
 
         args = vars(ap.parse_args())
+
         # Check if the high level warning uplink value exists.
         if "highLevelWarningUL" not in args:
             args["highLevelWarningUL"] = 41
@@ -1453,7 +1464,7 @@ def blank_parameter(device):
                       'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                       'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                       'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                      'temperature': '-', }
+                      'temperature': '-', 'central_frequency_point': '-'}
 
     channel_parameters = blank_channel_dict()
 
@@ -1480,7 +1491,7 @@ def blank_parameter_old(device):
                       'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                       'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                       'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                      'work_bandwidth': '-', 'temperature': '-', }
+                      'work_bandwidth': '-', 'temperature': '-', 'central_frequency_point': '-'}
         blank_channel_dict_old(parameters)
         return parameters
     return {}
@@ -1754,6 +1765,13 @@ def get_cmd_name_query(device):
     return query_cmd_name_query
 
 
+def get_setting_command_value(int_number):
+    for command in SettingCommand:
+        if command.value == int_number:
+            return command
+    return None
+
+
 # ----------------------
 #   MAIN
 # ----------------------
@@ -1764,9 +1782,28 @@ def main():
     device = args['device']
     hostname = args['hostname']
     port = int(args['port'])
+    cmd_name = int(args['cmd_name'])
+    cmd_body_length = int(args['cmd_body_length'])
+    cmd_data = int(args['cmd_data'])
+    type = int(args['type'])
 
-    cmd_name_query = get_cmd_name_query(device)
-    cmd_list = query_cmd_list(cmd_name_query)
+    if type == SET:
+        cmd_name = get_setting_command_value(cmd_name)
+        cmd_data = CommandData(
+            module_address=0,
+            module_link=DONWLINK_MODULE,
+            module_function=0x07,
+            command_type=DataType.DATA_INITIATION,
+            command_number=cmd_name,
+            command_body_length=cmd_body_length,
+            command_data=cmd_data,
+            response_flag=ResponseFlag.SUCCESS
+        )
+        cmd_list = list()
+        cmd_list.append(cmd_data)
+    else:
+        cmd_name_query = get_cmd_name_query(device)
+        cmd_list = query_cmd_list(cmd_name_query)
     start_time = time.time()
     if_board_query_port = 65050  # Replace with the actual port number
     remote_external_device_query_port = 65053  # Replace with the actual port number

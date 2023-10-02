@@ -1,12 +1,13 @@
 | ![Sigma Telecom](/docs/logo-sigma.svg)                                                                                 |
-| ---------------------------------------------------------------------------------------------------------------------- |
+|------------------------------------------------------------------------------------------------------------------------|
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
 
 # Base Customizations
 
 ## Links to device configuration
 
-To add direct links to rs485 device configuration module, please add the following code at line 141 of the file `/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml `:
+To add direct links to rs485 device configuration module, please add the following code at line 141 of the
+file `/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml `:
 
 ```php
 
@@ -134,17 +135,25 @@ To add direct links to rs485 device configuration module, please add the followi
             }
             ?>
             <?php endif ?>
+            <?php if ($this->hasPermission('rs485/master/edit')): ?>                         
+            <li>   
+               <?php if ($object->getType() === $object::TYPE_HOST) { 
+               $linkAddress = $object->address; 
+               echo "<a href=\"http://$linkAddress\" target='_blank'>Configuration</a>"; 
+               }            
+               ?> 
+               <?php endif ?> 
+           </li>  
         </li>
     </ul>
 </div>
 
 ```
 
-
-
 ## To not show feature commands in services tables (Because its not working ) , if want show this uncomment the line 55.
 
-Please comment the line 55 or replace the following code at line 55 to the file `/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml `:
+Please comment the line 55 or replace the following code at line 55 to the
+file `/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml `:
 
 ```php 
 
@@ -152,16 +161,15 @@ Please comment the line 55 or replace the following code at line 55 to the file 
 
 ```
 
+## Change Tab Icon
 
-
-
-## Change Tab Icon 
 ```
 cp -R /tmp/sigma-rds/src/modules/icingaweb2-theme-sigma/public/img/favicon.png /usr/share/icingaweb2/public/img/
 chown www-data:icingaweb2 /usr/share/icingaweb2/modules/sigma-theme
 ```
 
 ## Change Tab name
+
 ```
 sed -i 's/Icinga Web/DRS/g' /usr/share/php/Icinga/Web/Controller/ActionController.php
 sed -i 's/Icinga Web/DRS/g' /usr/share/icingaweb2/application/controllers/AuthenticationController.php
@@ -169,5 +177,5 @@ sed -i 's/Icinga Web/DRS/g' /usr/share/icingaweb2/application/controllers/Authen
 ```
 
 |                                                                                                                        |
-| ---------------------------------------------------------------------------------------------------------------------- |
+|------------------------------------------------------------------------------------------------------------------------|
 | [Readme](/readme.md) - [Master Node](/docs/setup_master_debian.md) - [Satellite Node](/docs/setup_satellite_debian.md) |
