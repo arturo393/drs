@@ -54,7 +54,7 @@ class HostForm extends ConfigForm
             #5: Optical PortState
             if ($option == 5 || $option == 999 || isset($formData['opt5_hidden'])) {
                 $input = 5;
-                echo "sdss";
+
                 $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);

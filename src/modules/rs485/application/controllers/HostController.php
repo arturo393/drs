@@ -104,6 +104,7 @@ class HostController extends Controller
 
         $device_address = $host->address;
         $device_hostname = $host->object_name;
+        $device = "dmu";
 
         #1: Working mode
         if ($this->_hasParam('opt1_hidden')) {
@@ -112,73 +113,72 @@ class HostController extends Controller
             $dmuCmdCode = 0x80;
             $dmuCmdLength = 1;
             $salidaArray = [];
-            $device = "dmu";
-            $hostname = "dmu5";
             $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
-            echo $ejecutar;
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
-            $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+            if ($salidaArray[0] == "OK") {
+                if ($dmuCmdData == 2) {
+                    $salida = "WideBand";
+                } else if ($dmuCmdData == 3) {
+                    $salida = "Channel mode";
+                } else {
+                    $salida = "Unkonw mode";
+                }
+            }
             array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
 
         }
         #2: Gain power control ATT
         if ($this->_hasParam('opt2_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt2_hidden'));
-            $dmuDevice1 = $trama->dmu_device1;
-            $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght;
-            $dmuCmdCode = $trama->cmd_number;
+            $dmuCmdCode = 0xe7;
+            $dmuCmdLength = 2;
+            $uplink_att = (int)$this->_getParam('opt2_2');
+            $downlink_att = (int)$this->_getParam('opt2_1');
             $byte1 = dechex(4 * (int)$this->_getParam('opt2_2'));
             $byte2 = dechex(4 * (int)$this->_getParam('opt2_1'));
             $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT);
             $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT);
             $dmuCmdData = "{$byte1}{$byte2}";
             $salidaArray = [];
-            $ejecutar = $this->comando($host_remote, $dmuDevice1, $dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');
+            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
-            $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
-            //$salida = "OK";
-            #$queryArray = [];   
-            #$ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, 'EF', $dmuCmdData, 'query');
-            #exec($ejecutarQuery . " 2>&1", $queryArray);  
-            #usleep(50000);
-            #$query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";          
-
+            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+            if ($salidaArray[0] == "OK") {
+                $salida = "Uplink ATT: {$uplink_att} [dB] \n Downlink ATT: {$downlink_att} [dB]";
+            }
             array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
         }
         #3: Channel Activation Status           
         if ($this->_hasParam('opt3_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt3_hidden'));
-            $dmuDevice1 = $trama->dmu_device1;
-            $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght;
-            $dmuCmdCode = $trama->cmd_number;
+            $dmuCmdCode = 0x41;
+            $dmuCmdLength = 10;
             $byte = "";
+            $message = "<br>";
+            $status = "";
             for ($i = 1; $i <= 16; $i++) {
                 $input = $this->_getParam("opt3_{$i}");
                 if ($input == 1) {
                     $byte = "{$byte}00";
+                    $status = "ON";
                 } else {
                     $byte = "{$byte}01";
+                    $status = "OFF";
                 }
-
+                $message .= "Channel {$i} : {$status} <br>";
             }
             $dmuCmdData = $byte;
             $salidaArray = [];
-            $ejecutar = $this->comando($host_remote, $dmuDevice1, $dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');
+            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
             exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(100000);
-            $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
-
-            //$salida = "OK";
-            # $queryArray = [];
-            # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '42', $dmuCmdData, 'query');
-            # exec($ejecutarQuery . " 2>&1", $queryArray);
-            # usleep(100000);
-            # $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";
-
+            usleep(50000);
+            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+            if ($salidaArray[0] == "OK") {
+                $salida = $message;
+            }
             array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
 
         }
@@ -260,6 +260,7 @@ class HostController extends Controller
         $paramFijos = "-a {$device_address} -d {$device} -t 1 -n ${hostname} -l {$dmuCmdLength} -c {$dmuCmdCode} -cd {$dmuCmdData} -b 10";
         $comando = "/usr/lib/nagios/plugins/check_status.py ";
         $ejecutar = $comando . $paramFijos;
+        echo $ejecutar;
         return $ejecutar;
     }
 

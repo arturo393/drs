@@ -75,6 +75,8 @@ class SettingCommand(IntEnum):
     ETH_IP_ADDRESS = 0xcb
     MODULE_EQUIPMENT_NUMBER = 0x16
     broadband_switching = 0x80
+    gain_power_control_att = 0xe7
+    channel_switch = 0x41
 
 
 class HardwarePeripheralDeviceParameterCommand(IntEnum):
@@ -539,20 +541,28 @@ class CommandData:
     def cmd_unit_set(self):
         command_number = ((self.command_number & 0xFF) << 8) | ((self.command_number >> 8) & 0xFF)
         command_body_length = ((self.command_body_length & 0xFF) << 8) | ((self.command_body_length >> 8) & 0xFF)
+        if isinstance(self.command_data, str):
+            cmd_unit = (
+                f"{self.module_function:02X}"
+                f"{self.module_address:02X}"
+                f"{self.command_type:02X}"
+                f"{self.command_number:02X}"
+                f"{self.response_flag:02X}"
+                f"{self.command_body_length:02X}"
+                f"{self.command_data}"
+            )
+        elif isinstance(self.command_data, int):
+            cmd_unit = (
+                f"{self.module_function:02X}"
+                f"{self.module_address:02X}"
+                f"{self.command_type:02X}"
+                f"{self.command_number:02X}"
+                f"{self.response_flag:02X}"
+                f"{self.command_body_length:02X}"
+                f"{self.command_data:02X}"
+            )
 
-        cmd_unit = (
-            f"{self.module_function:02X}"
-            f"{self.module_address:02X}"
-            f"{0:02X}"
-            f"{self.command_number:02X}"
-            f"{self.response_flag:02X}"
-            f"{self.command_body_length:02X}"
-            f"{self.command_data:02X}"
-        )
-
-        # Generate command_data with specified length
-        command_data_str = f"{self.command_data:0{self.command_body_length * 2}X}"
-        return f"{cmd_unit}{command_data_str}"
+        return f"{cmd_unit}"
 
     def get_reply_message(self):
         if len(self.reply) >= 6:
@@ -1784,8 +1794,12 @@ def main():
     port = int(args['port'])
     cmd_name = int(args['cmd_name'])
     cmd_body_length = int(args['cmd_body_length'])
-    cmd_data = int(args['cmd_data'])
     type = int(args['type'])
+
+    if len(args['cmd_data']) > 1:
+        cmd_data = args['cmd_data']
+    else:
+        cmd_data = int(args['cmd_data'])
 
     if type == SET:
         cmd_name = get_setting_command_value(cmd_name)
@@ -1812,15 +1826,19 @@ def main():
     parameters["rt"] = str(time.time() - start_time)
     start_time = time.time()
     update_parameters_with_args(args, parameters)
-    if device == "dru" or device == "dmu":
-        device_host_plugin_ouput(parameters)
-    elif 0 < port < 5:
-        discovery(parameters)
-        parameters["dt"] = str(time.time() - start_time)
-        discovery_plugin_output(parameters)
-    else:
-        sys.stderr.write("\nOK - " + "no command")
+    if type == SET:
+        sys.stderr.write("OK")
         sys.exit(OK)
+    else:
+        if device == "dru" or device == "dmu":
+            device_host_plugin_ouput(parameters)
+        elif 0 < port < 5:
+            discovery(parameters)
+            parameters["dt"] = str(time.time() - start_time)
+            discovery_plugin_output(parameters)
+        else:
+            sys.stderr.write("\nOK - " + "no command")
+            sys.exit(OK)
 
 
 if __name__ == "__main__":
