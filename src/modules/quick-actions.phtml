@@ -139,27 +139,71 @@
                 } ?>
             </li>
         <?php endif ?>
-        <?php if ($this->hasPermission('rs485/master/edit')): ?>
+        <?php if ($this->hasPermission('rs485//edit')): ?>
+            <li>
+                <?php if ($object->getType() === $object::TYPE_HOST) {
 
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                echo $this->qlink(
-                    $this->translate('Config'),
-                    'rs485/host/edit',
-                    array('host' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'plug',
-                        'title' => $this->translate(
-                            'Remote Device Configuration'
-                        )
-                    )
-                );
-                if (substr($object->host, 5, 3) === 'opt') {
+                    if (substr($object->host, 5, 3) === 'opt') {
+                        echo $this->qlink(
+                            $this->translate('Device Configuration'),
+                            'rs485/remote/edit',
+                            array('host' => $object->getName()),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'plug',
+                                'title' => $this->translate(
+                                    'Remote Device Configuration'
+                                )
+                            )
+                        );
+                    }
+                } else {
+                    if (substr($object->service, 0, 6) === 'Master') {
+
+                        $frequency = isset($object->customvars['frequencies']) ? $object->customvars['frequencies'] : " ";
+                        $service = $object->host->getName() . '-freq' . $frequency;
+                        echo $this->qlink(
+                            $this->translate('Device Configuration'),
+                            'rs485/master/edit',
+                            array('host' => $object->host->getName(), 'freq' => $frequency),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'plug',
+                                'title' => $this->translate(
+                                    'Master Device Configuration'
+                                )
+                            )
+                        );
+                    } else if (isset($object->customvars['opt']) && $object->customvars['dru']) {
+                        $opt = $object->customvars['opt'];
+                        $dru = $object->customvars['dru'];
+                        $service = $object->host->getName() . '-opt' . $opt . '-dru' . $dru;
+                        echo $this->qlink(
+                            $this->translate('Device Configuration'),
+                            'rs485/remote/edit',
+                            array('service' => $service),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'plug',
+                                'title' => $this->translate(
+                                    'Remote Device Configuration'
+                                )
+                            )
+                        );
+                    }
+                }
+                ?>
+            </li>
+        <?php endif ?>
+        <?php if ($this->hasPermission('rs485/host/edit')): ?>
+            <li>
+                <?php if ($object->getType() === $object::TYPE_HOST) {
                     echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/remote/edit',
+                        $this->translate('Config'),
+                        'rs485/host/edit',
                         array('host' => $object->getName()),
                         array(
                             'class' => 'action-link',
@@ -171,56 +215,30 @@
                         )
                     );
                 }
-            } else {
-                if (substr($object->service, 0, 6) === 'Master') {
-
-                    $frequency = isset($object->customvars['frequencies']) ? $object->customvars['frequencies'] : " ";
-                    $service = $object->host->getName() . '-freq' . $frequency;
+                ?>
+            </li>
+            <li>
+                <?php if ($object->getType() === $object::TYPE_HOST) {
+                    $linkAddress = $object->address;
+                    $address = "http://$linkAddress";
                     echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/master/edit',
-                        array('host' => $object->host->getName(), 'freq' => $frequency),
+                        $this->translate('Admin'),
+                        $address,
+                        array('host' => $object->getName()),
                         array(
                             'class' => 'action-link',
                             'data-base-target' => '_self',
                             'icon' => 'plug',
                             'title' => $this->translate(
-                                'Master Device Configuration'
-                            )
-                        )
-                    );
-                } else if (isset($object->customvars['opt']) && $object->customvars['dru']) {
-                    $opt = $object->customvars['opt'];
-                    $dru = $object->customvars['dru'];
-                    $service = $object->host->getName() . '-opt' . $opt . '-dru' . $dru;
-                    echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/remote/edit',
-                        array('service' => $service),
-                        array(
-                            'class' => 'action-link',
-                            'data-base-target' => '_self',
-                            'icon' => 'plug',
-                            'title' => $this->translate(
-                                'Remote Device Configuration'
-                            )
+                                ' '
+                            ),
+                            'target' => '_blank',
                         )
                     );
                 }
-            }
-            ?>
-            <?php endif ?>
-        </li>
+                ?>
+            </li>
+        <?php endif ?>
 
-        <?php if ($this->hasPermission('rs485/master/edit')): ?>
-
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                $linkAddress = $object->address;
-                echo "<a href=\"http://$linkAddress\" target='_blank'>Configuration</a>";
-            }
-            ?>
-            <?php endif ?>
-        </li>
     </ul>
 </div>
