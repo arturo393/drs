@@ -139,7 +139,7 @@
                 } ?>
             </li>
         <?php endif ?>
-        <?php if ($this->hasPermission('rs485//edit')): ?>
+        <?php if ($this->hasPermission('rs485/master/edit')): ?>
             <li>
                 <?php if ($object->getType() === $object::TYPE_HOST) {
 
@@ -201,10 +201,17 @@
         <?php if ($this->hasPermission('rs485/host/edit')): ?>
             <li>
                 <?php if ($object->getType() === $object::TYPE_HOST) {
+                    $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
+                    $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
+                    $bandwidth = $object->customvars['bandwidth'] ?? 0;
                     echo $this->qlink(
                         $this->translate('Config'),
                         'rs485/host/edit',
-                        array('host' => $object->getName()),
+                        array('host' => $object->getName(),
+                            'center_uplink_frequency' => $center_uplink_frequency,
+                            'center_downlink_frequency' => $center_downlink_frequency,
+                            'bandwidth' => $bandwidth
+                        ),
                         array(
                             'class' => 'action-link',
                             'data-base-target' => '_self',
@@ -227,10 +234,10 @@
                         array('host' => $object->getName()),
                         array(
                             'class' => 'action-link',
-                            'data-base-target' => '_self',
+                            'data-base-target' => '_blank',
                             'icon' => 'plug',
                             'title' => $this->translate(
-                                ' '
+                                'Admin Configuration '
                             ),
                             'target' => '_blank',
                         )

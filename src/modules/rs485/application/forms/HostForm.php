@@ -17,13 +17,12 @@ class HostForm extends ConfigForm
         $this->setAction('rs485/host/edit');
     }
 
-    public function refresh($frequency)
+    public function refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth)
     {
         $this->setName('form_host');
         $this->setSubmitLabel($this->translate('Submit Changes'));
-        $this->setAction('rs485/host/edit?freq=' . $frequency);
+        $this->setAction('rs485/host/edit?host=' . $host . '&center_uplink_frequency=' . $center_uplink_frequency . '&center_downlink_frequency=' . $center_downlink_frequency . '&bandwidth=' . $bandwidth);
 
-        $frequency = isset($_GET['freq']) ? $_GET['freq'] : "";
     }
 
     public function createElements(array $formData)
@@ -32,10 +31,12 @@ class HostForm extends ConfigForm
         if (isset($_GET['host'])) $hostname = $_GET['host'];
         $listHost = $this->cargarHostList($hostname);
         $listTrama = $this->tramasDMU();
-        $frequency = isset($_GET['freq']) ? $_GET['freq'] : "";
-        $this->refresh($frequency);
-
-
+        $center_frequency = $_GET['center_freq'] ?? "";
+        $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
+        $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
+        $bandwidth = $_GET['bandwidth'] ?? 0;
+        $host = $_GET['host'] ?? "";
+        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth);
         $this->addElement('select', 'host_remote', array(
             'multiOptions' => $listHost,
             'required' => true,
@@ -50,7 +51,6 @@ class HostForm extends ConfigForm
 
         if ((isset($formData['trama']) && $formData['trama'] != '') || isset($formData['btn_submit'])) {
             $option = isset($formData['btn_submit']) ? 0 : $formData['trama'];
-
             #5: Optical PortState
             if ($option == 5 || $option == 999 || isset($formData['opt5_hidden'])) {
                 $input = 5;
@@ -81,7 +81,6 @@ class HostForm extends ConfigForm
                             '02' => 'WideBand Mode'],
                         'required' => true,
                     ));
-
                 }
             }
             #2: Gain power control ATT
@@ -92,10 +91,7 @@ class HostForm extends ConfigForm
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}_1", ['label' => "Uplink ATT [dB]", 'placeholder' => 'between 0[dB] and 30[dB]', 'required' => true,]);
-
-                    $this->addElement('text', "opt{$input}_2", ['label' => 'Downlink ATT [dB]', 'placeholder' => 'between 0[dB] and 30[dB]', 'required' => true,
-
-                    ]);
+                    $this->addElement('text', "opt{$input}_2", ['label' => 'Downlink ATT [dB]', 'placeholder' => 'between 0[dB] and 30[dB]', 'required' => true,]);
                 }
             }
             #3: Channel Activation Status
@@ -120,9 +116,9 @@ class HostForm extends ConfigForm
             #4: Channel Frecuency Point Configuration
             if ($option == 4 || $option == 999 || isset($formData['opt4_hidden'])) {
                 $input = 4;
-                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                $hidden = $formData["opt{$input}_hidden"] ?? 0;
                 if ($option != $hidden) {
-                    $listFrecuencia = $this->frequencyTables($frequency);
+                    $listFrecuencia = $this->frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth);
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     for ($i = 1; $i <= 16; $i++) {
@@ -186,25 +182,17 @@ class HostForm extends ConfigForm
         return $row->name;
     }
 
-    private function frequencyTables($id)
+    private function frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth)
     {
-
-        if ($id == "vhf") {
-            $dl = 145;
-            $ul = 170;
-            $wb = 15;
-            $ch_number_length = 4;
-        } else if ($id == "uhf") {
-            $dl = 427;
-            $ul = 417;
-            $wb = 3;
-            $ch_number_length = 3;
-        }
-        $cb = 125;
-
-        if ($id != "vhf" and $id != "uhf") {
+        if ($center_downlink_frequency == 0 or $bandwidth == 0 or $center_uplink_frequency == 0) {
             $list = ["Unknown Frequencies"];
         } else {
+            $ul = (float)$center_uplink_frequency - (int)($bandwidth) / 2;
+            $dl = (float)$center_downlink_frequency - (int)($bandwidth) / 2;
+            $wb = $bandwidth;
+            $cb = 125;
+            $ch_number_length = 4;
+
             $total_channel = ($wb / $cb) * 10000;
             for ($i = 0; $i < $total_channel + 1; $i++) {
                 $dl_real = $dl * 10000 + $i * $cb;
@@ -241,35 +229,6 @@ class HostForm extends ConfigForm
                 if ($hex_code != "")
                     $list[$hex_code] = "CH " . $ch_number . " - UL [MHZ] : " . $ul_real . " - DL [MHZ] : " . $dl_real;
             }
-        }
-        return $list;
-    }
-
-    private function frecuenciaDMU($id)
-    {
-        if ($id == "uhf") {
-            $select = (new Select())->from('rs485_frecuencia r')
-                ->columns(['r.*'])
-                ->orderBy('r.channel', SORT_ASC);
-
-            $list[''] = '(Frequencies List)';
-        } elseif ($id == "vhf") {
-            $select = (new Select())->from('rs485_frecuencia_vhf r')
-                ->columns(['r.*'])
-                ->orderBy('r.channel', SORT_ASC);
-
-            $list[''] = '(Frequencies List)';
-        } else {
-            $select = (new Select(" "));
-
-            $list[''] = '(Unknown frequency)';
-            return $list;
-        }
-
-        foreach ($this->getDb()
-                     ->select($select) as $row) {
-            $list[$row
-                ->code_hex] = $row->description;
         }
         return $list;
     }

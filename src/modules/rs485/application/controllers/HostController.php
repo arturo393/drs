@@ -25,7 +25,6 @@ class HostController extends Controller
         parent::init();
     }
 
-
     public function editAction()
     {
         $form = (new HostForm())
@@ -89,7 +88,6 @@ class HostController extends Controller
 
     }
 
-
     public function saveAction()
     {
         $query = "";
@@ -101,11 +99,9 @@ class HostController extends Controller
         $dmuCmdData = -1;
         $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
         $host = $this->buscarDataFromDB($this->_getParam('host_remote'));
-
         $device_address = $host->address;
         $device_hostname = $host->object_name;
         $device = "dmu";
-
         #1: Working mode
         if ($this->_hasParam('opt1_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt1_hidden'));
@@ -155,7 +151,7 @@ class HostController extends Controller
         if ($this->_hasParam('opt3_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt3_hidden'));
             $dmuCmdCode = 0x41;
-            $dmuCmdLength = 10;
+            $dmuCmdLength = 0x10;
             $byte = "";
             $message = "<br>";
             $status = "";
@@ -185,74 +181,62 @@ class HostController extends Controller
         #4: Channel Frecuency Point Configuration
         if ($this->_hasParam('opt4_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt4_hidden'));
-            $dmuDevice1 = $trama->dmu_device1;
-            $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght;
-            $dmuCmdCode = $trama->cmd_number;
+            $dmuCmdCode = 0x35;
+            $dmuCmdLength = 0x40;
             $byte = "";
+            $message = "<br>";
+            $status = "";
             for ($i = 1; $i <= 16; $i++) {
                 $input = $this->_getParam("opt4_{$i}");
                 $byte = "{$byte}{$input}";
+                $message .= "Channel {$i} : {$input} <br>";
+
             }
             $dmuCmdData = $byte;
             $salidaArray = [];
-            $ejecutar = $this->comando($host_remote, $dmuDevice1, $dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');
+            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
             exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(100000);
-            $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
-            //$salida = "OK";   
-            # $queryArray = [];
-            # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '36', $dmuCmdData, 'query');
-            # exec($ejecutarQuery . " 2>&1", $queryArray);
-            # usleep(100000);
-            # $query =  count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";
-
+            usleep(50000);
+            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+            if ($salidaArray[0] == "OK") {
+                $salida = $message;
+            }
             array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
-            system("clear  2>&1");
         }
         #5: Optical PortState
         if ($this->_hasParam('opt5_hidden')) {
-
             $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));
-            $dmuDevice1 = $trama->dmu_device1;
-            $dmuDevice2 = $trama->dmu_device2;
-            $dmuCmdLength = $trama->cmd_body_lenght;
-            $dmuCmdCode = $trama->cmd_number;
+            $dmuCmdCode = 0x90;
+            $dmuCmdLength = 4;
             $byte = "";
+            $message = "<br>";
+            $status = "";
             for ($i = 1; $i <= 4; $i++) {
                 $input = $this->_getParam("opt5_{$i}");
                 if ($input == 1) {
                     $byte = "{$byte}00";
+                    $status = "ON";
                 } else {
                     $byte = "{$byte}01";
+                    $status = "OFF";
                 }
-
+                $message .= "Optical Port {$i} : {$status} <br>";
             }
             $dmuCmdData = $byte;
             $salidaArray = [];
-            $ejecutar = $this->comando($host_remote, $dmuDevice1, $dmuDevice2, $dmuCmdLength, $dmuCmdCode, $dmuCmdData, 'set');
+            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
             exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(100000);
-            $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
-            //$salida = "OK";   
-            # $queryArray = [];
-            # $ejecutarQuery = $this->comando($host_remote, $dmuDevice1,$dmuDevice2, $dmuCmdLength, '91', $dmuCmdData, 'query');
-            # exec($ejecutarQuery . " 2>&1", $queryArray);
-            # usleep(100000);
-            $query = count($queryArray) > 0 ? $queryArray[0] : "Changes were not applied";
-
+            usleep(50000);
+            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+            if ($salidaArray[0] == "OK") {
+                $salida = $message;
+            }
             array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
 
         }
 
-        #  $ejecutarQuery = $this->comando_dmu($host_remote);
-        #  exec($ejecutarQuery . " 2>&1", $parameters);
-        #    $index = strpos($parameters[0],'|');
-        #	$params = substr($parameters[0],0,$index);
-
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);
-        #  $this->view->assign('params', $params);
     }
 
     private function comando($device_address, $device, $hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData)
