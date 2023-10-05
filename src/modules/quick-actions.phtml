@@ -201,26 +201,29 @@
         <?php if ($this->hasPermission('rs485/host/edit')): ?>
             <li>
                 <?php if ($object->getType() === $object::TYPE_HOST) {
+                    $device = $object->customvars['device'] ?? -1;
                     $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
                     $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
                     $bandwidth = $object->customvars['bandwidth'] ?? 0;
-                    echo $this->qlink(
-                        $this->translate('Config'),
-                        'rs485/host/edit',
-                        array('host' => $object->getName(),
-                            'center_uplink_frequency' => $center_uplink_frequency,
-                            'center_downlink_frequency' => $center_downlink_frequency,
-                            'bandwidth' => $bandwidth
-                        ),
-                        array(
-                            'class' => 'action-link',
-                            'data-base-target' => '_self',
-                            'icon' => 'plug',
-                            'title' => $this->translate(
-                                'Remote Device Configuration'
+                    if ($device != -1) {
+                        echo $this->qlink(
+                            $this->translate('Config'),
+                            'rs485/host/edit',
+                            array('host' => $object->getName(),
+                                'center_uplink_frequency' => $center_uplink_frequency,
+                                'center_downlink_frequency' => $center_downlink_frequency,
+                                'bandwidth' => $bandwidth
+                            ),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'plug',
+                                'title' => $this->translate(
+                                    'Remote Device Configuration'
+                                )
                             )
-                        )
-                    );
+                        );
+                    }
                 }
                 ?>
             </li>
