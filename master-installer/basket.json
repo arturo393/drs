@@ -16898,6 +16898,16 @@
                     "var_filter": null
                 },
                 {
+                    "datafield_id": 51,
+                    "is_required": "n",
+                    "var_filter": "host.vars.device=%22dmu%22"
+                },
+                {
+                    "datafield_id": 50,
+                    "is_required": "n",
+                    "var_filter": "host.vars.device=%22dmu%22"
+                },
+                {
                     "datafield_id": 46,
                     "is_required": "n",
                     "var_filter": null
@@ -16918,7 +16928,7 @@
             "uuid": "22ca49a8-3548-4a9a-a0c0-a8f06a0ea9a5",
             "vars": {
                 "addToMap": true,
-                "bandwidth": "10"
+                "bandwidth": "0"
             },
             "zone": "master"
         },
@@ -17569,6 +17579,25 @@
             "list_name": "druIDDataList",
             "owner": "admin",
             "uuid": "08e90640-0485-403d-810e-438100000007"
+        },
+        "center_frequencies": {
+            "entries": [
+                {
+                    "entry_name": "171",
+                    "entry_value": "vhf wideband",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "177.5",
+                    "entry_value": "vhf narrowband",
+                    "format": "string",
+                    "allowed_roles": null
+                }
+            ],
+            "list_name": "center_frequencies",
+            "owner": "admin",
+            "uuid": "556f1262-3e12-421a-90b3-ffd97238e9ae"
         }
     },
     "DirectorJob": {
@@ -17796,6 +17825,31 @@
             "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
             "format": null,
             "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "51": {
+            "uuid": "34d4b2a3-cada-4e7d-aaa9-0d813d09b627",
+            "varname": "center_downlink_frequency",
+            "caption": "Center Downlink Frequency",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "50": {
+            "uuid": "cc855f76-ed85-4d37-981b-2c02414ebcbd",
+            "varname": "center_uplink_frequency",
+            "caption": "Center Uplink Frequency",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "rename_vars": "y",
                 "visibility": "visible"
             },
             "category": null
