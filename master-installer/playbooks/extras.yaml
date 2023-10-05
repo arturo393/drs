@@ -281,7 +281,7 @@
 
     - name: Links to device configuration
       template:
-        src: quick-actions.j2
+        src: /tmp/sigma-rds/src/modules/quick-actions.phtml
         dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
 
     - name: Change Tab Names
