@@ -1,974 +1,936 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Fiber Web</title>
-  <script src="/js/jquery.min.js"></script>
-  <script type="text/javascript" src="js/jquery.cookie.js"></script>	
-  <link rel="stylesheet" href="/layui/css/layui.css">
-  <script src="/js/public.js"></script>
-  <script src="/js/update.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Fiber Web</title>
+    <script src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jquery.cookie.js"></script>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <script src="/js/public.js"></script>
+    <script src="/js/update.js"></script>
 </head>
 
 
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin">
-	<div class="layui-header">
-		<div class="layui-logo" style="display:none;">santon</div>
-		<ul class="layui-nav layui-layout-right">
-			<li class="layui-nav-item">
-			<button onclick="admin()" class="layui-btn layui-btn-sm" style="width: 120px;height:25px;" id="adminbutton" >Enter Admin</button>
-			</li>
-		  </ul>
-	</div>
-  
-  	<div class="layui-side layui-bg-black">
-    	<div class="layui-side-scroll">
-      		<ul class="layui-nav layui-nav-tree"  lay-filter="test">
-				<li class="layui-nav-item " id="testhtml" style="display: none;"><a href="test.html" target="iframetest" >TEST</a></li>
-				<li class="layui-nav-item layui-this" id="config"><a href="hwconfig.html" target="iframetest" >HW CONFIG</a></li>
+    <div class="layui-header">
+        <div class="layui-logo"><img src="./images/logoUqomm.png"/></div>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <button onclick="admin()" class="layui-btn layui-btn-sm" style="width: 120px;height:25px;"
+                        id="adminbutton">Enter Admin
+                </button>
+            </li>
+        </ul>
+    </div>
 
-				<li class="layui-nav-item" id="re_li0" style="display: none;"><a href="rx0.html" target="iframetest" >CONFIG RX/TX</a></li>
-				<li class="layui-nav-item" id="rfpoint" style="display: none;"><a href="rfpoint.html" target="iframetest" >RX CHANNEL-FREQ</a></li>
-<!--
-				<li class="layui-nav-item" id="re_li0"><a href="rx0.html" target="iframetest" >接收发送通道</a></li>
--->
-				<li class="layui-nav-item" id="re_net"><a href="ssfb.html" target="iframetest" >REMOTE FIBER</a></li>
-				<li class="layui-nav-item" id="module_setting"><a href="module.html" target="iframetest" >MODULE CONFIG</a></li>
-				<li class="layui-nav-item" id="inasetting"><a href="lna.html" target="iframetest">CHANNEL 0</a></li>
-			</ul>
-	  
-			<div class="layui-collapse"  lay-filter="test" style="display: none;">
-				<div class="layui-colla-item" > 
-					<h2 class="layui-colla-title">Global settings</h2>
-					<div class="layui-colla-content">
-						<table>
-							<tr>
-								<td style="">
-									<select id="receive" style=" ">
-										<option>Zero Rx</option>
-										<option>One Rx</option>
-										<option>Two Rx</option>
-									</select>
-									<select id="send" style="">
-										<option>Zero Tx</option>
-										<option>One Tx</option>
-										<option>Two Tx</option>
-									</select>
-								</td>   
-							</tr> 
-							
-							<tr>
-								<td>
-									<input type="checkbox" id="radiochan" value="信道" checked="true">Channel
-									<input type="checkbox" id="radioband" value="带宽" checked="true">BandWidth
-									<input type="checkbox" id="radiocom" value="功率" checked="true">Compensation
-									<input type="checkbox" id="radiopower" value="补偿" checked="true">Power 
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Channel Num:
-									<select id="chnumber" style="">
-										<option>1</option>
-										<option>2</option>
-										<option>3</option>
-										<option>4</option>
-										<option>5</option>
-										<option>6</option>
-										<option>7</option>
-										<option>8</option>
-										<option>9</option>
-										<option>10</option>
-										<option>11</option>
-										<option>12</option>
-										<option>13</option>
-										<option>14</option>
-										<option>15</option>
-										<option>16</option>
-										<option>17</option>
-										<option>18</option>
-										<option>19</option>
-										<option>20</option>
-										<option>21</option>
-										<option>22</option>
-										<option>23</option>
-										<option>24</option>
-										<option>25</option>
-										<option>26</option>
-										<option>27</option>
-										<option>28</option>
-										<option>29</option>
-										<option>30</option>
-										<option>31</option>
-										<option>32</option>
-									</select>
-								</td>    
-							</tr>  
-			
-							<tr>
-								<td>
-									<button onclick="setting()" id="setting">Setting</button>
-									<button onclick="returntable()">return</button>
-								</td>
-							</tr>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-  
-	<div class="layui-body" id="iframe1">
-    
-    <iframe src="hwconfig.html" id="iframetest" name="iframetest"  style="width:100%;height:100%">
- 
-    </iframe>
-    <!--
-    <div class="layui-row">
-        <div class="layui-col-md9">
-            <div class="grid-demo grid-demo-bg1">
-                  <fieldset class="layui-elem-field layui-field-title" style="">
-                    <legend>debug</legend>
-                 </fieldset>
-                <div style="height:150px;width:100%;border:1px solid Gainsboro;overflow:auto;" contenteditable="true" id="textarea_Debug">
-            </div>
-        </div>
-        <div class="layui-col-md3">
-            <div class="grid-demo">
-                <button style="margin-left:1%;margin-top:5%;float:left;" onclick="txtClear()">清除</button>    
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                <li class="layui-nav-item " id="testhtml" style="display: none;"><a href="test.html"
+                                                                                    target="iframetest">TEST</a></li>
+                <li class="layui-nav-item layui-this" id="config"><a href="hwconfig.html" target="iframetest">HW
+                    CONFIG</a></li>
+
+                <li class="layui-nav-item" id="re_li0" style="display: none;"><a href="rx0.html" target="iframetest">CONFIG
+                    RX/TX</a></li>
+                <li class="layui-nav-item" id="rfpoint" style="display: none;"><a href="rfpoint.html"
+                                                                                  target="iframetest">RX
+                    CHANNEL-FREQ</a></li>
+                <!--
+                                <li class="layui-nav-item" id="re_li0"><a href="rx0.html" target="iframetest" >接收发送通道</a></li>
+                -->
+                <li class="layui-nav-item" id="re_net"><a href="ssfb.html" target="iframetest">REMOTE FIBER</a></li>
+                <li class="layui-nav-item" id="module_setting"><a href="module.html" target="iframetest">MODULE
+                    CONFIG</a></li>
+                <li class="layui-nav-item" id="inasetting"><a href="lna.html" target="iframetest">CHANNEL 0</a></li>
+            </ul>
+
+            <div class="layui-collapse" lay-filter="test" style="display: none;">
+                <div class="layui-colla-item">
+                    <h2 class="layui-colla-title">Global settings</h2>
+                    <div class="layui-colla-content">
+                        <table>
+                            <tr>
+                                <td style="">
+                                    <select id="receive" style=" ">
+                                        <option>Zero Rx</option>
+                                        <option>One Rx</option>
+                                        <option>Two Rx</option>
+                                    </select>
+                                    <select id="send" style="">
+                                        <option>Zero Tx</option>
+                                        <option>One Tx</option>
+                                        <option>Two Tx</option>
+                                    </select>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <input type="checkbox" id="radiochan" value="信道" checked="true">Channel
+                                    <input type="checkbox" id="radioband" value="带宽" checked="true">BandWidth
+                                    <input type="checkbox" id="radiocom" value="功率" checked="true">Compensation
+                                    <input type="checkbox" id="radiopower" value="补偿" checked="true">Power
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Channel Num:
+                                    <select id="chnumber" style="">
+                                        <option>1</option>
+                                        <option>2</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                        <option>5</option>
+                                        <option>6</option>
+                                        <option>7</option>
+                                        <option>8</option>
+                                        <option>9</option>
+                                        <option>10</option>
+                                        <option>11</option>
+                                        <option>12</option>
+                                        <option>13</option>
+                                        <option>14</option>
+                                        <option>15</option>
+                                        <option>16</option>
+                                        <option>17</option>
+                                        <option>18</option>
+                                        <option>19</option>
+                                        <option>20</option>
+                                        <option>21</option>
+                                        <option>22</option>
+                                        <option>23</option>
+                                        <option>24</option>
+                                        <option>25</option>
+                                        <option>26</option>
+                                        <option>27</option>
+                                        <option>28</option>
+                                        <option>29</option>
+                                        <option>30</option>
+                                        <option>31</option>
+                                        <option>32</option>
+                                    </select>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <button onclick="setting()" id="setting">Setting</button>
+                                    <button onclick="returntable()">return</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    -->
-    
-	</div>
-  
-	<div class="layui-footer">
-		<span  style="margin-left:38%;display:none;">Reserve All Copyright© 2020 福建信同信息科技有限公司</span>
-	</div>
+
+    <div class="layui-body" id="iframe1">
+
+        <iframe src="hwconfig.html" id="iframetest" name="iframetest" style="width:100%;height:100%">
+
+        </iframe>
+        <!--
+        <div class="layui-row">
+            <div class="layui-col-md9">
+                <div class="grid-demo grid-demo-bg1">
+                      <fieldset class="layui-elem-field layui-field-title" style="">
+                        <legend>debug</legend>
+                     </fieldset>
+                    <div style="height:150px;width:100%;border:1px solid Gainsboro;overflow:auto;" contenteditable="true" id="textarea_Debug">
+                </div>
+            </div>
+            <div class="layui-col-md3">
+                <div class="grid-demo">
+                    <button style="margin-left:1%;margin-top:5%;float:left;" onclick="txtClear()">清除</button>
+                </div>
+            </div>
+        </div>
+        -->
+
+    </div>
+
+    <div class="layui-footer">
+        <span style="margin-left:38%;display:none;">Reserve All Copyright© 2020 福建信同信息科技有限公司</span>
+    </div>
 </div>
 
 <script src="/layui/layui.js"></script>
 
 <script>
-	window.onload=function()
-	{
-		$("#re_li0").click();
-	}
+    window.onload = function () {
+        $("#re_li0").click();
+    }
 </script>
 
 <script>
-layui.use('element', function(){
-	var element = layui.element;
-	element.on('nav(test)', function(data){});
-});
+    layui.use('element', function () {
+        var element = layui.element;
+        element.on('nav(test)', function (data) {
+        });
+    });
 </script>
 
 <script>
-		function setting()
-		{
-			var radiochan=0;//信道,1不显示0显示
-			var radiocom=0//补偿,1不显示0显示
-			var radioband=1;//带宽,1不显示0显示
-			var radiopower=1;//功率,1不显示0显示
-			$("#receive").val("One Rx");//Zero Rx、One Rx、Two Rx
-			$("#send").val("One Tx");//Zero Tx、One Tx、Two Tx
-			$("#chnumber ").val("16");//1~32
-			//以上用于控制html页面显示几收几发，通道数，信道、带宽、补偿、功率的显示与否
-			
-			if(radiochan==0)
-				$("#radiochan").prop('checked', true);
-			else
-				$("#radiochan").prop('checked', false)
-
-			if(radiocom==0)
-				$("#radiocom").prop('checked', true);
-			else
-				$("#radiocom").prop('checked', false);
-
-			if(radioband==0)
-				$("#radioband").prop('checked', true);
-			else
-				$("#radioband").prop('checked', false);
-
-			if(radiopower==0)
-				$("#radiopower").prop('checked', true);
-			else
-				$("#radiopower").prop('checked', false);
-
-			$("#setting").attr("disabled","disabled");
-			$("#radiochan").attr("disabled","disabled");
-			$("#radioband").attr("disabled","disabled");
-			$("#radiocom").attr("disabled","disabled");
-			$("#radiopower").attr("disabled","disabled");
-
-			if($("#radiochan").prop("checked")==false )
-			{
-				$(window.frames["iframetest"].document).find("#upchan").hide();
-				$(window.frames["iframetest"].document).find("#dwchan").hide();
-
-				for(var i=0;i<31;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"channel"+x;
-					var z="#"+"t_channel"+x;
-					$(window.frames["iframetest"].document).find(y).hide();
-					$(window.frames["iframetest"].document).find(z).hide();
-				}
-			}
-
-			if($("#radioband").prop("checked")==false )
-			{
-				$(window.frames["iframetest"].document).find("#upnet").hide();
-				$(window.frames["iframetest"].document).find("#dwnet").hide();
-
-				for(var i=0;i<31;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"bandwidth"+x;
-					var z="#"+"t_bandwidth"+x;
-					$(window.frames["iframetest"].document).find(y).hide();
-					$(window.frames["iframetest"].document).find(z).hide();
-				}
-			}
-		
-			if($("#radiocom").prop("checked")==false )
-			{
-				for(var i=0;i<31;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"compensate"+x;
-					var z="#"+"t_compensate"+x;
-					$(window.frames["iframetest"].document).find(y).hide();
-					$(window.frames["iframetest"].document).find(z).hide();
-				}
-			}
-
-			if($("#radiopower").prop("checked")==false )
-			{
-				$(window.frames["iframetest"].document).find("#uppoint").hide();
-				$(window.frames["iframetest"].document).find("#dwpoint").hide();
-
-				for(var i=0;i<31;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"power"+x;
-					var z="#"+"t_power"+x;
-					$(window.frames["iframetest"].document).find(y).hide();
-					$(window.frames["iframetest"].document).find(z).hide();
-				}
-			}
-			
-			if($("#receive").val()=="Zero Rx" && $("#send").val()=="Zero Tx")
-			{
-				alert("at least One Rx or One Tx");	
-				return false;
-			}
-
-			if($("#receive").val()=="Zero Rx" && $("#send").val()=="One Tx")
-			{
-				$(window.frames["iframetest"].document).find("#upsetting").hide();
-				$(window.frames["iframetest"].document).find("#dwsetting").hide();
-				$(window.frames["iframetest"].document).find("#sssediv").hide();
-				$(window.frames["iframetest"].document).find("#ssrediv").hide();
-				$(window.frames["iframetest"].document).find("#msrediv").hide();
-				$(window.frames["iframetest"].document).find("#fieldset2").hide();	
-				$(window.frames["iframetest"].document).find("#fieldset1").hide();	
-				$(window.frames["iframetest"].document).find("#rx0Center_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx1Center_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx0WorkBandwidth_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();	
-				$("#rfpoint").hide();
-				$("#re_li1").hide();
-			}
-
-			if($("#receive").val()=="Zero Rx" && $("#send").val()=="Two Tx")
-			{
-				$(window.frames["iframetest"].document).find("#ssrediv").hide();
-				$(window.frames["iframetest"].document).find("#msrediv").hide();
-				$(window.frames["iframetest"].document).find("#fieldset2").hide();	
-				$(window.frames["iframetest"].document).find("#fieldset1").hide();	
-				$(window.frames["iframetest"].document).find("#rx0Center_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx1Center_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx0WorkBandwidth_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();	
-				$("#rfpoint").hide();
-			}
-
-			if($("#receive").val()=="One Rx" && $("#send").val()=="Zero Tx") 
-			{
-				$(window.frames["iframetest"].document).find("#dwsetting").hide();
-				$(window.frames["iframetest"].document).find("#sssediv").hide();
-				$(window.frames["iframetest"].document).find("#ssrediv").hide();
-				$(window.frames["iframetest"].document).find("#mssediv").hide();	
-				$(window.frames["iframetest"].document).find("#fieldset2").hide();	
-				$(window.frames["iframetest"].document).find("#rx1Center_index").hide();
-				$(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();		
-				$("#re_li1").hide();
-			}
-
-			if($("#receive").val()=="One Rx" && $("#send").val()=="One Tx") 
-			{
-				$(window.frames["iframetest"].document).find("#sssediv").hide();
-				$(window.frames["iframetest"].document).find("#ssrediv").hide();
-				$(window.frames["iframetest"].document).find("#fieldset2").hide();	
-				$(window.frames["iframetest"].document).find("#rx1Center_index").hide();	
-				$(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();	
-				$("#re_li1").hide();
-			}
-
-			if($("#receive").val()=="One Rx" && $("#send").val()=="Two Tx") 
-			{
-				$(window.frames["iframetest"].document).find("#ssrediv").hide();
-				$(window.frames["iframetest"].document).find("#fieldset2").hide();	
-				$(window.frames["iframetest"].document).find("#rx1Center_index").hide();
-				$(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();		
-			}
-
-			if($("#receive").val()=="Two Rx" && $("#send").val()=="Zero Tx") 
-			{
-				$(window.frames["iframetest"].document).find("#mssediv").hide();
-				$(window.frames["iframetest"].document).find("#sssediv").hide();
-			}
-			if($("#receive").val()=="Two Rx" && $("#send").val()=="One Tx") 
-			{
-				$(window.frames["iframetest"].document).find("#sssediv").hide();
-			}
-
-			$("#receive").attr("disabled","disabled");
-			$("#send").attr("disabled","disabled");
-			$("#chnumber").attr("disabled","disabled");
-			
-			var number= $("#chnumber").val(); 
-			if(number<9)
-			{
-				$(window.frames["iframetest"].document).find("#div1").hide();
-				$(window.frames["iframetest"].document).find("#div2").hide();
-				$(window.frames["iframetest"].document).find("#div3").hide();
-				for(var i=number;i<8;i++)
-				{
-					if(i==8)
-						return false;
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					var z="#"+"checkbox_rx0Manual"+x;
-					var t="#"+"checkbox_rx1Manual"+x;
-					$(window.frames["iframetest"].document).find(z).hide();
-					$(window.frames["iframetest"].document).find(t).hide();
-					$(window.frames["iframetest"].document).find(y).hide();
-				}
-
-				if($("#receive").val()=="Two Rx")
-				{
-					$(window.frames["iframetest"].document).find("#div5").hide();
-					$(window.frames["iframetest"].document).find("#div6").hide();
-					$(window.frames["iframetest"].document).find("#div7").hide();
-					for(var i=number;i<8;i++)
-					{
-						if(i==8)
-							return false;
-						var  x=i.toString();
-						var y="#"+"t_table"+x;
-						var z="#"+"checkbox_rx0Manual"+x;
-						var t="#"+"checkbox_rx1Manual"+x;
-						$(window.frames["iframetest"].document).find(z).hide();
-						$(window.frames["iframetest"].document).find(t).hide();
-						$(window.frames["iframetest"].document).find(y).hide();
-					}
-				}
-			}
-
-			if(number>=9 && number<17 )
-			{
-				$(window.frames["iframetest"].document).find("#div0").show();
-				$(window.frames["iframetest"].document).find("#div1").show();
-				$(window.frames["iframetest"].document).find("#div2").hide();
-				$(window.frames["iframetest"].document).find("#div3").hide();
-				$(window.frames["iframetest"].document).find("#div4").show();
-				$(window.frames["iframetest"].document).find("#div5").show();
-				$(window.frames["iframetest"].document).find("#div6").hide();
-				$(window.frames["iframetest"].document).find("#div7").hide();
-				for(var i=number;i<17;i++)
-				{
-					if(i==16)
-						break;
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					var z="#"+"checkbox_rx0Manual"+x;
-					var t="#"+"checkbox_rx1Manual"+x;
-					$(window.frames["iframetest"].document).find(z).hide();
-					$(window.frames["iframetest"].document).find(t).hide();
-					$(window.frames["iframetest"].document).find(y).hide();
-				}
-
-				if($("#receive").val()=="Two Rx")
-				{
-					for(var i=number;i<17;i++)
-					{
-						if(i==16)
-							break;
-						var  x=i.toString();
-						var y="#"+"t_table"+x;
-						var z="#"+"checkbox_rx0Manual"+x;
-						var t="#"+"checkbox_rx1Manual"+x;
-						$(window.frames["iframetest"].document).find(z).hide();
-						$(window.frames["iframetest"].document).find(t).hide();
-						$(window.frames["iframetest"].document).find(y).hide();
-					}
-				}
-			}
-
-			if(number>=17 && number<25 )
-			{
-				$(window.frames["iframetest"].document).find("#div0").show();
-				$(window.frames["iframetest"].document).find("#div1").show();
-				$(window.frames["iframetest"].document).find("#div2").show();
-				$(window.frames["iframetest"].document).find("#div3").hide();
-				$(window.frames["iframetest"].document).find("#div4").show();
-				$(window.frames["iframetest"].document).find("#div5").show();
-				$(window.frames["iframetest"].document).find("#div6").show();
-				$(window.frames["iframetest"].document).find("#div7").hide();
-				for(var i=number;i<25;i++)
-				{
-					if(i==24)
-						break;
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					var z="#"+"checkbox_rx0Manual"+x;
-					var t="#"+"checkbox_rx1Manual"+x;
-					$(window.frames["iframetest"].document).find(z).hide();
-					$(window.frames["iframetest"].document).find(t).hide();
-					$(window.frames["iframetest"].document).find(y).hide();
-				}
-
-				if($("#receive").val()=="Two Rx")
-				{
-					for(var i=number;i<25;i++)
-					{
-						if(i==24)
-							break;
-						var  x=i.toString();
-						var y="#"+"t_table"+x;
-						$(window.frames["iframetest"].document).find(y).hide();
-					}
-				}
-			}
-
-			if(number>=25 && number<32 )
-			{
-				$(window.frames["iframetest"].document).find("#div0").show();
-				$(window.frames["iframetest"].document).find("#div1").show();
-				$(window.frames["iframetest"].document).find("#div2").show();
-				$(window.frames["iframetest"].document).find("#div3").show();
-				$(window.frames["iframetest"].document).find("#div4").show();
-				$(window.frames["iframetest"].document).find("#div5").show();
-				$(window.frames["iframetest"].document).find("#div6").show();
-				$(window.frames["iframetest"].document).find("#div7").show();
-				for(var i=number;i<32;i++)
-				{
-					if(i==32)
-						break;
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					$(window.frames["iframetest"].document).find(y).hide();
-				}
-
-				if($("#receive").val()=="Two Rx")
-				{
-					for(var i=number;i<32;i++)
-					{
-						if(i==32)
-							break;
-						var  x=i.toString();
-						var y="#"+"t_table"+x;
-						$(window.frames["iframetest"].document).find(y).hide();
-					}
-				}
-			}
-		}
-		
-		function returntable()
-		{
-			for(var i=1;i<32;i++)
-			{
-				var  x=i.toString();
-				var y="#"+"rx0Manual"+x;
-				var y="#"+"rx1Manual"+x;
-				$(window.frames["iframetest"].document).find(y).show();
-				$(window.frames["iframetest"].document).find(z).show();
-			}
-	
-			$(window.frames["iframetest"].document).find("#rx0nobr1").show();
-			$(window.frames["iframetest"].document).find("#rx0nobr2").show();
-			$(window.frames["iframetest"].document).find("#rx0nobr3").show();
-			$(window.frames["iframetest"].document).find("#rx0nobr4").show();
-			$(window.frames["iframetest"].document).find("#rx1nobr1").show();
-			$(window.frames["iframetest"].document).find("#rx1nobr2").show();
-			$(window.frames["iframetest"].document).find("#rx1nobr3").show();
-			$(window.frames["iframetest"].document).find("#rx1nobr4").show();
-			$(window.frames["iframetest"].document).find("#uppoint").show();
-			$(window.frames["iframetest"].document).find("#dwpoint").show();
-			$(window.frames["iframetest"].document).find("#upnet").show();
-			$(window.frames["iframetest"].document).find("#dwnet").show();
-			$(window.frames["iframetest"].document).find("#upchan").show();
-			$(window.frames["iframetest"].document).find("#dwchan").show();
-
-			$(window.frames["iframetest"].document).find("#upsetting").show();
-			$(window.frames["iframetest"].document).find("#dwsetting").show();
-			$(window.frames["iframetest"].document).find("#msrediv").show();
-			$(window.frames["iframetest"].document).find("#mssediv").show();
-			$(window.frames["iframetest"].document).find("#ssrediv").show();
-			$(window.frames["iframetest"].document).find("#sssediv").show();		
-			$(window.frames["iframetest"].document).find("#fieldset2").show();
-			$(window.frames["iframetest"].document).find("#fieldset1").show();		
-			$("#receive").removeAttr("disabled");
-			$("#send").removeAttr("disabled");
-			$("#chnumber").removeAttr("disabled");
-			$("#setting").removeAttr("disabled");
-			$("#radiochan").removeAttr("disabled");
-			$("#radioband").removeAttr("disabled");
-			$("#radiocom").removeAttr("disabled");
-			$("#radiopower").removeAttr("disabled");
-			var number= $("#chnumber").val();
-			$(window.frames["iframetest"].document).find("#div1").show();
-			$(window.frames["iframetest"].document).find("#div2").show();
-			$(window.frames["iframetest"].document).find("#div3").show();
-			$(window.frames["iframetest"].document).find("#div4").show();
-			$(window.frames["iframetest"].document).find("#div5").show();
-			$(window.frames["iframetest"].document).find("#div6").show();
-			$(window.frames["iframetest"].document).find("#div7").show();
-
-			$(window.frames["iframetest"].document).find("#channel0").show();
-			$(window.frames["iframetest"].document).find("#channel1").show();
-			$(window.frames["iframetest"].document).find("#channel2").show();
-			$(window.frames["iframetest"].document).find("#channel3").show();
-			$(window.frames["iframetest"].document).find("#channel4").show();
-			$(window.frames["iframetest"].document).find("#channel5").show();
-			$(window.frames["iframetest"].document).find("#channel6").show();
-			$(window.frames["iframetest"].document).find("#channel7").show();
-
-			$(window.frames["iframetest"].document).find("#channel8").show();
-			$(window.frames["iframetest"].document).find("#channel9").show();
-			$(window.frames["iframetest"].document).find("#channel10").show();
-			$(window.frames["iframetest"].document).find("#channel11").show();
-			$(window.frames["iframetest"].document).find("#channel12").show();
-			$(window.frames["iframetest"].document).find("#channel13").show();
-			$(window.frames["iframetest"].document).find("#channel14").show();
-			$(window.frames["iframetest"].document).find("#channel15").show();
-
-			$(window.frames["iframetest"].document).find("#channel16").show();
-			$(window.frames["iframetest"].document).find("#channel17").show();
-			$(window.frames["iframetest"].document).find("#channel18").show();
-			$(window.frames["iframetest"].document).find("#channel19").show();
-			$(window.frames["iframetest"].document).find("#channel20").show();
-			$(window.frames["iframetest"].document).find("#channel21").show();
-			$(window.frames["iframetest"].document).find("#channel22").show();
-			$(window.frames["iframetest"].document).find("#channel23").show();
-
-			$(window.frames["iframetest"].document).find("#channel24").show();
-			$(window.frames["iframetest"].document).find("#channel25").show();
-			$(window.frames["iframetest"].document).find("#channel26").show();
-			$(window.frames["iframetest"].document).find("#channel27").show();
-			$(window.frames["iframetest"].document).find("#channel28").show();
-			$(window.frames["iframetest"].document).find("#channel29").show();
-			$(window.frames["iframetest"].document).find("#channel30").show();
-			$(window.frames["iframetest"].document).find("#channel31").show();
-
-			$(window.frames["iframetest"].document).find("#t_channel0").show();
-			$(window.frames["iframetest"].document).find("#t_channel1").show();
-			$(window.frames["iframetest"].document).find("#t_channel2").show();
-			$(window.frames["iframetest"].document).find("#t_channel3").show();
-			$(window.frames["iframetest"].document).find("#t_channel4").show();
-			$(window.frames["iframetest"].document).find("#t_channel5").show();
-			$(window.frames["iframetest"].document).find("#t_channel6").show();
-			$(window.frames["iframetest"].document).find("#t_channel7").show();
-
-			$(window.frames["iframetest"].document).find("#t_channel8").show();
-			$(window.frames["iframetest"].document).find("#t_channel9").show();
-			$(window.frames["iframetest"].document).find("#t_channel10").show();
-			$(window.frames["iframetest"].document).find("#t_channel11").show();
-			$(window.frames["iframetest"].document).find("#t_channel12").show();
-			$(window.frames["iframetest"].document).find("#t_channel13").show();
-			$(window.frames["iframetest"].document).find("#t_channel14").show();
-			$(window.frames["iframetest"].document).find("#t_channel15").show();
-
-			$(window.frames["iframetest"].document).find("#t_channel16").show();
-			$(window.frames["iframetest"].document).find("#t_channel17").show();
-			$(window.frames["iframetest"].document).find("#t_channel18").show();
-			$(window.frames["iframetest"].document).find("#t_channel19").show();
-			$(window.frames["iframetest"].document).find("#t_channel20").show();
-			$(window.frames["iframetest"].document).find("#t_channel21").show();
-			$(window.frames["iframetest"].document).find("#t_channel22").show();
-			$(window.frames["iframetest"].document).find("#t_channel23").show();
-
-			$(window.frames["iframetest"].document).find("#t_channel24").show();
-			$(window.frames["iframetest"].document).find("#t_channel25").show();
-			$(window.frames["iframetest"].document).find("#t_channel26").show();
-			$(window.frames["iframetest"].document).find("#t_channel27").show();
-			$(window.frames["iframetest"].document).find("#t_channel28").show();
-			$(window.frames["iframetest"].document).find("#t_channel29").show();
-			$(window.frames["iframetest"].document).find("#t_channel30").show();
-			$(window.frames["iframetest"].document).find("#t_channel31").show();
-
-			$(window.frames["iframetest"].document).find("#bandwidth0").show();
-			$(window.frames["iframetest"].document).find("#bandwidth1").show();
-			$(window.frames["iframetest"].document).find("#bandwidth2").show();
-			$(window.frames["iframetest"].document).find("#bandwidth3").show();
-			$(window.frames["iframetest"].document).find("#bandwidth4").show();
-			$(window.frames["iframetest"].document).find("#bandwidth5").show();
-			$(window.frames["iframetest"].document).find("#bandwidth6").show();
-			$(window.frames["iframetest"].document).find("#bandwidth7").show();
-
-			$(window.frames["iframetest"].document).find("#bandwidth8").show();
-			$(window.frames["iframetest"].document).find("#bandwidth9").show();
-			$(window.frames["iframetest"].document).find("#bandwidth10").show();
-			$(window.frames["iframetest"].document).find("#bandwidth11").show();
-			$(window.frames["iframetest"].document).find("#bandwidth12").show();
-			$(window.frames["iframetest"].document).find("#bandwidth13").show();
-			$(window.frames["iframetest"].document).find("#bandwidth14").show();
-			$(window.frames["iframetest"].document).find("#bandwidth15").show();
-
-			$(window.frames["iframetest"].document).find("#bandwidth16").show();
-			$(window.frames["iframetest"].document).find("#bandwidth17").show();
-			$(window.frames["iframetest"].document).find("#bandwidth18").show();
-			$(window.frames["iframetest"].document).find("#bandwidth19").show();
-			$(window.frames["iframetest"].document).find("#bandwidth20").show();
-			$(window.frames["iframetest"].document).find("#bandwidth21").show();
-			$(window.frames["iframetest"].document).find("#bandwidth22").show();
-			$(window.frames["iframetest"].document).find("#bandwidth23").show();
-
-			$(window.frames["iframetest"].document).find("#bandwidth24").show();
-			$(window.frames["iframetest"].document).find("#bandwidth25").show();
-			$(window.frames["iframetest"].document).find("#bandwidth26").show();
-			$(window.frames["iframetest"].document).find("#bandwidth27").show();
-			$(window.frames["iframetest"].document).find("#bandwidth28").show();
-			$(window.frames["iframetest"].document).find("#bandwidth29").show();
-			$(window.frames["iframetest"].document).find("#bandwidth30").show();
-			$(window.frames["iframetest"].document).find("#bandwidth31").show();
-
-			$(window.frames["iframetest"].document).find("#t_bandwidth0").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth1").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth2").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth3").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth4").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth5").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth6").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth7").show();
-
-			$(window.frames["iframetest"].document).find("#t_bandwidth8").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth9").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth10").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth11").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth12").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth13").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth14").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth15").show();
-
-			$(window.frames["iframetest"].document).find("#t_bandwidth16").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth17").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth18").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth19").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth20").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth21").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth22").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth23").show();
-
-			$(window.frames["iframetest"].document).find("#t_bandwidth24").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth25").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth26").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth27").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth28").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth29").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth30").show();
-			$(window.frames["iframetest"].document).find("#t_bandwidth31").show();
-
-			$(window.frames["iframetest"].document).find("#compensate0").show();
-			$(window.frames["iframetest"].document).find("#compensate1").show();
-			$(window.frames["iframetest"].document).find("#compensate2").show();
-			$(window.frames["iframetest"].document).find("#compensate3").show();
-			$(window.frames["iframetest"].document).find("#compensate4").show();
-			$(window.frames["iframetest"].document).find("#compensate5").show();
-			$(window.frames["iframetest"].document).find("#compensate6").show();
-			$(window.frames["iframetest"].document).find("#compensate7").show();
-
-			$(window.frames["iframetest"].document).find("#compensate8").show();
-			$(window.frames["iframetest"].document).find("#compensate9").show();
-			$(window.frames["iframetest"].document).find("#compensate10").show();
-			$(window.frames["iframetest"].document).find("#compensate11").show();
-			$(window.frames["iframetest"].document).find("#compensate12").show();
-			$(window.frames["iframetest"].document).find("#compensate13").show();
-			$(window.frames["iframetest"].document).find("#compensate14").show();
-			$(window.frames["iframetest"].document).find("#compensate15").show();
-
-			$(window.frames["iframetest"].document).find("#compensate16").show();
-			$(window.frames["iframetest"].document).find("#compensate17").show();
-			$(window.frames["iframetest"].document).find("#compensate18").show();
-			$(window.frames["iframetest"].document).find("#compensate19").show();
-			$(window.frames["iframetest"].document).find("#compensate20").show();
-			$(window.frames["iframetest"].document).find("#compensate21").show();
-			$(window.frames["iframetest"].document).find("#compensate22").show();
-			$(window.frames["iframetest"].document).find("#compensate23").show();
-
-			$(window.frames["iframetest"].document).find("#compensate24").show();
-			$(window.frames["iframetest"].document).find("#compensate25").show();
-			$(window.frames["iframetest"].document).find("#compensate26").show();
-			$(window.frames["iframetest"].document).find("#compensate27").show();
-			$(window.frames["iframetest"].document).find("#compensate28").show();
-			$(window.frames["iframetest"].document).find("#compensate29").show();
-			$(window.frames["iframetest"].document).find("#compensate30").show();
-			$(window.frames["iframetest"].document).find("#compensate31").show();
-
-			$(window.frames["iframetest"].document).find("#t_compensate0").show();
-			$(window.frames["iframetest"].document).find("#t_compensate1").show();
-			$(window.frames["iframetest"].document).find("#t_compensate2").show();
-			$(window.frames["iframetest"].document).find("#t_compensate3").show();
-			$(window.frames["iframetest"].document).find("#t_compensate4").show();
-			$(window.frames["iframetest"].document).find("#t_compensate5").show();
-			$(window.frames["iframetest"].document).find("#t_compensate6").show();
-			$(window.frames["iframetest"].document).find("#t_compensate7").show();
-
-			$(window.frames["iframetest"].document).find("#t_compensate8").show();
-			$(window.frames["iframetest"].document).find("#t_compensate9").show();
-			$(window.frames["iframetest"].document).find("#t_compensate10").show();
-			$(window.frames["iframetest"].document).find("#t_compensate11").show();
-			$(window.frames["iframetest"].document).find("#t_compensate12").show();
-			$(window.frames["iframetest"].document).find("#t_compensate13").show();
-			$(window.frames["iframetest"].document).find("#t_compensate14").show();
-			$(window.frames["iframetest"].document).find("#t_compensate15").show();
-
-			$(window.frames["iframetest"].document).find("#t_compensate16").show();
-			$(window.frames["iframetest"].document).find("#t_compensate17").show();
-			$(window.frames["iframetest"].document).find("#t_compensate18").show();
-			$(window.frames["iframetest"].document).find("#t_compensate19").show();
-			$(window.frames["iframetest"].document).find("#t_compensate20").show();
-			$(window.frames["iframetest"].document).find("#t_compensate21").show();
-			$(window.frames["iframetest"].document).find("#t_compensate22").show();
-			$(window.frames["iframetest"].document).find("#t_compensate23").show();
-
-			$(window.frames["iframetest"].document).find("#t_compensate24").show();
-			$(window.frames["iframetest"].document).find("#t_compensate25").show();
-			$(window.frames["iframetest"].document).find("#t_compensate26").show();
-			$(window.frames["iframetest"].document).find("#t_compensate27").show();
-			$(window.frames["iframetest"].document).find("#t_compensate28").show();
-			$(window.frames["iframetest"].document).find("#t_compensate29").show();
-			$(window.frames["iframetest"].document).find("#t_compensate30").show();
-			$(window.frames["iframetest"].document).find("#t_compensate31").show();
-
-
-			$(window.frames["iframetest"].document).find("#power0").show();
-			$(window.frames["iframetest"].document).find("#power1").show();
-			$(window.frames["iframetest"].document).find("#power2").show();
-			$(window.frames["iframetest"].document).find("#power3").show();
-			$(window.frames["iframetest"].document).find("#power4").show();
-			$(window.frames["iframetest"].document).find("#power5").show();
-			$(window.frames["iframetest"].document).find("#power6").show();
-			$(window.frames["iframetest"].document).find("#power7").show();
-
-			$(window.frames["iframetest"].document).find("#power8").show();
-			$(window.frames["iframetest"].document).find("#power9").show();
-			$(window.frames["iframetest"].document).find("#power10").show();
-			$(window.frames["iframetest"].document).find("#power11").show();
-			$(window.frames["iframetest"].document).find("#power12").show();
-			$(window.frames["iframetest"].document).find("#power13").show();
-			$(window.frames["iframetest"].document).find("#power14").show();
-			$(window.frames["iframetest"].document).find("#power15").show();
-
-			$(window.frames["iframetest"].document).find("#power16").show();
-			$(window.frames["iframetest"].document).find("#power17").show();
-			$(window.frames["iframetest"].document).find("#power18").show();
-			$(window.frames["iframetest"].document).find("#power19").show();
-			$(window.frames["iframetest"].document).find("#power20").show();
-			$(window.frames["iframetest"].document).find("#power21").show();
-			$(window.frames["iframetest"].document).find("#power22").show();
-			$(window.frames["iframetest"].document).find("#power23").show();
-
-			$(window.frames["iframetest"].document).find("#power24").show();
-			$(window.frames["iframetest"].document).find("#power25").show();
-			$(window.frames["iframetest"].document).find("#power26").show();
-			$(window.frames["iframetest"].document).find("#power27").show();
-			$(window.frames["iframetest"].document).find("#power28").show();
-			$(window.frames["iframetest"].document).find("#power29").show();
-			$(window.frames["iframetest"].document).find("#power30").show();
-			$(window.frames["iframetest"].document).find("#power31").show();
-
-			$(window.frames["iframetest"].document).find("#t_power0").show();
-			$(window.frames["iframetest"].document).find("#t_power1").show();
-			$(window.frames["iframetest"].document).find("#t_power2").show();
-			$(window.frames["iframetest"].document).find("#t_power3").show();
-			$(window.frames["iframetest"].document).find("#t_power4").show();
-			$(window.frames["iframetest"].document).find("#t_power5").show();
-			$(window.frames["iframetest"].document).find("#t_power6").show();
-			$(window.frames["iframetest"].document).find("#t_power7").show();
-
-			$(window.frames["iframetest"].document).find("#t_power8").show();
-			$(window.frames["iframetest"].document).find("#t_power9").show();
-			$(window.frames["iframetest"].document).find("#t_power10").show();
-			$(window.frames["iframetest"].document).find("#t_power11").show();
-			$(window.frames["iframetest"].document).find("#t_power12").show();
-			$(window.frames["iframetest"].document).find("#t_power13").show();
-			$(window.frames["iframetest"].document).find("#t_power14").show();
-			$(window.frames["iframetest"].document).find("#t_power15").show();
-
-			$(window.frames["iframetest"].document).find("#t_power16").show();
-			$(window.frames["iframetest"].document).find("#t_power17").show();
-			$(window.frames["iframetest"].document).find("#t_power18").show();
-			$(window.frames["iframetest"].document).find("#t_power19").show();
-			$(window.frames["iframetest"].document).find("#t_power20").show();
-			$(window.frames["iframetest"].document).find("#t_power21").show();
-			$(window.frames["iframetest"].document).find("#t_power22").show();
-			$(window.frames["iframetest"].document).find("#t_power23").show();
-
-			$(window.frames["iframetest"].document).find("#t_power24").show();
-			$(window.frames["iframetest"].document).find("#t_power25").show();
-			$(window.frames["iframetest"].document).find("#t_power26").show();
-			$(window.frames["iframetest"].document).find("#t_power27").show();
-			$(window.frames["iframetest"].document).find("#t_power28").show();
-			$(window.frames["iframetest"].document).find("#t_power29").show();
-			$(window.frames["iframetest"].document).find("#t_power30").show();
-			$(window.frames["iframetest"].document).find("#t_power31").show();
-			if(number<9)
-			{
-				for(var i=(number-1);i<8;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					$(window.frames["iframetest"].document).find(y).show();
-					var z="#"+"t_table"+x;
-					$(window.frames["iframetest"].document).find(z).show();
-				}
-			}
-
-			if(number>=9 && number<17)
-			{
-				for(var i=(number-1);i<16;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					$(window.frames["iframetest"].document).find(y).show();
-					var z="#"+"t_table"+x;
-					$(window.frames["iframetest"].document).find(z).show();
-				}
-			}
-
-			if(number>=17 && number<25)
-			{
-				for(var i=(number-1);i<24;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					$(window.frames["iframetest"].document).find(y).show();
-					var z="#"+"t_table"+x;
-					$(window.frames["iframetest"].document).find(z).show();
-				}
-			}
-
-			if(number>=25 && number<32)
-			{
-				for(var i=(number-1);i<32;i++)
-				{
-					var  x=i.toString();
-					var y="#"+"table"+x;
-					$(window.frames["iframetest"].document).find(y).show();
-					var z="#"+"t_table"+x;
-					$(window.frames["iframetest"].document).find(z).show();	
-				}
-			}
-		}
-		function admin()
-		{
-			if($("#adminbutton").text()=="Exit Admin")
-			{
-				$("#adminbutton").text("Enter Admin");
-	            $("#re_li0").attr("style","display: none");
-				$("#re_li1").attr("style","display: none");
-				$("#rfpoint").attr("style","display: none");
-				$("#testhtml").attr("style","display: none");
-				$("#iframetest").attr("src","hwconfig.html");
-				document.getElementById("testhtml").setAttribute("class","layui-nav-item");
-				document.getElementById("config").setAttribute("class","layui-nav-item layui-this");
-				$.cookie('the_cookie', null);
-				
-			}else{
-				
-
-				var admin;
-				var person = prompt("Enter your Pwd：", "");
-				if (person == null || person == "") {
-					admin = "用户取消输入";
-				} else {
-					admin =  person ;
-				}
-				$.ajax({
-				type: "POST",
-				url: "/cgi-bin/test.cgi",
-				data: {
-					cgiNumber:7,
-					admin:admin
-				},
-				success: function (data)
-				{
-					var obj = JSON.parse(data);
-					if(obj["returnnum"]==admin){
-						$("#adminbutton").text("Exit Admin");
-						$("#re_li0").removeAttr("style");
-						$("#re_li1").removeAttr("style");
-						$("#testhtml").removeAttr("style");
-						$("#rfpoint").removeAttr("style");
-						$("#iframetest").attr("src","test.html");
-						document.getElementById("config").setAttribute("class","layui-nav-item ");
-						document.getElementById("testhtml").setAttribute("class","layui-nav-item layui-this");
-						$.cookie('the_cookie', admin, { expires: 1 });
-					}else{
-						alert("Check PassWord Error");
-					}
-				},
-				});
-
-			}
-
-		    
-		}
-	
-</script> 
+    function setting() {
+        var radiochan = 0;//信道,1不显示0显示
+        var radiocom = 0//补偿,1不显示0显示
+        var radioband = 1;//带宽,1不显示0显示
+        var radiopower = 1;//功率,1不显示0显示
+        $("#receive").val("One Rx");//Zero Rx、One Rx、Two Rx
+        $("#send").val("One Tx");//Zero Tx、One Tx、Two Tx
+        $("#chnumber ").val("16");//1~32
+        //以上用于控制html页面显示几收几发，通道数，信道、带宽、补偿、功率的显示与否
+
+        if (radiochan == 0)
+            $("#radiochan").prop('checked', true);
+        else
+            $("#radiochan").prop('checked', false)
+
+        if (radiocom == 0)
+            $("#radiocom").prop('checked', true);
+        else
+            $("#radiocom").prop('checked', false);
+
+        if (radioband == 0)
+            $("#radioband").prop('checked', true);
+        else
+            $("#radioband").prop('checked', false);
+
+        if (radiopower == 0)
+            $("#radiopower").prop('checked', true);
+        else
+            $("#radiopower").prop('checked', false);
+
+        $("#setting").attr("disabled", "disabled");
+        $("#radiochan").attr("disabled", "disabled");
+        $("#radioband").attr("disabled", "disabled");
+        $("#radiocom").attr("disabled", "disabled");
+        $("#radiopower").attr("disabled", "disabled");
+
+        if ($("#radiochan").prop("checked") == false) {
+            $(window.frames["iframetest"].document).find("#upchan").hide();
+            $(window.frames["iframetest"].document).find("#dwchan").hide();
+
+            for (var i = 0; i < 31; i++) {
+                var x = i.toString();
+                var y = "#" + "channel" + x;
+                var z = "#" + "t_channel" + x;
+                $(window.frames["iframetest"].document).find(y).hide();
+                $(window.frames["iframetest"].document).find(z).hide();
+            }
+        }
+
+        if ($("#radioband").prop("checked") == false) {
+            $(window.frames["iframetest"].document).find("#upnet").hide();
+            $(window.frames["iframetest"].document).find("#dwnet").hide();
+
+            for (var i = 0; i < 31; i++) {
+                var x = i.toString();
+                var y = "#" + "bandwidth" + x;
+                var z = "#" + "t_bandwidth" + x;
+                $(window.frames["iframetest"].document).find(y).hide();
+                $(window.frames["iframetest"].document).find(z).hide();
+            }
+        }
+
+        if ($("#radiocom").prop("checked") == false) {
+            for (var i = 0; i < 31; i++) {
+                var x = i.toString();
+                var y = "#" + "compensate" + x;
+                var z = "#" + "t_compensate" + x;
+                $(window.frames["iframetest"].document).find(y).hide();
+                $(window.frames["iframetest"].document).find(z).hide();
+            }
+        }
+
+        if ($("#radiopower").prop("checked") == false) {
+            $(window.frames["iframetest"].document).find("#uppoint").hide();
+            $(window.frames["iframetest"].document).find("#dwpoint").hide();
+
+            for (var i = 0; i < 31; i++) {
+                var x = i.toString();
+                var y = "#" + "power" + x;
+                var z = "#" + "t_power" + x;
+                $(window.frames["iframetest"].document).find(y).hide();
+                $(window.frames["iframetest"].document).find(z).hide();
+            }
+        }
+
+        if ($("#receive").val() == "Zero Rx" && $("#send").val() == "Zero Tx") {
+            alert("at least One Rx or One Tx");
+            return false;
+        }
+
+        if ($("#receive").val() == "Zero Rx" && $("#send").val() == "One Tx") {
+            $(window.frames["iframetest"].document).find("#upsetting").hide();
+            $(window.frames["iframetest"].document).find("#dwsetting").hide();
+            $(window.frames["iframetest"].document).find("#sssediv").hide();
+            $(window.frames["iframetest"].document).find("#ssrediv").hide();
+            $(window.frames["iframetest"].document).find("#msrediv").hide();
+            $(window.frames["iframetest"].document).find("#fieldset2").hide();
+            $(window.frames["iframetest"].document).find("#fieldset1").hide();
+            $(window.frames["iframetest"].document).find("#rx0Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx0WorkBandwidth_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();
+            $("#rfpoint").hide();
+            $("#re_li1").hide();
+        }
+
+        if ($("#receive").val() == "Zero Rx" && $("#send").val() == "Two Tx") {
+            $(window.frames["iframetest"].document).find("#ssrediv").hide();
+            $(window.frames["iframetest"].document).find("#msrediv").hide();
+            $(window.frames["iframetest"].document).find("#fieldset2").hide();
+            $(window.frames["iframetest"].document).find("#fieldset1").hide();
+            $(window.frames["iframetest"].document).find("#rx0Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx0WorkBandwidth_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();
+            $("#rfpoint").hide();
+        }
+
+        if ($("#receive").val() == "One Rx" && $("#send").val() == "Zero Tx") {
+            $(window.frames["iframetest"].document).find("#dwsetting").hide();
+            $(window.frames["iframetest"].document).find("#sssediv").hide();
+            $(window.frames["iframetest"].document).find("#ssrediv").hide();
+            $(window.frames["iframetest"].document).find("#mssediv").hide();
+            $(window.frames["iframetest"].document).find("#fieldset2").hide();
+            $(window.frames["iframetest"].document).find("#rx1Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();
+            $("#re_li1").hide();
+        }
+
+        if ($("#receive").val() == "One Rx" && $("#send").val() == "One Tx") {
+            $(window.frames["iframetest"].document).find("#sssediv").hide();
+            $(window.frames["iframetest"].document).find("#ssrediv").hide();
+            $(window.frames["iframetest"].document).find("#fieldset2").hide();
+            $(window.frames["iframetest"].document).find("#rx1Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();
+            $("#re_li1").hide();
+        }
+
+        if ($("#receive").val() == "One Rx" && $("#send").val() == "Two Tx") {
+            $(window.frames["iframetest"].document).find("#ssrediv").hide();
+            $(window.frames["iframetest"].document).find("#fieldset2").hide();
+            $(window.frames["iframetest"].document).find("#rx1Center_index").hide();
+            $(window.frames["iframetest"].document).find("#rx1WorkBandwidth_index").hide();
+        }
+
+        if ($("#receive").val() == "Two Rx" && $("#send").val() == "Zero Tx") {
+            $(window.frames["iframetest"].document).find("#mssediv").hide();
+            $(window.frames["iframetest"].document).find("#sssediv").hide();
+        }
+        if ($("#receive").val() == "Two Rx" && $("#send").val() == "One Tx") {
+            $(window.frames["iframetest"].document).find("#sssediv").hide();
+        }
+
+        $("#receive").attr("disabled", "disabled");
+        $("#send").attr("disabled", "disabled");
+        $("#chnumber").attr("disabled", "disabled");
+
+        var number = $("#chnumber").val();
+        if (number < 9) {
+            $(window.frames["iframetest"].document).find("#div1").hide();
+            $(window.frames["iframetest"].document).find("#div2").hide();
+            $(window.frames["iframetest"].document).find("#div3").hide();
+            for (var i = number; i < 8; i++) {
+                if (i == 8)
+                    return false;
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                var z = "#" + "checkbox_rx0Manual" + x;
+                var t = "#" + "checkbox_rx1Manual" + x;
+                $(window.frames["iframetest"].document).find(z).hide();
+                $(window.frames["iframetest"].document).find(t).hide();
+                $(window.frames["iframetest"].document).find(y).hide();
+            }
+
+            if ($("#receive").val() == "Two Rx") {
+                $(window.frames["iframetest"].document).find("#div5").hide();
+                $(window.frames["iframetest"].document).find("#div6").hide();
+                $(window.frames["iframetest"].document).find("#div7").hide();
+                for (var i = number; i < 8; i++) {
+                    if (i == 8)
+                        return false;
+                    var x = i.toString();
+                    var y = "#" + "t_table" + x;
+                    var z = "#" + "checkbox_rx0Manual" + x;
+                    var t = "#" + "checkbox_rx1Manual" + x;
+                    $(window.frames["iframetest"].document).find(z).hide();
+                    $(window.frames["iframetest"].document).find(t).hide();
+                    $(window.frames["iframetest"].document).find(y).hide();
+                }
+            }
+        }
+
+        if (number >= 9 && number < 17) {
+            $(window.frames["iframetest"].document).find("#div0").show();
+            $(window.frames["iframetest"].document).find("#div1").show();
+            $(window.frames["iframetest"].document).find("#div2").hide();
+            $(window.frames["iframetest"].document).find("#div3").hide();
+            $(window.frames["iframetest"].document).find("#div4").show();
+            $(window.frames["iframetest"].document).find("#div5").show();
+            $(window.frames["iframetest"].document).find("#div6").hide();
+            $(window.frames["iframetest"].document).find("#div7").hide();
+            for (var i = number; i < 17; i++) {
+                if (i == 16)
+                    break;
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                var z = "#" + "checkbox_rx0Manual" + x;
+                var t = "#" + "checkbox_rx1Manual" + x;
+                $(window.frames["iframetest"].document).find(z).hide();
+                $(window.frames["iframetest"].document).find(t).hide();
+                $(window.frames["iframetest"].document).find(y).hide();
+            }
+
+            if ($("#receive").val() == "Two Rx") {
+                for (var i = number; i < 17; i++) {
+                    if (i == 16)
+                        break;
+                    var x = i.toString();
+                    var y = "#" + "t_table" + x;
+                    var z = "#" + "checkbox_rx0Manual" + x;
+                    var t = "#" + "checkbox_rx1Manual" + x;
+                    $(window.frames["iframetest"].document).find(z).hide();
+                    $(window.frames["iframetest"].document).find(t).hide();
+                    $(window.frames["iframetest"].document).find(y).hide();
+                }
+            }
+        }
+
+        if (number >= 17 && number < 25) {
+            $(window.frames["iframetest"].document).find("#div0").show();
+            $(window.frames["iframetest"].document).find("#div1").show();
+            $(window.frames["iframetest"].document).find("#div2").show();
+            $(window.frames["iframetest"].document).find("#div3").hide();
+            $(window.frames["iframetest"].document).find("#div4").show();
+            $(window.frames["iframetest"].document).find("#div5").show();
+            $(window.frames["iframetest"].document).find("#div6").show();
+            $(window.frames["iframetest"].document).find("#div7").hide();
+            for (var i = number; i < 25; i++) {
+                if (i == 24)
+                    break;
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                var z = "#" + "checkbox_rx0Manual" + x;
+                var t = "#" + "checkbox_rx1Manual" + x;
+                $(window.frames["iframetest"].document).find(z).hide();
+                $(window.frames["iframetest"].document).find(t).hide();
+                $(window.frames["iframetest"].document).find(y).hide();
+            }
+
+            if ($("#receive").val() == "Two Rx") {
+                for (var i = number; i < 25; i++) {
+                    if (i == 24)
+                        break;
+                    var x = i.toString();
+                    var y = "#" + "t_table" + x;
+                    $(window.frames["iframetest"].document).find(y).hide();
+                }
+            }
+        }
+
+        if (number >= 25 && number < 32) {
+            $(window.frames["iframetest"].document).find("#div0").show();
+            $(window.frames["iframetest"].document).find("#div1").show();
+            $(window.frames["iframetest"].document).find("#div2").show();
+            $(window.frames["iframetest"].document).find("#div3").show();
+            $(window.frames["iframetest"].document).find("#div4").show();
+            $(window.frames["iframetest"].document).find("#div5").show();
+            $(window.frames["iframetest"].document).find("#div6").show();
+            $(window.frames["iframetest"].document).find("#div7").show();
+            for (var i = number; i < 32; i++) {
+                if (i == 32)
+                    break;
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                $(window.frames["iframetest"].document).find(y).hide();
+            }
+
+            if ($("#receive").val() == "Two Rx") {
+                for (var i = number; i < 32; i++) {
+                    if (i == 32)
+                        break;
+                    var x = i.toString();
+                    var y = "#" + "t_table" + x;
+                    $(window.frames["iframetest"].document).find(y).hide();
+                }
+            }
+        }
+    }
+
+    function returntable() {
+        for (var i = 1; i < 32; i++) {
+            var x = i.toString();
+            var y = "#" + "rx0Manual" + x;
+            var y = "#" + "rx1Manual" + x;
+            $(window.frames["iframetest"].document).find(y).show();
+            $(window.frames["iframetest"].document).find(z).show();
+        }
+
+        $(window.frames["iframetest"].document).find("#rx0nobr1").show();
+        $(window.frames["iframetest"].document).find("#rx0nobr2").show();
+        $(window.frames["iframetest"].document).find("#rx0nobr3").show();
+        $(window.frames["iframetest"].document).find("#rx0nobr4").show();
+        $(window.frames["iframetest"].document).find("#rx1nobr1").show();
+        $(window.frames["iframetest"].document).find("#rx1nobr2").show();
+        $(window.frames["iframetest"].document).find("#rx1nobr3").show();
+        $(window.frames["iframetest"].document).find("#rx1nobr4").show();
+        $(window.frames["iframetest"].document).find("#uppoint").show();
+        $(window.frames["iframetest"].document).find("#dwpoint").show();
+        $(window.frames["iframetest"].document).find("#upnet").show();
+        $(window.frames["iframetest"].document).find("#dwnet").show();
+        $(window.frames["iframetest"].document).find("#upchan").show();
+        $(window.frames["iframetest"].document).find("#dwchan").show();
+
+        $(window.frames["iframetest"].document).find("#upsetting").show();
+        $(window.frames["iframetest"].document).find("#dwsetting").show();
+        $(window.frames["iframetest"].document).find("#msrediv").show();
+        $(window.frames["iframetest"].document).find("#mssediv").show();
+        $(window.frames["iframetest"].document).find("#ssrediv").show();
+        $(window.frames["iframetest"].document).find("#sssediv").show();
+        $(window.frames["iframetest"].document).find("#fieldset2").show();
+        $(window.frames["iframetest"].document).find("#fieldset1").show();
+        $("#receive").removeAttr("disabled");
+        $("#send").removeAttr("disabled");
+        $("#chnumber").removeAttr("disabled");
+        $("#setting").removeAttr("disabled");
+        $("#radiochan").removeAttr("disabled");
+        $("#radioband").removeAttr("disabled");
+        $("#radiocom").removeAttr("disabled");
+        $("#radiopower").removeAttr("disabled");
+        var number = $("#chnumber").val();
+        $(window.frames["iframetest"].document).find("#div1").show();
+        $(window.frames["iframetest"].document).find("#div2").show();
+        $(window.frames["iframetest"].document).find("#div3").show();
+        $(window.frames["iframetest"].document).find("#div4").show();
+        $(window.frames["iframetest"].document).find("#div5").show();
+        $(window.frames["iframetest"].document).find("#div6").show();
+        $(window.frames["iframetest"].document).find("#div7").show();
+
+        $(window.frames["iframetest"].document).find("#channel0").show();
+        $(window.frames["iframetest"].document).find("#channel1").show();
+        $(window.frames["iframetest"].document).find("#channel2").show();
+        $(window.frames["iframetest"].document).find("#channel3").show();
+        $(window.frames["iframetest"].document).find("#channel4").show();
+        $(window.frames["iframetest"].document).find("#channel5").show();
+        $(window.frames["iframetest"].document).find("#channel6").show();
+        $(window.frames["iframetest"].document).find("#channel7").show();
+
+        $(window.frames["iframetest"].document).find("#channel8").show();
+        $(window.frames["iframetest"].document).find("#channel9").show();
+        $(window.frames["iframetest"].document).find("#channel10").show();
+        $(window.frames["iframetest"].document).find("#channel11").show();
+        $(window.frames["iframetest"].document).find("#channel12").show();
+        $(window.frames["iframetest"].document).find("#channel13").show();
+        $(window.frames["iframetest"].document).find("#channel14").show();
+        $(window.frames["iframetest"].document).find("#channel15").show();
+
+        $(window.frames["iframetest"].document).find("#channel16").show();
+        $(window.frames["iframetest"].document).find("#channel17").show();
+        $(window.frames["iframetest"].document).find("#channel18").show();
+        $(window.frames["iframetest"].document).find("#channel19").show();
+        $(window.frames["iframetest"].document).find("#channel20").show();
+        $(window.frames["iframetest"].document).find("#channel21").show();
+        $(window.frames["iframetest"].document).find("#channel22").show();
+        $(window.frames["iframetest"].document).find("#channel23").show();
+
+        $(window.frames["iframetest"].document).find("#channel24").show();
+        $(window.frames["iframetest"].document).find("#channel25").show();
+        $(window.frames["iframetest"].document).find("#channel26").show();
+        $(window.frames["iframetest"].document).find("#channel27").show();
+        $(window.frames["iframetest"].document).find("#channel28").show();
+        $(window.frames["iframetest"].document).find("#channel29").show();
+        $(window.frames["iframetest"].document).find("#channel30").show();
+        $(window.frames["iframetest"].document).find("#channel31").show();
+
+        $(window.frames["iframetest"].document).find("#t_channel0").show();
+        $(window.frames["iframetest"].document).find("#t_channel1").show();
+        $(window.frames["iframetest"].document).find("#t_channel2").show();
+        $(window.frames["iframetest"].document).find("#t_channel3").show();
+        $(window.frames["iframetest"].document).find("#t_channel4").show();
+        $(window.frames["iframetest"].document).find("#t_channel5").show();
+        $(window.frames["iframetest"].document).find("#t_channel6").show();
+        $(window.frames["iframetest"].document).find("#t_channel7").show();
+
+        $(window.frames["iframetest"].document).find("#t_channel8").show();
+        $(window.frames["iframetest"].document).find("#t_channel9").show();
+        $(window.frames["iframetest"].document).find("#t_channel10").show();
+        $(window.frames["iframetest"].document).find("#t_channel11").show();
+        $(window.frames["iframetest"].document).find("#t_channel12").show();
+        $(window.frames["iframetest"].document).find("#t_channel13").show();
+        $(window.frames["iframetest"].document).find("#t_channel14").show();
+        $(window.frames["iframetest"].document).find("#t_channel15").show();
+
+        $(window.frames["iframetest"].document).find("#t_channel16").show();
+        $(window.frames["iframetest"].document).find("#t_channel17").show();
+        $(window.frames["iframetest"].document).find("#t_channel18").show();
+        $(window.frames["iframetest"].document).find("#t_channel19").show();
+        $(window.frames["iframetest"].document).find("#t_channel20").show();
+        $(window.frames["iframetest"].document).find("#t_channel21").show();
+        $(window.frames["iframetest"].document).find("#t_channel22").show();
+        $(window.frames["iframetest"].document).find("#t_channel23").show();
+
+        $(window.frames["iframetest"].document).find("#t_channel24").show();
+        $(window.frames["iframetest"].document).find("#t_channel25").show();
+        $(window.frames["iframetest"].document).find("#t_channel26").show();
+        $(window.frames["iframetest"].document).find("#t_channel27").show();
+        $(window.frames["iframetest"].document).find("#t_channel28").show();
+        $(window.frames["iframetest"].document).find("#t_channel29").show();
+        $(window.frames["iframetest"].document).find("#t_channel30").show();
+        $(window.frames["iframetest"].document).find("#t_channel31").show();
+
+        $(window.frames["iframetest"].document).find("#bandwidth0").show();
+        $(window.frames["iframetest"].document).find("#bandwidth1").show();
+        $(window.frames["iframetest"].document).find("#bandwidth2").show();
+        $(window.frames["iframetest"].document).find("#bandwidth3").show();
+        $(window.frames["iframetest"].document).find("#bandwidth4").show();
+        $(window.frames["iframetest"].document).find("#bandwidth5").show();
+        $(window.frames["iframetest"].document).find("#bandwidth6").show();
+        $(window.frames["iframetest"].document).find("#bandwidth7").show();
+
+        $(window.frames["iframetest"].document).find("#bandwidth8").show();
+        $(window.frames["iframetest"].document).find("#bandwidth9").show();
+        $(window.frames["iframetest"].document).find("#bandwidth10").show();
+        $(window.frames["iframetest"].document).find("#bandwidth11").show();
+        $(window.frames["iframetest"].document).find("#bandwidth12").show();
+        $(window.frames["iframetest"].document).find("#bandwidth13").show();
+        $(window.frames["iframetest"].document).find("#bandwidth14").show();
+        $(window.frames["iframetest"].document).find("#bandwidth15").show();
+
+        $(window.frames["iframetest"].document).find("#bandwidth16").show();
+        $(window.frames["iframetest"].document).find("#bandwidth17").show();
+        $(window.frames["iframetest"].document).find("#bandwidth18").show();
+        $(window.frames["iframetest"].document).find("#bandwidth19").show();
+        $(window.frames["iframetest"].document).find("#bandwidth20").show();
+        $(window.frames["iframetest"].document).find("#bandwidth21").show();
+        $(window.frames["iframetest"].document).find("#bandwidth22").show();
+        $(window.frames["iframetest"].document).find("#bandwidth23").show();
+
+        $(window.frames["iframetest"].document).find("#bandwidth24").show();
+        $(window.frames["iframetest"].document).find("#bandwidth25").show();
+        $(window.frames["iframetest"].document).find("#bandwidth26").show();
+        $(window.frames["iframetest"].document).find("#bandwidth27").show();
+        $(window.frames["iframetest"].document).find("#bandwidth28").show();
+        $(window.frames["iframetest"].document).find("#bandwidth29").show();
+        $(window.frames["iframetest"].document).find("#bandwidth30").show();
+        $(window.frames["iframetest"].document).find("#bandwidth31").show();
+
+        $(window.frames["iframetest"].document).find("#t_bandwidth0").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth1").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth2").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth3").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth4").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth5").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth6").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth7").show();
+
+        $(window.frames["iframetest"].document).find("#t_bandwidth8").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth9").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth10").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth11").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth12").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth13").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth14").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth15").show();
+
+        $(window.frames["iframetest"].document).find("#t_bandwidth16").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth17").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth18").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth19").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth20").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth21").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth22").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth23").show();
+
+        $(window.frames["iframetest"].document).find("#t_bandwidth24").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth25").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth26").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth27").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth28").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth29").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth30").show();
+        $(window.frames["iframetest"].document).find("#t_bandwidth31").show();
+
+        $(window.frames["iframetest"].document).find("#compensate0").show();
+        $(window.frames["iframetest"].document).find("#compensate1").show();
+        $(window.frames["iframetest"].document).find("#compensate2").show();
+        $(window.frames["iframetest"].document).find("#compensate3").show();
+        $(window.frames["iframetest"].document).find("#compensate4").show();
+        $(window.frames["iframetest"].document).find("#compensate5").show();
+        $(window.frames["iframetest"].document).find("#compensate6").show();
+        $(window.frames["iframetest"].document).find("#compensate7").show();
+
+        $(window.frames["iframetest"].document).find("#compensate8").show();
+        $(window.frames["iframetest"].document).find("#compensate9").show();
+        $(window.frames["iframetest"].document).find("#compensate10").show();
+        $(window.frames["iframetest"].document).find("#compensate11").show();
+        $(window.frames["iframetest"].document).find("#compensate12").show();
+        $(window.frames["iframetest"].document).find("#compensate13").show();
+        $(window.frames["iframetest"].document).find("#compensate14").show();
+        $(window.frames["iframetest"].document).find("#compensate15").show();
+
+        $(window.frames["iframetest"].document).find("#compensate16").show();
+        $(window.frames["iframetest"].document).find("#compensate17").show();
+        $(window.frames["iframetest"].document).find("#compensate18").show();
+        $(window.frames["iframetest"].document).find("#compensate19").show();
+        $(window.frames["iframetest"].document).find("#compensate20").show();
+        $(window.frames["iframetest"].document).find("#compensate21").show();
+        $(window.frames["iframetest"].document).find("#compensate22").show();
+        $(window.frames["iframetest"].document).find("#compensate23").show();
+
+        $(window.frames["iframetest"].document).find("#compensate24").show();
+        $(window.frames["iframetest"].document).find("#compensate25").show();
+        $(window.frames["iframetest"].document).find("#compensate26").show();
+        $(window.frames["iframetest"].document).find("#compensate27").show();
+        $(window.frames["iframetest"].document).find("#compensate28").show();
+        $(window.frames["iframetest"].document).find("#compensate29").show();
+        $(window.frames["iframetest"].document).find("#compensate30").show();
+        $(window.frames["iframetest"].document).find("#compensate31").show();
+
+        $(window.frames["iframetest"].document).find("#t_compensate0").show();
+        $(window.frames["iframetest"].document).find("#t_compensate1").show();
+        $(window.frames["iframetest"].document).find("#t_compensate2").show();
+        $(window.frames["iframetest"].document).find("#t_compensate3").show();
+        $(window.frames["iframetest"].document).find("#t_compensate4").show();
+        $(window.frames["iframetest"].document).find("#t_compensate5").show();
+        $(window.frames["iframetest"].document).find("#t_compensate6").show();
+        $(window.frames["iframetest"].document).find("#t_compensate7").show();
+
+        $(window.frames["iframetest"].document).find("#t_compensate8").show();
+        $(window.frames["iframetest"].document).find("#t_compensate9").show();
+        $(window.frames["iframetest"].document).find("#t_compensate10").show();
+        $(window.frames["iframetest"].document).find("#t_compensate11").show();
+        $(window.frames["iframetest"].document).find("#t_compensate12").show();
+        $(window.frames["iframetest"].document).find("#t_compensate13").show();
+        $(window.frames["iframetest"].document).find("#t_compensate14").show();
+        $(window.frames["iframetest"].document).find("#t_compensate15").show();
+
+        $(window.frames["iframetest"].document).find("#t_compensate16").show();
+        $(window.frames["iframetest"].document).find("#t_compensate17").show();
+        $(window.frames["iframetest"].document).find("#t_compensate18").show();
+        $(window.frames["iframetest"].document).find("#t_compensate19").show();
+        $(window.frames["iframetest"].document).find("#t_compensate20").show();
+        $(window.frames["iframetest"].document).find("#t_compensate21").show();
+        $(window.frames["iframetest"].document).find("#t_compensate22").show();
+        $(window.frames["iframetest"].document).find("#t_compensate23").show();
+
+        $(window.frames["iframetest"].document).find("#t_compensate24").show();
+        $(window.frames["iframetest"].document).find("#t_compensate25").show();
+        $(window.frames["iframetest"].document).find("#t_compensate26").show();
+        $(window.frames["iframetest"].document).find("#t_compensate27").show();
+        $(window.frames["iframetest"].document).find("#t_compensate28").show();
+        $(window.frames["iframetest"].document).find("#t_compensate29").show();
+        $(window.frames["iframetest"].document).find("#t_compensate30").show();
+        $(window.frames["iframetest"].document).find("#t_compensate31").show();
+
+
+        $(window.frames["iframetest"].document).find("#power0").show();
+        $(window.frames["iframetest"].document).find("#power1").show();
+        $(window.frames["iframetest"].document).find("#power2").show();
+        $(window.frames["iframetest"].document).find("#power3").show();
+        $(window.frames["iframetest"].document).find("#power4").show();
+        $(window.frames["iframetest"].document).find("#power5").show();
+        $(window.frames["iframetest"].document).find("#power6").show();
+        $(window.frames["iframetest"].document).find("#power7").show();
+
+        $(window.frames["iframetest"].document).find("#power8").show();
+        $(window.frames["iframetest"].document).find("#power9").show();
+        $(window.frames["iframetest"].document).find("#power10").show();
+        $(window.frames["iframetest"].document).find("#power11").show();
+        $(window.frames["iframetest"].document).find("#power12").show();
+        $(window.frames["iframetest"].document).find("#power13").show();
+        $(window.frames["iframetest"].document).find("#power14").show();
+        $(window.frames["iframetest"].document).find("#power15").show();
+
+        $(window.frames["iframetest"].document).find("#power16").show();
+        $(window.frames["iframetest"].document).find("#power17").show();
+        $(window.frames["iframetest"].document).find("#power18").show();
+        $(window.frames["iframetest"].document).find("#power19").show();
+        $(window.frames["iframetest"].document).find("#power20").show();
+        $(window.frames["iframetest"].document).find("#power21").show();
+        $(window.frames["iframetest"].document).find("#power22").show();
+        $(window.frames["iframetest"].document).find("#power23").show();
+
+        $(window.frames["iframetest"].document).find("#power24").show();
+        $(window.frames["iframetest"].document).find("#power25").show();
+        $(window.frames["iframetest"].document).find("#power26").show();
+        $(window.frames["iframetest"].document).find("#power27").show();
+        $(window.frames["iframetest"].document).find("#power28").show();
+        $(window.frames["iframetest"].document).find("#power29").show();
+        $(window.frames["iframetest"].document).find("#power30").show();
+        $(window.frames["iframetest"].document).find("#power31").show();
+
+        $(window.frames["iframetest"].document).find("#t_power0").show();
+        $(window.frames["iframetest"].document).find("#t_power1").show();
+        $(window.frames["iframetest"].document).find("#t_power2").show();
+        $(window.frames["iframetest"].document).find("#t_power3").show();
+        $(window.frames["iframetest"].document).find("#t_power4").show();
+        $(window.frames["iframetest"].document).find("#t_power5").show();
+        $(window.frames["iframetest"].document).find("#t_power6").show();
+        $(window.frames["iframetest"].document).find("#t_power7").show();
+
+        $(window.frames["iframetest"].document).find("#t_power8").show();
+        $(window.frames["iframetest"].document).find("#t_power9").show();
+        $(window.frames["iframetest"].document).find("#t_power10").show();
+        $(window.frames["iframetest"].document).find("#t_power11").show();
+        $(window.frames["iframetest"].document).find("#t_power12").show();
+        $(window.frames["iframetest"].document).find("#t_power13").show();
+        $(window.frames["iframetest"].document).find("#t_power14").show();
+        $(window.frames["iframetest"].document).find("#t_power15").show();
+
+        $(window.frames["iframetest"].document).find("#t_power16").show();
+        $(window.frames["iframetest"].document).find("#t_power17").show();
+        $(window.frames["iframetest"].document).find("#t_power18").show();
+        $(window.frames["iframetest"].document).find("#t_power19").show();
+        $(window.frames["iframetest"].document).find("#t_power20").show();
+        $(window.frames["iframetest"].document).find("#t_power21").show();
+        $(window.frames["iframetest"].document).find("#t_power22").show();
+        $(window.frames["iframetest"].document).find("#t_power23").show();
+
+        $(window.frames["iframetest"].document).find("#t_power24").show();
+        $(window.frames["iframetest"].document).find("#t_power25").show();
+        $(window.frames["iframetest"].document).find("#t_power26").show();
+        $(window.frames["iframetest"].document).find("#t_power27").show();
+        $(window.frames["iframetest"].document).find("#t_power28").show();
+        $(window.frames["iframetest"].document).find("#t_power29").show();
+        $(window.frames["iframetest"].document).find("#t_power30").show();
+        $(window.frames["iframetest"].document).find("#t_power31").show();
+        if (number < 9) {
+            for (var i = (number - 1); i < 8; i++) {
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                $(window.frames["iframetest"].document).find(y).show();
+                var z = "#" + "t_table" + x;
+                $(window.frames["iframetest"].document).find(z).show();
+            }
+        }
+
+        if (number >= 9 && number < 17) {
+            for (var i = (number - 1); i < 16; i++) {
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                $(window.frames["iframetest"].document).find(y).show();
+                var z = "#" + "t_table" + x;
+                $(window.frames["iframetest"].document).find(z).show();
+            }
+        }
+
+        if (number >= 17 && number < 25) {
+            for (var i = (number - 1); i < 24; i++) {
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                $(window.frames["iframetest"].document).find(y).show();
+                var z = "#" + "t_table" + x;
+                $(window.frames["iframetest"].document).find(z).show();
+            }
+        }
+
+        if (number >= 25 && number < 32) {
+            for (var i = (number - 1); i < 32; i++) {
+                var x = i.toString();
+                var y = "#" + "table" + x;
+                $(window.frames["iframetest"].document).find(y).show();
+                var z = "#" + "t_table" + x;
+                $(window.frames["iframetest"].document).find(z).show();
+            }
+        }
+    }
+
+    function admin() {
+        if ($("#adminbutton").text() == "Exit Admin") {
+            $("#adminbutton").text("Enter Admin");
+            $("#re_li0").attr("style", "display: none");
+            $("#re_li1").attr("style", "display: none");
+            $("#rfpoint").attr("style", "display: none");
+            $("#testhtml").attr("style", "display: none");
+            $("#iframetest").attr("src", "hwconfig.html");
+            document.getElementById("testhtml").setAttribute("class", "layui-nav-item");
+            document.getElementById("config").setAttribute("class", "layui-nav-item layui-this");
+            $.cookie('the_cookie', null);
+
+        } else {
+
+
+            var admin;
+            var person = prompt("Enter your Pwd：", "");
+            if (person == null || person == "") {
+                admin = "用户取消输入";
+            } else {
+                admin = person;
+            }
+            $.ajax({
+                type: "POST",
+                url: "/cgi-bin/test.cgi",
+                data: {
+                    cgiNumber: 7,
+                    admin: admin
+                },
+                success: function (data) {
+                    var obj = JSON.parse(data);
+                    if (obj["returnnum"] == admin) {
+                        $("#adminbutton").text("Exit Admin");
+                        $("#re_li0").removeAttr("style");
+                        $("#re_li1").removeAttr("style");
+                        $("#testhtml").removeAttr("style");
+                        $("#rfpoint").removeAttr("style");
+                        $("#iframetest").attr("src", "test.html");
+                        document.getElementById("config").setAttribute("class", "layui-nav-item ");
+                        document.getElementById("testhtml").setAttribute("class", "layui-nav-item layui-this");
+                        $.cookie('the_cookie', admin, {expires: 1});
+                    } else {
+                        alert("Check PassWord Error");
+                    }
+                },
+            });
+
+        }
+
+
+    }
+
+</script>
 
 <script>
-window.onload = function(){
-	var admin=$.cookie('the_cookie');
-	$.ajax({
-		type: "POST",
-		url: "/cgi-bin/test.cgi",
-		data: {
-			cgiNumber:7,
-		},
-		success: function (data)
-		{
-			var obj = JSON.parse(data);
-			if(obj["returnnum"]==admin){
-				$("#adminbutton").text("Exit Admin");
-				$("#re_li0").removeAttr("style");
-				$("#re_li1").removeAttr("style");
-				$("#testhtml").removeAttr("style");
-				$("#rfpoint").removeAttr("style");
-				$("#iframetest").attr("src","test.html");
-				document.getElementById("config").setAttribute("class","layui-nav-item ");
-				document.getElementById("testhtml").setAttribute("class","layui-nav-item layui-this");
-			}
-			
-		},
-	});
+    window.onload = function () {
+        var admin = $.cookie('the_cookie');
+        $.ajax({
+            type: "POST",
+            url: "/cgi-bin/test.cgi",
+            data: {
+                cgiNumber: 7,
+            },
+            success: function (data) {
+                var obj = JSON.parse(data);
+                if (obj["returnnum"] == admin) {
+                    $("#adminbutton").text("Exit Admin");
+                    $("#re_li0").removeAttr("style");
+                    $("#re_li1").removeAttr("style");
+                    $("#testhtml").removeAttr("style");
+                    $("#rfpoint").removeAttr("style");
+                    $("#iframetest").attr("src", "test.html");
+                    document.getElementById("config").setAttribute("class", "layui-nav-item ");
+                    document.getElementById("testhtml").setAttribute("class", "layui-nav-item layui-this");
+                }
 
-	setting();
-	$("#re_li0").attr("style","display: none");
-	$("#re_li1").attr("style","display: none");
-	$("#rfpoint").attr("style","display: none");
-	$("#testhtml").attr("style","display: none");
-	$("#iframetest").attr("src","hwconfig.html");
-	$("testhtml").removeClass("layui-this");
-	document.getElementById("config").setAttribute("class","layui-nav-item layui-this");
-	document.getElementById("testhtml").setAttribute("class","layui-nav-item");
-}
+            },
+        });
+
+        setting();
+        $("#re_li0").attr("style", "display: none");
+        $("#re_li1").attr("style", "display: none");
+        $("#rfpoint").attr("style", "display: none");
+        $("#testhtml").attr("style", "display: none");
+        $("#iframetest").attr("src", "hwconfig.html");
+        $("testhtml").removeClass("layui-this");
+        document.getElementById("config").setAttribute("class", "layui-nav-item layui-this");
+        document.getElementById("testhtml").setAttribute("class", "layui-nav-item");
+    }
 </script>
 
 
