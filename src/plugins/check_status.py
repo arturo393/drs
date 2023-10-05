@@ -57,28 +57,6 @@ class ResponseFlag(IntEnum):
     DATA_SIZE_EXCEEDS = 0X06
 
 
-class SettingCommand(IntEnum):
-    COMMAND_ERROR_RETURN_TYPE = 0x00
-    AD5662 = 0x04
-    AFC = 0x06
-    DATT = 0x08
-    RESTORE_FACTORY_CONFIGURATION = 0x0a
-    RESTORING_CONSISTENCY = 0x14
-    _5662_TEMPERATURE_COMPENSATION = 0x19
-    VCXO_COMPENSATION_ENABLE_STEP_DELAY_REFERENCE_VALUE = 0x1d
-    DAC0 = 0x25
-    DAC1 = 0x27
-    _9524 = 0x29
-    _1197A = 0x2b
-    _1197B = 0x2d
-    TEST_CONTROL_REGISTER = 0xc9
-    ETH_IP_ADDRESS = 0xcb
-    MODULE_EQUIPMENT_NUMBER = 0x16
-    broadband_switching = 0x80
-    gain_power_control_att = 0xe7
-    channel_switch = 0x41
-
-
 class HardwarePeripheralDeviceParameterCommand(IntEnum):
     version_number = 0x01
     temperature = 0x02
@@ -102,7 +80,7 @@ class HardwarePeripheralDeviceParameterCommand(IntEnum):
 
 
 class NearEndSettingCommandNumber(IntEnum):
-    OPTICAL_PORT_SWITCH = 0x90
+    optical_port_switch = 0x90
     NETWORK_MODE_CONFIG = 0x92
     MAC_ADDRESS = 0x94
     DEVICE_ID = 0x96
@@ -300,6 +278,14 @@ class DiscoveryCommand(IntEnum):
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
     optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
     optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
+
+
+class SettingCommand(IntEnum):
+    gain_power_control_att = Tx0SettingCmd.gain_power_control_att
+    channel_switch = Rx0SettingCmd.channel_switch
+    optical_port_switch = NearEndSettingCommandNumber.optical_port_switch
+    broadband_switching = 0x80
+    channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
 
 
 DONWLINK_MODULE = 0 << 7
@@ -1663,7 +1649,7 @@ def transmit_and_receive(address, cmd_list, target_port):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect((address, target_port))
-                sock.settimeout(1)
+                sock.settimeout(2)
                 data_bytes = bytearray.fromhex(cmd_name.query)
                 sock.sendall(data_bytes)
                 data_received = sock.recv(1024)
