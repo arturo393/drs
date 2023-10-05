@@ -189,7 +189,9 @@ class HostController extends Controller
             for ($i = 1; $i <= 16; $i++) {
                 $input = $this->_getParam("opt4_{$i}");
                 $byte = "{$byte}{$input}";
-                $message .= "Channel {$i} : {$input} <br>";
+                $inverted_bytes = $this->invert_bytes($input);
+                $decimal_value = $this->hex_to_dec($inverted_bytes) / 1000;
+                $message .= "Channel {$i} : {$decimal_value} [MHz] <br>";
 
             }
             $dmuCmdData = $byte;
@@ -244,7 +246,6 @@ class HostController extends Controller
         $paramFijos = "-a {$device_address} -d {$device} -t 1 -n ${hostname} -l {$dmuCmdLength} -c {$dmuCmdCode} -cd {$dmuCmdData} -b 10";
         $comando = "/usr/lib/nagios/plugins/check_status.py ";
         $ejecutar = $comando . $paramFijos;
-        echo $ejecutar;
         return $ejecutar;
     }
 
@@ -324,5 +325,24 @@ class HostController extends Controller
         return $row->address;
     }
 
+    function invert_bytes($bytes_string)
+    {
+        $inverted_bytes = "";
+        for ($i = strlen($bytes_string) / 2 - 1; $i >= 0; $i--) {
+            $inverted_bytes .= substr($bytes_string, $i * 2, 2);
+        }
+
+        return $inverted_bytes;
+    }
+
+    function hex_to_dec($hex_string)
+    {
+        $decimal_number = 0;
+        for ($i = strlen($hex_string) - 1; $i >= 0; $i--) {
+            $decimal_number += hexdec($hex_string[$i]) * (16 ** (strlen($hex_string) - $i - 1));
+        }
+
+        return $decimal_number;
+    }
 }
 

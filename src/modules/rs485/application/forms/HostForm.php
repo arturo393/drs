@@ -10,6 +10,17 @@ class HostForm extends ConfigForm
 {
     use Database;
 
+    private $listComando = [
+
+        1, # 'Working mode','Set', '7E', '07','00','00','80','00', '01', '02','0fD7', '7E');
+        2, #'Gain power control ATT','Set','7E','07','00','00','E7','00','02','0034','7783','7E');
+        3, #'Channel Activation Status','Set','7E','07','00','00','41','00','10','010101011101010101010101010101','11BD','7E');
+        4, #'Channel Frequency Point Configuration','Set','7E','07','00','00','35','00','40','B02741002D28410027294100A4294100212A41009E2A41001B2B4100982B4100152C4100922C41000F2D41008C2D4100092E4100862E4100032F4100802F4100','7783','7E');
+        5, #'Optical PortState','Set','7E','07','00','00','90','00','04','00010001','9532','7E');
+
+
+    ];
+
     public function init()
     {
         $this->setName('form_host');
@@ -30,7 +41,7 @@ class HostForm extends ConfigForm
         $hostname = '';
         if (isset($_GET['host'])) $hostname = $_GET['host'];
         $listHost = $this->cargarHostList($hostname);
-        $listTrama = $this->tramasDMU();
+        $listTrama = $this->tramasDMU($hostname);
         $center_frequency = $_GET['center_freq'] ?? "";
         $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
         $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
@@ -154,7 +165,7 @@ class HostForm extends ConfigForm
         return $list;
     }
 
-    private function tramasDMU()
+    private function tramasDMU($host)
     {
         $select = (new Select())->from('rs485_dmu_trama r')
             ->columns(['r.*'])
@@ -163,8 +174,10 @@ class HostForm extends ConfigForm
 
         foreach ($this->getDb()
                      ->select($select) as $row) {
-            $list[$row
-                ->id] = $row->name;
+            if (!(strripos($host, "dru") !== false && ($row->id == 4 || $row->id == 3))) {
+                $list[$row
+                    ->id] = $row->name;
+            }
         }
         $list[999] = 'Setup All Parameters';
         return $list;
