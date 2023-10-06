@@ -143,32 +143,22 @@
         <?php endif ?>
         <?php if ($this->hasPermission('rs485/master/edit')): ?>
             <li>
-                <?php if ($object->getType() === $object::TYPE_HOST) {
-
-                    if (substr($object->host, 5, 3) === 'opt') {
-                        echo $this->qlink(
-                            $this->translate('Device Configuration'),
-                            'rs485/remote/edit',
-                            array('host' => $object->getName()),
-                            array(
-                                'class' => 'action-link',
-                                'data-base-target' => '_self',
-                                'icon' => 'plug',
-                                'title' => $this->translate(
-                                    'Remote Device Configuration'
-                                )
-                            )
-                        );
-                    }
-                } else {
-                    if (substr($object->service, 0, 6) === 'Master') {
-
+                <?php if ($object->getType() === $object::TYPE_SERVICE) {
+                    $device = $object->customvars['device'] ?? -1;
+                    if ($device == "dmu") {
+                        $device = $object->customvars['device'] ?? -1;
+                        $start_uplink_frequency = $object->customvars['start_uplink_frequency'] ?? 0;
+                        $start_downlink_frequency = $object->customvars['start_downlink_frequency'] ?? 0;
+                        $bandwidth = $object->customvars['bandwidth'] ?? 0;
                         $frequency = isset($object->customvars['frequencies']) ? $object->customvars['frequencies'] : " ";
-                        $service = $object->host->getName() . '-freq' . $frequency;
                         echo $this->qlink(
                             $this->translate('Device Configuration'),
                             'rs485/master/edit',
-                            array('host' => $object->host->getName(), 'freq' => $frequency),
+                            array('host' => $object->host->getName(),
+                                'freq' => $frequency,
+                                'start_uplink_frequency' => $start_uplink_frequency,
+                                'start_downlink_frequency' => $start_downlink_frequency,
+                                'bandwidth' => $bandwidth),
                             array(
                                 'class' => 'action-link',
                                 'data-base-target' => '_self',
@@ -178,9 +168,9 @@
                                 )
                             )
                         );
-                    } else if (isset($object->customvars['opt']) && $object->customvars['dru']) {
-                        $opt = $object->customvars['opt'];
-                        $dru = $object->customvars['dru'];
+                    } else if ($device == "dru") {
+                        $opt = $object->customvars['opt'] ?? 0;
+                        $dru = $object->customvars['dru'] ?? 0;
                         $service = $object->host->getName() . '-opt' . $opt . '-dru' . $dru;
                         echo $this->qlink(
                             $this->translate('Device Configuration'),
