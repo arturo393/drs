@@ -77,6 +77,7 @@ class HardwarePeripheralDeviceParameterCommand(IntEnum):
     eth_ip_address = 0xcc
     module_equipment_number = 0xce
     broadband_switching = 0x81
+    reboot_device = 0xd0
 
 
 class NearEndSettingCommandNumber(IntEnum):
@@ -491,6 +492,7 @@ class CommandData:
             cmd_unit = self.cmd_unit_query()
             crc = get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+
 
 
         else:
@@ -1137,6 +1139,13 @@ class Queries:
         return {'dlAtt': str(output_att), 'ulAtt': str(input_att)}
 
     @staticmethod
+    def _decode_reboot_device(command_body):
+        if len(command_body) == 0:
+            return {'device_rebook': 'OK'}
+        else:
+            return {}
+
+    @staticmethod
     def _decode_optical_port_switch(command_body):
         if len(command_body) == 0:
             return {}
@@ -1765,6 +1774,9 @@ def get_setting_command_value(int_number):
     for command in SettingCommand:
         if command.value == int_number:
             return command
+    for command in HardwarePeripheralDeviceParameterCommand:
+        if command.value == int_number:
+            return command
     return None
 
 
@@ -1800,31 +1812,37 @@ def main():
             response_flag=ResponseFlag.SUCCESS
         )
         cmd_list = list()
-        cmd_list.append(cmd_data)
+        if cmd_data.query != "":
+            cmd_list.append(cmd_data)
     else:
         cmd_name_query = get_cmd_name_query(device)
         cmd_list = query_cmd_list(cmd_name_query)
-    start_time = time.time()
-    if_board_query_port = 65050  # Replace with the actual port number
-    remote_external_device_query_port = 65053  # Replace with the actual port number
-    transmit_and_receive(address, cmd_list, if_board_query_port)
-    parameters = reply_decode(cmd_list, device)
-    parameters["rt"] = str(time.time() - start_time)
-    start_time = time.time()
-    update_parameters_with_args(args, parameters)
-    if type == SET:
-        sys.stderr.write("OK")
-        sys.exit(OK)
-    else:
-        if device == "dru" or device == "dmu":
-            device_host_plugin_ouput(parameters)
-        elif 0 < port < 5:
-            discovery(parameters)
-            parameters["dt"] = str(time.time() - start_time)
-            discovery_plugin_output(parameters)
-        else:
-            sys.stderr.write("\nOK - " + "no command")
+
+    if len(cmd_list) > 0:
+        start_time = time.time()
+        if_board_query_port = 65050  # Replace with the actual port number
+        remote_external_device_query_port = 65053  # Replace with the actual port number
+        transmit_and_receive(address, cmd_list, if_board_query_port)
+        parameters = reply_decode(cmd_list, device)
+        parameters["rt"] = str(time.time() - start_time)
+        start_time = time.time()
+        update_parameters_with_args(args, parameters)
+        if type == SET:
+            sys.stderr.write("OK")
             sys.exit(OK)
+        else:
+            if device == "dru" or device == "dmu":
+                device_host_plugin_ouput(parameters)
+            elif 0 < port < 5:
+                discovery(parameters)
+                parameters["dt"] = str(time.time() - start_time)
+                discovery_plugin_output(parameters)
+            else:
+                sys.stderr.write("\nOK - " + "no command")
+                sys.exit(OK)
+    else:
+        sys.stderr.write("\nOK - " + args["cmd_name"] + " no valid command")
+        sys.exit(OK)
 
 
 if __name__ == "__main__":
