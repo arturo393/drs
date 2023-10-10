@@ -54,12 +54,7 @@
           - crccheck
           - psutil
 
-    - name: Install Bottle Python Package
-      ansible.builtin.pip:
-        name:
-          - logging
-
-      # Icinga2
+    # Icinga2
     - name: Apply API user Template
       template:
         src: api-users.conf.j2
