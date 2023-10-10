@@ -280,7 +280,7 @@
         ## Base Customizations
 
     - name: Links to device configuration
-      template:
+      copy:
         src: /tmp/sigma-rds/src/modules/quick-actions.phtml
         dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
         remote_src: yes
