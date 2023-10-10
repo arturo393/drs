@@ -283,6 +283,7 @@
       template:
         src: /tmp/sigma-rds/src/modules/quick-actions.phtml
         dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
+        remote_src: yes
 
     - name: Change Tab Names
       shell:
@@ -325,12 +326,14 @@
         owner: "www-data"
         group: "icingaweb2"
         recurse: yes
+
     - name: Fix /etc/icingaweb2/modules permissions
       file:
         path: /etc/icingaweb2/modules
         owner: "www-data"
         group: "icingaweb2"
         recurse: yes
+
     - name: Fix /etc/icinga2/conf.d permissions
       file:
         path: /etc/icinga2/conf.d
