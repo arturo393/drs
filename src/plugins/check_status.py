@@ -1367,6 +1367,7 @@ def get_power_table(responseDict):
 
 
 def get_opt_status_table(responseDict):
+    device = responseDict["device"]
     table1 = "<table width=280>"
     table1 += "<thead>"
     table1 += "<tr align=\"center\" style=font-size:12px>"
@@ -1381,13 +1382,14 @@ def get_opt_status_table(responseDict):
     for i in range(1, 5):
         connected_name = "optical_port_devices_connected_"
         opt = str(i)
-        connected = str(responseDict[f"{connected_name}{opt}"])
-        table1 += "<tr align=\"center\" style=font-size:12px>"
-        table1 += "<td>opt" + opt + "</td>"
-        table1 += "<td>" + responseDict['opt' + opt + 'ActivationStatus'] + "</td>"
-        table1 += "<td>" + connected + "</td>"
-        table1 += "<td>" + responseDict['opt' + opt + 'TransmissionStatus'] + "</td>"
-        table1 += "</tr>"
+        if not (device == "dru" and (opt == "3" or opt == "4")):
+            connected = str(responseDict[f"{connected_name}{opt}"])
+            table1 += "<tr align=\"center\" style=font-size:12px>"
+            table1 += "<td>opt" + opt + "</td>"
+            table1 += "<td>" + responseDict['opt' + opt + 'ActivationStatus'] + "</td>"
+            table1 += "<td>" + connected + "</td>"
+            table1 += "<td>" + responseDict['opt' + opt + 'TransmissionStatus'] + "</td>"
+            table1 += "</tr>"
 
     table1 += "</tbody>"
     table1 += "</table>"
@@ -1395,6 +1397,8 @@ def get_opt_status_table(responseDict):
 
 
 def get_channel_freq_table(parameter_dic):
+    device = parameter_dic['device']
+
     table3 = "<table width=90%>"
     table3 += "<thead><tr style=font-size:11px>"
     table3 += "<th width='10%'>Channel</font></th>"
@@ -1408,8 +1412,12 @@ def get_channel_freq_table(parameter_dic):
         table3 += "<thead><tr style=font-size:11px>"
         table3 += "<th width='5%'>Channel</font></th>"
         table3 += "<th width='5%'>Status</font></th>"
-        #        table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
-        table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
+        if device == 'dru':
+            table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
+        elif device == "dmu":
+            table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
+        else:
+            table3 += "<th width='50%'>Unknown device [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         for i in range(1, 17):
             channel = str(i)
@@ -1665,8 +1673,16 @@ def transmit_and_receive(address, cmd_list, target_port):
                 sock.close()
                 cmd_name.reply = data_received
         except Exception as e:
-            sys.stderr.write("CRITICAL - " + str(e))
-            sys.exit(CRITICAL)
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                    sock.settimeout(2)
+                    data_bytes = bytearray.fromhex(cmd_name.query)
+                    sent_bytes = sock.sendto(data_bytes, (address, 65055))
+                    data_received, _ = sock.recvfrom(1024)
+                    cmd_name.reply = data_received
+            except Exception as e:
+                sys.stderr.write("CRITICAL - " + str(e))
+                sys.exit(CRITICAL)
 
 
 def discovery(parameters):
