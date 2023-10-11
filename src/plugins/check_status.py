@@ -24,6 +24,7 @@ import socket
 import json
 import requests
 from enum import IntEnum
+import drs as drs
 
 OK = 0
 WARNING = 1
@@ -592,26 +593,6 @@ class CommandData:
         command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
 
         self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
-
-
-class Settings:
-    @staticmethod
-    def optical_port_switch(data):
-        switch_signal = data[0]
-        switch_status = "On" if switch_signal == 0 else "Off"
-        return f"Optical Port Switch Status: {switch_status}"
-
-    @staticmethod
-    def network_mode_config(data):
-        network_mode = data[0]
-        configuration = {
-            0: "Automatic Switching",
-            1: "Selective Light 1",
-            2: "Selective Light 2",
-            3: "Selective Light 3",
-        }
-        return f"Network Mode Configuration: {configuration.get(network_mode, 'Unknown')}"
-    # Add more setting command functions
 
 
 class Queries:
@@ -1310,8 +1291,8 @@ def if_board_table(parameters):
     return opt_status_table + power_att_table + vswr_temperature_table
 
 
-def get_channel_table(responseDict):
-    if (responseDict['workingMode'] == 'Channel Mode'):
+def get_channel_table(parameters):
+    if (parameters['workingMode'] == 'Channel Mode'):
         table3 = "<table width=80% >"
         table3 += "<thead><tr style=font-size:11px>"
         table3 += "<th width='10%'>Channel</font></th>"
@@ -1323,9 +1304,9 @@ def get_channel_table(responseDict):
             channel = str(i)
             table3 += "<tr align=\"center\" style=font-size:11px>"
             table3 += "<td>" + channel + "</td>"
-            table3 += "<td>" + responseDict["channel" + str(channel) + "Status"] + "</td>"
-            table3 += "<td>" + responseDict["channel" + str(channel) + "ulFreq"] + "</td>"
-            table3 += "<td>" + responseDict["channel" + str(channel) + "dlFreq"] + "</td>"
+            table3 += "<td>" + parameters["channel" + str(channel) + "Status"] + "</td>"
+            table3 += "<td>" + parameters["channel" + str(channel) + "ulFreq"] + "</td>"
+            table3 += "<td>" + parameters["channel" + str(channel) + "dlFreq"] + "</td>"
             table3 += "</tr>"
     else:
         table3 = "<table width=80%>"
@@ -1336,11 +1317,11 @@ def get_channel_table(responseDict):
         table3 += "<th width='40%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         table3 += "<tr align=\"center\" style=font-size:12px>"
-        table3 += "<td>" + responseDict['workingMode'] + "</td>"
+        table3 += "<td>" + parameters['workingMode'] + "</td>"
 
-        table3 += "<td>" + responseDict['work_bandwidth'] + "</td>"
-        table3 += "<td>" + responseDict['Uplink Start Frequency'] + "</td>"
-        table3 += "<td>" + responseDict['Downlink Start Frequency'] + "</td>"
+        table3 += "<td>" + parameters['work_bandwidth'] + "</td>"
+        table3 += "<td>" + parameters['Uplink Start Frequency'] + "</td>"
+        table3 += "<td>" + parameters['Downlink Start Frequency'] + "</td>"
 
         table3 += "</tr>"
 
@@ -1348,7 +1329,7 @@ def get_channel_table(responseDict):
     return table3
 
 
-def get_power_table(responseDict):
+def get_power_table(parameters):
     table2 = "<table width=250>"
     table2 += "<thead>"
     table2 += "<tr  align=\"center\" style=font-size:12px>"
@@ -1358,16 +1339,16 @@ def get_power_table(responseDict):
     table2 += "</tr>"
     table2 += "</thead>"
     table2 += "<tbody>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>" + responseDict[
-        'ulInputPower'] + " [dBm]</td><td>" + responseDict['ulAtt'] + " [dB]</td></tr>"
-    table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>" + responseDict[
-        'dlOutputPower'] + " [dBm]</td><td>" + responseDict['dlAtt'] + " [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>" + parameters[
+        'ulInputPower'] + " [dBm]</td><td>" + parameters['ulAtt'] + " [dB]</td></tr>"
+    table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>" + parameters[
+        'dlOutputPower'] + " [dBm]</td><td>" + parameters['dlAtt'] + " [dB]</td></tr>"
     table2 += "</tbody></table>"
     return table2
 
 
-def get_opt_status_table(responseDict):
-    device = responseDict["device"]
+def get_opt_status_table(parameters):
+    device = parameters["device"]
     table1 = "<table width=280>"
     table1 += "<thead>"
     table1 += "<tr align=\"center\" style=font-size:12px>"
@@ -1383,12 +1364,12 @@ def get_opt_status_table(responseDict):
         connected_name = "optical_port_devices_connected_"
         opt = str(i)
         if not (device == "dru" and (opt == "3" or opt == "4")):
-            connected = str(responseDict[f"{connected_name}{opt}"])
+            connected = str(parameters[f"{connected_name}{opt}"])
             table1 += "<tr align=\"center\" style=font-size:12px>"
             table1 += "<td>opt" + opt + "</td>"
-            table1 += "<td>" + responseDict['opt' + opt + 'ActivationStatus'] + "</td>"
+            table1 += "<td>" + parameters['opt' + opt + 'ActivationStatus'] + "</td>"
             table1 += "<td>" + connected + "</td>"
-            table1 += "<td>" + responseDict['opt' + opt + 'TransmissionStatus'] + "</td>"
+            table1 += "<td>" + parameters['opt' + opt + 'TransmissionStatus'] + "</td>"
             table1 += "</tr>"
 
     table1 += "</tbody>"
@@ -1396,8 +1377,8 @@ def get_opt_status_table(responseDict):
     return table1
 
 
-def get_channel_freq_table(parameter_dic):
-    device = parameter_dic['device']
+def get_channel_freq_table(parameters):
+    device = parameters['device']
 
     table3 = "<table width=90%>"
     table3 += "<thead><tr style=font-size:11px>"
@@ -1407,7 +1388,7 @@ def get_channel_freq_table(parameter_dic):
     table3 += "<th width='40%'>Downlink Frequency [Mhz]</font></th>"
     table3 += "</tr></thead><tbody>"
 
-    if (parameter_dic['workingMode'] == 'Channel Mode'):
+    if parameters['workingMode'] == 'Channel Mode':
         table3 = "<table width=100%>"
         table3 += "<thead><tr style=font-size:11px>"
         table3 += "<th width='5%'>Channel</font></th>"
@@ -1423,8 +1404,8 @@ def get_channel_freq_table(parameter_dic):
             channel = str(i)
             table3 += "<tr align=\"center\" style=font-size:12px>"
             table3 += "<td>" + channel + "</td>"
-            table3 += "<td>" + parameter_dic["channel" + str(channel) + "Status"] + "</td>"
-            table3 += "<td>" + parameter_dic["channel_" + str(channel) + "_freq"] + "</td>"
+            table3 += "<td>" + parameters["channel" + str(channel) + "Status"] + "</td>"
+            table3 += "<td>" + parameters["channel_" + str(channel) + "_freq"] + "</td>"
             #            table3 += "<td>" + parameter_dic["channel" + str(channel) + "ulFreq"] + "</td>"
             #            table3 += "<td>" + parameter_dic["channel" + str(channel) + "dlFreq"] + "</td>"
             table3 += "</tr>"
@@ -1437,11 +1418,11 @@ def get_channel_freq_table(parameter_dic):
         #       table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
         table3 += "</tr></thead><tbody>"
         table3 += "<tr align=\"center\" style=font-size:12px>"
-        table3 += "<td>" + parameter_dic['workingMode'] + "</td>"
-        table3 += "<td>" + str(parameter_dic["work_bandwidth"]) + "</td>"
+        table3 += "<td>" + parameters['workingMode'] + "</td>"
+        table3 += "<td>" + str(parameters["work_bandwidth"]) + "</td>"
         # table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
         # table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
-        table3 += "<td>" + parameter_dic['central_frequency_point'] + "</td>"
+        table3 += "<td>" + parameters['central_frequency_point'] + "</td>"
 
     table3 += "</tbody></table>"
     return table3
@@ -1485,39 +1466,6 @@ def blank_parameter(device):
     parameters.update(dmu_parameters)
     parameters.update(channel_parameters)
     return parameters
-
-
-def blank_parameter_old(device):
-    if device == 'dru':
-        parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
-                      'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
-                      "Downlink Start Frequency": '-', "work_bandwidth": '-'}
-        blank_channel_dict_old(parameters)
-        return parameters
-
-    elif device == 'dmu':
-        parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
-                      'optical_port_devices_connected_3': "-",
-                      'optical_port_devices_connected_4': "-", 'opt1ConnectionStatus': "-", 'opt2ConnectionStatus': "-",
-                      'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
-                      'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
-                      'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
-                      'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
-                      'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                      'work_bandwidth': '-', 'temperature': '-', 'central_frequency_point': '-'}
-        blank_channel_dict_old(parameters)
-        return parameters
-    return {}
-
-
-def blank_channel_dict_old(parameters):
-    channel = 1
-    while channel <= 16:
-        parameters["channel" + str(channel) + "Status"] = "-"
-        parameters["channel" + str(channel) + "ulFreq"] = "-"
-        parameters["channel" + str(channel) + "dlFreq"] = "-"
-        parameters["channel_" + str(channel) + "_freq"] = "-"
-        channel += 1
 
 
 def blank_channel_dict():
@@ -1656,12 +1604,10 @@ def reply_decode(cmd_list, device):
         message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
         if len(message) != 0:
             parameters.update(message)
-
-            #        print(message)
     return parameters
 
 
-def transmit_and_receive(address, cmd_list, target_port):
+def transmit_and_receive_tcp(address, cmd_list, target_port):
     for cmd_name in cmd_list:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -1683,6 +1629,20 @@ def transmit_and_receive(address, cmd_list, target_port):
             except Exception as e:
                 sys.stderr.write("CRITICAL - " + str(e))
                 sys.exit(CRITICAL)
+
+
+def transmit_and_receive_udp(address, cmd_list, target_port):
+    for cmd_name in cmd_list:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.settimeout(2)
+                data_bytes = bytearray.fromhex(cmd_name.query)
+                sent_bytes = sock.sendto(data_bytes, (address, target_port))
+                data_received, _ = sock.recvfrom(1024)
+                cmd_name.reply = data_received
+        except Exception as e:
+            sys.stderr.write("CRITICAL - " + str(e))
+            sys.exit(CRITICAL)
 
 
 def discovery(parameters):
@@ -1837,8 +1797,10 @@ def main():
     if len(cmd_list) > 0:
         start_time = time.time()
         if_board_query_port = 65050  # Replace with the actual port number
+        if_board_query_udp_port = 65055  # Replace with the actual port number
         remote_external_device_query_port = 65053  # Replace with the actual port number
-        transmit_and_receive(address, cmd_list, if_board_query_port)
+        transmit_and_receive_tcp(address, cmd_list, if_board_query_port)
+        # transmit_and_receive_udp(address, cmd_list, if_board_query_udp_port)
         parameters = reply_decode(cmd_list, device)
         parameters["rt"] = str(time.time() - start_time)
         start_time = time.time()
