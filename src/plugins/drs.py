@@ -352,7 +352,7 @@ class Director:
             'object_name': dru.hostname,
             "object_type": "object",
             "address": dru.ip_addr,
-            "imports": ["check_status_template"],
+            "imports": ["check_eth_template"],
             "display_name": dru.name,
             "vars": {
                 "opt": str(dru.port),
@@ -384,7 +384,7 @@ class Director:
                 update_query = {
                     "object_type": "object",
                     "address": dru.ip_addr,
-                    "imports": ["check_status_template"],
+                    "imports": ["check_eth_template"],
                     "vars": {
                         "opt": str(dru.port),
                         "dru": str(dru.position),
@@ -1127,7 +1127,7 @@ class Queries:
     def decode_optical_port_device_id_topology(command_body):
         """Decodes the opticalportx_topology_id command."""
 
-        if len(command_body) == 0:
+        if len(command_body) < 2:
             return {}
         port_number = command_body[0]
         device_ids = {}
@@ -1373,7 +1373,7 @@ class HtmlTable:
         return table2
 
     def get_opt_status_table(self):
-
+        device = self.parameters["device"]
         table1 = "<table width=280>"
         table1 += "<thead>"
         table1 += "<tr align=\"center\" style=font-size:12px>"
@@ -1388,13 +1388,14 @@ class HtmlTable:
         for i in range(1, 5):
             connected_name = "optical_port_devices_connected_"
             opt = str(i)
-            connected = str(self.parameters[f"{connected_name}{opt}"])
-            table1 += "<tr align=\"center\" style=font-size:12px>"
-            table1 += "<td>opt" + opt + "</td>"
-            table1 += "<td>" + self.parameters['opt' + opt + 'ActivationStatus'] + "</td>"
-            table1 += "<td>" + connected + "</td>"
-            table1 += "<td>" + self.parameters['opt' + opt + 'TransmissionStatus'] + "</td>"
-            table1 += "</tr>"
+            if not (device == "dru" and (opt == "3" or opt == "4")):
+                connected = str(self.parameters[f"{connected_name}{opt}"])
+                table1 += "<tr align=\"center\" style=font-size:12px>"
+                table1 += "<td>opt" + opt + "</td>"
+                table1 += "<td>" + self.parameters['opt' + opt + 'ActivationStatus'] + "</td>"
+                table1 += "<td>" + connected + "</td>"
+                table1 += "<td>" + self.parameters['opt' + opt + 'TransmissionStatus'] + "</td>"
+                table1 += "</tr>"
 
         table1 += "</tbody>"
         table1 += "</table>"
