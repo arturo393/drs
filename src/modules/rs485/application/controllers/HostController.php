@@ -244,8 +244,9 @@ class HostController extends Controller
     private function comando($device_address, $device, $hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData)
     {
         $paramFijos = "-a {$device_address} -d {$device} -t 1 -n ${hostname} -l {$dmuCmdLength} -c {$dmuCmdCode} -cd {$dmuCmdData} -b 10";
-        $comando = "/usr/lib/nagios/plugins/check_status.py ";
+        $comando = "/usr/lib/nagios/plugins/check_eth.py ";
         $ejecutar = $comando . $paramFijos;
+        echo $ejecutar;
         return $ejecutar;
     }
 
