@@ -22,6 +22,7 @@ import time
 import socket
 import json
 import requests
+import serial
 from enum import IntEnum
 
 OK = 0
@@ -38,6 +39,9 @@ fix_ip_end_opt_4 = 0xA0
 
 SET = 1
 QUERY = 0
+
+ETHERNET = 0
+SERIAL = 1
 
 
 class DataType(IntEnum):
@@ -420,6 +424,7 @@ class Command:
 
     def __init__(self, device, command_number, command_data, command_type, command_body_length, args):
 
+        self.serial = None
         self.device = device
         self.parameters = self.blank_parameter()
         self.set_args(args)
@@ -525,6 +530,63 @@ class Command:
         self.parameters['rt'] = rt
         return self.parameters
 
+    def transmit_and_receive_serial(self, port, baud):
+        rt = time.time()
+        self.serial = self.setSerial(port, baud)
+        for cmd_name in self.list:
+            self.write_serial_frame(cmd_name.query)
+            data_received = self.read_serial_frame()
+            cmd_name.reply = data_received
+            tmp = time.time() - rt
+            time.sleep(tmp)
+        self.serial.close()
+        rt = str(time.time() - rt)
+        self.reply_decode()
+        self.parameters['rt'] = rt
+
+    def write_serial_frame(self, Trama):
+        cmd_bytes = bytearray.fromhex(Trama)
+        hex_byte = ''
+        for cmd_byte in cmd_bytes:
+            hex_byte = ("{0:02x}".format(cmd_byte))
+            self.serial.write(bytes.fromhex(hex_byte))
+        self.serial.flush()
+
+    def read_serial_frame(self):
+        hexadecimal_string = ''
+        rcv_hex_array = list()
+        is_data_ready = False
+        rcv_count = 0
+        count = 2
+        while not is_data_ready and count > 0:
+            try:
+                response = self.serial.read()
+            except serial.SerialException as e:
+                logging.debug(str(e))
+                return bytearray()
+            rcv_hex = response.hex()
+            if rcv_count == 0 and rcv_hex == '7e':
+                rcv_hex_array.append(rcv_hex)
+                hexadecimal_string = hexadecimal_string + rcv_hex
+                rcv_count = rcv_count + 1
+            elif rcv_count > 0 and rcv_hex_array[0] == '7e' and (rcv_count == 1 and rcv_hex == '7e') is not True:
+                rcv_hex_array.append(rcv_hex)
+                hexadecimal_string = hexadecimal_string + rcv_hex
+                rcv_count = rcv_count + 1
+                if rcv_hex == '7e' or rcv_hex == '7f':
+                    is_data_ready = True
+                elif rcv_count > 100:
+                    return ""
+            elif rcv_hex == '':
+                self.write_serial_frame('7E')
+                return ""
+        if count == 0:
+            return ""
+
+        s.reset_input_buffer()
+        hexResponse = bytearray.fromhex(hexadecimal_string)
+        return hexResponse
+
     def reply_decode(self):
         for cmd_name in self.list:
             cmd_name.extract_data()
@@ -567,6 +629,20 @@ class Command:
             parameters["channel_" + str(channel) + "_freq"] = "-"
             channel += 1
         return parameters
+
+    def setSerial(self, port, baudrate):
+        for times in range(3):
+            try:
+                s = serial.Serial(port, baudrate)
+                s.timeout = 0.1
+                s.exclusive = True
+                return s
+
+            except serial.SerialException as e:
+                time.sleep(1)
+                if times == 2:
+                    sys.stderr.write("CRITICAL - " + (e.args.__str__()) + str(port))
+                    sys.exit(CRITICAL)
 
 
 class CommandData:

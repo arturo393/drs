@@ -39,7 +39,7 @@ def args_check():
     # Add the arguments to the parser
     # ap.add_argument("-h", "--help", required=False,  help="help")
     try:
-        ap.add_argument("-a", "--address", required=True, help="address es requerido", default="192.168.11.22")
+        ap.add_argument("-a", "--address", required=False, help="address es requerido", default="192.168.11.22")
         ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
         ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
         ap.add_argument("-p", "--port", required=False, help="hostname es requerido", default="0")
@@ -48,6 +48,7 @@ def args_check():
         ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="0")
         ap.add_argument("-t", "--type", required=False, help="bandwidth es requerido", default="0")
+        ap.add_argument("-ct", "--comm_type", required=False, help="comm_type es requerido", default=0)
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
         ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
@@ -108,6 +109,7 @@ def main():
     cmd_name = int(args['cmd_name'])
     cmd_body_length = int(args['cmd_body_length'])
     type = int(args['type'])
+    comm_type = int(args['comm_type'])
 
     if len(args['cmd_data']) > 1:
         cmd_data = args['cmd_data']
@@ -121,7 +123,10 @@ def main():
                           command_type=type,
                           args=args
                           )
-    parameters = command.transmit_and_receive_tcp(address)
+    if comm_type == drs.ETHERNET:
+        parameters = command.transmit_and_receive_tcp(address)
+    elif comm_type == drs.SERIAL:
+        parameters = command.transmit_and_receive_serial(serial)
 
     if type == drs.SET:
         sys.stderr.write("OK")
