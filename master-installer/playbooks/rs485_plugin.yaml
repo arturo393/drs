@@ -7,17 +7,6 @@
     - name: Installing Status Plugin
       copy:
         remote_src: true
-        src: /tmp/sigma-rds/src/plugins/check_status.py
-        dest: /usr/lib/nagios/plugins/
-
-    - name: Add +x permission to check_status.py
-      file:
-        path: /usr/lib/nagios/plugins/check_status.py
-        mode: +x
-
-    - name: Installing Status Plugin
-      copy:
-        remote_src: true
         src: /tmp/sigma-rds/src/plugins/check_eth.py
         dest: /usr/lib/nagios/plugins/
 

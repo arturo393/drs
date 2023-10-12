@@ -53,6 +53,7 @@
           - requests
           - crccheck
           - psutil
+          - serial
 
     # Icinga2
     - name: Apply API user Template
