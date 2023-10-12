@@ -17,7 +17,7 @@ Setup Service Apply Rules
     Open Icingaweb2 page
     Login
     Add UqommWeb host    Uqommweb    localhost-host-template    Master
-    Add Master host    ${hostname}    dmu-host-template    ${hostname}
+    Add Master host    ${hostname}    drs-alive-host-template    ${hostname}
     Deploy
 
 *** Keywords ***
@@ -104,7 +104,7 @@ Add UqommWeb host
     Select Options By    css=#imports    value    ${imports}
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
-    Type Text    css=#address    ${host}
+    Type Text    css=#address    localhost
     Click    css=#Add
     Wait Until Network Is Idle
 
