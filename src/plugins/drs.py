@@ -352,12 +352,12 @@ class Director:
         return q
 
     def create_dru_host(self, dru: DRU):
-
+        imports = ["drs-alive-host-template"]
         director_query = {
             'object_name': dru.hostname,
             "object_type": "object",
             "address": dru.ip_addr,
-            "imports": ["check_eth_template"],
+            "imports": imports,
             "display_name": dru.name,
             "vars": {
                 "opt": str(dru.port),
@@ -389,7 +389,7 @@ class Director:
                 update_query = {
                     "object_type": "object",
                     "address": dru.ip_addr,
-                    "imports": ["check_eth_template"],
+                    "imports": imports,
                     "vars": {
                         "opt": str(dru.port),
                         "dru": str(dru.position),
@@ -532,7 +532,7 @@ class Command:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((address, self.tcp_port))
                     sock.settimeout(2)
-                    data_bytes = bytearray.fromhex(cmd_name.query_group)
+                    data_bytes = bytearray.fromhex(cmd_name.query)
                     sock.sendall(data_bytes)
                     data_received = sock.recv(1024)
                     sock.close()
@@ -1719,10 +1719,10 @@ class PluginOutput:
         html_table = HtmlTable(self.parameters)
         graphite = Graphite(self.parameters)
         sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
-        if alarm != "":
-            sys.exit(1)
+        if alarm.display() != "":
+            sys.exit(WARNING)
         else:
-            sys.exit(0)
+            sys.exit(OK)
 
     def discovery_display(self):
         graphite = Graphite(self.parameters)
@@ -1738,26 +1738,28 @@ class Discovery:
         self.parameters = parameters
 
     def ethernet(self):
-        opt = self.parameters['port']
+        # opt = self.parameters['port']
         hostname = self.parameters['hostname']
         net = self.parameters["device_id"]
         dru_connected = {}
         fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
-        port_name = f"optical_port_devices_connected_{opt}"
-        optical_port_connected_ip_addr = {}
-        dru_connected[f"opt{opt}"] = []
-        last_connected = self.parameters[port_name]
-        dt = time.time()
-        for connected in range(1, self.parameters[port_name] + 1):
-            connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
-            id_key = f"optical_port_device_id_topology_{opt}"
-            device_id = self.parameters[id_key][f"id_{connected}"]
-            parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
-            ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
-            if device_id != 0:
-                d = DRU(connected, opt, device_id, hostname, ip, parent)
-                dru_connected[f"opt{opt}"].append(d)
-                self.parameters[connected_ip_addr_name] = ip
+        for opt in range(1, 5):
+            port_name = f"optical_port_devices_connected_{opt}"
+            optical_port_connected_ip_addr = {}
+            dru_connected[f"opt{opt}"] = []
+            last_connected = self.parameters[port_name]
+            dt = time.time()
+            optical_port_devices_connected = self.parameters[port_name] + 1
+            for connected in range(1, optical_port_devices_connected):
+                connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
+                id_key = f"optical_port_device_id_topology_{opt}"
+                device_id = self.parameters[id_key][f"id_{connected}"]
+                parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
+                if device_id != 0:
+                    d = DRU(connected, opt, device_id, hostname, ip, parent)
+                    dru_connected[f"opt{opt}"].append(d)
+                    self.parameters[connected_ip_addr_name] = ip
         hostname = socket.gethostname()
         master_host = socket.gethostbyname(hostname)
         director = Director(master_host)

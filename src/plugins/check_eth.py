@@ -135,7 +135,7 @@ def main():
         if device == "dru" or device == "dmu":
             plugin_output = drs.PluginOutput(parameters)
             plugin_output.device_display()
-        elif 0 < port < 5:
+        elif device == "discovery":
             discovery = drs.Discovery(parameters)
             discovery.ethernet()
             plugin_output = drs.PluginOutput(parameters)

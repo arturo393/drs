@@ -16,18 +16,8 @@ Setup Service Apply Rules
     Log To Console    ---
     Open Icingaweb2 page
     Login
-    Add Director Service Apply Data    Master Status    dmu-command-service-template    host.templates    contains    dmu-host-template
-    Add Director Service Apply Data    RU Discovery    dru-discovery-service-template    host.templates    contains    dmu-host-template
-    Add Director OPT Service Apply Data    opt1    discovery-service-template    host.templates    contains    master-template    1
-    Add Director OPT Service Apply Data    opt2    discovery-service-template    host.templates    contains    master-template    2
-    Add Director OPT Service Apply Data    opt3    discovery-service-template    host.templates    contains    master-template    3
-    Add Director OPT Service Apply Data    opt4    discovery-service-template    host.templates    contains    master-template    4
-    Add Director host Service Apply Data   load    monitor-service-template    host.templates    contains    host-template    check_load
-    Add Director host Service Apply Data   memory    monitor-service-template    host.templates    contains    host-template    check_memory
-    Add Director host Service Apply Data   disk    monitor-service-template    host.templates    contains    host-template    check_disk
-    Add Sigmaweb host     Sigmaweb    host-template    Monitor
-    Add UqommWeb host    Uqommweb    host-template    Master
-    Add Master host    ${hostname}    master-template    ${hostname}
+    Add UqommWeb host    Uqommweb    localhost-host-template    Master
+    Add Master host    ${hostname}    dmu-host-template    ${hostname}
     Deploy
 
 *** Keywords ***
@@ -105,18 +95,6 @@ Deploy
     Click    xpath=/html/body/div[1]/div[2]/div[2]/div[1]/div[1]/div/form/input[3]
     Wait Until Network Is Idle
 
-
-Add Sigmaweb host
-    [Arguments]    ${object_name}    ${imports}    ${display_name}
-    Log To Console    Add Director Custom Field ${object_name}
-    Close Page    CURRENT
-    New Page    http://${host}/director/host/add?type=object
-    Select Options By    css=#imports    value    ${imports}
-    Type Text    css=#object_name    ${object_name}
-    Type Text    css=#display_name    ${display_name}
-    Type Text    css=#address    ${host}
-    Click    css=#Add
-    Wait Until Network Is Idle
 
 Add UqommWeb host
     [Arguments]    ${object_name}    ${imports}    ${display_name}
