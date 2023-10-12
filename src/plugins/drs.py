@@ -43,6 +43,9 @@ QUERY = 0
 ETHERNET = 0
 SERIAL = 1
 
+DONWLINK_MODULE = 0 << 7
+UPLINK_MODULE = 1 << 7
+
 
 class DataType(IntEnum):
     DATA_INITIATION = 0x00
@@ -290,11 +293,6 @@ class SettingCommand(IntEnum):
     optical_port_switch = NearEndSettingCommandNumber.optical_port_switch
     broadband_switching = 0x80
     channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
-
-
-DONWLINK_MODULE = 0 << 7
-UPLINK_MODULE = 1 << 7
-
 
 class DRU:
     def __init__(self, position, port, device_id, master_hostname, ip_addr, parent):
@@ -664,33 +662,33 @@ class CommandData:
 
         if command_number in [cmd_name.value for cmd_name in SettingCommand]:
             cmd_unit = self.cmd_unit_set()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
         elif command_number in [cmd_name.value for cmd_name in HardwarePeripheralDeviceParameterCommand]:
             cmd_unit = self.cmd_unit_query()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
         elif command_number in [cmd_name.value for cmd_name in NearEndQueryCommandNumber]:
             cmd_unit = self.cmd_unit_query()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
         elif command_number in [cmd_name.value for cmd_name in RemoteQueryCommandNumber]:
             cmd_unit = self.cmd_unit_query()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
         elif command_number in [cmd_name.value for cmd_name in DRSRemoteCommand]:
             cmd_unit = self.cmd_unit_query()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
         elif command_number in [cmd_name.value for cmd_name in DRSMasterCommand]:
             cmd_unit = self.cmd_unit_query()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
         elif command_number in [cmd_name.value for cmd_name in DiscoveryCommand]:
             cmd_unit = self.cmd_unit_query()
-            crc = get_checksum(cmd_unit)
+            crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
 
@@ -699,7 +697,7 @@ class CommandData:
 
     def __str__(self):
         if self.reply:
-            reply = bytearray_to_hex(self.reply)
+            reply = self.bytearray_to_hex(self.reply)
             message = self.get_reply_message()
 
         else:
@@ -791,6 +789,34 @@ class CommandData:
         command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
 
         self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
+
+    def get_checksum(self,cmd):
+        """
+        -Description: this fuction calculate the checksum for a given comand
+        -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
+        -return: cheksum for the given command
+        """
+        data = bytearray.fromhex(cmd)
+
+        crc = Crc16Xmodem.calc(data)
+        crc = f"0x{crc:04X}"
+
+        # print("crc: %s" % crc)
+
+        if len(crc) == 5:
+            checksum = crc[3:5] + '0' + crc[2:3]
+        else:
+            checksum = crc[4:6] + crc[2:4]
+
+        checksum = checksum.upper()
+        checksum_new = checksum.replace('5E', '5E5D')
+        checksum_new = checksum.replace('7E', '5E7D')
+
+        return checksum_new
+
+    def bytearray_to_hex(self,byte_array):
+        hex_string = ''.join(format(byte, '02X') for byte in byte_array)
+        return hex_string
 
 
 class Queries:
@@ -1681,34 +1707,8 @@ class PluginOutput:
         sys.exit(OK)
 
 
-def bytearray_to_hex(byte_array):
-    hex_string = ''.join(format(byte, '02X') for byte in byte_array)
-    return hex_string
 
 
-def get_checksum(cmd):
-    """
-    -Description: this fuction calculate the checksum for a given comand
-    -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
-    -return: cheksum for the given command
-    """
-    data = bytearray.fromhex(cmd)
-
-    crc = Crc16Xmodem.calc(data)
-    crc = f"0x{crc:04X}"
-
-    # print("crc: %s" % crc)
-
-    if len(crc) == 5:
-        checksum = crc[3:5] + '0' + crc[2:3]
-    else:
-        checksum = crc[4:6] + crc[2:4]
-
-    checksum = checksum.upper()
-    checksum_new = checksum.replace('5E', '5E5D')
-    checksum_new = checksum.replace('7E', '5E7D')
-
-    return checksum_new
 
     # Add more query command functions
 
