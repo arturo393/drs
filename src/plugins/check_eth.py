@@ -126,7 +126,7 @@ def main():
     if comm_type == drs.ETHERNET:
         parameters = command.transmit_and_receive_tcp(address)
     elif comm_type == drs.SERIAL:
-        parameters = command.transmit_and_receive_serial(serial)
+        parameters = command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0')
 
     if type == drs.SET:
         sys.stderr.write("OK")

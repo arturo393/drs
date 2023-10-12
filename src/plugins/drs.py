@@ -38,7 +38,8 @@ fix_ip_end_opt_3 = 0x8C
 fix_ip_end_opt_4 = 0xA0
 
 SET = 1
-QUERY = 0
+QUERY_GROUP = 0
+QUERY_SINGLE = 3
 
 ETHERNET = 0
 SERIAL = 1
@@ -84,6 +85,7 @@ class HardwarePeripheralDeviceParameterCommand(IntEnum):
     eth_ip_address = 0xcc
     module_equipment_number = 0xce
     broadband_switching = 0x81
+    reboot_device = 0xd0
 
 
 class NearEndSettingCommandNumber(IntEnum):
@@ -294,6 +296,7 @@ class SettingCommand(IntEnum):
     broadband_switching = 0x80
     channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
 
+
 class DRU:
     def __init__(self, position, port, device_id, master_hostname, ip_addr, parent):
         self.position = position
@@ -430,8 +433,10 @@ class Command:
         if command_type == SET:
             command_number = self.get_setting_command_value(command_number)
             self.set(command_body_length, command_data, command_number)
-        elif command_type == QUERY:
-            self.query(device)
+        elif command_type == QUERY_GROUP:
+            self.query_group(device)
+        elif command_type == QUERY_SINGLE:
+            self.query_single(command_number)
         else:
             self.list = list()
 
@@ -448,7 +453,19 @@ class Command:
         self.parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
         self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
 
-    def query(self, device):
+    def query_single(self, command_number):
+        cmd_data = CommandData(
+            module_address=0,
+            module_link=DONWLINK_MODULE,
+            module_function=0x07,
+            command_number=command_number,
+            command_body_length=0,
+            command_data=0,
+            response_flag=ResponseFlag.SUCCESS
+        )
+        self.list.append(cmd_data)
+
+    def query_group(self, device):
         if device == 'dmu':
             query_cmd_name_query = DRSMasterCommand
         elif device == 'dru':
@@ -495,7 +512,7 @@ class Command:
         for cmd_name in self.list:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                    data_bytes = bytearray.fromhex(cmd_name.query)
+                    data_bytes = bytearray.fromhex(cmd_name.query_group)
                     sent_bytes = sock.sendto(data_bytes, (address, self.tcp_port))
                     data_received, _ = sock.recvfrom(1024)
                     cmd_name.reply = data_received
@@ -515,7 +532,7 @@ class Command:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((address, self.tcp_port))
                     sock.settimeout(2)
-                    data_bytes = bytearray.fromhex(cmd_name.query)
+                    data_bytes = bytearray.fromhex(cmd_name.query_group)
                     sock.sendall(data_bytes)
                     data_received = sock.recv(1024)
                     sock.close()
@@ -532,7 +549,7 @@ class Command:
         rt = time.time()
         self.serial = self.setSerial(port, baud)
         for cmd_name in self.list:
-            self.write_serial_frame(cmd_name.query)
+            self.write_serial_frame(cmd_name.query_group)
             data_received = self.read_serial_frame()
             cmd_name.reply = data_received
             tmp = time.time() - rt
@@ -560,7 +577,7 @@ class Command:
             try:
                 response = self.serial.read()
             except serial.SerialException as e:
-                logging.debug(str(e))
+
                 return bytearray()
             rcv_hex = response.hex()
             if rcv_count == 0 and rcv_hex == '7e':
@@ -581,7 +598,7 @@ class Command:
         if count == 0:
             return ""
 
-        s.reset_input_buffer()
+        self.serial.reset_input_buffer()
         hexResponse = bytearray.fromhex(hexadecimal_string)
         return hexResponse
 
@@ -790,7 +807,7 @@ class CommandData:
 
         self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
 
-    def get_checksum(self,cmd):
+    def get_checksum(self, cmd):
         """
         -Description: this fuction calculate the checksum for a given comand
         -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
@@ -814,7 +831,7 @@ class CommandData:
 
         return checksum_new
 
-    def bytearray_to_hex(self,byte_array):
+    def bytearray_to_hex(self, byte_array):
         hex_string = ''.join(format(byte, '02X') for byte in byte_array)
         return hex_string
 
@@ -910,6 +927,13 @@ class Queries:
                 subband_bandwidth["channel" + str(ch) + "_subband_bandwidth"] = str(number)
                 ch = ch + 1
             return subband_bandwidth
+
+    @staticmethod
+    def _decode_reboot_device(command_body):
+        if len(command_body) == 0:
+            return {'device_rebook': 'OK'}
+        else:
+            return {}
 
     @staticmethod
     def _decode_central_frequency_point(command_body):
@@ -1705,10 +1729,6 @@ class PluginOutput:
         sys.stderr.write("\nSummary - " + "discovery_str")
         sys.stderr.write("|" + graphite.display())
         sys.exit(OK)
-
-
-
-
 
     # Add more query command functions
 
