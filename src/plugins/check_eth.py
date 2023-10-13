@@ -43,7 +43,7 @@ def args_check():
         ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
         ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
         ap.add_argument("-p", "--port", required=False, help="hostname es requerido", default="0")
-        ap.add_argument("-b", "--bandwidth", required=True, help="bandwidth es requerido", default="0")
+        ap.add_argument("-b", "--bandwidth", required=False, help="bandwidth es requerido", default=0)
         ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="0")
