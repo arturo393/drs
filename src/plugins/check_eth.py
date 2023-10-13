@@ -101,6 +101,7 @@ def args_check():
 
 def main():
     # -- Analizar los argumentos pasados por el usuario
+    global parameters
     args = args_check()
     address = args['address']
     device = args['device']
@@ -126,17 +127,28 @@ def main():
     if comm_type == drs.ETHERNET:
         parameters = command.transmit_and_receive_tcp(address)
     elif comm_type == drs.SERIAL:
-        parameters = command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0')
+        if device == 'dmu':
+            baud = 9600
+            port = '/dev/ttyS0'
+            port = 'COM4'
+        elif device == 'dru':
+            baud = 9600
+            port = '/dev/ttyS1'
+        else:
+            sys.stderr.write("\nCRITICAL - " + "No drs device detected")
+            sys.exit(drs.CRITICAL)
+
+        command.transmit_and_receive_serial(baud=baud, port=port)
 
     if type == drs.SET:
         sys.stderr.write("OK")
         sys.exit(drs.OK)
     else:
         if device == "dru" or device == "dmu":
-            plugin_output = drs.PluginOutput(parameters)
+            plugin_output = drs.PluginOutput(command.parameters)
             plugin_output.device_display()
         elif device == "discovery":
-            discovery = drs.Discovery(parameters)
+            discovery = drs.Discovery(command.parameters)
             discovery.ethernet()
             plugin_output = drs.PluginOutput(parameters)
             plugin_output.discovery_display()
