@@ -549,10 +549,11 @@ class Command:
         rt = time.time()
         self.serial = self.setSerial(port, baud)
         for cmd_name in self.list:
-            self.write_serial_frame(cmd_name.query_group)
+            self.write_serial_frame(cmd_name.query)
+            query_time = time.time()
             data_received = self.read_serial_frame()
             cmd_name.reply = data_received
-            tmp = time.time() - rt
+            tmp = time.time() - query_time
             time.sleep(tmp)
         self.serial.close()
         rt = str(time.time() - rt)
@@ -1704,10 +1705,18 @@ class PluginOutput:
         self.parameters = parameters
 
     def device_display(self):
-        downlink_power = float(self.parameters.get('dlOutputPower', 100.0))
-        uplink_power = float(self.parameters.get('ulInputPower', 100.0))
+        # Default values for downlink and uplink power
+        default_power = 100.0
 
-        temperature = self.parameters['temperature']
+        # Get downlink power
+        downlink_power = float(self.parameters.get('dlOutputPower', default_power))
+
+        # Get uplink power
+        uplink_power = float(self.parameters.get('ulInputPower', default_power))
+
+        # Set default values if the values are '-'
+        downlink_power = 100.0 if downlink_power == '-' else downlink_power
+        uplink_power = 100.0 if uplink_power == '-' else uplink_power
 
         graphite = ""
         if downlink_power > 50.0:
