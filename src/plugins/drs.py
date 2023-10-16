@@ -281,7 +281,7 @@ class DiscoveryCommand(IntEnum):
     optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_2
     optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_3
     optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
-    eth_ip_address = HardwarePeripheralDeviceParameterCommand.eth_ip_address
+    # eth_ip_address = HardwarePeripheralDeviceParameterCommand.eth_ip_address
     device_id = NearEndQueryCommandNumber.device_id
     optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
@@ -307,6 +307,7 @@ class DRU:
         self.ip_addr = ip_addr
         self.parent = parent
         self.name = f"Remote {port}{position}"
+        self.comm_type = ""
 
     def __repr__(self):
         return "DRU()"
@@ -351,8 +352,46 @@ class Director:
 
         return q
 
-    def create_dru_host(self, dru: DRU):
-        imports = ["drs-alive-host-template"]
+    def create_host(self, director_query: {}, update_query: {}):
+
+        request_url = "http://" + self.master_host + "/director/host"
+        headers = {
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'POST'
+        }
+
+        try:
+            q = requests.post(request_url,
+                              headers=headers,
+                              data=json.dumps(director_query),
+                              auth=(self.director_api_login, self.director_api_password),
+                              verify=False,
+                              timeout=1)
+            # sys.stderr.write(f"{q.status_code} {q.text}")
+
+            # parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+            hostname = director_query['object_name']
+            if q.status_code == 422:
+                request_url = "http://" + self.master_host + "/director/host?name=" + hostname
+                q = requests.post(request_url,
+                                  headers=headers,
+                                  data=json.dumps(update_query),
+                                  auth=(self.director_api_login, self.director_api_password),
+                                  verify=False,
+                                  timeout=1)
+                # sys.stderr.write(f"{q.status_code} {q.text}")
+
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
+        except requests.exceptions.ConnectTimeout as e:
+            sys.stderr.write(f"WARNING - {e}")
+            sys.exit(WARNING)
+        # print(json.dumps(q.json(),indent=2))
+        return q
+
+    def create_dru_host(self, dru: DRU, comm_type: int, type: int, imports, device):
+
         director_query = {
             'object_name': dru.hostname,
             "object_type": "object",
@@ -363,8 +402,9 @@ class Director:
                 "opt": str(dru.port),
                 "dru": str(dru.position),
                 "parents": [dru.parent],
-                "device": "dru"
-
+                "device": device,
+                "comm_type": str(comm_type),
+                "type": str(type)
             }
         }
 
@@ -394,7 +434,8 @@ class Director:
                         "opt": str(dru.port),
                         "dru": str(dru.position),
                         "parents": [dru.parent],
-                        "device": "dru"
+                        "device": "dru",
+                        "comm_type": str(comm_type)
 
                     }
                 }
@@ -425,6 +466,7 @@ class Command:
 
     def __init__(self, device, command_number, command_data, command_type, command_body_length, args):
 
+        self.cmd_number_ok = None
         self.serial = None
         self.device = device
         self.parameters = self.blank_parameter()
@@ -445,6 +487,9 @@ class Command:
         self.parameters['device'] = args['device']
         self.parameters['hostname'] = args['hostname']
         self.parameters['port'] = int(args['port'])
+        self.parameters['comm_type'] = int(args['comm_type'])
+        self.parameters['cmd_name'] = int(args['cmd_name'])
+        self.parameters['type'] = int(args['type'])
         self.parameters['work_bandwidth'] = int(args['bandwidth'])
         self.parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
         self.parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
@@ -548,11 +593,14 @@ class Command:
     def transmit_and_receive_serial(self, port, baud):
         rt = time.time()
         self.serial = self.setSerial(port, baud)
+        self.cmd_number_ok = 0
         for cmd_name in self.list:
             self.write_serial_frame(cmd_name.query)
             query_time = time.time()
             data_received = self.read_serial_frame()
             cmd_name.reply = data_received
+            if cmd_name.reply != "":
+                self.cmd_number_ok = self.cmd_number_ok + 1
             tmp = time.time() - query_time
             time.sleep(tmp)
         self.serial.close()
@@ -626,7 +674,7 @@ class Command:
                           'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                           'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                           'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                          'temperature': '-', 'central_frequency_point': '-'}
+                          'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
 
         channel_parameters = self.blank_channel_dict()
 
@@ -1704,6 +1752,40 @@ class PluginOutput:
     def __init__(self, parameters):
         self.parameters = parameters
 
+        def dru_serial_display(self):
+            # Default values for downlink and uplink power
+            default_power = 100.0
+
+            # Get downlink power
+            downlink_power = float(self.parameters.get('dlOutputPower', default_power))
+
+            # Get uplink power
+            uplink_power = float(self.parameters.get('ulInputPower', default_power))
+
+            # Set default values if the values are '-'
+            downlink_power = 100.0 if downlink_power == '-' else downlink_power
+            uplink_power = 100.0 if uplink_power == '-' else uplink_power
+
+            graphite = ""
+            if downlink_power > 50.0:
+                self.parameters['dlOutputPower'] = "-"
+            if uplink_power > 50.0:
+                self.parameters['ulInputPower'] = "-"
+
+            alarm = Alarm(self.parameters)
+            html_table = HtmlTable(self.parameters)
+            graphite = Graphite(self.parameters)
+            # sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
+            sys.stderr.write(self.parameters)
+            if alarm.display() != "":
+                sys.exit(WARNING)
+            else:
+                sys.exit(OK)
+
+    def dru_serial_host_display(self):
+        sys.stderr.write(str(self.parameters))
+        sys.exit(OK)
+
     def device_display(self):
         # Default values for downlink and uplink power
         default_power = 100.0
@@ -1748,6 +1830,8 @@ class Discovery:
 
     def ethernet(self):
         # opt = self.parameters['port']
+        device = self.parameters['device']
+        imports = ["drs-alive-host-template"]
         hostname = self.parameters['hostname']
         net = self.parameters["device_id"]
         dru_connected = {}
@@ -1773,10 +1857,100 @@ class Discovery:
         master_host = socket.gethostbyname(hostname)
         director = Director(master_host)
         deploy = 0
+
         for opt in dru_connected:
             for dru in dru_connected[opt]:
-                response = director.create_dru_host(dru)
-                sys.stderr.write(f"{dru} {response.status_code} \n")
+
+                response = director.create_dru_host(dru, self.parameters['comm_type'], self.parameters['type'],
+                                                    imports, device)
+                message = ""
+                if response.status_code == 304:
+                    message = "Not modified"
+                elif response.status_code == 200:
+                    message = "Success"
+                else:
+                    message = "Unknown"
+
+                sys.stderr.write(f"{dru} {message} \n")
+                if response.status_code != 304:
+                    director.deploy()
+        self.parameters["dt"] = str(time.time() - dt)
+
+    def serial(self):
+        # opt = self.parameters['port']
+        cmd_name = NearEndQueryCommandNumber.device_id
+        comm_type = self.parameters['comm_type']
+        type = QUERY_SINGLE
+        device = "dru_serial"
+        imports = ["drs-alive-serial-host-template"]
+        hostname = self.parameters['hostname']
+        net = self.parameters["device_id"]
+        dru_connected = {}
+        fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
+        for opt in range(1, 5):
+            port_name = f"optical_port_devices_connected_{opt}"
+            optical_port_connected_ip_addr = {}
+            dru_connected[f"opt{opt}"] = []
+            last_connected = self.parameters[port_name]
+            dt = time.time()
+            optical_port_devices_connected = self.parameters[port_name] + 1
+            for connected in range(1, optical_port_devices_connected):
+                connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
+                id_key = f"optical_port_device_id_topology_{opt}"
+                device_id = self.parameters[id_key][f"id_{connected}"]
+                parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
+                if device_id != 0:
+                    d = DRU(connected, opt, device_id, hostname, ip, parent)
+                    dru_connected[f"opt{opt}"].append(d)
+                    self.parameters[connected_ip_addr_name] = ip
+        hostname = socket.gethostname()
+        master_host = socket.gethostbyname(hostname)
+        director = Director(master_host)
+        deploy = 0
+
+        for opt in dru_connected:
+            for dru in dru_connected[opt]:
+                director_query = {
+                    'object_name': dru.hostname,
+                    "object_type": "object",
+                    "address": dru.ip_addr,
+                    "imports": imports,
+                    "display_name": dru.name,
+                    "vars": {
+                        "opt": str(dru.port),
+                        "dru": str(dru.position),
+                        "parents": [dru.parent],
+                        "device": device,
+                        "comm_type": str(comm_type),
+                        "type": str(type),
+                        "cmd_name": str(cmd_name)
+                    }
+                }
+                update_query = {
+                    "object_type": "object",
+                    "address": dru.ip_addr,
+                    "imports": imports,
+                    "vars": {
+                        "opt": str(dru.port),
+                        "dru": str(dru.position),
+                        "parents": [dru.parent],
+                        "device": device,
+                        "comm_type": str(comm_type),
+                        "type": str(type),
+                        "cmd_name": str(cmd_name)
+                    }
+                }
+                response = director.create_host(director_query=director_query, update_query=update_query)
+                message = ""
+                if response.status_code == 304:
+                    message = "Not modified"
+                elif response.status_code == 200:
+                    message = "Success"
+                else:
+                    message = "Unknown"
+
+                sys.stderr.write(f"{dru} {message} \n")
                 if response.status_code != 304:
                     director.deploy()
         self.parameters["dt"] = str(time.time() - dt)
