@@ -120,13 +120,6 @@ def main():
 
     sys.stderr.write("\n" + str(type) + "\n")
 
-    command = drs.Command(device=device,
-                          command_number=cmd_name,
-                          command_body_length=cmd_body_length,
-                          command_data=cmd_data,
-                          command_type=type,
-                          args=args
-                          )
     if comm_type == drs.ETHERNET:
         command = drs.Command(device=device,
                               command_number=cmd_name,
@@ -160,7 +153,7 @@ def main():
                 sys.stderr.write("\nOK - " + "no command")
                 sys.exit(drs.OK)
     elif comm_type == drs.SERIAL:
-        sys.stderr.write(str())
+
         command = drs.Command(device=device,
                               command_number=cmd_name,
                               command_body_length=cmd_body_length,
