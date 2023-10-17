@@ -1812,7 +1812,7 @@ class Discovery:
     def ethernet(self):
         # opt = self.parameters['port']
         device = self.parameters['device']
-        imports = ["drs-alive-host-template"]
+        imports = ["ethernet-host-template"]
         hostname = self.parameters['hostname']
         net = self.parameters["device_id"]
         dru_connected = {}

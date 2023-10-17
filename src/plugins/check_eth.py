@@ -151,6 +151,14 @@ def main():
             sys.exit(drs.WARNING)
 
     elif device == "discovery_ethernet":
+        command = drs.Command(device=device,
+                              command_number=cmd_name,
+                              command_body_length=cmd_body_length,
+                              command_data=cmd_data,
+                              command_type=type,
+                              args=args
+                              )
+
         command.query_group(DiscoveryCommand)
         parameters = command.transmit_and_receive_tcp(address)
         discovery = drs.Discovery(command.parameters)
