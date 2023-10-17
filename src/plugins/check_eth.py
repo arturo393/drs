@@ -119,7 +119,7 @@ def main():
         command = drs.Command(device=device, args=args)
 
         if cmd_type == "single_set":
-            cmd_name = command.get_setting_command_value(cmd_name)
+            cmd_name = command.get_command_value(cmd_name)
             command.set(cmd_body_length, cmd_data, cmd_name)
             parameters = command.transmit_and_receive_tcp(address)
             sys.stderr.write("OK")
@@ -137,14 +137,15 @@ def main():
             plugin_output = drs.PluginOutput(command.parameters)
             plugin_output.device_display()
         elif cmd_type == "single_query":
+            cmd_name = command.get_command_value(cmd_name)
             command.query_single(cmd_name)
-            parameters = command.transmit_and_receive_tcp(address)
+            command.transmit_and_receive_tcp(address)
             plugin_output = drs.PluginOutput(command.parameters)
             plugin_output.device_display()
         else:
             sys.stderr.write("WARNING - no command type defined")
             sys.exit(drs.WARNING)
- 
+
     elif device == "discovery_ethernet":
         command = drs.Command(device=device, args=args)
         command.query_group(drs.DiscoveryCommand)
@@ -155,12 +156,41 @@ def main():
         plugin_output.discovery_display()
 
     elif device == "dmu_serial":
-        command = drs.Command(device=device,
-                              args=args
-                              )
-        baud = 9600
-        port = '/dev/ttyS0'
-        #            port = 'COM4'
+        command = drs.Command(device=device, args=args)
+        if cmd_type == "single_set":
+            cmd_name = command.get_setting_command_value(cmd_name)
+            command.set(cmd_body_length, cmd_data, cmd_name)
+            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
+            if command.cmd_number_ok == 0:
+                sys.stderr.write("\nCRITICAL - " + "No reply")
+                sys.exit(drs.CRITICAL)
+            else:
+                sys.stderr.write("OK")
+                sys.exit(drs.OK)
+        elif cmd_type == "group_query":
+            command.query_group(drs.DRSMasterCommand)
+            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
+            if command.cmd_number_ok == 0:
+                sys.stderr.write("\nCRITICAL - " + "No reply")
+                sys.exit(drs.CRITICAL)
+            else:
+                plugin_output = drs.PluginOutput(command.parameters)
+                plugin_output.device_display()
+        elif cmd_type == "single_query":
+            cmd_name = command.get_command_value(cmd_name)
+            command.query_single(cmd_name)
+            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
+            if command.cmd_number_ok == 0:
+                sys.stderr.write("\nCRITICAL - " + "No reply")
+                sys.exit(drs.CRITICAL)
+            else:
+                plugin_output = drs.PluginOutput(command.parameters)
+                plugin_output.dru_serial_host_display()
+
+        else:
+            sys.stderr.write("WARNING - no command type defined")
+            sys.exit(drs.WARNING)
+
     elif device == 'dru_serial':
         baud = 9600
         port = '/dev/ttyS0'
@@ -175,27 +205,6 @@ def main():
         if command.cmd_number_ok == 0:
             sys.stderr.write("\nCRITICAL - " + "No reply")
             sys.exit(drs.CRITICAL)
-
-        if type == drs.SET:
-            sys.stderr.write("OK")
-            sys.exit(drs.OK)
-        elif type == drs.QUERY_SINGLE:
-            plugin_output = drs.PluginOutput(command.parameters)
-            plugin_output.dru_serial_host_display()
-        else:
-            if device == "dru" or device == "dmu":
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.device_display()
-            elif device == "discovery":
-                discovery = drs.Discovery(command.parameters)
-                discovery.serial()
-
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.discovery_display()
-            else:
-                sys.stderr.write("\nOK - " + "no command")
-                sys.exit(drs.OK)
-
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
         sys.exit(drs.CRITICAL)
