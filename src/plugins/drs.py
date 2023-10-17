@@ -23,6 +23,7 @@ import socket
 import json
 import requests
 import serial
+import struct
 from enum import IntEnum
 
 OK = 0
@@ -250,7 +251,7 @@ class DRSMasterCommand(IntEnum):
     subband_bandwidth = Rx0QueryCmd.subband_bandwidth
     rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
     rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
-    optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
+    # optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
     # rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
 
@@ -274,6 +275,13 @@ class DRSRemoteCommand(IntEnum):
     optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_3
     optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
     rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
+
+
+class DRSRemoteSerialCommand(IntEnum):
+    optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
+    optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
+    optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
+    optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
 
 
 class DiscoveryCommand(IntEnum):
@@ -478,6 +486,7 @@ class Command:
         self.parameters['hostname'] = args['hostname']
         self.parameters['cmd_type'] = args['cmd_type']
         self.parameters['cmd_name'] = int(args['cmd_name'])
+        self.parameters['optical_port'] = int(args['optical_port'])
         self.parameters['work_bandwidth'] = int(args['bandwidth'])
         self.parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
         self.parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
@@ -527,6 +536,21 @@ class Command:
 
     def get_setting_command_value(self, int_number):
         for command in SettingCommand:
+            if command.value == int_number:
+                return command
+        return None
+
+    def get_command_value(self, int_number):
+        for command in SettingCommand:
+            if command.value == int_number:
+                return command
+        for command in NearEndQueryCommandNumber:
+            if command.value == int_number:
+                return command
+        for command in HardwarePeripheralDeviceParameterCommand:
+            if command.value == int_number:
+                return command
+        for command in RemoteQueryCommandNumber:
             if command.value == int_number:
                 return command
         return None
@@ -691,6 +715,33 @@ class Command:
 class CommandData:
     START_FLAG = "7E"
     END_FLAG = "7F"
+
+    def __init__(self, site_number, dru_id, tx_rx, cmd_length, cmd_code, cmd_data):
+        self.unknown1 = 0x0101
+        self.site_number = 0
+        self.dru_id = dru_id
+        self.unknown2 = 0x0100
+        self.tx_rx = tx_rx
+        self.unknown3 = 0x01
+        self.message_type = 0x02
+        self.tx_rx2 = 0xFF
+        self.cmd_length = cmd_length
+        self.cmd_code = cmd_code
+        self.cmd_data = cmd_data
+        self.crc = 0x0000  # You need to calculate this value based on the other fields
+        self.end = 0x7E
+        self.cr = 0x0D
+
+        cmd_unit = (
+            f"{self.module_function:02X}"
+            f"{self.self.unknown1:04X}"
+            f"{self.command_type:02X}"
+            f"{self.command_number:02X}"
+            f"{self.response_flag:02X}"
+            f"{self.command_body_length:02X}"
+        )
+        crc = self.get_checksum(cmd_unit)
+        self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
     def __init__(self, module_address, module_link, module_function, command_number, command_data, response_flag,
                  command_body_length):
@@ -877,46 +928,82 @@ class Queries:
     @staticmethod
     def _decode_optical_module_hw_parameters(array):
         parameters = {}
-        step = 8
+        step = 4
 
-        # The order of the parameters in the array is:
-        #
-        #    Fb0_ Temp 4byte temperature
-        #    Fb0_ Rx_ Pwr 2byte Received power
-        #    Fb0_ Tx_ Pwr 2byte Transmission power
-        #    Fb1_ Temp 4byte temperature
-        #    Fb1_ Rx_ Pwr 2byte Received power
-        #    Fb1_ Tx_ Pwr 2byte Transmission power
-        #    Fb2_ Temp 4byte temperature
-        #    Fb2_ Rx_ Pwr 2byte Received power
-        #    Fb2_ Tx_ Pwr 2byte Transmission power
-        #    Fb3_ Temp 4byte temperature
-        #    Fb3_ Rx_ Pwr 2byte Received power
-        #    Fb3_ Tx_ Pwr 2byte Transmission power
-
-        for i in range(0, len(array), step):
+        for i in range(0, 15, step):
             test = array[i:i + step]
             fb_number = i // step
-            temp = array[i:i + 4]
-            rx_pwr = array[i + 4:i + 6]
-            tx_pwr = array[i + 6:i + step]
-            temp = round(int.from_bytes(temp, byteorder="little") * 0.001, 2)
-            rx_pwr = Queries.optic_module_power_convert(rx_pwr)
-            tx_pwr = Queries.optic_module_power_convert(tx_pwr)
-            parameter_name = "Fb{}_Temp".format(
-                fb_number,
-            )
-            parameters[parameter_name] = temp
+            rx_pwr = array[i:i + 2]
+            tx_pwr = array[i + 2:i + 4]
+            rx_pwr = Queries.optic_module_power_convert(rx_pwr, 0.001)
+            tx_pwr = Queries.optic_module_power_convert(tx_pwr, 0.001)
             parameter_name = "Fb{}_Rx_Pwr".format(
                 fb_number,
             )
             parameters[parameter_name] = rx_pwr
+
             parameter_name = "Fb{}_Tx_Pwr".format(
                 fb_number,
             )
             parameters[parameter_name] = tx_pwr
 
+        for i in range(16, len(array), 2):
+            if i == 16:
+                fb_number = i % 16
+            else:
+                fb_number = (i % 16) - 1
+
+            temp = array[i:i + 2]
+            temp = Queries.optic_module_power_convert(temp, 0.1)
+
+            parameter_name = "Fb{}_Temp".format(
+                fb_number,
+            )
+            parameters[parameter_name] = temp
+
         return parameters
+
+    def calculate_tx_power(bytes_list):
+        """Calculates the TX power of a fiber from a list of bytes.
+
+        Args:
+          bytes_list: A list of bytes containing the TX power data.
+
+        Returns:
+          The TX power of the fiber in dBm.
+        """
+
+        tx_power = struct.unpack(">H", bytes_list)[0]
+        tx_power = tx_power * 0.1
+        return tx_power
+
+    def calculate_rx_power(bytes_list):
+        """Calculates the RX power of a fiber from a list of bytes.
+
+        Args:
+          bytes_list: A list of bytes containing the RX power data.
+
+        Returns:
+          The RX power of the fiber in dBm.
+        """
+
+        rx_power = struct.unpack(">H", bytes_list)[0]
+        rx_power = rx_power * 0.1
+        return rx_power
+
+    def calculate_temperature(bytes_list):
+        """Calculates the temperature of a fiber from a list of bytes.
+
+        Args:
+          bytes_list: A list of bytes containing the temperature data.
+
+        Returns:
+          The temperature of the fiber in degrees Celsius.
+        """
+
+        temperature = struct.unpack(">H", bytes_list)[0]
+        temperature = temperature * 0.001
+        return temperature
 
     @staticmethod
     def _decode_rx0_broadband_power(command_body):
@@ -1190,8 +1277,7 @@ class Queries:
     def _decode_hardware_status(command_body):
         if len(command_body) == 0:
             return {}
-        status = ["Locked" if i else "Loss of lock" for i in command_body]
-        return f"Hardware status: {status}"
+        return f"hardware_status: {command_body}"
 
     @staticmethod
     def _decode_ad5662(command_body):
@@ -1362,14 +1448,17 @@ class Queries:
         return uplink_power
 
     @staticmethod
-    def optic_module_power_convert(command_body):
+    def optic_module_power_convert(command_body, factor):
         if len(command_body) < 2:
             return {}
         data0 = command_body[0]
         data1 = command_body[1]
-        value = (data0 | data1 << 8)
-        value = -(value & 0x8000) | (value & 0x7fff)
-        power = value * 0.1
+        value = (data0 | data1 * 256)
+        # Check if the value is negative.
+        if value & 0x8000:
+            # Convert the value to a negative number.
+            value = -(value & 0x7fff)
+        power = value * factor
         power = round(power, 2)
         return power
 
@@ -1620,12 +1709,19 @@ class Graphite:
         self.parameters = parameters
 
     def display(self):
-        if self.parameters['device'] == 'dmu':
+        graphite = ""
+        if self.parameters['device'] == 'dmu_ethernet':
             graphite = self.dmu_output()
-        elif self.parameters['device'] == 'dru':
+        elif self.parameters['device'] == 'dru_ethernet':
             graphite = self.dru_output()
-        elif self.parameters['device'] == 'discovery':
+        elif self.parameters['device'] == 'discovery_ethernet':
             graphite = self.discovery_output()
+        elif self.parameters['device'] == 'dmu_serial':
+            if self.parameters['cmd_type'] == 'single_query':
+                graphite = self.dmu_serial_single()
+        elif self.parameters['device'] == 'dru_serial_host':
+            if self.parameters['cmd_type'] == 'single_query':
+                graphite = self.dmu_serial_single()
         else:
             graphite = ""
         return graphite
@@ -1669,6 +1765,12 @@ class Graphite:
         dt_str += ";" + str(2)
         dt_str += ";" + str(2)
         graphite = rt_str + " " + dt_str
+        return graphite
+
+    def dmu_serial_single(self):
+        graphite = ""
+        rt_str = "RTA=" + self.parameters['rt'] + ";1000;2000"
+        graphite = rt_str + " "
         return graphite
 
 
@@ -1762,7 +1864,32 @@ class PluginOutput:
                 sys.exit(OK)
 
     def dru_serial_host_display(self):
-        sys.stderr.write(str(self.parameters))
+        rt = self.parameters['rt']
+        device_id = int(self.parameters["hostname"][3:4])
+        optical_port = str(self.parameters["optical_port"])
+        key_name = f"optical_port_device_id_topology_{optical_port}"
+        optical_port_device_id_topology = self.parameters[key_name]
+        exit_value = CRITICAL
+        message = f"CRITICAL - No id {device_id} found"
+        for key, value in optical_port_device_id_topology.items():
+            if value == device_id:
+                message = f"OK - id {device_id} found"
+                exit_value = OK
+        graphite = Graphite(self.parameters)
+        rt = round(float(rt), 2)
+
+        sys.stderr.write(f"{message}, RTA = {rt} ms | {graphite.dmu_serial_single()}")
+        sys.exit(exit_value)
+
+    def dmu_serial_host_display(self):
+        rt = self.parameters['rt']
+        for key, value in self.parameters.items():
+            if value != "-":
+                sys.stderr.write(f"{key}: {value} \n")
+
+        graphite = Graphite(self.parameters)
+        rt = round(float(rt), 2)
+        sys.stderr.write(f"RTA = {rt} ms | {graphite.display()}")
         sys.exit(OK)
 
     def device_display(self):
@@ -1882,37 +2009,15 @@ class Discovery:
 
     def serial(self):
         # opt = self.parameters['port']
-        cmd_name = NearEndQueryCommandNumber.device_id
-        comm_type = self.parameters['comm_type']
-        type = QUERY_SINGLE
-        device = "dru_serial"
-        imports = ["drs-alive-serial-host-template"]
-        hostname = self.parameters['hostname']
-        net = self.parameters["device_id"]
-        dru_connected = {}
-        fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
-        for opt in range(1, 5):
-            port_name = f"optical_port_devices_connected_{opt}"
-            optical_port_connected_ip_addr = {}
-            dru_connected[f"opt{opt}"] = []
-            last_connected = self.parameters[port_name]
-            dt = time.time()
-            optical_port_devices_connected = self.parameters[port_name] + 1
-            for connected in range(1, optical_port_devices_connected):
-                connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
-                id_key = f"optical_port_device_id_topology_{opt}"
-                device_id = self.parameters[id_key][f"id_{connected}"]
-                parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
-                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
-                if device_id != 0:
-                    d = DRU(connected, opt, device_id, hostname, ip, parent)
-                    dru_connected[f"opt{opt}"].append(d)
-                    self.parameters[connected_ip_addr_name] = ip
+        dt = time.time()
+        device = "dru_serial_host"
+        imports = ["serial-host-template"]
+        cmd_name = "254"
         hostname = socket.gethostname()
         master_host = socket.gethostbyname(hostname)
         director = Director(master_host)
+        dru_connected = self.dru_connected_search()
         deploy = 0
-
         for opt in dru_connected:
             for dru in dru_connected[opt]:
                 director_query = {
@@ -1926,9 +2031,7 @@ class Discovery:
                         "dru": str(dru.position),
                         "parents": [dru.parent],
                         "device": device,
-                        "comm_type": str(comm_type),
-                        "type": str(type),
-                        "cmd_name": str(cmd_name)
+                        "cmd_name": cmd_name
                     }
                 }
                 update_query = {
@@ -1940,9 +2043,7 @@ class Discovery:
                         "dru": str(dru.position),
                         "parents": [dru.parent],
                         "device": device,
-                        "comm_type": str(comm_type),
-                        "type": str(type),
-                        "cmd_name": str(cmd_name)
+                        "cmd_name": cmd_name
                     }
                 }
                 response = director.create_host(director_query=director_query, update_query=update_query)

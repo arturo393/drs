@@ -192,7 +192,7 @@ def main():
             sys.stderr.write("WARNING - no command type defined")
             sys.exit(drs.WARNING)
 
-    elif device == 'dru_serial':
+    elif device == 'dru_serial_service':
         command = drs.Command(device=device, args=args)
         if cmd_type == "single_set":
             cmd_name = command.get_command_value(cmd_name)
