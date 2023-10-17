@@ -251,7 +251,7 @@ class DRSMasterCommand(IntEnum):
     rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
     rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
     optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
-    rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
+    #rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
 
 
@@ -464,23 +464,13 @@ class Command:
     udp_port = 65055
     remote_port = 65053
 
-    def __init__(self, device, command_number, command_data, command_type, command_body_length, args):
+    def __init__(self, device, command_number, command_data, command_body_length, args):
 
         self.cmd_number_ok = None
         self.serial = None
         self.device = device
         self.parameters = self.blank_parameter()
         self.set_args(args)
-
-        if command_type == SET:
-            command_number = self.get_setting_command_value(command_number)
-            self.set(command_body_length, command_data, command_number)
-        elif command_type == QUERY_GROUP:
-            self.query_group(device)
-        elif command_type == QUERY_SINGLE:
-            self.query_single(command_number)
-        else:
-            self.list = list()
 
     def set_args(self, args):
         self.parameters['address'] = args['address']
@@ -510,16 +500,7 @@ class Command:
         )
         self.list.append(cmd_data)
 
-    def query_group(self, device):
-        if device == 'dmu':
-            query_cmd_name_query = DRSMasterCommand
-        elif device == 'dru':
-            query_cmd_name_query = DRSRemoteCommand
-        elif device == 'discovery':
-            query_cmd_name_query = DiscoveryCommand
-        else:
-            sys.stderr.write("CRITICAL - no device")
-            sys.exit(CRITICAL)
+    def query_group(self, query_cmd_name_query):
 
         for cmd_name in query_cmd_name_query:
             cmd_data = CommandData(
