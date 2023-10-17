@@ -48,8 +48,7 @@ def args_check():
         ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido",
                         default=drs.NearEndQueryCommandNumber.device_id)
         ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="0")
-        ap.add_argument("-t", "--type", required=False, help="bandwidth es requerido", default="0")
-        ap.add_argument("-ct", "--comm_type", required=False, help="comm_type es requerido", default=0)
+        ap.add_argument("-ct", "--cmd_type", required=False, help="cmd_type es requerido", default="unknow")
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
         ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
@@ -107,86 +106,71 @@ def main():
     address = args['address']
     device = args['device']
     hostname = args['hostname']
-    port = int(args['port'])
     cmd_name = int(args['cmd_name'])
     cmd_body_length = int(args['cmd_body_length'])
-    type = int(args['type'])
-    comm_type = int(args['comm_type'])
+    cmd_type = args['cmd_type']
 
     if len(args['cmd_data']) > 1:
         cmd_data = args['cmd_data']
     else:
         cmd_data = int(args['cmd_data'])
 
-    sys.stderr.write("\n" + str(type) + "\n")
+    if device == "dru_ethernet" or device == "dmu_ethernet":
+        command = drs.Command(device=device, args=args)
 
-    command = drs.Command(device=device,
-                          command_number=cmd_name,
-                          command_body_length=cmd_body_length,
-                          command_data=cmd_data,
-                          command_type=type,
-                          args=args
-                          )
-    if comm_type == drs.ETHERNET:
-        command = drs.Command(device=device,
-                              command_number=cmd_name,
-                              command_body_length=cmd_body_length,
-                              command_data=cmd_data,
-                              command_type=type,
-                              args=args
-                              )
-        parameters = command.transmit_and_receive_tcp(address)
-
-        if type == drs.SET:
+        if cmd_type == "single_set":
+            cmd_name = command.get_setting_command_value(cmd_name)
+            command.set(cmd_body_length, cmd_data, cmd_name)
+            parameters = command.transmit_and_receive_tcp(address)
             sys.stderr.write("OK")
             sys.exit(drs.OK)
-        elif type == drs.QUERY_SINGLE:
+        elif cmd_type == "group_query":
+            if device == 'dmu_ethernet':
+                command.query_group(drs.DRSMasterCommand)
+            elif device == 'dru_ethernet':
+                command.query_group(drs.DRSRemoteCommand)
+            else:
+                sys.stderr.write("CRITICAL - no device")
+                sys.exit(drs.CRITICAL)
+
+            parameters = command.transmit_and_receive_tcp(address)
+            plugin_output = drs.PluginOutput(command.parameters)
+            plugin_output.device_display()
+        elif cmd_type == "single_query":
+            command.query_single(cmd_name)
+            parameters = command.transmit_and_receive_tcp(address)
             plugin_output = drs.PluginOutput(command.parameters)
             plugin_output.device_display()
         else:
-            if device == "dru" or device == "dmu":
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.device_display()
-            elif device == "discovery":
-                discovery = drs.Discovery(command.parameters)
-                if comm_type == drs.ETHERNET:
-                    discovery.ethernet()
-                elif comm_type == drs.SERIAL:
-                    discovery.serial()
+            sys.stderr.write("WARNING - no command type defined")
+            sys.exit(drs.WARNING)
+ 
+    elif device == "discovery_ethernet":
+        command = drs.Command(device=device, args=args)
+        command.query_group(drs.DiscoveryCommand)
+        parameters = command.transmit_and_receive_tcp(address)
+        discovery = drs.Discovery(command.parameters)
+        discovery.ethernet()
+        plugin_output = drs.PluginOutput(command.parameters)
+        plugin_output.discovery_display()
 
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.discovery_display()
-            else:
-                sys.stderr.write("\nOK - " + "no command")
-                sys.exit(drs.OK)
-    elif comm_type == drs.SERIAL:
-        sys.stderr.write(str())
+    elif device == "dmu_serial":
         command = drs.Command(device=device,
-                              command_number=cmd_name,
-                              command_body_length=cmd_body_length,
-                              command_data=cmd_data,
-                              command_type=type,
                               args=args
                               )
-
-        if device == 'dmu':
-            baud = 9600
-            port = '/dev/ttyS0'
+        baud = 9600
+        port = '/dev/ttyS0'
         #            port = 'COM4'
-        elif device == 'dru':
-            baud = 9600
-            port = '/dev/ttyS1'
-        elif device == 'dru_serial':
-            baud = 9600
-            port = '/dev/ttyS0'
-        elif device == 'discovery':
-            baud = 9600
-            port = '/dev/ttyS0'
+    elif device == 'dru_serial':
+        baud = 9600
+        port = '/dev/ttyS0'
+    elif device == 'discovery_serial':
+        baud = 9600
+        port = '/dev/ttyS0'
         #    port = 'COM4'
-        else:
-            sys.stderr.write("\nCRITICAL - " + "No drs device detected")
-            sys.exit(drs.CRITICAL)
-
+        command = drs.Command(device=device,
+                              args=args
+                              )
         command.transmit_and_receive_serial(baud=baud, port=port)
         if command.cmd_number_ok == 0:
             sys.stderr.write("\nCRITICAL - " + "No reply")
@@ -213,7 +197,7 @@ def main():
                 sys.exit(drs.OK)
 
     else:
-        sys.stderr.write("\nCRITICAL - " + "Communication type")
+        sys.stderr.write("\nCRITICAL - " + "No drs device detected")
         sys.exit(drs.CRITICAL)
 
 
