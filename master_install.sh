@@ -101,6 +101,6 @@ sed -i "/icinga2_monitor_hostname:/ s/.*/icinga2_monitor_hostname: \"$ansible_ho
 sed -i "/icinga2_monitor_host:/ s/.*/icinga2_monitor_host: \"$host\"/" ./vars.yaml
 
 
-./install.sh -c connection_type
+./install.sh "$connection_type"
 
 

@@ -2,6 +2,7 @@
 set -e -o nounset
 start_time=$(date +%s) # Start timestamp
 clear
+connection=$1
 if [ "$connection" != "serial" ] && [ "$connection" != "ethernet" ]; then
     echo "La conexión no es válida. Saliendo del script."
     exit 1
@@ -57,7 +58,7 @@ admin_password=$(./read_yaml.sh vars.yaml admin_password| sed 's/"//g')
 master_host=$(./read_yaml.sh vars.yaml master_host| sed 's/"//g')
 hosts=($(./get_hosts.sh inventory/hosts.yaml))
 # Obtener el valor del parámetro de conexión
-connection=$1
+
 
 # Step 1 (Base)
 #############################################################################
