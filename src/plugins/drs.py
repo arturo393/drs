@@ -323,11 +323,8 @@ class DRU:
     def __str__(self):
         response = ""
         response += f"RU{self.port}{self.position} "
-        response += f"device_id:{self.device_id} "
-        response += f"master_hostname:{self.master_hostname} "
         response += f"hostname: {self.hostname} "
         response += f"ip_addr: {self.ip_addr} "
-        response += f"parent:{self.parent}"
         return response
 
     def __eq__(self, other):
@@ -375,9 +372,7 @@ class Director:
                               auth=(self.director_api_login, self.director_api_password),
                               verify=False,
                               timeout=1)
-            # sys.stderr.write(f"{q.status_code} {q.text}")
 
-            # parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
             hostname = director_query['object_name']
             if q.status_code == 422:
                 request_url = "http://" + self.master_host + "/director/host?name=" + hostname
@@ -389,6 +384,30 @@ class Director:
                                   timeout=1)
                 # sys.stderr.write(f"{q.status_code} {q.text}")
 
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
+        except requests.exceptions.ConnectTimeout as e:
+            sys.stderr.write(f"WARNING - {e}")
+            sys.exit(WARNING)
+        # print(json.dumps(q.json(),indent=2))
+        return q
+
+    def modify_service(self, director_query: {}):
+
+        request_url = "http://" + self.master_host + "/director/service?name=Status"
+        headers = {
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'POST'
+        }
+
+        try:
+            q = requests.post(request_url,
+                              headers=headers,
+                              data=json.dumps(director_query),
+                              auth=(self.director_api_login, self.director_api_password),
+                              verify=False,
+                              timeout=1)
         except requests.exceptions.RequestException as e:
             sys.stderr.write(f"CRITICAL - {e}")
             sys.exit(CRITICAL)
@@ -717,11 +736,12 @@ class CommandData:
     END_FLAG = "7F"
 
     def __init__(self, site_number, dru_id, tx_rx, cmd_length, cmd_code, cmd_data):
+
         self.unknown1 = 0x0101
         self.site_number = 0
         self.dru_id = dru_id
         self.unknown2 = 0x0100
-        self.tx_rx = tx_rx
+        self.tx_rx = 0x80
         self.unknown3 = 0x01
         self.message_type = 0x02
         self.tx_rx2 = 0xFF
@@ -733,12 +753,18 @@ class CommandData:
         self.cr = 0x0D
 
         cmd_unit = (
-            f"{self.module_function:02X}"
-            f"{self.self.unknown1:04X}"
-            f"{self.command_type:02X}"
-            f"{self.command_number:02X}"
-            f"{self.response_flag:02X}"
-            f"{self.command_body_length:02X}"
+            f"{self.unknown1:04X}"
+            f"{self.site_number:08X}"
+            f"{self.dru_id:02X}"
+            f"{self.unknown2:03X}"
+            f"{self.tx_rx:02X}"
+            f"{self.unknown3:02X}"
+            f"{self.message_type:02X}"
+            f"{self.tx_rx2:02X}"
+            f"{self.cmd_length:02X}"
+            f"{self.cmd_data:04X}"
+            f"{self.cmd_length:02X}"
+            f"{self.cmd_data:04X}"
         )
         crc = self.get_checksum(cmd_unit)
         self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
@@ -1883,13 +1909,13 @@ class PluginOutput:
 
     def dmu_serial_host_display(self):
         rt = self.parameters['rt']
-        for key, value in self.parameters.items():
-            if value != "-":
-                sys.stderr.write(f"{key}: {value} \n")
+        # for key, value in self.parameters.items():
+        #    if value != "-":
+        #        sys.stderr.write(f"{key}: {value} \n")
 
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
-        sys.stderr.write(f"RTA = {rt} ms | {graphite.display()}")
+        sys.stderr.write(f"OK - RTA = {rt} ms | {graphite.display()}")
         sys.exit(OK)
 
     def device_display(self):
@@ -2051,7 +2077,21 @@ class Discovery:
                 if response.status_code == 304:
                     message = "Not modified"
                 elif response.status_code == 200:
-                    message = "Success"
+                    director_query = {
+                        'object_name': 'Status',
+                        "object_type": "object",
+                        "vars": {
+                            "opt": str(dru.port),
+                            "dru": str(dru.position),
+                        }
+                    }
+                    response = director.modify_service(director_query=director_query)
+                    if response.status_code == 304:
+                        message = f"{message} - Not modified"
+                    elif response.status_code == 200:
+                        message = f"{message} - Success"
+                    else:
+                        message = f"{message} - {response.text}"
                 else:
                     message = "Unknown"
 

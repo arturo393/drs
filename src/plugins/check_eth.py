@@ -223,7 +223,6 @@ def main():
             else:
                 plugin_output = drs.PluginOutput(command.parameters)
                 plugin_output.dmu_serial_host_display()
-
         else:
             sys.stderr.write("WARNING - no command type defined")
             sys.exit(drs.WARNING)
@@ -287,6 +286,7 @@ def main():
         discovery.serial()
         plugin_output = drs.PluginOutput(command.parameters)
         plugin_output.discovery_display()
+
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
         sys.exit(drs.CRITICAL)
