@@ -18,6 +18,28 @@
     - name: Installing Status Plugin
       copy:
         remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_rs485.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_rs485.py
+      file:
+        path: /usr/lib/nagios/plugins/check_rs485.py
+        mode: +x
+
+    - name: Installing Status Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/dru_check_rs485.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to dru_check_rs485.py
+      file:
+        path: /usr/lib/nagios/plugins/dru_check_rs485.py
+        mode: +x
+
+    - name: Installing Status Plugin
+      copy:
+        remote_src: true
         src: /tmp/sigma-rds/src/plugins/drs.py
         dest: /usr/lib/nagios/plugins/
 

@@ -2,7 +2,10 @@
 set -e -o nounset
 start_time=$(date +%s) # Start timestamp
 clear
-
+if [ "$connection" != "serial" ] && [ "$connection" != "ethernet" ]; then
+    echo "La conexión no es válida. Saliendo del script."
+    exit 1
+fi
 # Comprueba si Google Chrome ya está instalado
 if [ $(dpkg-query -W -f='${Status}' google-chrome-stable 2>/dev/null | grep -c "ok installed") -eq 0 ]
 then
@@ -53,7 +56,8 @@ ansible_user=$(./read_yaml.sh vars.yaml icinga2_monitor_user| sed 's/"//g')
 admin_password=$(./read_yaml.sh vars.yaml admin_password| sed 's/"//g')
 master_host=$(./read_yaml.sh vars.yaml master_host| sed 's/"//g')
 hosts=($(./get_hosts.sh inventory/hosts.yaml))
-
+# Obtener el valor del parámetro de conexión
+connection=$1
 
 # Step 1 (Base)
 #############################################################################
@@ -102,7 +106,10 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     echo "Setting up Director Service Apply Rules: $ip_address"
     echo "\tPlease wait until rcc setup is finished...browser will open..."
     cd rpa/setup_extras
-     rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host setup_director.robot
+     if [ "$connection" == "ethernet" ]; then
+      rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host setup_director.robot
+     elif [ "$connection" == "serial" ]; then
+       rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host setup_director_serial.robot
     cd ../..
 done
 
