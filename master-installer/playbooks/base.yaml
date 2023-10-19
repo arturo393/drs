@@ -24,16 +24,16 @@
           - net-tools
         state: present
 
-    - name: Installing .vimrc file
+    - name: Installing vimrc file
       copy:
         remote_src: true
-        src: /tmp/sigma-rds/master-install/.vimrc
+        src: /tmp/sigma-rds/master-install/vimrc
         dest: /home/sigmadev/
 
-    - name: Installing .vimrc file
+    - name: Installing vimrc file
       copy:
         remote_src: true
-        src: /tmp/sigma-rds/master-install/.vimrc
+        src: /tmp/sigma-rds/master-install/vimrc
         dest: /root/
 
     - name: Downloading Sigma Software
