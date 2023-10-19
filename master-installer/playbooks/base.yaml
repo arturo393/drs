@@ -1,33 +1,45 @@
 # Install MiniPC Software 
 ---
-- name: Install Debian Image Dependencies   
+- name: Install Debian Image Dependencies
   hosts: icinga_master
   become: true
   vars_files:
     - ../vars.yaml
 
   tasks:
-  - name: Update And upgrade Apt Packages
-    apt:
-      upgrade: yes
-      update_cache: yes
-      cache_valid_time: 86400 #One day
+    - name: Update And upgrade Apt Packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400 #One day
 
-  - name: Dependencies
-    apt:
+    - name: Dependencies
+      apt:
         name:
-            - htop
-            - git
-            - curl
-            - zsh
-            - vim
-            - net-tools
+          - htop
+          - git
+          - curl
+          - zsh
+          - vim
+          - net-tools
         state: present
 
-  - name: Downloading Sigma Software
-    git:
-      repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/sigma-telecom/sigma-rds.git
-      dest: /tmp/sigma-rds
-      version: development
-      accept_hostkey: true
-      update: yes
+    - name: Installing .vimrc file
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/master-install/.vimrc
+        dest: /home/sigmadev/
+
+    - name: Installing .vimrc file
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/master-install/.vimrc
+        dest: /root/
+
+    - name: Downloading Sigma Software
+      git:
+        repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/sigma-telecom/sigma-rds.git
+        dest: /tmp/sigma-rds
+        version: development
+        accept_hostkey: true
+        update: yes
