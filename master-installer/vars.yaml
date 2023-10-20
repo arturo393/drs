@@ -21,6 +21,10 @@ remote_basket_file: /home/sigmadev/basket.json
 ssh_key_folder: ~/.ssh
 ssh_user_folder: /home/sigmadev/
 
+#for vimrc install
+ansible_user: "sigmadev"
+ansible_group: "sigmadev"
+
 director_api_username: "admin"
 director_api_password: "Admin.123"
 apply_services:
