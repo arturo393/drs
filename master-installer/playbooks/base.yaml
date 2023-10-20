@@ -27,7 +27,7 @@
     - name: Copy vimrc template to .vimrc for users
       template:
         src: vimrc.j2
-        dest: /home/{{ ansible_user }}/.vimrc
+        dest: /home/sigmadev/.vimrc
         owner: "{{ ansible_user }}"
         group: "{{ ansible_group }}"
         mode: 0644

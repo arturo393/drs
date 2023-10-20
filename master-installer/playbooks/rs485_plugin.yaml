@@ -81,3 +81,10 @@
       file:
         path: /usr/lib/nagios/plugins/check_load.py
         mode: +x
+
+
+    - name: Add the user nagios to the dialout group
+      user:
+        name: nagios
+        groups:
+          - dialout

@@ -111,6 +111,7 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
       rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host setup_director.robot
      elif [ "$connection" == "serial" ]; then
        rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host setup_director_serial.robot
+     fi
     cd ../..
 done
 
