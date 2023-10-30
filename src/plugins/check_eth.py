@@ -14,6 +14,8 @@ import argparse
 
 import drs as drs
 
+COM1_BAUD = 115200
+
 
 def cmd_help():
     sys.stderr.write("""Uso: check_status [opciones]
@@ -105,7 +107,7 @@ def main():
     args = args_check()
     address = args['address']
     device = args['device']
-    cmd_name = int(args['cmd_name'])
+    cmd_name: int = int(args['cmd_name'])
     cmd_body_length = int(args['cmd_body_length'])
     cmd_type = args['cmd_type']
 
@@ -159,7 +161,7 @@ def main():
         if cmd_type == "single_set":
             cmd_name = command.get_setting_command_value(cmd_name)
             command.set(cmd_body_length, cmd_data, cmd_name)
-            if command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0') == 0:
+            if command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
             else:
@@ -167,7 +169,7 @@ def main():
                 sys.exit(drs.OK)
         elif cmd_type == "group_query":
             command.query_group(drs.DRSMasterCommand)
-            command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0')
+            command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0')
             if command.cmd_number_ok == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
@@ -177,7 +179,7 @@ def main():
         elif cmd_type == "single_query":
             cmd_name = command.get_command_value(cmd_name)
             command.query_single(cmd_name)
-            command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0')
+            command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0')
             if command.cmd_number_ok == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
@@ -194,8 +196,8 @@ def main():
         if cmd_type == "single_set":
             cmd_name = command.get_command_value(cmd_name)
             command.set(cmd_body_length, cmd_data, cmd_name)
-            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
-            if command.cmd_number_ok == 0:
+            sys.stderr.write(str(command.parameters))
+            if command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
             else:
@@ -213,8 +215,7 @@ def main():
         elif cmd_type == "single_query":
             cmd_name = command.get_command_value(cmd_name)
             command.query_single(cmd_name)
-            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
-            if command.cmd_number_ok == 0:
+            if command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
             else:
@@ -229,8 +230,7 @@ def main():
         if cmd_type == "single_set":
             cmd_name = command.get_command_value(cmd_name)
             command.set(cmd_body_length, cmd_data, cmd_name)
-            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
-            if command.cmd_number_ok == 0:
+            if command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
             else:
@@ -258,9 +258,8 @@ def main():
             else:
                 sys.stderr.write("\nWARNING - " + "Unknonw optical port")
                 sys.exit(drs.WARNING)
-            command.query_single(cmd_name)
-            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
-            if command.cmd_number_ok == 0:
+
+            if command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
             else:
@@ -275,7 +274,7 @@ def main():
     elif device == 'discovery_serial':
         command = drs.Command(device=device, args=args)
         command.query_group(drs.DiscoveryCommand)
-        command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0')
+        command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0')
         if command.cmd_number_ok == 0:
             sys.stderr.write("\nCRITICAL - " + "No reply")
             sys.exit(drs.CRITICAL)

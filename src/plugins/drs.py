@@ -295,6 +295,10 @@ class DiscoveryCommand(IntEnum):
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
     optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
     optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
+    optical_port_mac_topology_1 = NearEndQueryCommandNumber.optical_port_mac_topology_1
+    optical_port_mac_topology_2 = NearEndQueryCommandNumber.optical_port_mac_topology_2
+    optical_port_mac_topology_3 = NearEndQueryCommandNumber.optical_port_mac_topology_3
+    optical_port_mac_topology_4 = NearEndQueryCommandNumber.optical_port_mac_topology_4
 
 
 class SettingCommand(IntEnum):
@@ -527,17 +531,14 @@ class Command:
         self.list.append(cmd_data)
 
     def query_group(self, query_cmd_name_query):
-
+        opt = self.parameters['opt']
+        dru = self.parameters['dru']
+        cmd_length = 0
+        dru_id = f"{opt}{dru}"
         for cmd_name in query_cmd_name_query:
-            cmd_data = CommandData(
-                module_address=0,
-                module_link=DONWLINK_MODULE,
-                module_function=0x07,
-                command_number=cmd_name,
-                command_body_length=0x00,
-                command_data=0x00,
-                response_flag=ResponseFlag.SUCCESS
-            )
+            cmd_data = CommandData(dru_id=dru_id, cmd_code=cmd_name, cmd_length=cmd_length,
+                                   cmd_data=cmd_length
+                                   )
             if cmd_data.query != "":
                 self.list.append(cmd_data)
 
@@ -629,6 +630,7 @@ class Command:
         rt = str(time.time() - rt)
         self.reply_decode()
         self.parameters['rt'] = rt
+        return self.cmd_number_ok
 
     def write_serial_frame(self, Trama):
         cmd_bytes = bytearray.fromhex(Trama)
@@ -735,7 +737,7 @@ class CommandData:
     START_FLAG = "7E"
     END_FLAG = "7F"
 
-    def __init__(self, site_number, dru_id, tx_rx, cmd_length, cmd_code, cmd_data):
+    def __init__(self, dru_id, cmd_length, cmd_code, cmd_data):
 
         self.unknown1 = 0x0101
         self.site_number = 0
@@ -948,7 +950,7 @@ class Queries:
         try:
             return getattr(Queries, f"_decode_{command_number.name}")(command_body)
         except AttributeError:
-            print(f"Command number {command_number:02X} is not supported.")
+            print(f" Command number {command_number:02X} is not supported.")
             return {}
 
     @staticmethod
@@ -1079,7 +1081,7 @@ class Queries:
     @staticmethod
     def _decode_central_frequency_point(command_body):
         """Decodes the central frequency point query command."""
-        if len(command_body) < 0:
+        if len(command_body) <= 4:
             return {}
         number = command_body[0:4]
         number = int.from_bytes(number, byteorder="little")
@@ -1366,7 +1368,7 @@ class Queries:
     @staticmethod
     def decode_optical_port_devices_connected(command_body):
         if len(command_body) == 0:
-            return "0"
+            return 0
         return command_body[0]
 
     @staticmethod
@@ -1398,6 +1400,7 @@ class Queries:
         port_number = command_body[0]
         device_ids = {}
         id = 1
+
         for i in range(0, len(command_body), 2):
             device_id = command_body[i] + command_body[i + 1] * 256
             device_ids["id_" + str(id)] = device_id
@@ -1720,12 +1723,14 @@ class HtmlTable:
         table2 += "<thead>"
         table2 += "<tr  style=font-size:12px>"
         table2 += "<th width='40%'>Temperature</font></th>"
-        table2 += "<th width='40%'>VSWR</font></th>"
+        #        table2 += "<th width='40%'>VSWR</font></th>"
         table2 += "</tr>"
         table2 += "</thead>"
         table2 += "<tbody>"
-        table2 += "<tr align=\"center\" style=font-size:12px><td>" + temperature + " [&deg;C]</td><td>" + \
-                  self.parameters['vswr'] + "</td></tr>"
+        table2 += "<tr align=\"center\" style=font-size:12px>"
+        table2 += "<td>" + temperature + " [&deg;C] </td> "
+        #        table2 += "<td>" + self.parameters['vswr'] + "</td>"
+        table2 += "</tr>"
         table2 += "</tbody></table>"
         return table2
 
@@ -1740,11 +1745,13 @@ class Graphite:
             graphite = self.dmu_output()
         elif self.parameters['device'] == 'dru_ethernet':
             graphite = self.dru_output()
-        elif self.parameters['device'] == 'discovery_ethernet':
+        elif self.parameters['device'] == 'discovery_ethernet' or self.parameters['device'] == 'discovery_serial':
             graphite = self.discovery_output()
         elif self.parameters['device'] == 'dmu_serial':
             if self.parameters['cmd_type'] == 'single_query':
                 graphite = self.dmu_serial_single()
+            elif self.parameters['cmd_type'] == 'group_query':
+                graphite = self.dmu_output()
         elif self.parameters['device'] == 'dru_serial_host':
             if self.parameters['cmd_type'] == 'single_query':
                 graphite = self.dmu_serial_single()
@@ -1773,12 +1780,15 @@ class Graphite:
         return graphite
 
     def dmu_output(self):
+
         graphite = ""
         dl_str = f"Downlink={self.parameters['dlOutputPower']}"
         dl_str += ";" + str(self.parameters['highLevelWarningDL'])
         dl_str += ";" + str(self.parameters['highLevelCriticalDL'])
-        rt_str = "RT=" + self.parameters['rt'] + ";1000;2000"
-        graphite = rt_str + " " + dl_str
+        temperature_str = "Temperature=" + str(self.parameters['temperature'])
+        temperature_str += ";" + str(self.parameters['highLevelWarningTemperature'])
+        temperature_str += ";" + str(self.parameters['highLevelCriticalTemperature'])
+        graphite = dl_str + " " + temperature_str
         return graphite
 
     def discovery_output(self):
@@ -1948,9 +1958,16 @@ class PluginOutput:
             sys.exit(OK)
 
     def discovery_display(self):
+        rt = self.parameters['rt']
+        dt = self.parameters['dt']
+        # for key, value in self.parameters.items():
+        #    if value != "-":
+        #        sys.stderr.write(f"{key}: {value} \n")
+
         graphite = Graphite(self.parameters)
-        sys.stderr.write("\nSummary - " + "discovery_str")
-        sys.stderr.write("|" + graphite.display())
+        rt = round(float(rt), 2)
+        dt = round(float(dt), 2)
+        sys.stderr.write(f"OK - DTA = {dt} ms, RTA = {rt} ms | {graphite.display()}")
         sys.exit(OK)
 
     # Add more query command functions
@@ -2016,6 +2033,7 @@ class Discovery:
         dru_connected = {}
         fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
         for opt in range(1, 5):
+
             port_name = f"optical_port_devices_connected_{opt}"
             optical_port_connected_ip_addr = {}
             dru_connected[f"opt{opt}"] = []
