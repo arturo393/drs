@@ -24,7 +24,7 @@ import json
 import requests
 import serial
 import struct
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 OK = 0
 WARNING = 1
@@ -309,6 +309,23 @@ class SettingCommand(IntEnum):
     channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
 
 
+class LtelDruCommand(Enum):
+    # use the dict keys as the enum member names
+    # use the dict values as the associated values
+    uplink_att = (0x04, 0x4004)
+    downlink_att = (0x04, 0x4104)
+    channel_switch = (0x05, 0x160A)
+    working_mode = (0x04, 0xEF0B)
+    uplink_start_frequency = (0x07, 0x180A)
+    downlink_start_frequency = (0x07, 0x190A)
+    work_bandwidth = (0x07, 0x1A0A)
+    channel_bandwidth = (0x07, 0x1B0A)
+    downlink_vswr = (0x04, 0x0605)
+    power_amplifier_temperature = (0x04, 0x0105)
+    downlink_output_power = (0x04, 0x0605)
+    uplink_input_power = (0x04, 0x2505)
+
+
 class DRU:
     def __init__(self, position, port, device_id, master_hostname, ip_addr, parent):
         self.position = position
@@ -509,6 +526,7 @@ class Command:
         self.parameters['hostname'] = args['hostname']
         self.parameters['cmd_type'] = args['cmd_type']
         self.parameters['cmd_name'] = int(args['cmd_name'])
+        self.parameters['device_number'] = int(args['device_number'])
         self.parameters['optical_port'] = int(args['optical_port'])
         self.parameters['work_bandwidth'] = int(args['bandwidth'])
         self.parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
@@ -519,28 +537,41 @@ class Command:
         self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
 
     def query_single(self, command_number):
-        cmd_data = CommandData(
-            module_address=0,
-            module_link=DONWLINK_MODULE,
-            module_function=0x07,
-            command_number=command_number,
-            command_body_length=0,
-            command_data=0,
-            response_flag=ResponseFlag.SUCCESS
-        )
+        cmd_data = CommandData()
+        cmd_data.generate_ifboard_frame(module_address=0,
+                                        module_link=DONWLINK_MODULE,
+                                        module_function=0x07,
+                                        command_number=command_number,
+                                        command_body_length=0,
+                                        command_data=0,
+                                        response_flag=ResponseFlag.SUCCESS)
         self.list.append(cmd_data)
 
-    def query_group(self, query_cmd_name_query):
-        opt = self.parameters['opt']
-        dru = self.parameters['dru']
-        cmd_length = 0
-        dru_id = f"{opt}{dru}"
-        for cmd_name in query_cmd_name_query:
-            cmd_data = CommandData(dru_id=dru_id, cmd_code=cmd_name, cmd_length=cmd_length,
-                                   cmd_data=cmd_length
-                                   )
-            if cmd_data.query != "":
-                self.list.append(cmd_data)
+    def create_query_group(self, query_cmd_name_query):
+
+        if query_cmd_name_query == LtelDruCommand:
+            for cmd_name in query_cmd_name_query:
+                opt = self.parameters['optical_port']
+                dru = self.parameters['device_number']
+                code = cmd_name
+                dru_id = f"{opt}{dru}"
+                cmd_data = CommandData()
+                cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
+                # sys.stderr.write(f"\n\r{cmd_name} {cmd_data.query}\n\r")
+                if cmd_data.query != "":
+                    self.list.append(cmd_data)
+        else:
+            for cmd_name in query_cmd_name_query:
+                cmd_data = CommandData()
+                cmd_data.generate_ifboard_frame(module_address=0,
+                                                module_link=DONWLINK_MODULE,
+                                                module_function=0x07,
+                                                command_number=cmd_name,
+                                                command_body_length=0x00,
+                                                command_data=0x00,
+                                                response_flag=ResponseFlag.SUCCESS)
+                if cmd_data.query != "":
+                    self.list.append(cmd_data)
 
     def set(self, command_body_length, command_data, command_number):
         cmd_data = CommandData(
@@ -580,7 +611,7 @@ class Command:
         for cmd_name in self.list:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                    data_bytes = bytearray.fromhex(cmd_name.query_group)
+                    data_bytes = bytearray.fromhex(cmd_name.create_query_group)
                     sent_bytes = sock.sendto(data_bytes, (address, self.tcp_port))
                     data_received, _ = sock.recvfrom(1024)
                     cmd_name.reply = data_received
@@ -737,42 +768,59 @@ class CommandData:
     START_FLAG = "7E"
     END_FLAG = "7F"
 
-    def __init__(self, dru_id, cmd_length, cmd_code, cmd_data):
+    def __init__(self):
+        self.reply_command_data = None
+        self.reply = None
+        self.command_type = None
+        self.data = None
+        self.dru_id = None
+        self.length = None
+        self.code = None
+        self.data = None
+        self.module_address = None
+        self.module_link = None
+        self.module_function = None
+        self.command_number = None
+        self.command_data = None
+        self.response_flag = None
+        self.command_body_length = None
+        self.query = None
 
-        self.unknown1 = 0x0101
-        self.site_number = 0
+    def generate_ltel_comunication_board_frame(self, dru_id, cmd_name):
+
+        unknown1 = 0x0101
+        site_number = 0
         self.dru_id = dru_id
-        self.unknown2 = 0x0100
-        self.tx_rx = 0x80
-        self.unknown3 = 0x01
-        self.message_type = 0x02
-        self.tx_rx2 = 0xFF
-        self.cmd_length = cmd_length
-        self.cmd_code = cmd_code
-        self.cmd_data = cmd_data
-        self.crc = 0x0000  # You need to calculate this value based on the other fields
-        self.end = 0x7E
-        self.cr = 0x0D
+        unknown2 = 0x0100
+        tx_rx = 0x80
+        unknown3 = 0x01
+        message_type = 0x02
+        tx_rx2 = 0xFF
+        length = cmd_name.value[0]
+        code = cmd_name.value[1]
+        data = "".zfill(length * 2)
+        self.command_number = cmd_name
 
         cmd_unit = (
-            f"{self.unknown1:04X}"
-            f"{self.site_number:08X}"
-            f"{self.dru_id:02X}"
-            f"{self.unknown2:03X}"
-            f"{self.tx_rx:02X}"
-            f"{self.unknown3:02X}"
-            f"{self.message_type:02X}"
-            f"{self.tx_rx2:02X}"
-            f"{self.cmd_length:02X}"
-            f"{self.cmd_data:04X}"
-            f"{self.cmd_length:02X}"
-            f"{self.cmd_data:04X}"
+            f"{unknown1:04X}"
+            f"{site_number:08X}"
+            f"{self.dru_id}"
+            f"{unknown2:04X}"
+            f"{tx_rx:02X}"
+            f"{unknown3:02X}"
+            f"{message_type:02X}"
+            f"{tx_rx2:02X}"
+            f"{length:02X}"
+            f"{code:04X}"
+            f"{data}"
         )
+
         crc = self.get_checksum(cmd_unit)
         self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
-    def __init__(self, module_address, module_link, module_function, command_number, command_data, response_flag,
-                 command_body_length):
+    def generate_ifboard_frame(self, module_address, module_link, module_function, command_number, command_data,
+                               response_flag,
+                               command_body_length):
 
         self.module_address = module_link | module_address
         self.module_function = module_function
@@ -848,6 +896,7 @@ class CommandData:
         return cmd_unit
 
     def cmd_unit_set(self):
+        cmd_unit = ""
         command_number = ((self.command_number & 0xFF) << 8) | ((self.command_number >> 8) & 0xFF)
         command_body_length = ((self.command_body_length & 0xFF) << 8) | ((self.command_body_length >> 8) & 0xFF)
         if isinstance(self.command_data, str):
@@ -894,25 +943,46 @@ class CommandData:
             return f"Unknown message ({response_flag})"
 
     def extract_data(self):
-        module_function_index = 1
-        data_type_index = 3
-        cmd_number_index = 4
-        respond_flag_index = 5
-        cmd_body_length_index = 6
-        cmd_data_index = 7
+        if self.command_number in LtelDruCommand:
+            module_function_index = 1
+            data_type_index = 3
+            cmd_number_index = 4
+            respond_flag_index = 5
+            cmd_body_length_index = 14
+            cmd_data_index = 17
 
-        if not self.reply:
-            self.reply_command_data = ""
-            return
+            if not self.reply:
+                self.reply_command_data = ""
+                return
 
-        module_function = self.reply[module_function_index]
-        data_type = self.reply[data_type_index]
-        command_number = self.reply[cmd_number_index]
-        response_flag = self.reply[respond_flag_index]
-        command_body_length = self.reply[cmd_body_length_index]
-        command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
+            response_flag = self.reply[respond_flag_index]
+            command_body_length = self.reply[cmd_body_length_index] - 3
+            command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
 
-        self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
+            self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
+
+            sys.stderr.write(str(self.reply_command_data))
+
+        else:
+            module_function_index = 1
+            data_type_index = 3
+            cmd_number_index = 4
+            respond_flag_index = 5
+            cmd_body_length_index = 6
+            cmd_data_index = 7
+
+            if not self.reply:
+                self.reply_command_data = ""
+                return
+
+            module_function = self.reply[module_function_index]
+            data_type = self.reply[data_type_index]
+            command_number = self.reply[cmd_number_index]
+            response_flag = self.reply[respond_flag_index]
+            command_body_length = self.reply[cmd_body_length_index]
+            command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
+
+            self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
 
     def get_checksum(self, cmd):
         """
@@ -950,7 +1020,7 @@ class Queries:
         try:
             return getattr(Queries, f"_decode_{command_number.name}")(command_body)
         except AttributeError:
-            print(f" Command number {command_number:02X} is not supported.")
+            print(f" Command number {command_number} is not supported.")
             return {}
 
     @staticmethod
@@ -1032,6 +1102,114 @@ class Queries:
         temperature = struct.unpack(">H", bytes_list)[0]
         temperature = temperature * 0.001
         return temperature
+
+    @staticmethod
+    def _decode_uplink_att(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "uplink_att": command_body,
+        }
+
+    @staticmethod
+    def _decode_downlink_att(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "downlink_att": command_body,
+        }
+
+    @staticmethod
+    def _decode_channel_switch(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "downlink_channel_switch ": command_body,
+        }
+
+    @staticmethod
+    def _decode_working_mode(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "working_mode ": command_body,
+        }
+
+    @staticmethod
+    def _decode_uplink_start_frequency(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "uplink_start_frequency  ": command_body,
+        }
+
+    @staticmethod
+    def _decode_downlink_start_frequency(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "downlink_start_frequency   ": command_body,
+        }
+
+    @staticmethod
+    def _decode_work_bandwidth(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "work_bandwidth    ": command_body,
+        }
+
+    @staticmethod
+    def _decode_channel_bandwidth(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "channel_bandwidth     ": command_body,
+        }
+
+    @staticmethod
+    def _decode_downlink_vswr(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "downlink_vswr      ": command_body,
+        }
+
+    @staticmethod
+    def _decode_power_amplifier_temperature(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "power_amplifier_temperature      ": command_body,
+        }
+
+    @staticmethod
+    def _decode_downlink_output_power(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "downlink_output_power      ": command_body,
+        }
+
+    @staticmethod
+    def _decode_uplink_input_power(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 2:
+            return {}
+        return {
+            "uplink_input_power       ": command_body,
+        }
 
     @staticmethod
     def _decode_rx0_broadband_power(command_body):
@@ -2100,14 +2278,14 @@ class Discovery:
                         "object_type": "object",
                         "vars": {
                             "opt": str(dru.port),
-                            "dru": str(dru.position),
+                            "device_number": str(dru.position),
                         }
                     }
                     response = director.modify_service(director_query=director_query)
                     if response.status_code == 304:
-                        message = f"{message} - Not modified"
+                        message = f"{message} - Error - Service modified"
                     elif response.status_code == 200:
-                        message = f"{message} - Success"
+                        message = f"{message} - Success - Service modified"
                     else:
                         message = f"{message} - {response.text}"
                 else:

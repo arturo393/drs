@@ -45,6 +45,7 @@ def args_check():
         ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
         ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
         ap.add_argument("-op", "--optical_port", required=False, help="hostname es requerido", default="0")
+        ap.add_argument("-dn", "--device_number", required=False, help="device_number es requerido", default="0")
         ap.add_argument("-b", "--bandwidth", required=False, help="bandwidth es requerido", default=0)
         ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido",
@@ -127,9 +128,9 @@ def main():
             sys.exit(drs.OK)
         elif cmd_type == "group_query":
             if device == 'dmu_ethernet':
-                command.query_group(drs.DRSMasterCommand)
+                command.create_query_group(drs.DRSMasterCommand)
             elif device == 'dru_ethernet':
-                command.query_group(drs.DRSRemoteCommand)
+                command.create_query_group(drs.DRSRemoteCommand)
             else:
                 sys.stderr.write("CRITICAL - no device")
                 sys.exit(drs.CRITICAL)
@@ -149,7 +150,7 @@ def main():
 
     elif device == "discovery_ethernet":
         command = drs.Command(device=device, args=args)
-        command.query_group(drs.DiscoveryCommand)
+        command.create_query_group(drs.DiscoveryCommand)
         parameters = command.transmit_and_receive_tcp(address)
         discovery = drs.Discovery(command.parameters)
         discovery.ethernet()
@@ -168,7 +169,7 @@ def main():
                 sys.stderr.write("OK")
                 sys.exit(drs.OK)
         elif cmd_type == "group_query":
-            command.query_group(drs.DRSMasterCommand)
+            command.create_query_group(drs.DRSMasterCommand)
             command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0')
             if command.cmd_number_ok == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
@@ -204,8 +205,8 @@ def main():
                 sys.stderr.write("OK")
                 sys.exit(drs.OK)
         elif cmd_type == "group_query":
-            command.query_group(drs.DRSMasterCommand)
-            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
+            command.create_query_group(drs.LtelDruCommand)
+            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS1')
             if command.cmd_number_ok == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
@@ -237,7 +238,7 @@ def main():
                 sys.stderr.write("OK")
                 sys.exit(drs.OK)
         elif cmd_type == "group_query":
-            command.query_group(drs.DRSRemoteSerialCommand)
+            command.create_query_group(drs.DRSRemoteSerialCommand)
             command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0')
             if command.cmd_number_ok == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
@@ -273,7 +274,7 @@ def main():
 
     elif device == 'discovery_serial':
         command = drs.Command(device=device, args=args)
-        command.query_group(drs.DiscoveryCommand)
+        command.create_query_group(drs.DiscoveryCommand)
         command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0')
         if command.cmd_number_ok == 0:
             sys.stderr.write("\nCRITICAL - " + "No reply")
