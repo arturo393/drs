@@ -302,6 +302,7 @@
                     "skip_key": false,
                     "value": "$device$"
                 },
+                "-dn": "$device_number$",
                 "-n": {
                     "description": "hostnam",
                     "required": true,
@@ -16970,7 +16971,7 @@
             "uuid": "cbfe3250-8ad1-4f7a-ad67-6d20650e00f3"
         },
         "serial-host-template": {
-            "check_interval": 15,
+            "check_interval": 120,
             "fields": [
                 {
                     "datafield_id": 29,
@@ -17033,7 +17034,7 @@
         },
         "discovery-service-template": {
             "check_command": "check_eth",
-            "check_interval": 15,
+            "check_interval": 60,
             "check_timeout": 10,
             "enable_active_checks": true,
             "enable_flapping": true,
@@ -17124,7 +17125,7 @@
             "zone": "master"
         },
         "dru_check_serial--service-template": {
-            "check_command": "dru_check_rs485",
+            "check_command": "check_eth",
             "check_interval": 120,
             "check_timeout": 10,
             "enable_active_checks": true,
@@ -17138,7 +17139,17 @@
                     "var_filter": null
                 },
                 {
-                    "datafield_id": 32,
+                    "datafield_id": 27,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 21,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 33,
                     "is_required": "n",
                     "var_filter": null
                 },
@@ -17157,7 +17168,9 @@
             "use_agent": false,
             "uuid": "6195e5c5-6b76-4d58-adc1-89abb75d21f8",
             "vars": {
-                "addToMap": false
+                "addToMap": false,
+                "cmd_type": "group_query",
+                "device": "dru_serial_service"
             },
             "zone": "master"
         }
@@ -17242,9 +17255,8 @@
                     "object_type": "object",
                     "uuid": "00b37b7d-c572-4ded-8085-181c7c25e864",
                     "vars": {
-                        "bandwidth": "15",
-                        "cmd_type": "group_query",
-                        "device": "dru_ethernet"
+                        "device_number": "1",
+                        "opt": "2"
                     }
                 }
             ],
@@ -17298,7 +17310,11 @@
                     ],
                     "object_name": "Status",
                     "object_type": "object",
-                    "uuid": "96172e01-3fa8-4108-8ea9-26ef6b4a07b1"
+                    "uuid": "96172e01-3fa8-4108-8ea9-26ef6b4a07b1",
+                    "vars": {
+                        "cmd_type": "group_query",
+                        "device": "dru_serial_service"
+                    }
                 }
             ],
             "uuid": "66096b5b-b6a1-4210-b228-55d389d24dad"
@@ -17603,6 +17619,12 @@
         },
         "cmd_name_list": {
             "entries": [
+                {
+                    "entry_name": "1",
+                    "entry_value": "version_number",
+                    "format": "string",
+                    "allowed_roles": null
+                },
                 {
                     "entry_name": "151",
                     "entry_value": "query_device_id",
@@ -17960,6 +17982,16 @@
                 "rename_vars": "y",
                 "visibility": "visible"
             },
+            "category": null
+        },
+        "33": {
+            "uuid": "dd49509a-dbc3-43c9-a26f-b4f80d7b917c",
+            "varname": "device_number",
+            "caption": "device_number",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
             "category": null
         }
     }
