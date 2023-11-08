@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation       Setup Service Apply Rules.
+Documentation       Setup initial hosts
 
 Library             RPA.Browser.Playwright
 Library             Dialogs
@@ -13,12 +13,12 @@ ${master_host}    %{master_host}
 ${connection}    %{connection}
 
 *** Tasks ***
-Setup Service Apply Rules
+Setup Hosts
     Log To Console    ---
     Open Icingaweb2 page
     Login
     Add UqommWeb host    Uqommweb    localhost-host-template    Master
-    Add hostname host    ${hostname}    ${connection}-host-template    ${hostname}
+    Add hostname host    ${hostname}    ${connection}-host-template    ${hostname}    dmu_${connection}
     Deploy
 
 *** Keywords ***
@@ -55,7 +55,7 @@ Add UqommWeb host
     Wait Until Network Is Idle
 
 Add Hostname host
-    [Arguments]    ${object_name}    ${imports}    ${display_name}
+    [Arguments]    ${object_name}    ${imports}    ${display_name}    ${device}
     Log To Console    Add Director Custom Field ${object_name}
     Close Page    CURRENT
     New Page    http://${host}/director/host/add?type=object
@@ -63,5 +63,7 @@ Add Hostname host
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
     Type Text    css=#address    ${master_host}
+    Click    xpath=//*[@id="fieldset-custom_fields"]/legend
+    Select Options By    css=#var_device    value    ${device}
     Click    css=#Add
     Wait Until Network Is Idle

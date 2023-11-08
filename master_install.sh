@@ -57,13 +57,6 @@ fi
 echo "Please enter the master host (digital_board):"
 read master_host
 
-ping -c 1 $master_host > /dev/null 2>&1
-while [ $? -ne 0 ]
-do
-    echo "Master host is not reachable. Please enter a valid master host:"
-    read master_host
-    ping -c 1 $master_host > /dev/null 2>&1
-done
 
 echo "You entered the following master host: $master_host. Is this correct? (y/n)"
 read answer
@@ -78,14 +71,6 @@ if [ "$answer" == "n" ]
 then
     echo "Please enter the master host:"
     read master_host
-
-    ping -c 1 $master_host > /dev/null 2>&1
-    while [ $? -ne 0 ]
-    do
-        echo "Master host is not reachable. Please enter a valid master host:"
-        read master_host
-        ping -c 1 $master_host > /dev/null 2>&1
-    done
 fi
 
 echo "Which type of connection do you want to use? (serial/ethernet)"
@@ -135,7 +120,7 @@ EOF
 cd ..
 sed -i "/icinga2_monitor_hostname:/ s/.*/icinga2_monitor_hostname: \"$ansible_host\"/" ./vars.yaml
 sed -i "/icinga2_monitor_host:/ s/.*/icinga2_monitor_host: \"$host\"/" ./vars.yaml
-sed -i "/icinga2_monitor_hostname:/ s/.*/icinga2_monitor_hostname: \"$master_host\"/" ./vars.yaml
+sed -i "/master_host:/ s/.*/master_host: \"$master_host\"/" ./vars.yaml
 
 
 ./install.sh "$connection_type"
