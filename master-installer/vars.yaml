@@ -14,7 +14,6 @@ admin_password: "Admin.123"
 
 master_host: "192.168.11.22"
 
-
 local_basket_file: ../basket.json
 remote_basket_file: /home/sigmadev/basket.json
 
@@ -27,10 +26,3 @@ ansible_group: "sigmadev"
 
 director_api_username: "admin"
 director_api_password: "Admin.123"
-apply_services:
-  - name: "Master Status"
-    imports: "dmu-command-service-template"
-    assign_where: "host.templates.contains('dmu-host-template')"
-  - name: "RU Discovery"
-    imports: "dru-discovery-service-template"
-    assign_where: "host.templates.contains('dmu-host-template')"

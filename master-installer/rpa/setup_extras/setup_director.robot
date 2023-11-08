@@ -10,6 +10,7 @@ ${host}    %{host}
 ${passwd}    %{passwd}
 ${hostname}    %{hostname}
 ${master_host}    %{master_host}
+${connection}    %{connection}
 
 *** Tasks ***
 Setup Service Apply Rules
@@ -17,7 +18,7 @@ Setup Service Apply Rules
     Open Icingaweb2 page
     Login
     Add UqommWeb host    Uqommweb    localhost-host-template    Master
-    Add Master Ethernet host    ${hostname}    ethernet-host-template    ${hostname}
+    Add hostname host    ${hostname}    ${connection}-host-template    ${hostname}
     Deploy
 
 *** Keywords ***
@@ -53,7 +54,7 @@ Add UqommWeb host
     Click    css=#Add
     Wait Until Network Is Idle
 
-Add Master Ethernet host
+Add Hostname host
     [Arguments]    ${object_name}    ${imports}    ${display_name}
     Log To Console    Add Director Custom Field ${object_name}
     Close Page    CURRENT
@@ -62,16 +63,5 @@ Add Master Ethernet host
     Type Text    css=#object_name    ${object_name}
     Type Text    css=#display_name    ${display_name}
     Type Text    css=#address    ${master_host}
-    Click    css=#Add
-    Wait Until Network Is Idle
-
-Add Master Serial host
-    [Arguments]    ${object_name}    ${imports}    ${display_name}
-    Log To Console    Add Director Custom Field ${object_name}
-    Close Page    CURRENT
-    New Page    http://${host}/director/host/add?type=object
-    Select Options By    css=#imports    value    ${imports}
-    Type Text    css=#object_name    ${object_name}
-    Type Text    css=#display_name    ${display_name}
     Click    css=#Add
     Wait Until Network Is Idle
