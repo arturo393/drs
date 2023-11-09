@@ -117,39 +117,37 @@ def main():
     else:
         cmd_data = int(args['cmd_data'])
 
-    if device == "dru_ethernet" or device == "dmu_ethernet":
-        command = drs.Command(device=device, args=args)
+    command = drs.Command(args=args)
 
+    if device == "dru_ethernet" or device == "dmu_ethernet":
+        command = drs.Command(args=args)
         if cmd_type == "single_set":
-            cmd_name = command.get_command_value(cmd_name)
-            command.set(cmd_body_length, cmd_data, cmd_name)
+            command.create_single_set()
             parameters = command.transmit_and_receive_tcp(address)
             sys.stderr.write("OK")
             sys.exit(drs.OK)
+
         elif cmd_type == "group_query":
-            if device == 'dmu_ethernet':
-                command.create_query_group(drs.DRSMasterCommand)
-            elif device == 'dru_ethernet':
-                command.create_query_group(drs.DRSRemoteCommand)
-            else:
+            if command.create_group_query() == 0:
                 sys.stderr.write("CRITICAL - no device")
                 sys.exit(drs.CRITICAL)
-
             parameters = command.transmit_and_receive_tcp(address)
-            plugin_output = drs.PluginOutput(command.parameters)
-            plugin_output.device_display()
+
         elif cmd_type == "single_query":
-            cmd_name = command.get_command_value(cmd_name)
-            command.query_single(cmd_name)
-            command.transmit_and_receive_tcp(address)
-            plugin_output = drs.PluginOutput(command.parameters)
-            plugin_output.device_display()
+            cmd_name = command.get_command_value()
+            command.create_single_query(cmd_name)
         else:
             sys.stderr.write("WARNING - no command type defined")
             sys.exit(drs.WARNING)
 
+        command.transmit_and_receive_tcp(address)
+        plugin_output = drs.PluginOutput(command.parameters)
+        exit_code, plugin_output_message = plugin_output.get_master_remote_service_message()
+        sys.stderr.write(plugin_output_message)
+        sys.exit(exit_code)
+
     elif device == "discovery_ethernet":
-        command = drs.Command(device=device, args=args)
+
         command.create_query_group(drs.DiscoveryCommand)
         parameters = command.transmit_and_receive_tcp(address)
         discovery = drs.Discovery(command.parameters)
@@ -158,10 +156,9 @@ def main():
         plugin_output.discovery_display()
 
     elif device == "dmu_serial":
-        command = drs.Command(device=device, args=args)
         if cmd_type == "single_set":
             cmd_name = command.get_setting_command_value(cmd_name)
-            command.set(cmd_body_length, cmd_data, cmd_name)
+            command.create_single_set(cmd_body_length, cmd_data, cmd_name)
             if command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
@@ -176,10 +173,10 @@ def main():
                 sys.exit(drs.CRITICAL)
             else:
                 plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.device_display()
+                plugin_output.master_remote_service_display()
         elif cmd_type == "single_query":
             cmd_name = command.get_command_value(cmd_name)
-            command.query_single(cmd_name)
+            command.create_single_query(cmd_name)
             command.transmit_and_receive_serial(baud=COM1_BAUD, port='/dev/ttyS0')
             if command.cmd_number_ok == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
@@ -196,7 +193,7 @@ def main():
         command = drs.Command(device=device, args=args)
         if cmd_type == "single_set":
             cmd_name = command.get_command_value(cmd_name)
-            command.set(cmd_body_length, cmd_data, cmd_name)
+            command.create_single_set(cmd_body_length, cmd_data, cmd_name)
             sys.stderr.write(str(command.parameters))
             if command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
@@ -212,10 +209,10 @@ def main():
                 sys.exit(drs.CRITICAL)
             else:
                 plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.device_display()
+                plugin_output.master_remote_service_display()
         elif cmd_type == "single_query":
             cmd_name = command.get_command_value(cmd_name)
-            command.query_single(cmd_name)
+            command.create_single_query(cmd_name)
             if command.transmit_and_receive_serial(baud=19200, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
@@ -230,7 +227,7 @@ def main():
         command = drs.Command(device=device, args=args)
         if cmd_type == "single_set":
             cmd_name = command.get_command_value(cmd_name)
-            command.set(cmd_body_length, cmd_data, cmd_name)
+            command.create_single_set(cmd_body_length, cmd_data, cmd_name)
             if command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS0') == 0:
                 sys.stderr.write("\nCRITICAL - " + "No reply")
                 sys.exit(drs.CRITICAL)
@@ -249,13 +246,13 @@ def main():
         elif cmd_type == "single_query":
             optical_port = command.parameters['optical_port']
             if optical_port == 1:
-                command.query_single(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_1)
+                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_1)
             elif optical_port == 2:
-                command.query_single(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_2)
+                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_2)
             elif optical_port == 3:
-                command.query_single(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_3)
+                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_3)
             elif optical_port == 4:
-                command.query_single(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_4)
+                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_4)
             else:
                 sys.stderr.write("\nWARNING - " + "Unknonw optical port")
                 sys.exit(drs.WARNING)

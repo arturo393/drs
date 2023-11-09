@@ -512,11 +512,10 @@ class Command:
     udp_port = 65055
     remote_port = 65053
 
-    def __init__(self, device, args):
+    def __init__(self, args):
 
         self.cmd_number_ok = None
         self.serial = None
-        self.device = device
         self.parameters = self.blank_parameter()
         self.set_args(args)
 
@@ -536,19 +535,38 @@ class Command:
         self.parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
         self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
 
-    def query_single(self, command_number):
+    def create_single_query(self, command_number):
         cmd_data = CommandData()
-        cmd_data.generate_ifboard_frame(module_address=0,
-                                        module_link=DONWLINK_MODULE,
-                                        module_function=0x07,
-                                        command_number=command_number,
-                                        command_body_length=0,
-                                        command_data=0,
-                                        response_flag=ResponseFlag.SUCCESS)
+        cmd_data.generate_ifboard_frame(
+            command_number=command_number,
+            command_body_length=0,
+            command_data=0)
         self.list.append(cmd_data)
 
-    def create_query_group(self, query_cmd_name_query):
+    def create_group_query(self):
+        cmd_name = {'dmu_ethernet': DRSMasterCommand, 'dru_ethernet': DRSRemoteCommand}
+        device = self.parameters['device']
+        if device in cmd_name:
+            cmd_names = cmd_name[device]
+            return self.create_query_group(cmd_names)
+        else:
+            return 0
 
+    def create_single_set(self):
+        command_number = self.get_command_value()
+        command_body_length = self.parameters['command_body_length']
+        command_data = self.parameters['command_data']
+        cmd_data = CommandData()
+        frame_len = cmd_data.generate_ifboard_frame(
+            command_number=command_number,
+            command_body_length=command_body_length,
+            command_data=command_data,
+        )
+        if frame_len > 0:
+            self.list.append(cmd_data)
+        return frame_len
+
+    def create_query_group(self, query_cmd_name_query):
         if query_cmd_name_query == LtelDruCommand:
             for cmd_name in query_cmd_name_query:
                 opt = self.parameters['optical_port']
@@ -563,27 +581,15 @@ class Command:
         else:
             for cmd_name in query_cmd_name_query:
                 cmd_data = CommandData()
-                cmd_data.generate_ifboard_frame(module_address=0,
-                                                module_link=DONWLINK_MODULE,
-                                                module_function=0x07,
-                                                command_number=cmd_name,
-                                                command_body_length=0x00,
-                                                command_data=0x00,
-                                                response_flag=ResponseFlag.SUCCESS)
-                if cmd_data.query != "":
+                frame_len = cmd_data.generate_ifboard_frame(
+                    command_number=cmd_name,
+                    command_body_length=0x00,
+                    command_data=0x00
+                )
+                if frame_len > 0:
                     self.list.append(cmd_data)
 
-    def set(self, command_body_length, command_data, command_number):
-        cmd_data = CommandData(
-            module_address=0,
-            module_link=DONWLINK_MODULE,
-            module_function=0x07,
-            command_number=command_number,
-            command_body_length=command_body_length,
-            command_data=command_data,
-            response_flag=ResponseFlag.SUCCESS
-        )
-        self.list.append(cmd_data)
+        return len(self.list)
 
     def get_setting_command_value(self, int_number):
         for command in SettingCommand:
@@ -591,7 +597,9 @@ class Command:
                 return command
         return None
 
-    def get_command_value(self, int_number):
+    def get_command_value(self):
+        int_number = self.parameters['cmd_name']
+
         for command in SettingCommand:
             if command.value == int_number:
                 return command
@@ -818,15 +826,16 @@ class CommandData:
         crc = self.get_checksum(cmd_unit)
         self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
-    def generate_ifboard_frame(self, module_address, module_link, module_function, command_number, command_data,
-                               response_flag,
-                               command_body_length):
+    def generate_ifboard_frame(self, command_number, command_data, command_body_length):
+        command_number = command_number,
+        command_body_length = command_body_length,
+        command_data = command_data,
 
-        self.module_address = module_link | module_address
-        self.module_function = module_function
+        self.module_address = DONWLINK_MODULE | 0
+        self.module_function = 0x07
         self.command_number = command_number
         self.command_type = DataType.DATA_INITIATION
-        self.response_flag = response_flag
+        self.response_flag = ResponseFlag.SUCCESS
         self.command_body_length = command_body_length
         self.command_data = command_data
         self.reply = ""
@@ -862,10 +871,10 @@ class CommandData:
             cmd_unit = self.cmd_unit_query()
             crc = self.get_checksum(cmd_unit)
             self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
-
-
         else:
             self.query = ""
+
+        return len(self.query)
 
     def __str__(self):
         if self.reply:
@@ -2047,35 +2056,35 @@ class PluginOutput:
     def __init__(self, parameters):
         self.parameters = parameters
 
-        def dru_serial_display(self):
-            # Default values for downlink and uplink power
-            default_power = 100.0
+    def dru_serial_display(self):
+        # Default values for downlink and uplink power
+        default_power = 100.0
 
-            # Get downlink power
-            downlink_power = float(self.parameters.get('dlOutputPower', default_power))
+        # Get downlink power
+        downlink_power = float(self.parameters.get('dlOutputPower', default_power))
 
-            # Get uplink power
-            uplink_power = float(self.parameters.get('ulInputPower', default_power))
+        # Get uplink power
+        uplink_power = float(self.parameters.get('ulInputPower', default_power))
 
-            # Set default values if the values are '-'
-            downlink_power = 100.0 if downlink_power == '-' else downlink_power
-            uplink_power = 100.0 if uplink_power == '-' else uplink_power
+        # Set default values if the values are '-'
+        downlink_power = 100.0 if downlink_power == '-' else downlink_power
+        uplink_power = 100.0 if uplink_power == '-' else uplink_power
 
-            graphite = ""
-            if downlink_power > 50.0:
-                self.parameters['dlOutputPower'] = "-"
-            if uplink_power > 50.0:
-                self.parameters['ulInputPower'] = "-"
+        graphite = ""
+        if downlink_power > 50.0:
+            self.parameters['dlOutputPower'] = "-"
+        if uplink_power > 50.0:
+            self.parameters['ulInputPower'] = "-"
 
-            alarm = Alarm(self.parameters)
-            html_table = HtmlTable(self.parameters)
-            graphite = Graphite(self.parameters)
-            # sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
-            sys.stderr.write(self.parameters)
-            if alarm.display() != "":
-                sys.exit(WARNING)
-            else:
-                sys.exit(OK)
+        alarm = Alarm(self.parameters)
+        html_table = HtmlTable(self.parameters)
+        graphite = Graphite(self.parameters)
+        # sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
+        sys.stderr.write(self.parameters)
+        if alarm.display() != "":
+            sys.exit(WARNING)
+        else:
+            sys.exit(OK)
 
     def dru_serial_host_display(self):
         rt = self.parameters['rt']
@@ -2106,34 +2115,32 @@ class PluginOutput:
         sys.stderr.write(f"OK - RTA = {rt} ms | {graphite.display()}")
         sys.exit(OK)
 
-    def device_display(self):
+    def master_remote_service_display(self):
+        exit_code, plugin_output_message = self.get_master_remote_service_message()
+        sys.stderr.write(plugin_output_message)
+        sys.exit(exit_code)
+
+    def get_master_remote_service_message(self):
         # Default values for downlink and uplink power
         default_power = 100.0
-
         # Get downlink power
         downlink_power = float(self.parameters.get('dlOutputPower', default_power))
-
         # Get uplink power
         uplink_power = float(self.parameters.get('ulInputPower', default_power))
-
         # Set default values if the values are '-'
         downlink_power = 100.0 if downlink_power == '-' else downlink_power
         uplink_power = 100.0 if uplink_power == '-' else uplink_power
-
         graphite = ""
         if downlink_power > 50.0:
             self.parameters['dlOutputPower'] = "-"
         if uplink_power > 50.0:
             self.parameters['ulInputPower'] = "-"
-
         alarm = Alarm(self.parameters)
         html_table = HtmlTable(self.parameters)
         graphite = Graphite(self.parameters)
-        sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
-        if alarm.display() != "":
-            sys.exit(WARNING)
-        else:
-            sys.exit(OK)
+        plugin_output_message = f"{alarm.display()}{html_table.display()}|{graphite.display()}"
+        exit_code = WARNING if alarm.display() != "" else OK
+        return exit_code, plugin_output_message
 
     def discovery_display(self):
         rt = self.parameters['rt']
