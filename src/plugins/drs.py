@@ -567,6 +567,7 @@ class Command:
         return frame_len
 
     def create_query_group(self, query_cmd_name_query):
+
         if query_cmd_name_query == LtelDruCommand:
             for cmd_name in query_cmd_name_query:
                 opt = self.parameters['optical_port']
@@ -581,6 +582,7 @@ class Command:
         else:
             for cmd_name in query_cmd_name_query:
                 cmd_data = CommandData()
+                sys.stderr.write(str(cmd_name))
                 frame_len = cmd_data.generate_ifboard_frame(
                     command_number=cmd_name,
                     command_body_length=0x00,
@@ -589,6 +591,7 @@ class Command:
                 if frame_len > 0:
                     self.list.append(cmd_data)
 
+        sys.stderr.write(str(self.list))
         return len(self.list)
 
     def get_setting_command_value(self, int_number):
@@ -773,8 +776,6 @@ class Command:
 
 
 class CommandData:
-    START_FLAG = "7E"
-    END_FLAG = "7F"
 
     def __init__(self):
         self.reply_command_data = None
@@ -827,54 +828,75 @@ class CommandData:
         self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
     def generate_ifboard_frame(self, command_number, command_data, command_body_length):
-        command_number = command_number,
-        command_body_length = command_body_length,
-        command_data = command_data,
-
-        self.module_address = DONWLINK_MODULE | 0
-        self.module_function = 0x07
-        self.command_number = command_number
-        self.command_type = DataType.DATA_INITIATION
-        self.response_flag = ResponseFlag.SUCCESS
-        self.command_body_length = command_body_length
-        self.command_data = command_data
+        start_flag = "7E"
+        end_flag = "7F"
         self.reply = ""
         self.reply_command_data = ""
-
         if command_number in [cmd_name.value for cmd_name in SettingCommand]:
-            cmd_unit = self.cmd_unit_set()
+            cmd_unit = self.cmd_unit_set(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         elif command_number in [cmd_name.value for cmd_name in HardwarePeripheralDeviceParameterCommand]:
-            cmd_unit = self.cmd_unit_query()
+            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         elif command_number in [cmd_name.value for cmd_name in NearEndQueryCommandNumber]:
-            cmd_unit = self.cmd_unit_query()
+            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
 
         elif command_number in [cmd_name.value for cmd_name in RemoteQueryCommandNumber]:
-            cmd_unit = self.cmd_unit_query()
+            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         elif command_number in [cmd_name.value for cmd_name in DRSRemoteCommand]:
-            cmd_unit = self.cmd_unit_query()
+            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
-
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         elif command_number in [cmd_name.value for cmd_name in DRSMasterCommand]:
-            cmd_unit = self.cmd_unit_query()
+            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         elif command_number in [cmd_name.value for cmd_name in DiscoveryCommand]:
-            cmd_unit = self.cmd_unit_query()
+            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
             crc = self.get_checksum(cmd_unit)
-            self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         else:
             self.query = ""
 
+        sys.stderr.write(str(self.query))
         return len(self.query)
+
+    def cmd_unit_set(self, command_number, command_data, command_body_length):
+        module_address = DONWLINK_MODULE | 0
+        module_function = 0x07
+        command_type = DataType.DATA_INITIATION
+        response_flag = ResponseFlag.SUCCESS
+        cmd_unit = ""
+        command_number = ((command_number & 0xFF) << 8) | ((command_number >> 8) & 0xFF)
+        command_body_length = ((command_body_length & 0xFF) << 8) | ((command_body_length >> 8) & 0xFF)
+        if isinstance(command_data, str):
+            cmd_unit = (
+                f"{module_function:02X}"
+                f"{module_address:02X}"
+                f"{command_type:02X}"
+                f"{command_number:02X}"
+                f"{response_flag:02X}"
+                f"{command_body_length:02X}"
+                f"{command_data}"
+            )
+        elif isinstance(command_data, int):
+            cmd_unit = (
+                f"{module_function:02X}"
+                f"{module_address:02X}"
+                f"{command_type:02X}"
+                f"{command_number:02X}"
+                f"{response_flag:02X}"
+                f"{command_body_length:02X}"
+                f"{command_data:02X}"
+            )
+
+        return f"{cmd_unit}"
 
     def __str__(self):
         if self.reply:
@@ -892,44 +914,20 @@ class CommandData:
         self.command_number = command_number
         self.command_body_length = command_body_length
 
-    def cmd_unit_query(self):
-
+    def cmd_unit_query(self, command_number, command_data, command_body_length):
+        module_address = DONWLINK_MODULE | 0
+        module_function = 0x07
+        command_type = DataType.DATA_INITIATION
+        response_flag = ResponseFlag.SUCCESS
         cmd_unit = (
-            f"{self.module_function:02X}"
-            f"{self.module_address:02X}"
-            f"{self.command_type:02X}"
-            f"{self.command_number:02X}"
-            f"{self.response_flag:02X}"
-            f"{self.command_body_length:02X}"
+            f"{module_function:02X}"
+            f"{module_address:02X}"
+            f"{command_type:02X}"
+            f"{command_number:02X}"
+            f"{response_flag:02X}"
+            f"{command_body_length:02X}"
         )
         return cmd_unit
-
-    def cmd_unit_set(self):
-        cmd_unit = ""
-        command_number = ((self.command_number & 0xFF) << 8) | ((self.command_number >> 8) & 0xFF)
-        command_body_length = ((self.command_body_length & 0xFF) << 8) | ((self.command_body_length >> 8) & 0xFF)
-        if isinstance(self.command_data, str):
-            cmd_unit = (
-                f"{self.module_function:02X}"
-                f"{self.module_address:02X}"
-                f"{self.command_type:02X}"
-                f"{self.command_number:02X}"
-                f"{self.response_flag:02X}"
-                f"{self.command_body_length:02X}"
-                f"{self.command_data}"
-            )
-        elif isinstance(self.command_data, int):
-            cmd_unit = (
-                f"{self.module_function:02X}"
-                f"{self.module_address:02X}"
-                f"{self.command_type:02X}"
-                f"{self.command_number:02X}"
-                f"{self.response_flag:02X}"
-                f"{self.command_body_length:02X}"
-                f"{self.command_data:02X}"
-            )
-
-        return f"{cmd_unit}"
 
     def get_reply_message(self):
         if len(self.reply) >= 6:
@@ -2218,12 +2216,9 @@ class Discovery:
         dru_connected = {}
         fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
         for opt in range(1, 5):
-
             port_name = f"optical_port_devices_connected_{opt}"
-            optical_port_connected_ip_addr = {}
             dru_connected[f"opt{opt}"] = []
-            last_connected = self.parameters[port_name]
-            optical_port_devices_connected = self.parameters[port_name] + 1
+            optical_port_devices_connected = 0 if self.parameters[port_name] == '-' else self.parameters[port_name] + 1
             for connected in range(1, optical_port_devices_connected):
                 connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
                 id_key = f"optical_port_device_id_topology_{opt}"
