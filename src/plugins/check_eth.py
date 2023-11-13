@@ -50,7 +50,7 @@ def args_check():
         ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido",
                         default=drs.NearEndQueryCommandNumber.device_id)
-        ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="-1")
+        ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default=-1)
         ap.add_argument("-ct", "--cmd_type", required=False, help="cmd_type es requerido", default="unknow")
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
@@ -113,24 +113,18 @@ def main():
     cmd_type = args['cmd_type']
 
     command = drs.Command(args=args)
-    if device == "dru_ethernet" or device == "dmu_ethernet":
+    if device == "dru_ethernet" or device == "dmu_ethernet" or "discovery_ethernet":
         command = drs.Command(args=args)
-        if cmd_type == "single_set":
-            command.create_single_set()
-            sys.stderr.write("OK")
-            sys.exit(drs.OK)
-
-        elif cmd_type == "group_query":
-            if command.create_group_query() == 0:
-                sys.stderr.write("CRITICAL - no device")
-                sys.exit(drs.CRITICAL)
-
-        elif cmd_type == "single_query":
-            cmd_name = command.get_command_value()
-            command.create_single_query(cmd_name)
-        else:
-            sys.stderr.write("WARNING - no command type defined")
-            sys.exit(drs.WARNING)
+        is_created = command.create_command(cmd_type)
+        if is_created == -1:
+            sys.stderr.write("CRITICAL - no command type defined")
+            sys.exit(drs.CRITICAL)
+        elif is_created == -2:
+            sys.stderr.write(f"CRITICAL - no command {args['cmd_name']} known")
+            sys.exit(drs.CRITICAL)
+        elif is_created == -3:
+            sys.stderr.write(f"CRITICAL - no command group known")
+            sys.exit(drs.CRITICAL)
 
         if command.transmit_and_receive_tcp(address) == 0:
             sys.stderr.write(f"CRITICAL - no response from {address}")
@@ -140,15 +134,17 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(drs.CRITICAL)
 
+        if device == "discovery_ethernet":
+            discovery = drs.Discovery(command.parameters)
+            discovery.ethernet()
+
         plugin_output = drs.PluginOutput(command.parameters)
-        exit_code, plugin_output_message = plugin_output.get_master_remote_service_message()
+        exit_code, plugin_output_message = plugin_output.create_message()
         sys.stderr.write(plugin_output_message)
         sys.exit(exit_code)
 
     elif device == "discovery_ethernet":
 
-        command.create_query_group(drs.DiscoveryCommand)
-        parameters = command.transmit_and_receive_tcp(address)
         discovery = drs.Discovery(command.parameters)
         discovery.ethernet()
         plugin_output = drs.PluginOutput(command.parameters)
@@ -283,6 +279,20 @@ def main():
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
         sys.exit(drs.CRITICAL)
+
+
+def create_single_set_command(command):
+    command_number = command.get_command_value()
+    command_body_length = command.parameters['command_body_length']
+    command_data = command.parameters['command_data']
+    cmd_data = drs.CommandData()
+    frame_len = cmd_data.generate_ifboard_frame(
+        command_number=command_number,
+        command_body_length=command_body_length,
+        command_data=command_data,
+    )
+    if frame_len > 0:
+        command.list.append(cmd_data)
 
 
 if __name__ == "__main__":

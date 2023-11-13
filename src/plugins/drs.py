@@ -1430,7 +1430,10 @@ class Command:
         self.parameters['device'] = args['device']
         self.parameters['hostname'] = args['hostname']
         self.parameters['cmd_type'] = args['cmd_type']
+        self.parameters['cmd_data'] = args['cmd_data']
         self.parameters['cmd_name'] = int(args['cmd_name'])
+
+        self.parameters['cmd_body_length'] = int(args['cmd_body_length'])
         self.parameters['device_number'] = int(args['device_number'])
         self.parameters['optical_port'] = int(args['optical_port'])
         self.parameters['work_bandwidth'] = int(args['bandwidth'])
@@ -1441,21 +1444,49 @@ class Command:
         self.parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
         self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
 
-    def create_single_query(self, command_number):
-        cmd_data = CommandData()
-        cmd_data.generate_ifboard_frame(
-            command_number=command_number,
-            command_body_length=0,
-            command_data=0)
-        self.list.append(cmd_data)
+    def create_command(self, cmd_type):
+        cmd_type_map = dict(
+            single_set=self.create_single_command(),
+            single_query=self.create_single_command(),
+            group_query=self.create_group_query_command()
+        )
+        if cmd_type in cmd_type_map:
+            get_command = cmd_type_map.get(cmd_type)
+            is_created = get_command
+            return is_created
+        else:
+            return -1
 
-    def create_group_query(self):
-        """Creates a group query for the given device.
-           Returns:
-        the length of the group.
+    def create_single_command(self):
+        """Generates a single command frame.
+
+        Returns:
+            int: The length of the command frame, in bytes.
         """
 
-        cmd_name_map = {'dmu_ethernet': DRSMasterCommand, 'dru_ethernet': DRSRemoteCommand}
+        cmd_data = CommandData()
+        frame_len = cmd_data.generate_ifboard_frame(
+            command_number=self.get_command_value(),
+            command_body_length=self.parameters['cmd_body_length'],
+            command_data=self.parameters['cmd_data'],
+        )
+
+        if frame_len > 0:
+            self.list.append(cmd_data)
+
+        return frame_len if frame_len > 0 else -2
+
+    def create_group_query_command(self):
+        """Creates a group query for the given device.
+
+        Returns:
+            int: The number of commands in the group query.
+        """
+        cmd_name_map = dict(
+            dmu_ethernet=DRSMasterCommand,
+            dru_ethernet=DRSRemoteCommand,
+            discovery_ethernet=DiscoveryCommand
+        )
         device = self.parameters['device']
         if device in cmd_name_map:
             cmd_name_group = cmd_name_map[device]
@@ -1482,7 +1513,7 @@ class Command:
 
             return len(self.list)
         else:
-            return 0
+            return -3
 
     def create_single_set(self):
         command_number = self.get_command_value()
@@ -1629,6 +1660,10 @@ class Command:
         return decoded_commands
 
     def _decode_ifboard_command(self, command: CommandData) -> int:
+
+        if len(command.reply) == 0:
+            return 0
+
         module_function_index = 1
         data_type_index = 3
         cmd_number_index = 4
@@ -2036,6 +2071,16 @@ class Alarm:
 class PluginOutput:
     def __init__(self, parameters):
         self.parameters = parameters
+        # Define a dictionary of command types and corresponding functions
+        self.command_functions = {
+            'dru_serial_service': self.dru_serial_display,
+            'dru_serial_host': self.dru_serial_host_display,
+            'dmu_serial': self.dmu_serial_host_display,
+            'dru_ethernet': self.get_master_remote_service_message,
+            'dmu_ethernet': self.get_master_remote_service_message,
+            'discovery_ethernet': self.discovery_display,
+            'discovery_serial': self.discovery_display
+        }
 
     def dru_serial_display(self):
         # Default values for downlink and uplink power
@@ -2061,11 +2106,9 @@ class PluginOutput:
         html_table = HtmlTable(self.parameters)
         graphite = Graphite(self.parameters)
         # sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
-        sys.stderr.write(self.parameters)
-        if alarm.display() != "":
-            sys.exit(WARNING)
-        else:
-            sys.exit(OK)
+        plugin_output_message = str(self.parameters)
+        exit_code = WARNING if alarm.display() != "" else OK
+        return exit_code, plugin_output_message
 
     def dru_serial_host_display(self):
         rt = self.parameters['rt']
@@ -2081,9 +2124,9 @@ class PluginOutput:
                 exit_value = OK
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
-
-        sys.stderr.write(f"{message}, RTA = {rt} ms | {graphite.dmu_serial_single()}")
-        sys.exit(exit_value)
+        plugin_output_message = f"{message}, RTA = {rt} ms | {graphite.dmu_serial_single()}"
+        exit_code = exit_value
+        return exit_code, plugin_output_message
 
     def dmu_serial_host_display(self):
         rt = self.parameters['rt']
@@ -2093,13 +2136,9 @@ class PluginOutput:
 
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
-        sys.stderr.write(f"OK - RTA = {rt} ms | {graphite.display()}")
-        sys.exit(OK)
-
-    def master_remote_service_display(self):
-        exit_code, plugin_output_message = self.get_master_remote_service_message()
-        sys.stderr.write(plugin_output_message)
-        sys.exit(exit_code)
+        plugin_output_message = f"OK - RTA = {rt} ms | {graphite.display()}"
+        exit_code = OK
+        return exit_code, plugin_output_message
 
     def get_master_remote_service_message(self):
         # Default values for downlink and uplink power
@@ -2133,10 +2172,18 @@ class PluginOutput:
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
         dt = round(float(dt), 2)
-        sys.stderr.write(f"OK - DTA = {dt} ms, RTA = {rt} ms | {graphite.display()}")
-        sys.exit(OK)
+        plugin_output_message = f"OK - DTA = {dt} ms, RTA = {rt} ms | {graphite.display()}"
+        exit_code = OK
+        return exit_code, plugin_output_message
 
-    # Add more query command functions
+    def create_message(self):
+        device = self.parameters['device']
+        if device in self.command_functions:
+            get_message = self.command_functions.get(device)
+            exit_code, message = get_message()
+            return exit_code, message
+        else:
+            return WARNING, f"WARNING  - no output message for {device}"
 
 
 class Discovery:
