@@ -506,273 +506,6 @@ class Director:
         return q
 
 
-class Command:
-    list = list()
-    tcp_port = 65050
-    udp_port = 65055
-    remote_port = 65053
-
-    def __init__(self, args):
-
-        self.cmd_number_ok = None
-        self.serial = None
-        self.parameters = self.blank_parameter()
-        self.set_args(args)
-
-    def set_args(self, args):
-        self.parameters['address'] = args['address']
-        self.parameters['device'] = args['device']
-        self.parameters['hostname'] = args['hostname']
-        self.parameters['cmd_type'] = args['cmd_type']
-        self.parameters['cmd_name'] = int(args['cmd_name'])
-        self.parameters['device_number'] = int(args['device_number'])
-        self.parameters['optical_port'] = int(args['optical_port'])
-        self.parameters['work_bandwidth'] = int(args['bandwidth'])
-        self.parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
-        self.parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
-        self.parameters['highLevelWarningDL'] = int(args['highLevelWarningDL'])
-        self.parameters['highLevelCriticalDL'] = int(args['highLevelCriticalDL'])
-        self.parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
-        self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
-
-    def create_single_query(self, command_number):
-        cmd_data = CommandData()
-        cmd_data.generate_ifboard_frame(
-            command_number=command_number,
-            command_body_length=0,
-            command_data=0)
-        self.list.append(cmd_data)
-
-    def create_group_query(self):
-        """Creates a group query for the given device.
-           Returns:
-        the length of the group.
-        """
-
-        cmd_name_map = {'dmu_ethernet': DRSMasterCommand, 'dru_ethernet': DRSRemoteCommand}
-        device = self.parameters['device']
-        if device in cmd_name_map:
-            cmd_name_group = cmd_name_map[device]
-            if cmd_name_group == LtelDruCommand:
-                for cmd_name in cmd_name_group:
-                    opt = self.parameters['optical_port']
-                    dru = self.parameters['device_number']
-                    code = cmd_name
-                    dru_id = f"{opt}{dru}"
-                    cmd_data = CommandData()
-                    cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
-                    if cmd_data.query != "":
-                        self.list.append(cmd_data)
-            else:
-                for cmd_name in cmd_name_group:
-                    cmd_data = CommandData()
-                    frame_len = cmd_data.generate_ifboard_frame(
-                        command_number=cmd_name,
-                        command_body_length=0x00,
-                        command_data=-1
-                    )
-                    if frame_len > 0:
-                        self.list.append(cmd_data)
-
-            return len(self.list)
-        else:
-            return 0
-
-    def create_single_set(self):
-        command_number = self.get_command_value()
-        command_body_length = self.parameters['command_body_length']
-        command_data = self.parameters['command_data']
-        cmd_data = CommandData()
-        frame_len = cmd_data.generate_ifboard_frame(
-            command_number=command_number,
-            command_body_length=command_body_length,
-            command_data=command_data,
-        )
-        if frame_len > 0:
-            self.list.append(cmd_data)
-        return frame_len
-
-    def get_setting_command_value(self, int_number):
-        for command in SettingCommand:
-            if command.value == int_number:
-                return command
-        return None
-
-    def get_command_value(self):
-        int_number = self.parameters['cmd_name']
-
-        for command in SettingCommand:
-            if command.value == int_number:
-                return command
-        for command in NearEndQueryCommandNumber:
-            if command.value == int_number:
-                return command
-        for command in HardwarePeripheralDeviceParameterCommand:
-            if command.value == int_number:
-                return command
-        for command in RemoteQueryCommandNumber:
-            if command.value == int_number:
-                return command
-        return None
-
-    def transmit_and_receive(self, address):
-        rt = time.time()
-        for cmd_name in self.list:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                    data_bytes = bytearray.fromhex(cmd_name.create_query_group)
-                    sent_bytes = sock.sendto(data_bytes, (address, self.tcp_port))
-                    data_received, _ = sock.recvfrom(1024)
-                    cmd_name.reply = data_received
-            except Exception as e:
-                sys.stderr.write("CRITICAL - " + str(e))
-                sys.exit(CRITICAL)
-
-        rt = str(time.time() - rt)
-        self.extract_and_decode_received
-        self.parameters['rt'] = rt
-        return self.parameters
-
-    def transmit_and_receive_tcp(self, address):
-        rt = time.time()
-        reply_counter = 0
-        exception_message = "CRITICAL - "
-        for cmd_name in self.list:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect((address, self.tcp_port))
-                    sock.settimeout(2)
-                    data_bytes = bytearray.fromhex(cmd_name.query)
-                    sock.sendall(data_bytes)
-                    data_received = sock.recv(1024)
-                    sock.close()
-                    cmd_name.reply = data_received
-                    reply_counter = reply_counter + 1
-            except Exception as e:
-                return 0
-
-        rt = str(time.time() - rt)
-        self.parameters['rt'] = rt
-        return self.parameters
-
-    def transmit_and_receive_serial(self, port, baud):
-        rt = time.time()
-        self.serial = self.setSerial(port, baud)
-        self.cmd_number_ok = 0
-        for cmd_name in self.list:
-            self.write_serial_frame(cmd_name.query)
-            query_time = time.time()
-            data_received = self.read_serial_frame()
-            cmd_name.reply = data_received
-            if cmd_name.reply != "":
-                self.cmd_number_ok = self.cmd_number_ok + 1
-            tmp = time.time() - query_time
-            time.sleep(tmp)
-        self.serial.close()
-        rt = str(time.time() - rt)
-        self.extract_and_decode_received
-        self.parameters['rt'] = rt
-        return self.cmd_number_ok
-
-    def write_serial_frame(self, Trama):
-        cmd_bytes = bytearray.fromhex(Trama)
-        hex_byte = ''
-        for cmd_byte in cmd_bytes:
-            hex_byte = ("{0:02x}".format(cmd_byte))
-            self.serial.write(bytes.fromhex(hex_byte))
-        self.serial.flush()
-
-    def read_serial_frame(self):
-        hexadecimal_string = ''
-        rcv_hex_array = list()
-        is_data_ready = False
-        rcv_count = 0
-        count = 2
-        while not is_data_ready and count > 0:
-            try:
-                response = self.serial.read()
-            except serial.SerialException as e:
-
-                return bytearray()
-            rcv_hex = response.hex()
-            if rcv_count == 0 and rcv_hex == '7e':
-                rcv_hex_array.append(rcv_hex)
-                hexadecimal_string = hexadecimal_string + rcv_hex
-                rcv_count = rcv_count + 1
-            elif rcv_count > 0 and rcv_hex_array[0] == '7e' and (rcv_count == 1 and rcv_hex == '7e') is not True:
-                rcv_hex_array.append(rcv_hex)
-                hexadecimal_string = hexadecimal_string + rcv_hex
-                rcv_count = rcv_count + 1
-                if rcv_hex == '7e' or rcv_hex == '7f':
-                    is_data_ready = True
-                elif rcv_count > 100:
-                    return ""
-            elif rcv_hex == '':
-                self.write_serial_frame('7E')
-                return ""
-        if count == 0:
-            return ""
-
-        self.serial.reset_input_buffer()
-        hexResponse = bytearray.fromhex(hexadecimal_string)
-        return hexResponse
-
-    def extract_and_decode_received(self):
-        for cmd_name in self.list:
-            message = cmd_name.extract_data_from_response()
-            if len(message) is not None:
-                self.parameters.update(message)
-
-    def blank_parameter(self):
-        parameters = {}
-        dru_parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
-                          'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
-                          "Downlink Start Frequency": '-'}
-
-        dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
-                          'optical_port_devices_connected_3': "-",
-                          'optical_port_devices_connected_4': "-", 'opt1ConnectionStatus': "-",
-                          'opt2ConnectionStatus': "-",
-                          'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
-                          'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
-                          'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
-                          'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
-                          'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                          'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
-
-        channel_parameters = self.blank_channel_dict()
-
-        parameters.update(dru_parameters)
-        parameters.update(dmu_parameters)
-        parameters.update(channel_parameters)
-        return parameters
-
-    def blank_channel_dict(self):
-        parameters = {}
-        channel = 1
-        while channel <= 16:
-            parameters["channel" + str(channel) + "Status"] = "-"
-            parameters["channel" + str(channel) + "ulFreq"] = "-"
-            parameters["channel" + str(channel) + "dlFreq"] = "-"
-            parameters["channel_" + str(channel) + "_freq"] = "-"
-            channel += 1
-        return parameters
-
-    def setSerial(self, port, baudrate):
-        for times in range(3):
-            try:
-                s = serial.Serial(port, baudrate)
-                s.timeout = 0.1
-                s.exclusive = True
-                return s
-
-            except serial.SerialException as e:
-                time.sleep(1)
-                if times == 2:
-                    sys.stderr.write("CRITICAL - " + (e.args.__str__()) + str(port))
-                    sys.exit(CRITICAL)
-
-
 class CommandData:
 
     def __init__(self):
@@ -906,45 +639,6 @@ class CommandData:
             return messages[response_flag]
         else:
             return f"Unknown message ({response_flag})"
-
-    def extract_data_from_response(self):
-        if self.reply is None:
-            self.reply_command_data = None
-            self.message = None
-
-        elif self.command_number in LtelDruCommand:
-            module_function_index = 1
-            data_type_index = 3
-            cmd_number_index = 4
-            respond_flag_index = 5
-            cmd_body_length_index = 14
-            cmd_data_index = 17
-            response_flag = self.reply[respond_flag_index]
-            command_body_length = self.reply[cmd_body_length_index] - 3
-            command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
-            self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
-            self.message = Decoder.ltel_decode(self.command_number, self.command_data)
-        else:
-            module_function_index = 1
-            data_type_index = 3
-            cmd_number_index = 4
-            respond_flag_index = 5
-            cmd_body_length_index = 6
-            cmd_data_index = 7
-            module_function = self.reply[module_function_index]
-            data_type = self.reply[data_type_index]
-            command_number = self.reply[cmd_number_index]
-            if command_number == self.command_number.value:
-                response_flag = self.reply[respond_flag_index]
-                command_body_length = self.reply[cmd_body_length_index]
-                command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
-                self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
-                self.message = self.decoder.ifboard_decode(self.command_number, command_body)
-            else:
-                self.reply_command_data = None
-                self.message = None
-
-        return self.message
 
     def generate_checksum(self, cmd):
         """
@@ -1716,6 +1410,321 @@ class Decoder:
         parameter_dict['opt3TransmissionStatus'] = temp[6]
         parameter_dict['opt4TransmissionStatus'] = temp[7]
         return parameter_dict
+
+
+class Command:
+    list = list()
+    tcp_port = 65050
+    udp_port = 65055
+    remote_port = 65053
+
+    def __init__(self, args):
+
+        self.cmd_number_ok = None
+        self.serial = None
+        self.parameters = self.blank_parameter()
+        self.set_args(args)
+
+    def set_args(self, args):
+        self.parameters['address'] = args['address']
+        self.parameters['device'] = args['device']
+        self.parameters['hostname'] = args['hostname']
+        self.parameters['cmd_type'] = args['cmd_type']
+        self.parameters['cmd_name'] = int(args['cmd_name'])
+        self.parameters['device_number'] = int(args['device_number'])
+        self.parameters['optical_port'] = int(args['optical_port'])
+        self.parameters['work_bandwidth'] = int(args['bandwidth'])
+        self.parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
+        self.parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
+        self.parameters['highLevelWarningDL'] = int(args['highLevelWarningDL'])
+        self.parameters['highLevelCriticalDL'] = int(args['highLevelCriticalDL'])
+        self.parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
+        self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
+
+    def create_single_query(self, command_number):
+        cmd_data = CommandData()
+        cmd_data.generate_ifboard_frame(
+            command_number=command_number,
+            command_body_length=0,
+            command_data=0)
+        self.list.append(cmd_data)
+
+    def create_group_query(self):
+        """Creates a group query for the given device.
+           Returns:
+        the length of the group.
+        """
+
+        cmd_name_map = {'dmu_ethernet': DRSMasterCommand, 'dru_ethernet': DRSRemoteCommand}
+        device = self.parameters['device']
+        if device in cmd_name_map:
+            cmd_name_group = cmd_name_map[device]
+            if cmd_name_group == LtelDruCommand:
+                for cmd_name in cmd_name_group:
+                    opt = self.parameters['optical_port']
+                    dru = self.parameters['device_number']
+                    code = cmd_name
+                    dru_id = f"{opt}{dru}"
+                    cmd_data = CommandData()
+                    cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
+                    if cmd_data.query != "":
+                        self.list.append(cmd_data)
+            else:
+                for cmd_name in cmd_name_group:
+                    cmd_data = CommandData()
+                    frame_len = cmd_data.generate_ifboard_frame(
+                        command_number=cmd_name,
+                        command_body_length=0x00,
+                        command_data=-1
+                    )
+                    if frame_len > 0:
+                        self.list.append(cmd_data)
+
+            return len(self.list)
+        else:
+            return 0
+
+    def create_single_set(self):
+        command_number = self.get_command_value()
+        command_body_length = self.parameters['command_body_length']
+        command_data = self.parameters['command_data']
+        cmd_data = CommandData()
+        frame_len = cmd_data.generate_ifboard_frame(
+            command_number=command_number,
+            command_body_length=command_body_length,
+            command_data=command_data,
+        )
+        if frame_len > 0:
+            self.list.append(cmd_data)
+        return frame_len
+
+    def get_setting_command_value(self, int_number):
+        for command in SettingCommand:
+            if command.value == int_number:
+                return command
+        return None
+
+    def get_command_value(self):
+        int_number = self.parameters['cmd_name']
+
+        for command in SettingCommand:
+            if command.value == int_number:
+                return command
+        for command in NearEndQueryCommandNumber:
+            if command.value == int_number:
+                return command
+        for command in HardwarePeripheralDeviceParameterCommand:
+            if command.value == int_number:
+                return command
+        for command in RemoteQueryCommandNumber:
+            if command.value == int_number:
+                return command
+        return None
+
+    def transmit_and_receive_tcp(self, address):
+        rt = time.time()
+        reply_counter = 0
+        exception_message = "CRITICAL - "
+        for cmd_name in self.list:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect((address, self.tcp_port))
+                    sock.settimeout(2)
+                    data_bytes = bytearray.fromhex(cmd_name.query)
+                    sock.sendall(data_bytes)
+                    data_received = sock.recv(1024)
+                    sock.close()
+                    cmd_name.reply = data_received
+                    reply_counter = reply_counter + 1
+            except Exception as e:
+                return 0
+
+        rt = str(time.time() - rt)
+        self.parameters['rt'] = rt
+        return self.parameters
+
+    def transmit_and_receive_serial(self, port, baud):
+        rt = time.time()
+        self.serial = self.setSerial(port, baud)
+        self.cmd_number_ok = 0
+        for cmd_name in self.list:
+            self.write_serial_frame(cmd_name.query)
+            query_time = time.time()
+            data_received = self.read_serial_frame()
+            cmd_name.reply = data_received
+            if cmd_name.reply != "":
+                self.cmd_number_ok = self.cmd_number_ok + 1
+            tmp = time.time() - query_time
+            time.sleep(tmp)
+        self.serial.close()
+        rt = str(time.time() - rt)
+        self.parameters['rt'] = rt
+        return self.cmd_number_ok
+
+    def write_serial_frame(self, Trama):
+        cmd_bytes = bytearray.fromhex(Trama)
+        hex_byte = ''
+        for cmd_byte in cmd_bytes:
+            hex_byte = ("{0:02x}".format(cmd_byte))
+            self.serial.write(bytes.fromhex(hex_byte))
+        self.serial.flush()
+
+    def read_serial_frame(self):
+        hexadecimal_string = ''
+        rcv_hex_array = list()
+        is_data_ready = False
+        rcv_count = 0
+        count = 2
+        while not is_data_ready and count > 0:
+            try:
+                response = self.serial.read()
+            except serial.SerialException as e:
+
+                return bytearray()
+            rcv_hex = response.hex()
+            if rcv_count == 0 and rcv_hex == '7e':
+                rcv_hex_array.append(rcv_hex)
+                hexadecimal_string = hexadecimal_string + rcv_hex
+                rcv_count = rcv_count + 1
+            elif rcv_count > 0 and rcv_hex_array[0] == '7e' and (rcv_count == 1 and rcv_hex == '7e') is not True:
+                rcv_hex_array.append(rcv_hex)
+                hexadecimal_string = hexadecimal_string + rcv_hex
+                rcv_count = rcv_count + 1
+                if rcv_hex == '7e' or rcv_hex == '7f':
+                    is_data_ready = True
+                elif rcv_count > 100:
+                    return ""
+            elif rcv_hex == '':
+                self.write_serial_frame('7E')
+                return ""
+        if count == 0:
+            return ""
+
+        self.serial.reset_input_buffer()
+        hexResponse = bytearray.fromhex(hexadecimal_string)
+        return hexResponse
+
+    def extract_and_decode_received(self) -> int:
+        """Extracts and decodes the received commands.
+
+        Returns:
+            The number of decoded commands.
+        """
+        decoded_commands = 0
+        for command in self.list:
+            if command.reply is None:
+                command.reply_command_data = None
+                command.message = None
+                continue
+
+            if command.command_number in LtelDruCommand:
+                decoded_commands += self._decode_ltel_command(command)
+            else:
+                decoded_commands += self._decode_ifboard_command(command)
+
+            # Update the parameters with the decoded data.
+            if command.message:
+                self.parameters.update(command.message)
+
+        return decoded_commands
+
+    def _decode_ifboard_command(self, command: CommandData) -> int:
+        module_function_index = 1
+        data_type_index = 3
+        cmd_number_index = 4
+        respond_flag_index = 5
+        cmd_body_length_index = 6
+        cmd_data_index = 7
+        module_function = command.reply[module_function_index]
+        data_type = command.reply[data_type_index]
+        command_number = command.reply[cmd_number_index]
+        if command_number == command.command_number.value:
+            response_flag = command.reply[respond_flag_index]
+            command_body_length = command.reply[cmd_body_length_index]
+            command_body = command.reply[cmd_data_index:cmd_data_index + command_body_length]
+            if response_flag == ResponseFlag.SUCCESS:
+                command.reply_command_data = command_body
+                command.message = command.decoder.ifboard_decode(command.command_number, command_body)
+                return 1
+            else:
+                return 0
+        else:
+            return 0
+
+    def _decode_ltel_command(self, command: CommandData) -> int:
+        """Decodes a LtelDru command.
+
+        Args:
+            command: The command to decode.
+
+        Returns:
+            The number of decoded commands.
+        """
+
+        module_function_index = 1
+        data_type_index = 3
+        cmd_number_index = 4
+        respond_flag_index = 5
+        cmd_body_length_index = 14
+        cmd_data_index = 17
+        response_flag = command.reply[respond_flag_index]
+        command_body_length = command.reply[cmd_body_length_index] - 3
+        command_body = command.reply[cmd_data_index:cmd_data_index + command_body_length]
+        if response_flag == ResponseFlag.SUCCESS:
+            command.reply_command_data = command_body
+            command.message = Decoder.ltel_decode(command.command_number, command.command_data)
+            return 1
+        else:
+            return 0
+
+    def blank_parameter(self):
+        parameters = {}
+        dru_parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
+                          'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
+                          "Downlink Start Frequency": '-'}
+
+        dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
+                          'optical_port_devices_connected_3': "-",
+                          'optical_port_devices_connected_4': "-", 'opt1ConnectionStatus': "-",
+                          'opt2ConnectionStatus': "-",
+                          'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
+                          'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
+                          'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
+                          'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
+                          'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
+                          'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
+
+        channel_parameters = self.blank_channel_dict()
+
+        parameters.update(dru_parameters)
+        parameters.update(dmu_parameters)
+        parameters.update(channel_parameters)
+        return parameters
+
+    def blank_channel_dict(self):
+        parameters = {}
+        channel = 1
+        while channel <= 16:
+            parameters["channel" + str(channel) + "Status"] = "-"
+            parameters["channel" + str(channel) + "ulFreq"] = "-"
+            parameters["channel" + str(channel) + "dlFreq"] = "-"
+            parameters["channel_" + str(channel) + "_freq"] = "-"
+            channel += 1
+        return parameters
+
+    def setSerial(self, port, baudrate):
+        for times in range(3):
+            try:
+                s = serial.Serial(port, baudrate)
+                s.timeout = 0.1
+                s.exclusive = True
+                return s
+
+            except serial.SerialException as e:
+                time.sleep(1)
+                if times == 2:
+                    sys.stderr.write("CRITICAL - " + (e.args.__str__()) + str(port))
+                    sys.exit(CRITICAL)
 
 
 class HtmlTable:

@@ -136,7 +136,9 @@ def main():
             sys.stderr.write(f"CRITICAL - no response from {address}")
             sys.exit(drs.CRITICAL)
 
-        command.extract_and_decode_received()
+        if command.extract_and_decode_received() == 0:
+            sys.stderr.write(f"CRITICAL - no decoded data")
+            sys.exit(drs.CRITICAL)
 
         plugin_output = drs.PluginOutput(command.parameters)
         exit_code, plugin_output_message = plugin_output.get_master_remote_service_message()
