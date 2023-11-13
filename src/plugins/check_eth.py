@@ -50,7 +50,7 @@ def args_check():
         ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
         ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido",
                         default=drs.NearEndQueryCommandNumber.device_id)
-        ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="0")
+        ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default="-1")
         ap.add_argument("-ct", "--cmd_type", required=False, help="cmd_type es requerido", default="unknow")
         ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
                         default=200)
@@ -112,18 +112,11 @@ def main():
     cmd_body_length = int(args['cmd_body_length'])
     cmd_type = args['cmd_type']
 
-    if len(args['cmd_data']) > 1:
-        cmd_data = args['cmd_data']
-    else:
-        cmd_data = int(args['cmd_data'])
-
     command = drs.Command(args=args)
-
     if device == "dru_ethernet" or device == "dmu_ethernet":
         command = drs.Command(args=args)
         if cmd_type == "single_set":
             command.create_single_set()
-            parameters = command.transmit_and_receive_tcp(address)
             sys.stderr.write("OK")
             sys.exit(drs.OK)
 
@@ -131,7 +124,6 @@ def main():
             if command.create_group_query() == 0:
                 sys.stderr.write("CRITICAL - no device")
                 sys.exit(drs.CRITICAL)
-            parameters = command.transmit_and_receive_tcp(address)
 
         elif cmd_type == "single_query":
             cmd_name = command.get_command_value()
@@ -140,7 +132,12 @@ def main():
             sys.stderr.write("WARNING - no command type defined")
             sys.exit(drs.WARNING)
 
-        command.transmit_and_receive_tcp(address)
+        if command.transmit_and_receive_tcp(address) == 0:
+            sys.stderr.write(f"CRITICAL - no response from {address}")
+            sys.exit(drs.CRITICAL)
+
+        command.extract_and_decode_received()
+
         plugin_output = drs.PluginOutput(command.parameters)
         exit_code, plugin_output_message = plugin_output.get_master_remote_service_message()
         sys.stderr.write(plugin_output_message)

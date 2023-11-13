@@ -544,11 +544,37 @@ class Command:
         self.list.append(cmd_data)
 
     def create_group_query(self):
-        cmd_name = {'dmu_ethernet': DRSMasterCommand, 'dru_ethernet': DRSRemoteCommand}
+        """Creates a group query for the given device.
+           Returns:
+        the length of the group.
+        """
+
+        cmd_name_map = {'dmu_ethernet': DRSMasterCommand, 'dru_ethernet': DRSRemoteCommand}
         device = self.parameters['device']
-        if device in cmd_name:
-            cmd_names = cmd_name[device]
-            return self.create_query_group(cmd_names)
+        if device in cmd_name_map:
+            cmd_name_group = cmd_name_map[device]
+            if cmd_name_group == LtelDruCommand:
+                for cmd_name in cmd_name_group:
+                    opt = self.parameters['optical_port']
+                    dru = self.parameters['device_number']
+                    code = cmd_name
+                    dru_id = f"{opt}{dru}"
+                    cmd_data = CommandData()
+                    cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
+                    if cmd_data.query != "":
+                        self.list.append(cmd_data)
+            else:
+                for cmd_name in cmd_name_group:
+                    cmd_data = CommandData()
+                    frame_len = cmd_data.generate_ifboard_frame(
+                        command_number=cmd_name,
+                        command_body_length=0x00,
+                        command_data=-1
+                    )
+                    if frame_len > 0:
+                        self.list.append(cmd_data)
+
+            return len(self.list)
         else:
             return 0
 
@@ -565,34 +591,6 @@ class Command:
         if frame_len > 0:
             self.list.append(cmd_data)
         return frame_len
-
-    def create_query_group(self, query_cmd_name_query):
-
-        if query_cmd_name_query == LtelDruCommand:
-            for cmd_name in query_cmd_name_query:
-                opt = self.parameters['optical_port']
-                dru = self.parameters['device_number']
-                code = cmd_name
-                dru_id = f"{opt}{dru}"
-                cmd_data = CommandData()
-                cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
-                # sys.stderr.write(f"\n\r{cmd_name} {cmd_data.query}\n\r")
-                if cmd_data.query != "":
-                    self.list.append(cmd_data)
-        else:
-            for cmd_name in query_cmd_name_query:
-                cmd_data = CommandData()
-                sys.stderr.write(str(cmd_name))
-                frame_len = cmd_data.generate_ifboard_frame(
-                    command_number=cmd_name,
-                    command_body_length=0x00,
-                    command_data=0x00
-                )
-                if frame_len > 0:
-                    self.list.append(cmd_data)
-
-        sys.stderr.write(str(self.list))
-        return len(self.list)
 
     def get_setting_command_value(self, int_number):
         for command in SettingCommand:
@@ -631,12 +629,14 @@ class Command:
                 sys.exit(CRITICAL)
 
         rt = str(time.time() - rt)
-        self.reply_decode()
+        self.extract_and_decode_received
         self.parameters['rt'] = rt
         return self.parameters
 
     def transmit_and_receive_tcp(self, address):
         rt = time.time()
+        reply_counter = 0
+        exception_message = "CRITICAL - "
         for cmd_name in self.list:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -647,11 +647,11 @@ class Command:
                     data_received = sock.recv(1024)
                     sock.close()
                     cmd_name.reply = data_received
+                    reply_counter = reply_counter + 1
             except Exception as e:
-                sys.stderr.write("CRITICAL - " + str(e))
-                sys.exit(CRITICAL)
+                return 0
+
         rt = str(time.time() - rt)
-        self.reply_decode()
         self.parameters['rt'] = rt
         return self.parameters
 
@@ -670,7 +670,7 @@ class Command:
             time.sleep(tmp)
         self.serial.close()
         rt = str(time.time() - rt)
-        self.reply_decode()
+        self.extract_and_decode_received
         self.parameters['rt'] = rt
         return self.cmd_number_ok
 
@@ -717,13 +717,11 @@ class Command:
         hexResponse = bytearray.fromhex(hexadecimal_string)
         return hexResponse
 
-    def reply_decode(self):
+    def extract_and_decode_received(self):
         for cmd_name in self.list:
-            cmd_name.extract_data()
-            message = Queries.decode(cmd_name.command_number, cmd_name.reply_command_data)
-            if len(message) != 0:
+            message = cmd_name.extract_data_from_response()
+            if len(message) is not None:
                 self.parameters.update(message)
-        return self.parameters
 
     def blank_parameter(self):
         parameters = {}
@@ -794,6 +792,8 @@ class CommandData:
         self.response_flag = None
         self.command_body_length = None
         self.query = None
+        self.message = None
+        self.decoder = Decoder()
 
     def generate_ltel_comunication_board_frame(self, dru_id, cmd_name):
 
@@ -824,79 +824,52 @@ class CommandData:
             f"{data}"
         )
 
-        crc = self.get_checksum(cmd_unit)
+        crc = self.generate_checksum(cmd_unit)
         self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
 
     def generate_ifboard_frame(self, command_number, command_data, command_body_length):
+        """Generates an IFBoard frame for the given command number, command data, and command body length.
+
+        Args:
+            command_number: The command number.
+            command_data: The command data.
+            command_body_length: The command body length.
+
+        Returns:
+            An IFBoard len frame.
+        """
+
         start_flag = "7E"
         end_flag = "7F"
-        self.reply = ""
-        self.reply_command_data = ""
-        if command_number in [cmd_name.value for cmd_name in SettingCommand]:
-            cmd_unit = self.cmd_unit_set(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-        elif command_number in [cmd_name.value for cmd_name in HardwarePeripheralDeviceParameterCommand]:
-            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-        elif command_number in [cmd_name.value for cmd_name in NearEndQueryCommandNumber]:
-            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-
-        elif command_number in [cmd_name.value for cmd_name in RemoteQueryCommandNumber]:
-            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-        elif command_number in [cmd_name.value for cmd_name in DRSRemoteCommand]:
-            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-        elif command_number in [cmd_name.value for cmd_name in DRSMasterCommand]:
-            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-        elif command_number in [cmd_name.value for cmd_name in DiscoveryCommand]:
-            cmd_unit = self.cmd_unit_query(command_number, command_data, command_body_length)
-            crc = self.get_checksum(cmd_unit)
-            self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
-        else:
-            self.query = ""
-
-        sys.stderr.write(str(self.query))
-        return len(self.query)
-
-    def cmd_unit_set(self, command_number, command_data, command_body_length):
+        self.command_number = command_number
+        self.command_body_length = command_body_length
+        self.command_data = command_data
         module_address = DONWLINK_MODULE | 0
         module_function = 0x07
         command_type = DataType.DATA_INITIATION
         response_flag = ResponseFlag.SUCCESS
         cmd_unit = ""
-        command_number = ((command_number & 0xFF) << 8) | ((command_number >> 8) & 0xFF)
         command_body_length = ((command_body_length & 0xFF) << 8) | ((command_body_length >> 8) & 0xFF)
         if isinstance(command_data, str):
-            cmd_unit = (
-                f"{module_function:02X}"
-                f"{module_address:02X}"
-                f"{command_type:02X}"
-                f"{command_number:02X}"
-                f"{response_flag:02X}"
-                f"{command_body_length:02X}"
-                f"{command_data}"
-            )
+            command_data = f"{command_data}"
         elif isinstance(command_data, int):
-            cmd_unit = (
-                f"{module_function:02X}"
-                f"{module_address:02X}"
-                f"{command_type:02X}"
-                f"{command_number:02X}"
-                f"{response_flag:02X}"
-                f"{command_body_length:02X}"
-                f"{command_data:02X}"
-            )
+            if command_data < 0:
+                command_data = ""
+            else:
+                command_data = f"{command_data:02X}"
 
-        return f"{cmd_unit}"
+        cmd_unit = (
+            f"{module_function:02X}"
+            f"{module_address:02X}"
+            f"{command_type:02X}"
+            f"{command_number:02X}"
+            f"{response_flag:02X}"
+            f"{command_body_length:02X}"
+            f"{command_data}"
+        )
+        crc = self.generate_checksum(cmd_unit)
+        self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
+        return len(self.query)
 
     def __str__(self):
         if self.reply:
@@ -913,21 +886,6 @@ class CommandData:
     def set_command(self, command_number, command_body_length):
         self.command_number = command_number
         self.command_body_length = command_body_length
-
-    def cmd_unit_query(self, command_number, command_data, command_body_length):
-        module_address = DONWLINK_MODULE | 0
-        module_function = 0x07
-        command_type = DataType.DATA_INITIATION
-        response_flag = ResponseFlag.SUCCESS
-        cmd_unit = (
-            f"{module_function:02X}"
-            f"{module_address:02X}"
-            f"{command_type:02X}"
-            f"{command_number:02X}"
-            f"{response_flag:02X}"
-            f"{command_body_length:02X}"
-        )
-        return cmd_unit
 
     def get_reply_message(self):
         if len(self.reply) >= 6:
@@ -949,27 +907,23 @@ class CommandData:
         else:
             return f"Unknown message ({response_flag})"
 
-    def extract_data(self):
-        if self.command_number in LtelDruCommand:
+    def extract_data_from_response(self):
+        if self.reply is None:
+            self.reply_command_data = None
+            self.message = None
+
+        elif self.command_number in LtelDruCommand:
             module_function_index = 1
             data_type_index = 3
             cmd_number_index = 4
             respond_flag_index = 5
             cmd_body_length_index = 14
             cmd_data_index = 17
-
-            if not self.reply:
-                self.reply_command_data = ""
-                return
-
             response_flag = self.reply[respond_flag_index]
             command_body_length = self.reply[cmd_body_length_index] - 3
             command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
-
             self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
-
-            sys.stderr.write(str(self.reply_command_data))
-
+            self.message = Decoder.ltel_decode(self.command_number, self.command_data)
         else:
             module_function_index = 1
             data_type_index = 3
@@ -977,27 +931,31 @@ class CommandData:
             respond_flag_index = 5
             cmd_body_length_index = 6
             cmd_data_index = 7
-
-            if not self.reply:
-                self.reply_command_data = ""
-                return
-
             module_function = self.reply[module_function_index]
             data_type = self.reply[data_type_index]
             command_number = self.reply[cmd_number_index]
-            response_flag = self.reply[respond_flag_index]
-            command_body_length = self.reply[cmd_body_length_index]
-            command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
+            if command_number == self.command_number.value:
+                response_flag = self.reply[respond_flag_index]
+                command_body_length = self.reply[cmd_body_length_index]
+                command_body = self.reply[cmd_data_index:cmd_data_index + command_body_length]
+                self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
+                self.message = self.decoder.ifboard_decode(self.command_number, command_body)
+            else:
+                self.reply_command_data = None
+                self.message = None
 
-            self.reply_command_data = command_body if response_flag == ResponseFlag.SUCCESS else ""
+        return self.message
 
-    def get_checksum(self, cmd):
+    def generate_checksum(self, cmd):
         """
         -Description: this fuction calculate the checksum for a given comand
         -param text: string with the data, ex device = 03 , id = 03 cmd = 0503110000
         -return: cheksum for the given command
         """
-        data = bytearray.fromhex(cmd)
+        try:
+            data = bytearray.fromhex(cmd)
+        except ValueError as e:
+            return ""
 
         crc = Crc16Xmodem.calc(data)
         crc = f"0x{crc:04X}"
@@ -1020,12 +978,28 @@ class CommandData:
         return hex_string
 
 
-class Queries:
+class Decoder:
 
     def decode(command_number, command_body):
         """Decodes a command number."""
         try:
-            return getattr(Queries, f"_decode_{command_number.name}")(command_body)
+            return getattr(Decoder, f"_decode_{command_number.name}")(command_body)
+        except AttributeError:
+            print(f" Command number {command_number} is not supported.")
+            return {}
+
+    def ifboard_decode(self, command_number, command_body):
+        """Decodes a command number."""
+        try:
+            return getattr(Decoder, f"_decode_{command_number.name}")(command_body)
+        except AttributeError:
+            print(f" Command number {command_number} is not supported.")
+            return {}
+
+    def ltel_decode(command_number, command_body):
+        """Decodes a command number."""
+        try:
+            return getattr(Decoder, f"_decode_{command_number.name}")(command_body)
         except AttributeError:
             print(f" Command number {command_number} is not supported.")
             return {}
@@ -1040,8 +1014,8 @@ class Queries:
             fb_number = i // step
             rx_pwr = array[i:i + 2]
             tx_pwr = array[i + 2:i + 4]
-            rx_pwr = Queries.optic_module_power_convert(rx_pwr, 0.001)
-            tx_pwr = Queries.optic_module_power_convert(tx_pwr, 0.001)
+            rx_pwr = Decoder.optic_module_power_convert(rx_pwr, 0.001)
+            tx_pwr = Decoder.optic_module_power_convert(tx_pwr, 0.001)
             parameter_name = "Fb{}_Rx_Pwr".format(
                 fb_number,
             )
@@ -1059,7 +1033,7 @@ class Queries:
                 fb_number = (i % 16) - 1
 
             temp = array[i:i + 2]
-            temp = Queries.optic_module_power_convert(temp, 0.1)
+            temp = Decoder.optic_module_power_convert(temp, 0.1)
 
             parameter_name = "Fb{}_Temp".format(
                 fb_number,
@@ -1224,7 +1198,7 @@ class Queries:
         if len(command_body) < 2:
             return {}
 
-        rx0_broadband_power = Queries.power_convert(command_body)
+        rx0_broadband_power = Decoder.power_convert(command_body)
 
         return {
             "rx0_broadband_power": rx0_broadband_power,
@@ -1236,7 +1210,7 @@ class Queries:
         if len(command_body) < 2:
             return {}
 
-        rx1_broadband_power = Queries.power_convert(command_body)
+        rx1_broadband_power = Decoder.power_convert(command_body)
 
         return {
             "rx1_broadband_power": rx1_broadband_power,
@@ -1536,19 +1510,19 @@ class Queries:
 
     @staticmethod
     def _decode_optical_port_devices_connected_1(command_body):
-        return {"optical_port_devices_connected_1": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_1": Decoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_2(command_body):
-        return {"optical_port_devices_connected_2": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_2": Decoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_3(command_body):
-        return {"optical_port_devices_connected_3": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_3": Decoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_4(command_body):
-        return {"optical_port_devices_connected_4": Queries.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_4": Decoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def decode_optical_port_devices_connected(command_body):
@@ -1558,22 +1532,22 @@ class Queries:
 
     @staticmethod
     def _decode_optical_port_device_id_topology_1(command_body):
-        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        device_ids = Decoder.decode_optical_port_device_id_topology(command_body)
         return {"optical_port_device_id_topology_1": device_ids}
 
     @staticmethod
     def _decode_optical_port_device_id_topology_2(command_body):
-        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        device_ids = Decoder.decode_optical_port_device_id_topology(command_body)
         return {"optical_port_device_id_topology_2": device_ids}
 
     @staticmethod
     def _decode_optical_port_device_id_topology_3(command_body):
-        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        device_ids = Decoder.decode_optical_port_device_id_topology(command_body)
         return {"optical_port_device_id_topology_3": device_ids}
 
     @staticmethod
     def _decode_optical_port_device_id_topology_4(command_body):
-        device_ids = Queries.decode_optical_port_device_id_topology(command_body)
+        device_ids = Decoder.decode_optical_port_device_id_topology(command_body)
         return {"optical_port_device_id_topology_4": device_ids}
 
     @staticmethod
@@ -1594,19 +1568,19 @@ class Queries:
 
     @staticmethod
     def _decode_optical_port_mac_topology_1(command_body):
-        return Queries.decode_optical_port_mac_topology(command_body)
+        return Decoder.decode_optical_port_mac_topology(command_body)
 
     @staticmethod
     def _decode_optical_port_mac_topology_2(command_body):
-        return Queries.decode_optical_port_mac_topology(command_body)
+        return Decoder.decode_optical_port_mac_topology(command_body)
 
     @staticmethod
     def _decode_optical_port_mac_topology_3(command_body):
-        return Queries.decode_optical_port_mac_topology(command_body)
+        return Decoder.decode_optical_port_mac_topology(command_body)
 
     @staticmethod
     def _decode_optical_port_mac_topology_4(command_body):
-        return Queries.decode_optical_port_mac_topology(command_body)
+        return Decoder.decode_optical_port_mac_topology(command_body)
 
     @staticmethod
     def decode_optical_port_mac_topology(command_body):
@@ -1645,8 +1619,8 @@ class Queries:
         if len(command_body) == 0:
             return {}
 
-        downlink_power = Queries.power_convert(command_body[2:])
-        uplink_power = Queries.power_convert(command_body)
+        downlink_power = Decoder.power_convert(command_body[2:])
+        uplink_power = Decoder.power_convert(command_body)
         return {'dlOutputPower': str(downlink_power), 'ulInputPower': str(uplink_power)}
 
     @staticmethod
