@@ -93,7 +93,6 @@ class HostController extends Controller
         $paramFijos = "-a {$address} -d {$device} -ct {$cmd_type} -n ${hostname} -l {$cmd_body_length} -c {$cmd_name} -cd {$cmd_data} -b {$bandwidth}";
         $comando = "/usr/lib/nagios/plugins/check_eth.py ";
         $ejecutar = $comando . $paramFijos;
-        echo $ejecutar;
         return $ejecutar;
     }
 
