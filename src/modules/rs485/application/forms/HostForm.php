@@ -28,13 +28,12 @@ class HostForm extends ConfigForm
         $this->setAction('rs485/host/edit');
     }
 
-    public function refresh(string $host, int $centerUplinkFrequency, int $centerDownlinkFrequency, int $bandwidth, string $cmdType, string $device): void
+    public function refresh(string $host, int $centerUplinkFrequency, int $centerDownlinkFrequency, int $bandwidth, string $cmd_type, string $device): void
     {
         $this->setName('form_host');
         $this->setSubmitLabel($this->translate('Submit Changes'));
-        $this->setAction(sprintf('rs485/host/edit?host=%s&center_uplink_frequency=%d&center_downlink_frequency=%d&bandwidth=%d&cmd_type=%s&device=%s', $host, $centerUplinkFrequency, $centerDownlinkFrequency, $bandwidth, $cmdType, $device));
+        $this->setAction(sprintf('rs485/host/edit?host=%s&center_uplink_frequency=%d&center_downlink_frequency=%d&bandwidth=%d&cmd_type=%s&device=%s', $host, $centerUplinkFrequency, $centerDownlinkFrequency, $bandwidth, $cmd_type, $device));
     }
-
 
     public function createElements(array $formData)
     {
@@ -44,10 +43,10 @@ class HostForm extends ConfigForm
         $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
         $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
         $bandwidth = $_GET['bandwidth'] ?? 0;
-        $cmd_type = $_GET['cmd_type'] ?? 0;
-        $device = $_GET['device'] ?? 0;
+        $cmd_type = $_GET['cmd_type'] ?? "";
+        $device = $_GET['device'] ?? "";
         $host = $_GET['host'] ?? "";
-        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth,$cmd_type,$device);
+        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
 
         $this->addElement('select', 'host_remote', array(
             'multiOptions' => $listHost,

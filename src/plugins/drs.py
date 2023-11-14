@@ -582,7 +582,6 @@ class CommandData:
         command_type = DataType.DATA_INITIATION
         response_flag = ResponseFlag.SUCCESS
         cmd_unit = ""
-        command_body_length = ((command_body_length & 0xFF) << 8) | ((command_body_length >> 8) & 0xFF)
         if isinstance(command_data, str):
             command_data = f"{command_data}"
         elif isinstance(command_data, int):
@@ -591,15 +590,14 @@ class CommandData:
             else:
                 command_data = f"{command_data:02X}"
 
-        cmd_unit = (
-            f"{module_function:02X}"
-            f"{module_address:02X}"
-            f"{command_type:02X}"
-            f"{command_number:02X}"
-            f"{response_flag:02X}"
-            f"{command_body_length:02X}"
-            f"{command_data}"
-        )
+        cmd_unit += f"{module_function:02X}"
+        cmd_unit += f"{module_address:02X}"
+        cmd_unit += f"{command_type:02X}"
+        cmd_unit += f"{command_number:02X}"
+        cmd_unit += f"{response_flag:02X}"
+        cmd_unit += f"{command_body_length:02X}"
+        cmd_unit += f"{command_data}"
+
         crc = self.generate_checksum(cmd_unit)
         self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
         return len(self.query)
@@ -1446,13 +1444,13 @@ class Command:
 
     def create_command(self, cmd_type):
         cmd_type_map = dict(
-            single_set=self.create_single_command(),
-            single_query=self.create_single_command(),
-            group_query=self.create_group_query_command()
+            single_set=self.create_single_command,
+            single_query=self.create_single_command,
+            group_query=self.create_group_query_command
         )
         if cmd_type in cmd_type_map:
             get_command = cmd_type_map.get(cmd_type)
-            is_created = get_command
+            is_created = get_command()
             return is_created
         else:
             return -1
@@ -1714,7 +1712,7 @@ class Command:
 
     def blank_parameter(self):
         parameters = {}
-        dru_parameters = {'dlOutputPower': '-', 'ulInputPower': '-', 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
+        dru_parameters = {'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
                           'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
                           "Downlink Start Frequency": '-'}
 
@@ -1724,7 +1722,7 @@ class Command:
                           'opt2ConnectionStatus': "-",
                           'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
                           'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
-                          'dlOutputPower': "-", 'ulInputPower': "-", 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
+                          'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
                           'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                           'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
                           'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
@@ -2148,8 +2146,8 @@ class PluginOutput:
         # Get uplink power
         uplink_power = float(self.parameters.get('ulInputPower', default_power))
         # Set default values if the values are '-'
-        downlink_power = 100.0 if downlink_power == '-' else downlink_power
-        uplink_power = 100.0 if uplink_power == '-' else uplink_power
+        downlink_power = 100.0 if downlink_power == 100.0 else downlink_power
+        uplink_power = 100.0 if uplink_power == 100.0 else uplink_power
         graphite = ""
         if downlink_power > 50.0:
             self.parameters['dlOutputPower'] = "-"
@@ -2160,6 +2158,8 @@ class PluginOutput:
         graphite = Graphite(self.parameters)
         plugin_output_message = f"{alarm.display()}{html_table.display()}|{graphite.display()}"
         exit_code = WARNING if alarm.display() != "" else OK
+        if self.parameters['cmd_type'] == 'single_set':
+            plugin_output_message = "OK"
         return exit_code, plugin_output_message
 
     def discovery_display(self):
@@ -2235,7 +2235,7 @@ class Discovery:
                 else:
                     message = "Unknown"
 
-                sys.stderr.write(f"{dru} {message} \n")
+                # sys.stderr.write(f"{dru} {message} \n")
                 if response.status_code != 304:
                     director.deploy()
         self.parameters["dt"] = str(time.time() - dt)

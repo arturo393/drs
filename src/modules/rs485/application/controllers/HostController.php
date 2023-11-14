@@ -88,6 +88,15 @@ class HostController extends Controller
 
     }
 
+    private function comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth)
+    {
+        $paramFijos = "-a {$address} -d {$device} -ct {$cmd_type} -n ${hostname} -l {$cmd_body_length} -c {$cmd_name} -cd {$cmd_data} -b {$bandwidth}";
+        $comando = "/usr/lib/nagios/plugins/check_eth.py ";
+        $ejecutar = $comando . $paramFijos;
+        echo $ejecutar;
+        return $ejecutar;
+    }
+
     public function saveAction()
     {
         $query = "";
@@ -95,28 +104,30 @@ class HostController extends Controller
         $result = [];
         $dmuDevice1 = -1;
         $dmuDevice2 = -1;
-        $dmuCmdLength = -1;
-        $dmuCmdData = -1;
+        $cmd_body_length = -1;
+        $cmd_data = -1;
         $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
         $host = $this->buscarDataFromDB($this->_getParam('host_remote'));
-        $device_address = $host->address;
-        $device_hostname = $host->object_name;
-        $device = "dmu";
+        $address = $host->address;
+        $hostname = $host->object_name;
+        $bandwidth = $this->_getParam('bandwidth');
+        $cmd_type = 'single_set';
+        $device = $this->_getParam('device');
         #1: Working mode
         if ($this->_hasParam('opt1_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt1_hidden'));
-            $dmuCmdData = $this->_getParam('opt1');
-            $dmuCmdCode = 0x80;
-            $dmuCmdLength = 1;
+            $cmd_data = $this->_getParam('opt1');
+            $cmd_name = 0x80;
+            $cmd_body_length = 1;
             $salidaArray = [];
-            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
+            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
             $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
             if ($salidaArray[0] == "OK") {
-                if ($dmuCmdData == 2) {
+                if ($cmd_data == 2) {
                     $salida = "WideBand";
-                } else if ($dmuCmdData == 3) {
+                } else if ($cmd_data == 3) {
                     $salida = "Channel mode";
                 } else {
                     $salida = "Unkonw mode";
@@ -128,17 +139,17 @@ class HostController extends Controller
         #2: Gain power control ATT
         if ($this->_hasParam('opt2_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt2_hidden'));
-            $dmuCmdCode = 0xe7;
-            $dmuCmdLength = 2;
+            $cmd_name = 0xe7;
+            $cmd_body_length = 2;
             $uplink_att = (int)$this->_getParam('opt2_2');
             $downlink_att = (int)$this->_getParam('opt2_1');
             $byte1 = dechex(4 * (int)$this->_getParam('opt2_2'));
             $byte2 = dechex(4 * (int)$this->_getParam('opt2_1'));
             $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT);
             $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT);
-            $dmuCmdData = "{$byte1}{$byte2}";
+            $cmd_data = "{$byte1}{$byte2}";
             $salidaArray = [];
-            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
+            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
             $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
@@ -150,8 +161,8 @@ class HostController extends Controller
         #3: Channel Activation Status           
         if ($this->_hasParam('opt3_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt3_hidden'));
-            $dmuCmdCode = 0x41;
-            $dmuCmdLength = 0x10;
+            $cmd_name = 0x41;
+            $cmd_body_length = 0x10;
             $byte = "";
             $message = "<br>";
             $status = "";
@@ -166,9 +177,9 @@ class HostController extends Controller
                 }
                 $message .= "Channel {$i} : {$status} <br>";
             }
-            $dmuCmdData = $byte;
+            $cmd_data = $byte;
             $salidaArray = [];
-            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
+            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
             $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
@@ -181,8 +192,8 @@ class HostController extends Controller
         #4: Channel Frecuency Point Configuration
         if ($this->_hasParam('opt4_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt4_hidden'));
-            $dmuCmdCode = 0x35;
-            $dmuCmdLength = 0x40;
+            $cmd_name = 0x35;
+            $cmd_body_length = 0x40;
             $byte = "";
             $message = "<br>";
             $status = "";
@@ -194,9 +205,9 @@ class HostController extends Controller
                 $message .= "Channel {$i} : {$decimal_value} [MHz] <br>";
 
             }
-            $dmuCmdData = $byte;
+            $cmd_data = $byte;
             $salidaArray = [];
-            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
+            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
             $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
@@ -208,8 +219,8 @@ class HostController extends Controller
         #5: Optical PortState
         if ($this->_hasParam('opt5_hidden')) {
             $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));
-            $dmuCmdCode = 0x90;
-            $dmuCmdLength = 4;
+            $cmd_name = 0x90;
+            $cmd_body_length = 4;
             $byte = "";
             $message = "<br>";
             $status = "";
@@ -224,9 +235,9 @@ class HostController extends Controller
                 }
                 $message .= "Optical Port {$i} : {$status} <br>";
             }
-            $dmuCmdData = $byte;
+            $cmd_data = $byte;
             $salidaArray = [];
-            $ejecutar = $this->comando($device_address, $device, $device_hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData);
+            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
             exec($ejecutar . " 2>&1", $salidaArray);
             usleep(50000);
             $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
@@ -241,14 +252,6 @@ class HostController extends Controller
         $this->view->assign('cmd', $ejecutar);
     }
 
-    private function comando($device_address, $device, $hostname, $dmuCmdLength, $dmuCmdCode, $dmuCmdData)
-    {
-        $paramFijos = "-a {$device_address} -d {$device} -ct set_single -n ${hostname} -l {$dmuCmdLength} -c {$dmuCmdCode} -cd {$dmuCmdData} -b 10";
-        $comando = "/usr/lib/nagios/plugins/check_eth.py ";
-        $ejecutar = $comando . $paramFijos;
-        echo $ejecutar;
-        return $ejecutar;
-    }
 
     private function validaRepetidos()
     {
