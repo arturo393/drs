@@ -28,26 +28,27 @@ class HostForm extends ConfigForm
         $this->setAction('rs485/host/edit');
     }
 
-    public function refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth)
+    public function refresh(string $host, int $centerUplinkFrequency, int $centerDownlinkFrequency, int $bandwidth, string $cmdType, string $device): void
     {
         $this->setName('form_host');
         $this->setSubmitLabel($this->translate('Submit Changes'));
-        $this->setAction('rs485/host/edit?host=' . $host . '&center_uplink_frequency=' . $center_uplink_frequency . '&center_downlink_frequency=' . $center_downlink_frequency . '&bandwidth=' . $bandwidth);
-
+        $this->setAction(sprintf('rs485/host/edit?host=%s&center_uplink_frequency=%d&center_downlink_frequency=%d&bandwidth=%d&cmd_type=%s&device=%s', $host, $centerUplinkFrequency, $centerDownlinkFrequency, $bandwidth, $cmdType, $device));
     }
+
 
     public function createElements(array $formData)
     {
-        $hostname = '';
-        if (isset($_GET['host'])) $hostname = $_GET['host'];
+        $hostname = $_GET['host'] ?? "";
         $listHost = $this->cargarHostList($hostname);
         $listTrama = $this->tramasDMU($hostname);
-        $center_frequency = $_GET['center_freq'] ?? "";
         $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
         $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
         $bandwidth = $_GET['bandwidth'] ?? 0;
+        $cmd_type = $_GET['cmd_type'] ?? 0;
+        $device = $_GET['device'] ?? 0;
         $host = $_GET['host'] ?? "";
-        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth);
+        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth,$cmd_type,$device);
+
         $this->addElement('select', 'host_remote', array(
             'multiOptions' => $listHost,
             'required' => true,
@@ -203,7 +204,7 @@ class HostForm extends ConfigForm
             $ul = (float)$center_uplink_frequency - (int)($bandwidth) / 2;
             $dl = (float)$center_downlink_frequency - (int)($bandwidth) / 2;
             $wb = $bandwidth;
-            $cb = 125;
+            $cb = 125; // 12.5 Khz
             $ch_number_length = 4;
 
             $total_channel = ($wb / $cb) * 10000;

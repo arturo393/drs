@@ -197,6 +197,7 @@
                     $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
                     $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
                     $bandwidth = $object->customvars['bandwidth'] ?? 0;
+                    $cmd_type = $object->customvars['cmd_type'] ?? 0;
                     if ($device != -1) {
                         echo $this->qlink(
                             $this->translate('Config'),
@@ -204,7 +205,9 @@
                             array('host' => $object->getHost()->getName(),
                                 'center_uplink_frequency' => $center_uplink_frequency,
                                 'center_downlink_frequency' => $center_downlink_frequency,
-                                'bandwidth' => $bandwidth
+                                'bandwidth' => $bandwidth,
+                                'cmd_type' => $cmd_type,
+                                'device' => $device
                             ),
                             array(
                                 'class' => 'action-link',
