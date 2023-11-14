@@ -932,7 +932,7 @@ class Decoder:
     @staticmethod
     def _decode_central_frequency_point(command_body):
         """Decodes the central frequency point query command."""
-        if len(command_body) <= 4:
+        if len(command_body) < 4:
             return {}
         number = command_body[0:4]
         number = int.from_bytes(number, byteorder="little")

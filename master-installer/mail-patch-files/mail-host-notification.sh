@@ -13,7 +13,7 @@ fi
 
 ## Function helpers
 Usage() {
-cat << EOF
+  cat << EOF
 
 Required parameters:
   -d LONGDATETIME (\$icinga.long_date_time\$)
@@ -42,6 +42,7 @@ Help() {
 }
 
 Error() {
+  echo "Error occurred: $1"  # Debug statement
   if [ "$1" ]; then
     echo $1
   fi
@@ -65,6 +66,7 @@ urlencode() {
 ## Main
 while getopts 4:6::b:c:d:f:hi:l:n:o:r:s:t:v: opt
 do
+  echo "Processing argument: $opt"  # Debug statement
   case "$opt" in
     4) HOSTADDRESS=$OPTARG ;;
     6) HOSTADDRESS6=$OPTARG ;;
@@ -161,14 +163,16 @@ if [ -n "$MAILFROM" ] ; then
 
   ## Debian/Ubuntu use mailutils which requires `-a` to append the header
   if [ -f /etc/debian_version ]; then
+    echo "Sending email to: $USEREMAIL"  # Debug statement
     /usr/bin/printf "%b" "$NOTIFICATION_MESSAGE" | $MAILBIN -a "From: $MAILFROM" -s "$SUBJECT" $USEREMAIL
   ## Other distributions (RHEL/SUSE/etc.) prefer mailx which sets a sender address with `-r`
   else
+    echo "Sending email to: $USEREMAIL"  # Debug statement
     /usr/bin/printf "%b" "$NOTIFICATION_MESSAGE" | $MAILBIN -r "$MAILFROM" -s "$SUBJECT" $USEREMAIL
   fi
 
 else
+  echo "Sending email to: $USEREMAIL"  # Debug statement
   /usr/bin/printf "%b" "$NOTIFICATION_MESSAGE" \
   | $MAILBIN -s "$SUBJECT" $USEREMAIL
 fi
-#

@@ -293,6 +293,11 @@
         - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
 
     ## Notifications Customization
+    - name: mailutils install
+      apt:
+        name:
+          - mailutils
+          - postfix
     - name: Copy mail-service-notification.sh file
       copy:
         src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-service-notification.sh
