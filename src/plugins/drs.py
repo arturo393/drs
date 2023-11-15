@@ -1435,12 +1435,12 @@ class Command:
         self.parameters['device_number'] = int(args['device_number'])
         self.parameters['optical_port'] = int(args['optical_port'])
         self.parameters['work_bandwidth'] = int(args['bandwidth'])
-        self.parameters['highLevelWarningUL'] = int(args['highLevelWarningUL'])
-        self.parameters['highLevelCriticalUL'] = int(args['highLevelCriticalUL'])
-        self.parameters['highLevelWarningDL'] = int(args['highLevelWarningDL'])
-        self.parameters['highLevelCriticalDL'] = int(args['highLevelCriticalDL'])
-        self.parameters['highLevelWarningTemperature'] = int(args['highLevelWarningTemperature'])
-        self.parameters['highLevelCriticalTemperature'] = int(args['highLevelCriticalTemperature'])
+        self.parameters['warning_uplink_threshold'] = int(args['warning_uplink_threshold'])
+        self.parameters['critical_uplink_threshold'] = int(args['critical_uplink_threshold'])
+        self.parameters['critical_uplink_threshold'] = int(args['critical_uplink_threshold'])
+        self.parameters['critical_uplink_threshold'] = int(args['critical_uplink_threshold'])
+        self.parameters['warning_temperature_threshold'] = int(args['warning_temperature_threshold'])
+        self.parameters['critical_temperature_threshold'] = int(args['critical_temperature_threshold'])
 
     def create_command(self, cmd_type):
         cmd_type_map = dict(
@@ -1967,15 +1967,15 @@ class Graphite:
         else:
             self.parameters['dlOutputPower'] = str(self.parameters['dlOutputPower'])
         pa_temperature = "Temperature=" + str(self.parameters['temperature'])
-        pa_temperature += ";" + str(self.parameters['highLevelWarningTemperature'])
-        pa_temperature += ";" + str(self.parameters['highLevelCriticalTemperature'])
+        pa_temperature += ";" + str(self.parameters['warning_temperature_threshold'])
+        pa_temperature += ";" + str(self.parameters['critical_temperature_threshold'])
         dl_str = f"Downlink={self.parameters['dlOutputPower']}"
-        dl_str += ";" + str(self.parameters['highLevelWarningDL'])
-        dl_str += ";" + str(self.parameters['highLevelCriticalDL'])
+        dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
+        dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
         vswr = "VSWR=" + self.parameters['vswr']
         up_str = f"Uplink={self.parameters['ulInputPower']}"
-        up_str += ";" + str(self.parameters['highLevelWarningUL'])
-        up_str += ";" + str(self.parameters['highLevelCriticalUL'])
+        up_str += ";" + str(self.parameters['warning_uplink_threshold'])
+        up_str += ";" + str(self.parameters['critical_uplink_threshold'])
         rt = "RT=" + self.parameters['rt'] + ";1000;2000"
         graphite = rt + " " + pa_temperature + " " + dl_str + " " + vswr + " " + up_str
         return graphite
@@ -1984,11 +1984,11 @@ class Graphite:
 
         graphite = ""
         dl_str = f"Downlink={self.parameters['dlOutputPower']}"
-        dl_str += ";" + str(self.parameters['highLevelWarningDL'])
-        dl_str += ";" + str(self.parameters['highLevelCriticalDL'])
+        dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
+        dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
         temperature_str = "Temperature=" + str(self.parameters['temperature'])
-        temperature_str += ";" + str(self.parameters['highLevelWarningTemperature'])
-        temperature_str += ";" + str(self.parameters['highLevelCriticalTemperature'])
+        temperature_str += ";" + str(self.parameters['warning_temperature_threshold'])
+        temperature_str += ";" + str(self.parameters['critical_temperature_threshold'])
         graphite = dl_str + " " + temperature_str
         return graphite
 
@@ -2033,32 +2033,32 @@ class Alarm:
 
         alarm = ""
 
-        if dlPower >= self.parameters['highLevelCriticalDL']:
+        if dlPower >= self.parameters['critical_uplink_threshold']:
             alarm += "<h3><font color=\"#ff5566\">Downlink Power Level Critical "
             alarm += self.parameters['dlOutputPower']
             alarm += " [dBn]!</font></h3>"
 
-        elif dlPower >= self.parameters['highLevelWarningDL']:
+        elif dlPower >= self.parameters['critical_uplink_threshold']:
             alarm += "<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
             alarm += self.parameters['dlOutputPower']
             alarm += "[dBm]</font></h3>"
 
-        if ulPower >= self.parameters['highLevelCriticalUL']:
+        if ulPower >= self.parameters['critical_uplink_threshold']:
             alarm += "<h3><font color=\"#ff5566\">Uplink Power Level Critical "
             alarm += self.parameters['ulInputPower']
             alarm += "[dBm]!</font></h3>"
 
-        elif ulPower >= self.parameters['highLevelWarningUL']:
+        elif ulPower >= self.parameters['warning_uplink_threshold']:
             alarm += "<h3><font color=\"#ffaa44\">Uplink Power Level Warning "
             alarm += self.parameters['ulInputPower']
             alarm += "[dBm]</font></h3>"
 
-        if temperature >= self.parameters['highLevelCriticalTemperature']:
+        if temperature >= self.parameters['critical_temperature_threshold']:
             alarm += "<h3><font color=\"#ff5566\">Temperature Level Critical "
             alarm += self.parameters['temperature']
             alarm += " [&deg;C]]!</font></h3>"
 
-        elif temperature >= self.parameters['highLevelWarningTemperature']:
+        elif temperature >= self.parameters['warning_temperature_threshold']:
             alarm += "<h3><font color=\"#ffaa44\">Temperature Level Warning "
             alarm += self.parameters['temperature']
             alarm += " [&deg;C]]!</font></h3>"

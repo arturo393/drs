@@ -48,50 +48,53 @@ def args_check():
         ap.add_argument("-dn", "--device_number", required=False, help="device_number es requerido", default="0")
         ap.add_argument("-b", "--bandwidth", required=False, help="bandwidth es requerido", default=0)
         ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
-        ap.add_argument("-c", "--cmd_name", required=False, help="hostname es requerido",
+        ap.add_argument("-c", "--cmd_name", required=False, help="cmd_name es requerido",
                         default=drs.NearEndQueryCommandNumber.device_id)
         ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default=-1)
         ap.add_argument("-ct", "--cmd_type", required=False, help="cmd_type es requerido", default="unknow")
-        ap.add_argument("-hlwu", "--highLevelWarningUplink", required=False, help="highLevelWarningUplink es requerido",
+        ap.add_argument("-wut", "--warning_uplink_threshold", required=False,
+                        help="warning_uplink_threshold es requerido", default=200)
+        ap.add_argument("-cut", "--critical_uplink_threshold", required=False,
+                        help="critical_uplink_threshold es requerido",
                         default=200)
-        ap.add_argument("-hlcu", "--highLevelCriticalUplink", required=False,
-                        help="highLevelCriticalUplink es requerido",
+        ap.add_argument("-wdt", "--warning_downlink_threshold", required=False,
+                        help="warning_downlink_threshold es requerido",
                         default=200)
-        ap.add_argument("-hlwd", "--highLevelWarningDownlink", required=False,
-                        help="highLevelWarningDownlink es requerido",
-                        default=200)
-        ap.add_argument("-hlcd", "--highLevelCriticalDownlink", required=False,
-                        help="highLevelCriticalDownlink es requerido", default=200)
-        ap.add_argument("-hlwt", "--highLevelWarningTemperature", required=False,
-                        help="highLevelWarningTemperature es requerido", default=200)
-        ap.add_argument("-hlct", "--highLevelCriticalTemperature", required=False,
-                        help="highLevelCriticalTemperature es requerido", default=200)
+
+        ap.add_argument("-cdt", "--critical_downlink_threshold", required=False,
+                        help="critical_downlink_threshold es requerido", default=200)
+
+        ap.add_argument("-wtt", "--warning_temperature_threshold", required=False,
+                        help="warning_temperature_threshold es requerido", default=200)
+
+        ap.add_argument("-ctt", "--critical_temperature_threshold", required=False,
+                        help="critical_temperature_threshold es requerido", default=200)
 
         args = vars(ap.parse_args())
 
         # Check if the high level warning uplink value exists.
-        if "highLevelWarningUL" not in args:
-            args["highLevelWarningUL"] = 41
+        if "warning_uplink_threshold" not in args:
+            args["warning_uplink_threshold"] = 41
 
         # Check if the high level critical uplink value exists.
-        if "highLevelCriticalUL" not in args:
-            args["highLevelCriticalUL"] = 38
+        if "critical_uplink_threshold" not in args:
+            args["critical_uplink_threshold"] = 38
 
         # Check if the high level warning downlink value exists.
-        if "highLevelWarningDL" not in args:
-            args["highLevelWarningDL"] = 41
+        if "warning_downlink_threshold" not in args:
+            args["warning_downlink_threshold"] = 41
 
         # Check if the high level critical downlink value exists.
-        if "highLevelCriticalDL" not in args:
-            args["highLevelCriticalDL"] = 38
+        if "critical_downlink_threshold" not in args:
+            args["critical_downlink_threshold"] = 38
 
         # Check if the high level warning temperature value exists.
-        if "highLevelWarningTemperature" not in args:
-            args["highLevelWarningTemperature"] = 50
+        if "warning_temperature_threshold" not in args:
+            args["warning_temperature_threshold"] = 50
 
         # Check if the high level critical temperature value exists.
-        if "highLevelCriticalTemperature" not in args:
-            args["highLevelCriticalTemperature"] = 45
+        if "critical_temperature_threshold" not in args:
+            args["critical_temperature_threshold"] = 45
 
     except Exception as e:
         # print help information and exit:
