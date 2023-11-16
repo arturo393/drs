@@ -1857,13 +1857,13 @@ class HtmlTable:
         # Default color and font size for normal conditions
         self.default_font_color = "#10263b"
         self.default_background_color = "white"
-        self.default_font_size = "12px"
+        self.default_font_size = "font-size:12px"
 
         # Alarm color and font size for critical and warning conditions
         self.critical_color = "#ff5566"
         self.alarm_font_color = "white"
         self.warning_color = "#ffaa44"
-        self.alarm_font_size = "14px"
+        self.alarm_font_size = "font-size:14px"
 
     def display(self):
         # device_table = dmu_table(parameters) if device == 'dmu' else dru_table(parameters)
