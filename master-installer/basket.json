@@ -1,53 +1,5 @@
 {
     "Command": {
-        "dmu-command": {
-            "fields": [
-                {
-                    "datafield_id": 3,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 4,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 5,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 6,
-                    "is_required": "n",
-                    "var_filter": null
-                }
-            ],
-            "imports": [
-                "dmu-command-template"
-            ],
-            "methods_execute": "PluginCheck",
-            "object_name": "dmu-command",
-            "object_type": "object",
-            "timeout": 5,
-            "uuid": "2a1e1d18-703f-4b57-ae0d-cc001f7e7a2c",
-            "vars": {
-                "highLevelCriticalDownlink": "41",
-                "highLevelCriticalUplink": "38",
-                "highLevelWarningDownlink": "41",
-                "highLevelWarningUplink": "38"
-            }
-        },
-        "dmu-dru-command": {
-            "fields": [],
-            "imports": [
-                "dmu-dru-command-template"
-            ],
-            "methods_execute": "PluginCheck",
-            "object_name": "dmu-dru-command",
-            "object_type": "object",
-            "uuid": "16e499a7-187a-4e85-a7c8-b9983fafce26"
-        },
         "mail-host-notification-command": {
             "arguments": {
                 "-4": {
@@ -179,51 +131,6 @@
             "object_type": "object",
             "uuid": "b1f668c6-c914-466b-b845-070680be1518"
         },
-        "dru_discovery": {
-            "command": "/usr/lib/monitoring-plugins/dru_discovery.py",
-            "fields": [],
-            "methods_execute": "PluginCheck",
-            "object_name": "dru_discovery",
-            "object_type": "object",
-            "uuid": "7e782ae2-25c3-4745-be8e-f7ce0ea637c8"
-        },
-        "check_status": {
-            "arguments": {
-                "-a": {
-                    "required": true,
-                    "value": "$address$"
-                },
-                "-b": {
-                    "description": "work bandwidth",
-                    "required": true,
-                    "value": "$bandwidth$"
-                },
-                "-d": {
-                    "description": "Device",
-                    "required": true,
-                    "skip_key": false,
-                    "value": "$device$"
-                },
-                "-n": {
-                    "description": "hostnam",
-                    "required": true,
-                    "value": "$host.name$"
-                },
-                "-p": {
-                    "description": "Optical Port Number",
-                    "required": false,
-                    "value": "$port$"
-                }
-            },
-            "command": "/usr/lib/nagios/plugins/check_status.py",
-            "fields": [],
-            "methods_execute": "PluginCheck",
-            "object_name": "check_status",
-            "object_type": "object",
-            "timeout": 1,
-            "uuid": "8a430168-df46-49eb-9cd8-eb432a7afc6b",
-            "zone": "master"
-        },
         "check_memory": {
             "command": "/usr/lib/nagios/plugins/check_memory.py",
             "fields": [],
@@ -245,28 +152,6 @@
             "zone": "master"
         },
         "check_disk": {
-            "arguments": {
-                "-a": {
-                    "required": true,
-                    "value": "$address$"
-                },
-                "-d": {
-                    "description": "Device",
-                    "required": true,
-                    "skip_key": false,
-                    "value": "$device$"
-                },
-                "-n": {
-                    "description": "hostnam",
-                    "required": true,
-                    "value": "$host.name$"
-                },
-                "-p": {
-                    "description": "Optical Port Number",
-                    "required": false,
-                    "value": "$port$"
-                }
-            },
             "command": "/usr/lib/nagios/plugins/check_disk.py",
             "fields": [],
             "methods_execute": "PluginCheck",
@@ -282,79 +167,33 @@
                     "required": true,
                     "value": "$address$"
                 },
-                "-b": {
-                    "description": "work bandwidth",
-                    "required": false,
-                    "value": "$bandwidth$"
-                },
-                "-c": {
-                    "description": "Command Name",
-                    "value": "$cmd_name$"
-                },
-                "-ct": {
-                    "description": "Command type",
-                    "repeat_key": false,
-                    "value": "$cmd_type$"
-                },
+                "-b": "$bandwidth$",
+                "-c": "$cmd_name$",
+                "-cdt": "$cdt$",
+                "-ct": "$cmd_type$",
+                "-ctt": "$ctt$",
+                "-cut": "$cut$",
                 "-d": {
-                    "description": "Device",
                     "required": true,
-                    "skip_key": false,
                     "value": "$device$"
                 },
                 "-n": {
-                    "description": "hostnam",
                     "required": true,
                     "value": "$host.name$"
                 },
-                "-op": {
-                    "description": "Optical Port",
-                    "value": "$opt$"
-                },
-                "-p": {
-                    "description": "Optical Port Number",
-                    "required": false,
-                    "value": "$port$"
-                }
+                "-op": "$opt$",
+                "-p": "$port$",
+                "-wdt": "$wdt$",
+                "-wtt": "$wtt$",
+                "-wut": "$wut$"
             },
             "command": "/usr/lib/nagios/plugins/check_eth.py",
             "fields": [],
             "methods_execute": "PluginCheck",
             "object_name": "check_eth",
             "object_type": "object",
-            "timeout": 1,
+            "timeout": 2,
             "uuid": "cce1d589-2a21-4c0b-851f-71889609b6a4",
-            "zone": "master"
-        },
-        "dru_check_rs485": {
-            "arguments": {
-                "-d": {
-                    "description": "dru",
-                    "value": "$dru$"
-                },
-                "-o": {
-                    "description": "Optical Port",
-                    "value": "$opt$"
-                }
-            },
-            "command": "/usr/lib/nagios/plugins/dru_check_rs485.py",
-            "fields": [
-                {
-                    "datafield_id": 32,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 31,
-                    "is_required": "n",
-                    "var_filter": null
-                }
-            ],
-            "methods_execute": "PluginCheck",
-            "object_name": "dru_check_rs485",
-            "object_type": "object",
-            "timeout": 5,
-            "uuid": "f1ebc210-da17-4052-a0e1-887b53db3782",
             "zone": "master"
         }
     },
@@ -16748,136 +16587,11 @@
             }
         }
     },
-    "CommandTemplate": {
-        "dmu-command-template": {
-            "arguments": {
-                "-hlcd": "$highLevelCriticalDownlink$",
-                "-hlcu": "$highLevelCriticalUplink$",
-                "-hlwd": "$highLevelWarningDownlink$",
-                "-hlwu": "$highLevelWarningUplink$"
-            },
-            "command": "/usr/lib/monitoring-plugins/dmu_check_rs485.py",
-            "fields": [
-                {
-                    "datafield_id": 3,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 4,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 5,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 6,
-                    "is_required": "n",
-                    "var_filter": null
-                }
-            ],
-            "methods_execute": "PluginCheck",
-            "object_name": "dmu-command-template",
-            "object_type": "template",
-            "timeout": 5,
-            "uuid": "21b2a585-c088-4910-858f-268ec298bb97",
-            "vars": {
-                "highLevelCriticalDownlink": "41",
-                "highLevelCriticalUplink": "38",
-                "highLevelWarningDownlink": "41",
-                "highLevelWarningUplink": "38"
-            }
-        },
-        "dmu-dru-command-template": {
-            "arguments": {
-                "-d": {
-                    "required": true,
-                    "value": "$dru$"
-                },
-                "-hlcd": "$highLevelCriticalDownlink$",
-                "-hlcu": "$highLevelCriticalUplink$",
-                "-hltc": "$highLevelTemperatureCritical$",
-                "-hltw": "$highLevelTemperatureWarning$",
-                "-hlwd": "$highLevelWarningDownlink$",
-                "-hlwu": "$highLevelWarningUplink$",
-                "-m": "$mac$",
-                "-o": {
-                    "required": true,
-                    "value": "$opt$"
-                },
-                "-s": "$sn$"
-            },
-            "command": "/usr/lib/monitoring-plugins/dru_check_rs485.py",
-            "fields": [
-                {
-                    "datafield_id": 10,
-                    "is_required": "y",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 3,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 4,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 11,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 12,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 5,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 6,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 13,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 15,
-                    "is_required": "n",
-                    "var_filter": null
-                }
-            ],
-            "methods_execute": "PluginCheck",
-            "object_name": "dmu-dru-command-template",
-            "object_type": "template",
-            "timeout": 5,
-            "uuid": "12df8e04-938c-4733-ae30-501a4b0441d1",
-            "vars": {
-                "highLevelCriticalDownlink": "41",
-                "highLevelCriticalUplink": "38",
-                "highLevelTemperatureCritical": "50",
-                "highLevelTemperatureWarning": "45",
-                "highLevelWarningDownlink": "41",
-                "highLevelWarningUplink": "38"
-            }
-        }
-    },
     "HostTemplate": {
         "localhost-host-template": {
             "check_command": "hostalive",
             "check_interval": 60,
-            "check_timeout": 5,
+            "check_timeout": 30,
             "enable_active_checks": true,
             "enable_flapping": true,
             "enable_passive_checks": true,
@@ -16893,13 +16607,13 @@
                     "var_filter": null
                 }
             ],
-            "flapping_threshold_high": "80",
-            "flapping_threshold_low": "20",
+            "flapping_threshold_high": "30",
+            "flapping_threshold_low": "25",
             "has_agent": false,
-            "max_check_attempts": "5",
+            "max_check_attempts": "2",
             "object_name": "localhost-host-template",
             "object_type": "template",
-            "retry_interval": 15,
+            "retry_interval": 5,
             "uuid": "b5f74c10-c16f-4322-9ce0-be68b55c6795",
             "vars": {
                 "addToMap": true,
@@ -16917,7 +16631,7 @@
         "drs-alive-host-template": {
             "check_command": "check_eth",
             "check_interval": 60,
-            "check_timeout": 5,
+            "check_timeout": 30,
             "enable_active_checks": true,
             "enable_flapping": true,
             "enable_notifications": true,
@@ -16939,13 +16653,13 @@
                     "var_filter": null
                 }
             ],
-            "flapping_threshold_high": "80",
-            "flapping_threshold_low": "20",
+            "flapping_threshold_high": "35",
+            "flapping_threshold_low": "25",
             "has_agent": false,
-            "max_check_attempts": "5",
+            "max_check_attempts": "2",
             "object_name": "drs-alive-host-template",
             "object_type": "template",
-            "retry_interval": 15,
+            "retry_interval": 5,
             "uuid": "54356c72-adf6-451e-93fe-fc2187a009f3",
             "vars": {
                 "addToMap": true,
@@ -17076,7 +16790,7 @@
             "check_timeout": 10,
             "enable_active_checks": true,
             "enable_flapping": true,
-            "enable_notifications": false,
+            "enable_notifications": true,
             "enable_passive_checks": true,
             "fields": [
                 {
@@ -17086,6 +16800,11 @@
                 },
                 {
                     "datafield_id": 18,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 3,
                     "is_required": "n",
                     "var_filter": null
                 },
@@ -17105,9 +16824,34 @@
                     "var_filter": null
                 },
                 {
+                    "datafield_id": 11,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 4,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
                     "datafield_id": 21,
                     "is_required": "n",
                     "var_filter": null
+                },
+                {
+                    "datafield_id": 5,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 6,
+                    "is_required": "n",
+                    "var_filter": "service.vars.device!=%22discovery%2A%22"
                 }
             ],
             "flapping_threshold_high": "30",
@@ -17119,39 +16863,28 @@
             "use_agent": false,
             "uuid": "60a32d00-efe7-4412-98fa-c142a32a5cb5",
             "vars": {
-                "addToMap": false
+                "addToMap": false,
+                "cdt": "41",
+                "ctt": "50",
+                "cut": "31",
+                "wdt": "38",
+                "wtt": "45",
+                "wut": "38"
             },
             "zone": "master"
         },
-        "dru_check_serial--service-template": {
-            "check_command": "dru_check_rs485",
+        "dru_check_serial--service-template2": {
             "check_interval": 120,
             "check_timeout": 10,
             "enable_active_checks": true,
             "enable_flapping": true,
             "enable_notifications": false,
             "enable_passive_checks": true,
-            "fields": [
-                {
-                    "datafield_id": 16,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 32,
-                    "is_required": "n",
-                    "var_filter": null
-                },
-                {
-                    "datafield_id": 31,
-                    "is_required": "n",
-                    "var_filter": null
-                }
-            ],
+            "fields": [],
             "flapping_threshold_high": "30",
             "flapping_threshold_low": "25",
             "max_check_attempts": "1",
-            "object_name": "dru_check_serial--service-template",
+            "object_name": "dru_check_serial--service-template2",
             "object_type": "template",
             "retry_interval": 10,
             "use_agent": false,
@@ -17310,7 +17043,7 @@
                 {
                     "fields": [],
                     "imports": [
-                        "dru_check_serial--service-template"
+                        "dru_check_serial--service-template2"
                     ],
                     "object_name": "Status",
                     "object_type": "object",
@@ -17331,39 +17064,19 @@
             "object_name": "user-email-template",
             "object_type": "template",
             "states": [
-                "Down"
-            ],
-            "types": [
-                "Problem"
-            ],
-            "uuid": "7ef1ab98-b8e1-414c-927f-911d35b70be0"
-        }
-    },
-    "User": {
-        "arturo": {
-            "display_name": "Arturo",
-            "email": "arturo@uqomm.com",
-            "fields": [],
-            "imports": [
-                "user-email-template"
-            ],
-            "object_name": "arturo",
-            "object_type": "object",
-            "states": [
-                "Critical",
                 "Down",
-                "OK",
-                "Unknown",
-                "Up",
-                "Warning"
+                "Up"
             ],
             "types": [
                 "Custom",
                 "Problem",
                 "Recovery"
             ],
-            "uuid": "532abc0d-9ae7-4a3e-bd1e-ce8fe50bdeb1"
-        },
+            "uuid": "7ef1ab98-b8e1-414c-927f-911d35b70be0",
+            "zone": "master"
+        }
+    },
+    "User": {
         "admin": {
             "display_name": "admin",
             "email": "admin@uqomm.com",
@@ -17388,6 +17101,30 @@
                 "Recovery"
             ],
             "uuid": "3cda355e-3e84-47f2-87c3-bfc3117f2e20"
+        },
+        "Arturo": {
+            "display_name": "Arturo",
+            "email": "arturo@uqomm.com",
+            "enable_notifications": true,
+            "fields": [],
+            "imports": [
+                "user-email-template"
+            ],
+            "object_name": "Arturo",
+            "object_type": "object",
+            "states": [
+                "Critical",
+                "Down",
+                "OK",
+                "Up",
+                "Warning"
+            ],
+            "types": [
+                "Custom",
+                "Problem",
+                "Recovery"
+            ],
+            "uuid": "2332942f-c2d1-4ca3-94c5-548e236ba974"
         }
     },
     "NotificationTemplate": {
@@ -17441,34 +17178,9 @@
         }
     },
     "Notification": {
-        "mail-dmu-notification": {
-            "apply_to": "host",
-            "assign_filter": "host.templates=%22dmu%2A%22",
-            "fields": [],
-            "imports": [
-                "mail-host-notification-template"
-            ],
-            "object_name": "mail-dmu-notification",
-            "object_type": "apply",
-            "states": [
-                "Down"
-            ],
-            "types": [
-                "FlappingEnd",
-                "FlappingStart"
-            ],
-            "users": [
-                "admin",
-                "arturo"
-            ],
-            "uuid": "f72f49ac-6c1c-4632-aac2-1c39fd0aa1a2",
-            "vars": {
-                "notification_mailfrom": "notification@uqomm.com"
-            }
-        },
         "mail-host-notification": {
             "apply_to": "host",
-            "assign_filter": "host.templates!=%22dmu%2A%22",
+            "assign_filter": "host.templates=%22ethernet-host-template%22|host.templates=%22serial-host-template%22|host.templates=%22localhost-host-template%22|\"ethernet-host-template\"=host.templates|\"serial-host-template\"=host.templates|\"localhost-host-template\"=host.templates",
             "fields": [],
             "imports": [
                 "mail-host-notification-template"
@@ -17477,15 +17189,18 @@
             "object_name": "mail-host-notification",
             "object_type": "apply",
             "states": [
-                "Down"
+                "Down",
+                "Up"
             ],
             "types": [
+                "Custom",
                 "FlappingEnd",
-                "FlappingStart"
+                "FlappingStart",
+                "Problem",
+                "Recovery"
             ],
             "users": [
-                "admin",
-                "arturo"
+                "Arturo"
             ],
             "uuid": "b0fafac0-2639-4724-b28e-e9d7f6d894ea",
             "vars": {
@@ -17494,7 +17209,7 @@
         },
         "mail-service-notification": {
             "apply_to": "service",
-            "assign_filter": "service.check_command=%22dmu%2A%22",
+            "assign_filter": "\"ethernet-host-template\"=host.templates|\"serial-host-template\"=host.templates|\"localhost-host-template\"=host.templates",
             "fields": [],
             "imports": [
                 "mail-service-notification-template"
@@ -17504,16 +17219,15 @@
             "object_type": "apply",
             "states": [
                 "Critical",
-                "Unknown",
+                "OK",
                 "Warning"
             ],
             "types": [
-                "FlappingEnd",
-                "Problem"
+                "Problem",
+                "Recovery"
             ],
             "users": [
-                "admin",
-                "arturo"
+                "Arturo"
             ],
             "uuid": "e63996cc-2d10-4b03-89a5-73e75b3759f9",
             "vars": {
@@ -17724,54 +17438,6 @@
         }
     },
     "Datafield": {
-        "3": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001a",
-            "varname": "highLevelCriticalDownlink",
-            "caption": "HighLevelCriticalDownlinkAlert",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "4": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001b",
-            "varname": "highLevelCriticalUplink",
-            "caption": "HighLevelCriticalUplinkAlert",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "5": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001c",
-            "varname": "highLevelWarningDownlink",
-            "caption": "HighLevelWarningDownlinkAlert",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "6": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001d",
-            "varname": "highLevelWarningUplink",
-            "caption": "HighLevelWarningUplinkAlert",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
         "7": {
             "uuid": "2f037a3b-d621-4bfe-8f30-074c00000026",
             "varname": "address",
@@ -17800,92 +17466,6 @@
             "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
             "format": null,
             "settings": {},
-            "category": null
-        },
-        "32": {
-            "uuid": "856841e1-d8f7-4fd1-9942-30a5ddc02826",
-            "varname": "dru",
-            "caption": "dru",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "31": {
-            "uuid": "7fbaa0a3-66b3-4cb8-8ccf-8812cc35e0b8",
-            "varname": "opt",
-            "caption": "optical_port",
-            "description": "Optical Port",
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
-            "format": null,
-            "settings": {
-                "behavior": "strict",
-                "data_type": "string",
-                "datalist": "opt_port_list"
-            },
-            "category": null
-        },
-        "10": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c00000014",
-            "varname": "dru",
-            "caption": "RemoteNumber",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "11": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001e",
-            "varname": "highLevelTemperatureCritical",
-            "caption": "HighLevelTemperatureCriticalAlert",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "12": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001f",
-            "varname": "highLevelTemperatureWarning",
-            "caption": "HighLevelTemperatureWarningAlert",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "13": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c00000029",
-            "varname": "mac",
-            "caption": "MAC address",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
-            "category": null
-        },
-        "15": {
-            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000002a",
-            "varname": "sn",
-            "caption": "S/N",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
-            "format": null,
-            "settings": {
-                "visibility": "visible"
-            },
             "category": null
         },
         "16": {
@@ -17951,10 +17531,36 @@
             },
             "category": null
         },
+        "31": {
+            "uuid": "7fbaa0a3-66b3-4cb8-8ccf-8812cc35e0b8",
+            "varname": "opt",
+            "caption": "optical_port",
+            "description": "Optical Port",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
+            "format": null,
+            "settings": {
+                "behavior": "strict",
+                "data_type": "string",
+                "datalist": "opt_port_list"
+            },
+            "category": null
+        },
         "18": {
             "uuid": "e756c2ea-e140-4678-b840-ae00f92cf44b",
             "varname": "bandwidth",
             "caption": "bandwidth",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "3": {
+            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001a",
+            "varname": "cdt",
+            "caption": "Critical Downlink Threshold",
             "description": null,
             "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
             "format": null,
@@ -17979,6 +17585,70 @@
             "uuid": "cc855f76-ed85-4d37-981b-2c02414ebcbd",
             "varname": "center_uplink_frequency",
             "caption": "Center Uplink Frequency",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "rename_vars": "y",
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "11": {
+            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001e",
+            "varname": "ctt",
+            "caption": "Critical Temperature  Threshold",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "4": {
+            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001b",
+            "varname": "cut",
+            "caption": "Critical Uplink Threshold",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "rename_vars": "y",
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "5": {
+            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001c",
+            "varname": "wdt",
+            "caption": "Warning Downlink Threshold",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "rename_vars": "y",
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "12": {
+            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001f",
+            "varname": "wtt",
+            "caption": "Warning Temperature Threshold",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "rename_vars": "y",
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "6": {
+            "uuid": "2f037a3b-d621-4bfe-8f30-074c0000001d",
+            "varname": "wut",
+            "caption": "Warning Uplink Threshold",
             "description": null,
             "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
             "format": null,
