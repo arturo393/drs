@@ -55,18 +55,13 @@ def args_check():
         ap.add_argument("-wut", "--warning_uplink_threshold", required=False,
                         help="warning_uplink_threshold es requerido", default=200)
         ap.add_argument("-cut", "--critical_uplink_threshold", required=False,
-                        help="critical_uplink_threshold es requerido",
-                        default=200)
+                        help="critical_uplink_threshold es requerido", default=200)
         ap.add_argument("-wdt", "--warning_downlink_threshold", required=False,
-                        help="warning_downlink_threshold es requerido",
-                        default=200)
-
+                        help="warning_downlink_threshold es requerido", default=200)
         ap.add_argument("-cdt", "--critical_downlink_threshold", required=False,
                         help="critical_downlink_threshold es requerido", default=200)
-
         ap.add_argument("-wtt", "--warning_temperature_threshold", required=False,
                         help="warning_temperature_threshold es requerido", default=200)
-
         ap.add_argument("-ctt", "--critical_temperature_threshold", required=False,
                         help="critical_temperature_threshold es requerido", default=200)
 

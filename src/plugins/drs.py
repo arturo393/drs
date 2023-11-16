@@ -16,7 +16,6 @@
 
 import sys
 from crccheck.crc import Crc16Xmodem
-import argparse
 # import dru_discovery as discovery
 import time
 import socket
@@ -1313,7 +1312,7 @@ class Decoder:
 
         downlink_power = Decoder.power_convert(command_body[2:])
         uplink_power = Decoder.power_convert(command_body)
-        return {'dlOutputPower': str(downlink_power), 'ulInputPower': str(uplink_power)}
+        return {'dlOutputPower': downlink_power, 'ulInputPower': uplink_power}
 
     @staticmethod
     def power_convert(command_body):
@@ -1437,8 +1436,8 @@ class Command:
         self.parameters['work_bandwidth'] = int(args['bandwidth'])
         self.parameters['warning_uplink_threshold'] = int(args['warning_uplink_threshold'])
         self.parameters['critical_uplink_threshold'] = int(args['critical_uplink_threshold'])
-        self.parameters['critical_uplink_threshold'] = int(args['critical_uplink_threshold'])
-        self.parameters['critical_uplink_threshold'] = int(args['critical_uplink_threshold'])
+        self.parameters['warning_downlink_threshold'] = int(args['warning_downlink_threshold'])
+        self.parameters['critical_downlink_threshold'] = int(args['critical_downlink_threshold'])
         self.parameters['warning_temperature_threshold'] = int(args['warning_temperature_threshold'])
         self.parameters['critical_temperature_threshold'] = int(args['critical_temperature_threshold'])
 
@@ -1760,10 +1759,111 @@ class Command:
                     sys.exit(CRITICAL)
 
 
-class HtmlTable:
+class Alarm:
+    """
+    Class to manage alarm conditions and generate HTML output.
+    """
 
     def __init__(self, parameters):
+        """
+        Initialize the alarm object with the provided parameters.
+
+        Args:
+            parameters (dict): A dictionary containing alarm parameters.
+        """
         self.parameters = parameters
+
+        self.uplink_power_alarm = OK
+        self.downlink_power_alarm = OK
+        self.temperature_alarm = OK
+
+        # Extract alarm thresholds from parameters
+        self.critical_uplink_power_threshold = self.parameters['critical_uplink_threshold']
+        self.warning_uplink_power_threshold = self.parameters['warning_uplink_threshold']
+        self.critical_downlink_power_threshold = self.parameters['critical_downlink_threshold']
+        self.warning_downlink_power_threshold = self.parameters['warning_downlink_threshold']
+        self.critical_temperature_threshold = self.parameters['critical_temperature_threshold']
+        self.warning_temperature_threshold = self.parameters['warning_temperature_threshold']
+        self.check_alarm()
+
+    def check_exit_code(self):
+
+        if self.uplink_power_alarm == CRITICAL or self.downlink_power_alarm == CRITICAL or self.temperature_alarm == CRITICAL:
+            return CRITICAL
+        elif self.uplink_power_alarm == WARNING or self.downlink_power_alarm == WARNING or self.temperature_alarm == WARNING:
+            return WARNING
+
+    def check_alarm(self):
+        """
+        Check for alarm conditions and update alarm properties accordingly.
+
+        Returns:
+            str: Alarm message if any alarm condition is detected, empty string otherwise.
+        """
+
+        # Extract power and temperature values from parameters
+        downlink_power = self._get_value(self.parameters['dlOutputPower'], -200)
+        uplink_power = self._get_value(self.parameters['ulInputPower'], -200)
+        temperature = self._get_value(self.parameters['temperature'], -200)
+
+        alarm = ""
+
+        # Check downlink power alarm conditions and update color/font size if necessary
+        self._update_color_and_font_size(downlink_power, 'downlink_power')
+
+        # Check uplink power alarm conditions and update color/font size if necessary
+        self._update_color_and_font_size(uplink_power, 'uplink_power')
+
+        # Check temperature alarm conditions and update color/font size if necessary
+        self._update_color_and_font_size(temperature, 'temperature')
+
+    def _get_value(self, parameter_value, default_value):
+        """
+        Retrieve the value of a parameter, using the default value if the parameter is not found or is '-'.
+
+        Args:
+            parameter_value (str): The value of the parameter from the input data.
+            default_value (float): The default value to use if the parameter is not found or is '-'.
+
+        Returns:
+            float: The actual value of the parameter or the default value.
+        """
+        if parameter_value != '-':
+            return float(parameter_value)
+        else:
+            return default_value
+
+    def _update_color_and_font_size(self, value, parameter_name):
+        """
+        Update the color and font size properties for a specific parameter based on its value.
+
+        Args:
+            value (float): The value of the parameter to check.
+            parameter_name (str): The name of the parameter to update color and font size for.
+        """
+        critical_threshold = getattr(self, f'critical_{parameter_name}_threshold')
+        warning_threshold = getattr(self, f'warning_{parameter_name}_threshold')
+        if value >= critical_threshold:
+            setattr(self, f'{parameter_name}_alarm', CRITICAL)
+        elif value >= warning_threshold:
+            setattr(self, f'{parameter_name}_alarm', WARNING)
+
+
+class HtmlTable:
+
+    def __init__(self, parameters, alarm: Alarm):
+        self.parameters = parameters
+        self.alarm = alarm
+        # Default color and font size for normal conditions
+        self.default_font_color = "#10263b"
+        self.default_background_color = "white"
+        self.default_font_size = "12px"
+
+        # Alarm color and font size for critical and warning conditions
+        self.critical_color = "#ff5566"
+        self.alarm_font_color = "white"
+        self.warning_color = "#ffaa44"
+        self.alarm_font_size = "14px"
 
     def display(self):
         # device_table = dmu_table(parameters) if device == 'dmu' else dru_table(parameters)
@@ -1829,21 +1929,99 @@ class HtmlTable:
         return table3
 
     def get_power_table(self):
+        """
+        Generates an HTML table displaying power and attenuation information.
+        Applies styling based on alarm conditions.
+
+        Returns:
+            str: The generated HTML table
+        """
+
+        # Define default styling
+        default_style = f"style=font-size:12px"
+        uplink_power_style = default_style
+        downlink_power_style = default_style
+
+        # Update styling based on alarm conditions
+        if self.alarm.uplink_power_alarm is CRITICAL:
+            uplink_power_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
+        elif self.alarm.uplink_power_alarm is WARNING:
+            uplink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
+
+        if self.alarm.downlink_power_alarm is CRITICAL:
+            downlink_power_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
+        elif self.alarm.downlink_power_alarm is WARNING:
+            downlink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
+
+        # Generate the HTML table
         table2 = "<table width=250>"
-        table2 += "<thead>"
-        table2 += "<tr  align=\"center\" style=font-size:12px>"
-        table2 += "<th width='12%'>Link</font></th>"
-        table2 += "<th width='33%'>Power</font> </th>"
-        table2 += "<th width='35%'>Attenuation</font></th>"
-        table2 += "</tr>"
-        table2 += "</thead>"
-        table2 += "<tbody>"
-        table2 += "<tr align=\"center\" style=font-size:12px><td>Uplink</td><td>" + self.parameters[
-            'ulInputPower'] + " [dBm]</td><td>" + self.parameters['ulAtt'] + " [dB]</td></tr>"
-        table2 += "<tr align=\"center\" style=font-size:12px><td>Downlink</td><td>" + self.parameters[
-            'dlOutputPower'] + " [dBm]</td><td>" + self.parameters['dlAtt'] + " [dB]</td></tr>"
-        table2 += "</tbody></table>"
+
+        # Define table header with styling
+        table2 += \
+            "<thead>" \
+            "<tr  align=\"center\" style=font-size:12px>" \
+            "<th width='12%'>Link</font></th>" \
+            f"<th width='33%'>Power</font> </th>" \
+            "<th width='35%'>Attenuation</font></th>" \
+            "</tr>" \
+            "</thead>"
+
+        # Populate table body with power and attenuation values
+        table2 += \
+            f"<tbody>" \
+            f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>" \
+            f"<td>{self.parameters['ulInputPower']}[dBm]</td>" \
+            f"<td>{self.parameters['ulAtt']}[dB]</td></tr>" \
+            f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>" \
+            f"<td>{self.parameters['dlOutputPower']}[dBm]</td>" \
+            f"<td>{self.parameters['dlAtt']}[dB]</td></tr>" \
+            f"</tbody></table>"
         return table2
+
+    def get_vswr_temperature_table(self):
+        # Define default styling
+        default_style = f"style=font-size:12px"
+        temperature_style = default_style
+
+        # Update styling based on alarm conditions
+        if self.alarm.uplink_power_alarm is CRITICAL:
+            temperature_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
+        elif self.alarm.uplink_power_alarm is WARNING:
+            temperature_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
+        temperature = str(self.parameters['temperature'])
+
+        # Define table header with styling
+        table2 = \
+            "<table width=90%>" \
+            "<thead>" \
+            "<tr  style=font-size:12px>" \
+            "<th width='40%'>Temperature</font></th>" \
+            "</tr>" \
+            "</thead>"
+        # Populate table body with power and attenuation values
+        table2 += \
+            "<tbody>" \
+            f"<tr align=\"center\" {temperature_style}>" \
+            f"<td>{temperature} [&deg;C] </td> " \
+            "</tr>" \
+            "</tbody></table>"
+        return table2
+
+    def _get_alarm_style(self, color, font_size):
+        """
+        Generates an inline CSS style string based on the provided color and font size.
+
+        Args:
+            color (str): The background color for alarm indication.
+            font_size (str): The font size for alarm indication.
+
+        Returns:
+            str: The generated inline CSS style string
+        """
+
+        background_color = f"background-color:{color}"
+        font_color = f"color:white"
+        return f"style={background_color};{font_color};{font_size}"
 
     def get_opt_status_table(self):
         device = self.parameters["device"]
@@ -1917,23 +2095,6 @@ class HtmlTable:
 
         table3 += "</tbody></table>"
         return table3
-
-    def get_vswr_temperature_table(self):
-        temperature = str(self.parameters['temperature'])
-        table2 = "<table width=90%>"
-        table2 += "<thead>"
-        table2 += "<tr  style=font-size:12px>"
-        table2 += "<th width='40%'>Temperature</font></th>"
-        #        table2 += "<th width='40%'>VSWR</font></th>"
-        table2 += "</tr>"
-        table2 += "</thead>"
-        table2 += "<tbody>"
-        table2 += "<tr align=\"center\" style=font-size:12px>"
-        table2 += "<td>" + temperature + " [&deg;C] </td> "
-        #        table2 += "<td>" + self.parameters['vswr'] + "</td>"
-        table2 += "</tr>"
-        table2 += "</tbody></table>"
-        return table2
 
 
 class Graphite:
@@ -2011,61 +2172,6 @@ class Graphite:
         return graphite
 
 
-class Alarm:
-
-    def __init__(self, parameters):
-        self.parameters = parameters
-
-    def display(self):
-
-        if self.parameters['dlOutputPower'] != '-':
-            dlPower = float(self.parameters['dlOutputPower'])
-        else:
-            dlPower = -200
-        if self.parameters['ulInputPower'] != '-':
-            ulPower = float(self.parameters['ulInputPower'])
-        else:
-            ulPower = -200
-        if self.parameters['temperature'] != '-':
-            temperature = float(self.parameters['temperature'])
-        else:
-            temperature = -200
-
-        alarm = ""
-
-        if dlPower >= self.parameters['critical_uplink_threshold']:
-            alarm += "<h3><font color=\"#ff5566\">Downlink Power Level Critical "
-            alarm += self.parameters['dlOutputPower']
-            alarm += " [dBn]!</font></h3>"
-
-        elif dlPower >= self.parameters['critical_uplink_threshold']:
-            alarm += "<h3><font color=\"#ffaa44\">Downlink Power Level Warning "
-            alarm += self.parameters['dlOutputPower']
-            alarm += "[dBm]</font></h3>"
-
-        if ulPower >= self.parameters['critical_uplink_threshold']:
-            alarm += "<h3><font color=\"#ff5566\">Uplink Power Level Critical "
-            alarm += self.parameters['ulInputPower']
-            alarm += "[dBm]!</font></h3>"
-
-        elif ulPower >= self.parameters['warning_uplink_threshold']:
-            alarm += "<h3><font color=\"#ffaa44\">Uplink Power Level Warning "
-            alarm += self.parameters['ulInputPower']
-            alarm += "[dBm]</font></h3>"
-
-        if temperature >= self.parameters['critical_temperature_threshold']:
-            alarm += "<h3><font color=\"#ff5566\">Temperature Level Critical "
-            alarm += self.parameters['temperature']
-            alarm += " [&deg;C]]!</font></h3>"
-
-        elif temperature >= self.parameters['warning_temperature_threshold']:
-            alarm += "<h3><font color=\"#ffaa44\">Temperature Level Warning "
-            alarm += self.parameters['temperature']
-            alarm += " [&deg;C]]!</font></h3>"
-
-        return alarm
-
-
 class PluginOutput:
     def __init__(self, parameters):
         self.parameters = parameters
@@ -2085,10 +2191,10 @@ class PluginOutput:
         default_power = 100.0
 
         # Get downlink power
-        downlink_power = float(self.parameters.get('dlOutputPower', default_power))
+        downlink_power = self.parameters.get('dlOutputPower', default_power)
 
         # Get uplink power
-        uplink_power = float(self.parameters.get('ulInputPower', default_power))
+        uplink_power = self.parameters.get('ulInputPower', default_power)
 
         # Set default values if the values are '-'
         downlink_power = 100.0 if downlink_power == '-' else downlink_power
@@ -2101,11 +2207,11 @@ class PluginOutput:
             self.parameters['ulInputPower'] = "-"
 
         alarm = Alarm(self.parameters)
-        html_table = HtmlTable(self.parameters)
+        exit_code = alarm.check_alarm()
+        html_table = HtmlTable(self.parameters, alarm)
         graphite = Graphite(self.parameters)
         # sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
         plugin_output_message = str(self.parameters)
-        exit_code = WARNING if alarm.display() != "" else OK
         return exit_code, plugin_output_message
 
     def dru_serial_host_display(self):
@@ -2154,10 +2260,11 @@ class PluginOutput:
         if uplink_power > 50.0:
             self.parameters['ulInputPower'] = "-"
         alarm = Alarm(self.parameters)
-        html_table = HtmlTable(self.parameters)
+
+        html_table = HtmlTable(self.parameters, alarm)
         graphite = Graphite(self.parameters)
-        plugin_output_message = f"{alarm.display()}{html_table.display()}|{graphite.display()}"
-        exit_code = WARNING if alarm.display() != "" else OK
+        plugin_output_message = f"{html_table.display()}|{graphite.display()}"
+        exit_code = alarm.check_exit_code()
         if self.parameters['cmd_type'] == 'single_set':
             plugin_output_message = "OK"
         return exit_code, plugin_output_message
