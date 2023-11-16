@@ -1984,9 +1984,9 @@ class HtmlTable:
         temperature_style = default_style
 
         # Update styling based on alarm conditions
-        if self.alarm.uplink_power_alarm is CRITICAL:
+        if self.alarm.temperature_alarm is CRITICAL:
             temperature_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
-        elif self.alarm.uplink_power_alarm is WARNING:
+        elif self.alarm.temperature_alarm is WARNING:
             temperature_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
         temperature = str(self.parameters['temperature'])
 
