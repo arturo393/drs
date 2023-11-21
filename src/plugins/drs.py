@@ -30,7 +30,6 @@ WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
 
-fix_ip_start = 0xC0
 fix_ip_end = 0x16
 fix_ip_end_opt_1 = 0x64
 fix_ip_end_opt_2 = 0x78
@@ -402,7 +401,7 @@ class Director:
                                   auth=(self.director_api_login, self.director_api_password),
                                   verify=False,
                                   timeout=1)
-                # sys.stderr.write(f"{q.status_code} {q.text}")
+            # sys.stderr.write(f"{q.status_code} {q.text}")
 
         except requests.exceptions.RequestException as e:
             sys.stderr.write(f"CRITICAL - {e}")
@@ -428,6 +427,7 @@ class Director:
                               auth=(self.director_api_login, self.director_api_password),
                               verify=False,
                               timeout=1)
+
         except requests.exceptions.RequestException as e:
             sys.stderr.write(f"CRITICAL - {e}")
             sys.exit(CRITICAL)
@@ -1412,8 +1412,8 @@ class Decoder:
 class Command:
     list = list()
     tcp_port = 65050
-    udp_port = 65055
-    remote_port = 65053
+    master_to_rs485_udp_port = 65055
+    remote_to_rs485_udp_port = 65053
 
     def __init__(self, args):
 
@@ -1479,11 +1479,15 @@ class Command:
         Returns:
             int: The number of commands in the group query.
         """
+
         cmd_name_map = dict(
             dmu_ethernet=DRSMasterCommand,
             dru_ethernet=DRSRemoteCommand,
-            discovery_ethernet=DiscoveryCommand
+            discovery_ethernet=DiscoveryCommand,
+            discovery_serial=DiscoveryCommand,
+            dmu_serial_service=DRSMasterCommand
         )
+
         device = self.parameters['device']
         if device in cmd_name_map:
             cmd_name_group = cmd_name_map[device]
@@ -1891,39 +1895,75 @@ class HtmlTable:
         vswr_temperature_table = self.get_vswr_temperature_table()
         return opt_status_table + power_att_table + vswr_temperature_table
 
-    def get_channel_table(self):
-        if self.parameters['workingMode'] == 'Channel Mode':
-            table3 = "<table width=80% >"
+    def get_channel_freq_tableNEW(self):
+        table3 = ""
+        table = ""
+
+        if (self.parameters['workingMode'] == 'Channel Mode'):
+            table = \
+                "<table width=100%>" \
+                "<thead>" \
+                "<tr style=font-size:7px>"
+            for i in range(1, 17):
+                channel = str(i)
+                table += "<th width='5%'>Ch " + channel + "</font></th>"
+            table += "</tr></thead>" \
+                #                "<tbody>"
+        #           "<tr align=\"center\" style=font-size:11px>"
+        #           for i in range(1, 17):
+        #               channel = str(i)
+        #               table += "<th width='5%'>Ch " + self.parameters["channel" + str(channel) + "dlFreq"] + "</font></th>"
+        #           table += "</tr>"
+        #           "<tr align=\"center\" style=font-size:11px>"
+        #           for i in range(1, 17):
+        #               channel = str(i)
+        #               table += "<th width='5%'>Ch " + self.parameters["channel" + str(channel) + "Status"] + "</font></th>"
+        #           table += "</tr>"
+        else:
+            table = "<table width=90%>"
+            table += "<thead><tr style=font-size:12px>"
+            table += "<th width='10%'>Mode</font></th>"
+            table += "<th width='30%'>Work Bandwidth [Mhz]</font></th>"
+            table += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
+            #      table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
+            table += "</tr></thead><tbody>"
+            table += "<tr align=\"center\" style=font-size:12px>"
+            table += "<td>" + self.parameters['workingMode'] + "</td>"
+            table += "<td>" + str(self.parameters["work_bandwidth"]) + "</td>"
+            # table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
+            # table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
+            table += "<td>" + self.parameters['central_frequency_point'] + "</td>"
+
+        table += "</tbody></table>"
+        return table
+
+    def get_channel_freq_table(self):
+
+        if (self.parameters['workingMode'] == 'Channel Mode'):
+            table3 = "<table width=100%>"
             table3 += "<thead><tr style=font-size:11px>"
-            table3 += "<th width='10%'>Channel</font></th>"
-            table3 += "<th width='10%'>Status</font></th>"
-            table3 += "<th width='40%'>UpLink [Mhz]</font></th>"
-            table3 += "<th width='40%'>Downlink [Mhz]</font></th>"
+            table3 += "<th width='5%'>Channel</font></th>"
+            table3 += "<th width='5%'>Status</font></th>"
+            table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
             table3 += "</tr></thead><tbody>"
             for i in range(1, 17):
                 channel = str(i)
-                table3 += "<tr align=\"center\" style=font-size:11px>"
+                table3 += "<tr align=\"center\" style=font-size:12px>"
                 table3 += "<td>" + channel + "</td>"
                 table3 += "<td>" + self.parameters["channel" + str(channel) + "Status"] + "</td>"
-                table3 += "<td>" + self.parameters["channel" + str(channel) + "ulFreq"] + "</td>"
-                table3 += "<td>" + self.parameters["channel" + str(channel) + "dlFreq"] + "</td>"
+                table3 += "<td>" + self.parameters["channel_" + str(channel) + "_freq"] + "</td>"
                 table3 += "</tr>"
         else:
-            table3 = "<table width=80%>"
+            table3 = "<table width=90%>"
             table3 += "<thead><tr style=font-size:12px>"
-            table3 += "<th width='40%'>Status</font></th>"
-            table3 += "<th width='10%'>Work Bandwidth [Mhz]</font></th>"
-            table3 += "<th width='40%'>UpLink [Mhz]</font></th>"
-            table3 += "<th width='40%'>Downlink [Mhz]</font></th>"
+            table3 += "<th width='10%'>Mode</font></th>"
+            table3 += "<th width='30%'>Work Bandwidth [Mhz]</font></th>"
+            table3 += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
             table3 += "</tr></thead><tbody>"
             table3 += "<tr align=\"center\" style=font-size:12px>"
             table3 += "<td>" + self.parameters['workingMode'] + "</td>"
-
-            table3 += "<td>" + self.parameters['work_bandwidth'] + "</td>"
-            table3 += "<td>" + self.parameters['Uplink Start Frequency'] + "</td>"
-            table3 += "<td>" + self.parameters['Downlink Start Frequency'] + "</td>"
-
-            table3 += "</tr>"
+            table3 += "<td>" + str(self.parameters["work_bandwidth"]) + "</td>"
+            table3 += "<td>" + self.parameters['central_frequency_point'] + "</td>"
 
         table3 += "</tbody></table>"
         return table3
@@ -1962,7 +2002,7 @@ class HtmlTable:
             "<tr  align=\"center\" style=font-size:12px>" \
             "<th width='12%'>Link</font></th>" \
             f"<th width='33%'>Power</font> </th>" \
-            "<th width='35%'>Attenuation</font></th>" \
+            "<th width='10%'>Attenuation</font></th>" \
             "</tr>" \
             "</thead>"
 
@@ -1992,7 +2032,7 @@ class HtmlTable:
 
         # Define table header with styling
         table2 = \
-            "<table width=90%>" \
+            "<table width=10%>" \
             "<thead>" \
             "<tr  style=font-size:12px>" \
             "<th width='40%'>Temperature</font></th>" \
@@ -2024,77 +2064,65 @@ class HtmlTable:
         return f"style={background_color};{font_color};{font_size}"
 
     def get_opt_status_table(self):
-        device = self.parameters["device"]
-        table1 = "<table width=280>"
-        table1 += "<thead>"
-        table1 += "<tr align=\"center\" style=font-size:12px>"
-        table1 += "<th width='12%'>Port</font></th>"
-        table1 += "<th width='22%'>Activation Status</font></th>"
-        table1 += "<th width='22%'>Connected Remotes</font></th>"
-        table1 += "<th width='20%'>Transmission Status</font></th>"
-        table1 += "</tr>"
-        table1 += "</thead>"
-        table1 += "<tbody>"
+        """
+        Generates an HTML table displaying optical port status information.
+        Determines the number of ports based on the device type.
 
-        for i in range(1, 5):
-            connected_name = "optical_port_devices_connected_"
+        Returns:
+            str: The generated HTML table
+        """
+
+        device = self.parameters["device"]
+        opt_range = self._get_opt_range(device)
+
+        table1 = "<table width=280>"
+
+        # Define table header with styling
+        table1 += \
+            "<thead>" \
+            "<tr align=\"center\" style=font-size:12px>" \
+            "<th width='12%'>Port</font></th>" \
+            "<th width='22%'>Activation Status</font></th>" \
+            "<th width='22%'>Connected Remotes</font></th>" \
+            "<th width='20%'>Transmission Status</font></th>" \
+            "</tr></thead>"
+
+        # Populate table body with optical port information
+        table1 += "<tbody>"
+        for i in range(1, opt_range + 1):
+            connected_name = f"optical_port_devices_connected_{i}"
             opt = str(i)
-            if not (device == "dru" and (opt == "3" or opt == "4")):
-                connected = str(self.parameters[f"{connected_name}{opt}"])
-                table1 += "<tr align=\"center\" style=font-size:12px>"
-                table1 += "<td>opt" + opt + "</td>"
-                table1 += "<td>" + self.parameters['opt' + opt + 'ActivationStatus'] + "</td>"
-                table1 += "<td>" + connected + "</td>"
-                table1 += "<td>" + self.parameters['opt' + opt + 'TransmissionStatus'] + "</td>"
-                table1 += "</tr>"
+            connected = str(self.parameters.get(connected_name, ""))
+            table1 += \
+                "<tr align=\"center\" style=font-size:12px>" \
+                f"<td>opt{opt}</td>" \
+                f"<td>{self.parameters['opt' + opt + 'ActivationStatus']}</td>" \
+                f"<td>{connected}</td>" \
+                f"<td>{self.parameters['opt' + opt + 'TransmissionStatus']}</td>" \
+                "</tr>"
 
         table1 += "</tbody>"
         table1 += "</table>"
+
         return table1
 
-    def get_channel_freq_table(self):
-        table3 = "<table width=90%>"
-        table3 += "<thead><tr style=font-size:11px>"
-        table3 += "<th width='10%'>Channel</font></th>"
-        table3 += "<th width='10%'>Status</font></th>"
-        table3 += "<th width='40%'>UpLink Frequency [Mhz]</font></th>"
-        table3 += "<th width='40%'>Downlink Frequency [Mhz]</font></th>"
-        table3 += "</tr></thead><tbody>"
+    def _get_opt_range(self, device):
+        """
+        Determines the number of optical ports based on the device type.
 
-        if (self.parameters['workingMode'] == 'Channel Mode'):
-            table3 = "<table width=100%>"
-            table3 += "<thead><tr style=font-size:11px>"
-            table3 += "<th width='5%'>Channel</font></th>"
-            table3 += "<th width='5%'>Status</font></th>"
-            #        table3 += "<th width='50%'>UpLink [Mhz]</font></th>"
-            table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
-            table3 += "</tr></thead><tbody>"
-            for i in range(1, 17):
-                channel = str(i)
-                table3 += "<tr align=\"center\" style=font-size:12px>"
-                table3 += "<td>" + channel + "</td>"
-                table3 += "<td>" + self.parameters["channel" + str(channel) + "Status"] + "</td>"
-                table3 += "<td>" + self.parameters["channel_" + str(channel) + "_freq"] + "</td>"
-                #            table3 += "<td>" + parameter_dic["channel" + str(channel) + "ulFreq"] + "</td>"
-                #            table3 += "<td>" + parameter_dic["channel" + str(channel) + "dlFreq"] + "</td>"
-                table3 += "</tr>"
+        Args:
+            device (str): The device type (dmu_ethernet, dmu_serial, or dru_serial_service).
+
+        Returns:
+            int: The number of optical ports for the specified device
+        """
+
+        if device in ['dmu_ethernet', 'dmu_serial_service']:
+            return 4
+        elif device in ['dru_ethernet', 'dru_serial_service']:
+            return 2
         else:
-            table3 = "<table width=90%>"
-            table3 += "<thead><tr style=font-size:12px>"
-            table3 += "<th width='10%'>Mode</font></th>"
-            table3 += "<th width='30%'>Work Bandwidth [Mhz]</font></th>"
-            table3 += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
-            #       table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
-            table3 += "</tr></thead><tbody>"
-            table3 += "<tr align=\"center\" style=font-size:12px>"
-            table3 += "<td>" + self.parameters['workingMode'] + "</td>"
-            table3 += "<td>" + str(self.parameters["work_bandwidth"]) + "</td>"
-            # table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
-            # table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
-            table3 += "<td>" + self.parameters['central_frequency_point'] + "</td>"
-
-        table3 += "</tbody></table>"
-        return table3
+            raise ValueError(f"Invalid device type: {device}")
 
 
 class Graphite:
@@ -2102,24 +2130,20 @@ class Graphite:
         self.parameters = parameters
 
     def display(self):
-        graphite = ""
-        if self.parameters['device'] == 'dmu_ethernet':
-            graphite = self.dmu_output()
-        elif self.parameters['device'] == 'dru_ethernet':
-            graphite = self.dru_output()
-        elif self.parameters['device'] == 'discovery_ethernet' or self.parameters['device'] == 'discovery_serial':
-            graphite = self.discovery_output()
-        elif self.parameters['device'] == 'dmu_serial':
-            if self.parameters['cmd_type'] == 'single_query':
-                graphite = self.dmu_serial_single()
-            elif self.parameters['cmd_type'] == 'group_query':
-                graphite = self.dmu_output()
-        elif self.parameters['device'] == 'dru_serial_host':
-            if self.parameters['cmd_type'] == 'single_query':
-                graphite = self.dmu_serial_single()
+        """
+        Generates the appropriate output based on the device type.
+
+        Returns:
+            str: The generated output
+        """
+        if self.parameters['device'] in ['dmu_ethernet', 'dru_ethernet', 'dmu_serial_service']:
+            return self.dmu_output()
+        elif self.parameters['device'] in ['discovery_ethernet', 'discovery_serial']:
+            return self.discovery_output()
+        elif self.parameters['device'] in ['dmu_serial_host', 'dru_serial_host']:
+            return self.dmu_serial_single()
         else:
-            graphite = ""
-        return graphite
+            return ""
 
     def dru_output(self):
         graphite = ""
@@ -2179,7 +2203,8 @@ class PluginOutput:
         self.command_functions = {
             'dru_serial_service': self.dru_serial_display,
             'dru_serial_host': self.dru_serial_host_display,
-            'dmu_serial': self.dmu_serial_host_display,
+            'dmu_serial_service': self.get_master_remote_service_message,
+            'dmu_serial_host': self.dmu_serial_host_display,
             'dru_ethernet': self.get_master_remote_service_message,
             'dmu_ethernet': self.get_master_remote_service_message,
             'discovery_ethernet': self.discovery_display,
@@ -2234,9 +2259,6 @@ class PluginOutput:
 
     def dmu_serial_host_display(self):
         rt = self.parameters['rt']
-        # for key, value in self.parameters.items():
-        #    if value != "-":
-        #        sys.stderr.write(f"{key}: {value} \n")
 
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
@@ -2294,146 +2316,276 @@ class PluginOutput:
 
 
 class Discovery:
+    """
+    Class responsible for discovering and creating DRU devices.
+    """
+
     def __init__(self, parameters):
+        """
+        Initialize the Discovery object with the provided parameters.
+
+        Args:
+            parameters (dict): A dictionary containing discovery parameters.
+        """
+
         self.parameters = parameters
 
-    def ethernet(self):
-        # opt = self.parameters['port']
-        dt = time.time()
-        device = "dru_ethernet"
-        imports = ["ethernet-host-template"]
+        # Define a dictionary mapping device types to their respective discovery methods
+        self.discovery_functions = {
+            "discovery_ethernet": self._discover_ethernet,
+            "discovery_serial": self._discover_serial
+        }
+
+    def _discover(self, device_type):
+        """
+        Perform discovery based on the specified device type.
+
+        Args:
+            device_type (str): The type of device to discover (e.g., "discovery_ethernet", "discovery_serial").
+        """
+
+        if device_type in self.discovery_functions:
+            discovery_function = self.discovery_functions[device_type]
+            discovery_function()
+            return OK
+        else:
+            return WARNING
+
+    def search_and_create_dru(self):
+        """
+        Determine the appropriate discovery method based on the device type and initiate the discovery process.
+
+        Returns:
+            int: 0 if discovery is successful, 1 if device type is not supported.
+        """
+
+        device = self.parameters["device"]
+        return self._discover(device)
+
+    def _get_director_instance(self):
+        """
+        Retrieve an instance of the Director class.
+
+        Returns:
+            Director: An instance of the Director class.
+        """
+
         hostname = socket.gethostname()
         master_host = socket.gethostbyname(hostname)
-        director = Director(master_host)
-        dru_connected = self.dru_connected_search()
-        deploy = 0
-        for opt in dru_connected:
-            for dru in dru_connected[opt]:
-                director_query = {
-                    'object_name': dru.hostname,
-                    "object_type": "object",
-                    "address": dru.ip_addr,
-                    "imports": imports,
-                    "display_name": dru.name,
-                    "vars": {
-                        "opt": str(dru.port),
-                        "dru": str(dru.position),
-                        "parents": [dru.parent],
-                        "device": device,
-                    }
-                }
-                update_query = {
-                    "object_type": "object",
-                    "address": dru.ip_addr,
-                    "imports": imports,
-                    "vars": {
-                        "opt": str(dru.port),
-                        "dru": str(dru.position),
-                        "parents": [dru.parent],
-                        "device": device,
-                    }
-                }
-                response = director.create_host(director_query=director_query, update_query=update_query)
-                message = ""
-                if response.status_code == 304:
-                    message = "Not modified"
-                elif response.status_code == 200:
-                    message = "Success"
-                else:
-                    message = "Unknown"
+        return Director(master_host)
 
-                # sys.stderr.write(f"{dru} {message} \n")
-                if response.status_code != 304:
-                    director.deploy()
-        self.parameters["dt"] = str(time.time() - dt)
+    def _create_host_query(self, dru, device, imports, cmd_name=None):
+        """
+        Generate a query for creating or updating hosts in Icinga 2 Director.
 
-    def dru_connected_search(self):
-        hostname = self.parameters['hostname']
-        net = self.parameters["device_id"]
+        Args:
+            dru (DRU): A DRU object representing the connected DRU device.
+            device (str): The type of device to discover (e.g., "dru_ethernet", "dru_serial_host").
+            imports (list): A list of imports for the host template.
+            cmd_name (str, optional): The command name for serial devices. Defaults to None.
+
+        Returns:
+            dict: A query dictionary for creating or updating hosts in Icinga 2 Director.
+        """
+
+        query = {
+            'object_name': dru.hostname,
+            'object_type': 'object',
+            'address': dru.ip_addr,
+            'imports': imports,
+            'display_name': dru.name,
+            'vars': {
+                'opt': str(dru.port),
+                'dru': str(dru.position),
+                'parents': [dru.parent],
+                'device': device
+            }
+        }
+
+        if cmd_name:
+            query['vars']['cmd_name'] = cmd_name
+
+        return query
+
+    def _update_service_query(self, dru):
+        """
+        Generate a query for updating service status in Icinga 2 Director.
+
+        Args:
+            dru (DRU): A DRU object representing the connected DRU device.
+
+        Returns:
+            dict: A query dictionary for updating service status in Icinga 2 Director.
+        """
+
+        return {
+            'object_name': 'Status',
+            'object_type': 'object',
+            'vars': {
+                'opt': str(dru.port),
+                'device_number': str(dru.position),
+            }
+        }
+
+    def _log_status(self, dru, message):
+        """
+        Log status messages to stderr.
+
+        Args:
+            dru (DRU): A DRU object representing the connected DRU device.
+            message (str): The status message to log.
+        """
+
+        sys.stderr.write(f"{dru} {message} \n")
+
+    def _deploy_if_needed(self, director, response):
+        """
+        Deploy changes to Icinga 2 Director if the response status code indicates a need to deploy.
+
+        Args:
+            director (Director): An instance of the Director class.
+            response (requests.Response): The response from the API call.
+        """
+
+        if response.status_code != 304:
+            director.deploy()
+
+    def _process_response(self, dru, message, response, director):
+        """
+        Process and log the response from Icinga 2 Director, and deploy changes if necessary.
+
+        Args:
+            dru (DRU): A DRU object representing the connected DRU device.
+            message (str): The status message to log.
+            response (requests.Response): The response from the API call.
+            director (Director): An instance of the Director class.
+        """
+        if response.status_code != 304:
+            self._log_status(dru, message)
+            self._deploy_if_needed(director, response)
+
+    def _dru_connected_search(self):
+        """
+        Identify and gather information about connected DRU devices.
+
+        This method iterates through the configured optical ports and retrieves
+        information about the connected DRU devices. It constructs a dictionary
+        storing the discovered DRU devices and their corresponding information.
+
+        Returns:
+            dict: A dictionary containing discovered DRU devices and their information.
+        """
+
+        hostname = self.parameters["hostname"]
         dru_connected = {}
-        fix_ip_end_opt = [0, 100, 120, 140, 160]  # You can adjust these values according to your logic
+
         for opt in range(1, 5):
             port_name = f"optical_port_devices_connected_{opt}"
+            optical_port_devices_connected = 0 if self.parameters[port_name] == "-" else self.parameters[port_name] + 1
+
             dru_connected[f"opt{opt}"] = []
-            optical_port_devices_connected = 0 if self.parameters[port_name] == '-' else self.parameters[port_name] + 1
             for connected in range(1, optical_port_devices_connected):
-                connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
+                fix_ip_start = 0xC0
+                fix_ip_end_opt = [0, 100, 120, 140, 160]
+                net = self.parameters["device_id"]
                 id_key = f"optical_port_device_id_topology_{opt}"
                 device_id = self.parameters[id_key][f"id_{connected}"]
                 parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
-                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"  # You can use a list to store the different values of fix_ip_end_opt
+                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
+
                 if device_id != 0:
                     d = DRU(connected, opt, device_id, hostname, ip, parent)
                     dru_connected[f"opt{opt}"].append(d)
+                    connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
                     self.parameters[connected_ip_addr_name] = ip
+
         return dru_connected
 
-    def serial(self):
-        # opt = self.parameters['port']
+    def _discover_device(self, device, imports, cmd_name=None):
+        """
+        Handle device discovery for the specified device type.
+
+        This method performs the discovery process for the given device type.
+        It identifies connected DRU devices, creates the necessary host objects
+        in Icinga 2 Director, and updates the parameters dictionary with
+        the execution time.
+
+        Args:
+            device (str): The type of device to discover (e.g., "dru_ethernet", "dru_serial_host").
+            imports (list): A list of imports for the host template.
+            cmd_name (str, optional): The command name for serial devices. Defaults to None.
+        """
+
         dt = time.time()
+        director = self._get_director_instance()
+        dru_connected = self._dru_connected_search()
+
+        for opt in dru_connected:
+            for dru in dru_connected[opt]:
+                director_query = self._create_host_query(dru, device, imports, cmd_name)
+                update_query = self._create_host_query(dru, device, imports, cmd_name)
+
+                response = director.create_host(director_query=director_query, update_query=update_query)
+                message = "Create -> Success" if response.status_code == 200 else "Create -> Unknown"
+
+                self._process_response(dru, message, response, director)
+                if response.status_code == 200:
+                    self._modify_service_status()
+
+        self.parameters["dt"] = str(time.time() - dt)
+
+    def _discover_ethernet(self):
+        """
+        Perform discovery and creation for Ethernet DRU devices.
+
+        This method handles the discovery process for Ethernet-based DRU devices.
+        It creates the necessary host objects in Icinga 2 Director and deploys the changes.
+
+        """
+
+        device = "dru_ethernet"
+        imports = ["ethernet-host-template"]
+        self._discover_device(device, imports)
+
+    def _discover_serial(self):
+        """
+        Perform discovery and creation for Serial DRU devices.
+
+        This method handles the discovery process for Serial-based DRU devices.
+        It creates the necessary host objects in Icinga 2 Director and deploys the changes.
+        Additionally, it updates the service status for the discovered devices.
+
+        """
+
         device = "dru_serial_host"
         imports = ["serial-host-template"]
         cmd_name = "254"
-        hostname = socket.gethostname()
-        master_host = socket.gethostbyname(hostname)
-        director = Director(master_host)
-        dru_connected = self.dru_connected_search()
-        deploy = 0
+        self._discover_device(device, imports, cmd_name)
+
+    def _modify_service_status(self):
+        """
+        Modify service status for devices discovered using serial discovery.
+
+        Iterates through the connected DRU devices and constructs a query for updating
+        the service status for each device. Sends the query to Icinga 2 Director and
+        processes the response, logging status messages and deploying changes if necessary.
+        """
+
+        director = self._get_director_instance()
+        dru_connected = self._dru_connected_search()
+
         for opt in dru_connected:
             for dru in dru_connected[opt]:
-                director_query = {
-                    'object_name': dru.hostname,
-                    "object_type": "object",
-                    "address": dru.ip_addr,
-                    "imports": imports,
-                    "display_name": dru.name,
-                    "vars": {
-                        "opt": str(dru.port),
-                        "dru": str(dru.position),
-                        "parents": [dru.parent],
-                        "device": device,
-                        "cmd_name": cmd_name
-                    }
-                }
-                update_query = {
-                    "object_type": "object",
-                    "address": dru.ip_addr,
-                    "imports": imports,
-                    "vars": {
-                        "opt": str(dru.port),
-                        "dru": str(dru.position),
-                        "parents": [dru.parent],
-                        "device": device,
-                        "cmd_name": cmd_name
-                    }
-                }
-                response = director.create_host(director_query=director_query, update_query=update_query)
-                message = ""
-                if response.status_code == 304:
-                    message = "Not modified"
-                elif response.status_code == 200:
-                    director_query = {
-                        'object_name': 'Status',
-                        "object_type": "object",
-                        "vars": {
-                            "opt": str(dru.port),
-                            "device_number": str(dru.position),
-                        }
-                    }
-                    response = director.modify_service(director_query=director_query)
-                    if response.status_code == 304:
-                        message = f"{message} - Error - Service modified"
-                    elif response.status_code == 200:
-                        message = f"{message} - Success - Service modified"
-                    else:
-                        message = f"{message} - {response.text}"
-                else:
-                    message = "Unknown"
+                director_query = self._update_service_query(dru)
+                response = director.modify_service(director_query=director_query)
 
-                sys.stderr.write(f"{dru} {message} \n")
-                if response.status_code != 304:
-                    director.deploy()
-        self.parameters["dt"] = str(time.time() - dt)
+                message = (
+                    f"Success - Service modified"
+                    if response.status_code == 200
+                    else f"Error - {response.text}"
+                )
+
+                self._process_response(dru, message, response, director)
 
 # Nagios Exit Codes
 # Exit Code     Status
