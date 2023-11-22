@@ -2336,6 +2336,13 @@ class Discovery:
             "discovery_serial": self._discover_serial
         }
 
+        self.cmd_name_map = {
+            1: DRSRemoteSerialCommand.optical_port_device_id_topology_1,
+            2: DRSRemoteSerialCommand.optical_port_device_id_topology_2,
+            3: DRSRemoteSerialCommand.optical_port_device_id_topology_3,
+            4: DRSRemoteSerialCommand.optical_port_device_id_topology_4,
+        }
+
     def _discover(self, device_type):
         """
         Perform discovery based on the specified device type.
@@ -2521,7 +2528,10 @@ class Discovery:
         dru_connected = self._dru_connected_search()
 
         for opt in dru_connected:
+
             for dru in dru_connected[opt]:
+                if dru.port in self.cmd_name_map:
+                    cmd_name = self.cmd_name_map[dru.port]
                 director_query = self._create_host_query(dru, device, imports, cmd_name)
                 update_query = self._create_host_query(dru, device, imports, cmd_name)
 

@@ -113,7 +113,7 @@ def main():
     cmd_type = args['cmd_type']
 
     if device in ["dru_ethernet", "dmu_ethernet", "discovery_ethernet", 'discovery_serial', 'dmu_serial_host',
-                  'dmu_serial_service']:
+                  'dmu_serial_service', 'dru_serial_host']:
         command = drs.Command(args=args)
         is_created = command.create_command(cmd_type)
         if is_created == -1:
@@ -126,7 +126,7 @@ def main():
             sys.stderr.write(f"CRITICAL - no command group known")
             sys.exit(drs.CRITICAL)
 
-        if device in ['dmu_serial_host', 'dmu_serial_service']:
+        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host']:
             if not command.transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
                 sys.stderr.write(f"CRITICAL - no response from {DMU_PORT}")
                 sys.exit(drs.CRITICAL)
@@ -183,53 +183,6 @@ def main():
         else:
             sys.stderr.write("WARNING - no command type defined")
             sys.exit(drs.WARNING)
-
-    elif device == 'dru_serial_host':
-        command = drs.Command(device=device, args=args)
-        if cmd_type == "single_set":
-            cmd_name = command.get_command_value(cmd_name)
-            command.create_single_set(cmd_body_length, cmd_data, cmd_name)
-            if command.transmit_and_receive_serial(baud=9600, port=DMU_PORT) == 0:
-                sys.stderr.write("\nCRITICAL - " + "No reply")
-                sys.exit(drs.CRITICAL)
-            else:
-                sys.stderr.write("OK")
-                sys.exit(drs.OK)
-        elif cmd_type == "group_query":
-            command.create_query_group(drs.DRSRemoteSerialCommand)
-            command.transmit_and_receive_serial(baud=9600, port=DMU_PORT)
-            if command.cmd_number_ok == 0:
-                sys.stderr.write("\nCRITICAL - " + "No reply")
-                sys.exit(drs.CRITICAL)
-            else:
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.dru_serial_host_display()
-        elif cmd_type == "single_query":
-            optical_port = command.parameters['optical_port']
-            if optical_port == 1:
-                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_1)
-            elif optical_port == 2:
-                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_2)
-            elif optical_port == 3:
-                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_3)
-            elif optical_port == 4:
-                command.create_single_query(drs.DRSRemoteSerialCommand.optical_port_device_id_topology_4)
-            else:
-                sys.stderr.write("\nWARNING - " + "Unknonw optical port")
-                sys.exit(drs.WARNING)
-
-            if command.transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT) == 0:
-                sys.stderr.write("\nCRITICAL - " + "No reply")
-                sys.exit(drs.CRITICAL)
-            else:
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.dru_serial_host_display()
-
-
-        else:
-            sys.stderr.write("WARNING - no command type defined")
-            sys.exit(drs.WARNING)
-
 
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
