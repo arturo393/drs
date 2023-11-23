@@ -298,6 +298,21 @@ class DiscoveryCommand(IntEnum):
     optical_port_mac_topology_3 = NearEndQueryCommandNumber.optical_port_mac_topology_3
     optical_port_mac_topology_4 = NearEndQueryCommandNumber.optical_port_mac_topology_4
 
+class DiscoveryRedBoardCommand(IntEnum):
+    optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_1
+    optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_2
+    optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_3
+    optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_4
+    # eth_ip_address = HardwarePeripheralDeviceParameterCommand.eth_ip_address
+    device_id = NearEndQueryCommandNumber.device_id
+    optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
+    optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
+    optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
+    optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
+    optical_port_mac_topology_1 = NearEndQueryCommandNumber.optical_port_mac_topology_1
+    optical_port_mac_topology_2 = NearEndQueryCommandNumber.optical_port_mac_topology_2
+    optical_port_mac_topology_3 = NearEndQueryCommandNumber.optical_port_mac_topology_3
+    optical_port_mac_topology_4 = NearEndQueryCommandNumber.optical_port_mac_topology_4
 
 class SettingCommand(IntEnum):
     gain_power_control_att = Tx0SettingCmd.gain_power_control_att
@@ -1514,7 +1529,8 @@ class Command:
             discovery_ethernet=DiscoveryCommand,
             discovery_serial=DiscoveryCommand,
             dmu_serial_service=DRSMasterCommand,
-            dru_serial_service=LtelDruCommand
+            dru_serial_service=LtelDruCommand,
+            discovery_redboard_serial = DiscoveryRedBoardCommand
         )
 
         device = self.parameters['device']
@@ -2238,7 +2254,8 @@ class PluginOutput:
             'dru_ethernet': self.get_master_remote_service_message,
             'dmu_ethernet': self.get_master_remote_service_message,
             'discovery_ethernet': self.discovery_display,
-            'discovery_serial': self.discovery_display
+            'discovery_serial': self.discovery_display,
+            'discovery_redboard_serial': self.discovery_display
         }
 
     def dru_serial_display(self):
@@ -2363,7 +2380,8 @@ class Discovery:
         # Define a dictionary mapping device types to their respective discovery methods
         self.discovery_functions = {
             "discovery_ethernet": self._discover_ethernet,
-            "discovery_serial": self._discover_serial
+            "discovery_serial": self._discover_serial,
+            "discovery_redboard_serial": self._discover_serial
         }
 
         self.cmd_name_map = {

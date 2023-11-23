@@ -14,14 +14,17 @@ import argparse
 
 import drs as drs
 
-#DMU_PORT = '/dev/ttyS0'
-#DRU_PORT = '/dev/ttyS1'
 
-DMU_PORT = 'COM4'
-DRU_PORT = 'COM2'
+#DMU_PORT = 'COM4'
+#DRU_PORT = 'COM2'
 
-COM1_BAUD = 19200
-COM2_BAUD = 19200
+#COM1_BAUD = 19200
+#COM2_BAUD = 19200
+
+import os
+
+# Detectar el sistema operativo
+
 
 
 def cmd_help():
@@ -108,6 +111,21 @@ def args_check():
 
 
 def main():
+
+    platform = os.name
+    COM1_BAUD = 19200
+    COM2_BAUD = 19200
+        
+    # Realizar acciones basadas en el sistema operativo
+    if platform == 'posix':  # Posix indica que es un sistema tipo Unix, como Linux
+        DMU_PORT = '/dev/ttyS0'
+        DRU_PORT = '/dev/ttyS1'
+    elif platform == 'nt':  # 'nt' indica que es Windows
+        DMU_PORT = 'COM4'
+        DRU_PORT = 'COM2'
+    else:
+        # Acción por defecto para otros sistemas operativos
+        print("Sistema operativo no identificado, ejecutando acción predeterminada.")
     # -- Analizar los argumentos pasados por el usuario
     global parameters
     args = args_check()
@@ -118,7 +136,7 @@ def main():
     cmd_type = args['cmd_type']
     
     if device in ["dru_ethernet", "dmu_ethernet", "discovery_ethernet", 'discovery_serial', 'dmu_serial_host',
-                  'dmu_serial_service', 'dru_serial_host', 'dru_serial_service']:
+                  'dmu_serial_service', 'dru_serial_host', 'dru_serial_service','discovery_redboard_serial']:
         command = drs.Command(args=args)
         is_created = command.create_command(cmd_type)
         if is_created == -1:
@@ -131,7 +149,7 @@ def main():
             sys.stderr.write(f"CRITICAL - no command group known")
             sys.exit(drs.CRITICAL)
 
-        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial']:
+        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
             if not command.transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
                 sys.stderr.write(f"CRITICAL - no response from {DMU_PORT} at {COM1_BAUD}")
                 sys.exit(drs.CRITICAL)
@@ -148,7 +166,7 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(drs.CRITICAL)
 
-        if device in ["discovery_ethernet", "discovery_serial"]:
+        if device in ["discovery_ethernet", "discovery_serial",'discovery_redboard_serial']:
             discovery = drs.Discovery(command.parameters)
             if discovery.search_and_create_dru() is not drs.OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
