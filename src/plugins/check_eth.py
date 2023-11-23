@@ -14,9 +14,14 @@ import argparse
 
 import drs as drs
 
-DMU_PORT = '/dev/ttyS0'
+#DMU_PORT = '/dev/ttyS0'
+#DRU_PORT = '/dev/ttyS1'
 
-COM1_BAUD = 115200
+DMU_PORT = 'COM4'
+DRU_PORT = 'COM2'
+
+COM1_BAUD = 19200
+COM2_BAUD = 19200
 
 
 def cmd_help():
@@ -111,9 +116,9 @@ def main():
     cmd_name: int = int(args['cmd_name'])
     cmd_body_length = int(args['cmd_body_length'])
     cmd_type = args['cmd_type']
-
+    
     if device in ["dru_ethernet", "dmu_ethernet", "discovery_ethernet", 'discovery_serial', 'dmu_serial_host',
-                  'dmu_serial_service', 'dru_serial_host']:
+                  'dmu_serial_service', 'dru_serial_host', 'dru_serial_service']:
         command = drs.Command(args=args)
         is_created = command.create_command(cmd_type)
         if is_created == -1:
@@ -126,9 +131,13 @@ def main():
             sys.stderr.write(f"CRITICAL - no command group known")
             sys.exit(drs.CRITICAL)
 
-        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host']:
+        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial']:
             if not command.transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
-                sys.stderr.write(f"CRITICAL - no response from {DMU_PORT}")
+                sys.stderr.write(f"CRITICAL - no response from {DMU_PORT} at {COM1_BAUD}")
+                sys.exit(drs.CRITICAL)
+        elif device in ['dru_serial_service']:
+            if not command.transmit_and_receive_serial(baud=COM2_BAUD, port=DRU_PORT):
+                sys.stderr.write(f"CRITICAL - no response from {DRU_PORT} at {COM2_BAUD}")
                 sys.exit(drs.CRITICAL)
         else:
             if not command.transmit_and_receive_tcp(address):
@@ -149,41 +158,6 @@ def main():
         exit_code, plugin_output_message = plugin_output.create_message()
         sys.stderr.write(plugin_output_message)
         sys.exit(exit_code)
-
-    elif device == 'dru_serial_service':
-        command = drs.Command(device=device, args=args)
-        if cmd_type == "single_set":
-            cmd_name = command.get_command_value(cmd_name)
-            command.create_single_set(cmd_body_length, cmd_data, cmd_name)
-            sys.stderr.write(str(command.parameters))
-            if command.transmit_and_receive_serial(baud=115200, port=DMU_PORT) == 0:
-                sys.stderr.write("\nCRITICAL - " + "No reply")
-                sys.exit(drs.CRITICAL)
-            else:
-                sys.stderr.write("OK")
-                sys.exit(drs.OK)
-        elif cmd_type == "group_query":
-            command.create_query_group(drs.LtelDruCommand)
-            command.transmit_and_receive_serial(baud=9600, port='/dev/ttyS1')
-            if command.cmd_number_ok == 0:
-                sys.stderr.write("\nCRITICAL - " + "No reply")
-                sys.exit(drs.CRITICAL)
-            else:
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.master_remote_service_display()
-        elif cmd_type == "single_query":
-            cmd_name = command.get_command_value(cmd_name)
-            command.create_single_query(cmd_name)
-            if command.transmit_and_receive_serial(baud=19200, port=DMU_PORT) == 0:
-                sys.stderr.write("\nCRITICAL - " + "No reply")
-                sys.exit(drs.CRITICAL)
-            else:
-                plugin_output = drs.PluginOutput(command.parameters)
-                plugin_output.dmu_serial_host_display()
-        else:
-            sys.stderr.write("WARNING - no command type defined")
-            sys.exit(drs.WARNING)
-
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
         sys.exit(drs.CRITICAL)

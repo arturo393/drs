@@ -528,7 +528,8 @@ class CommandData:
         self.decoder = Decoder()
 
     def generate_ltel_comunication_board_frame(self, dru_id, cmd_name):
-
+        start_flag = "7E"
+        end_flag = "7F"
         unknown1 = 0x0101
         site_number = 0
         self.dru_id = dru_id
@@ -557,7 +558,7 @@ class CommandData:
         )
 
         crc = self.generate_checksum(cmd_unit)
-        self.query = f"{self.START_FLAG}{cmd_unit}{crc}{self.START_FLAG}"
+        self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
 
     def generate_ifboard_frame(self, command_number, command_data, command_body_length):
         """Generates an IFBoard frame for the given command number, command data, and command body length.
@@ -1259,28 +1260,29 @@ class Decoder:
 
     @staticmethod
     def _decode_optical_port_mac_topology_1(command_body):
-        return Decoder.decode_optical_port_mac_topology(command_body)
+        return {"optical_port_mac_topology_1": Decoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def _decode_optical_port_mac_topology_2(command_body):
-        return Decoder.decode_optical_port_mac_topology(command_body)
+        return {"optical_port_mac_topology_2": Decoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def _decode_optical_port_mac_topology_3(command_body):
-        return Decoder.decode_optical_port_mac_topology(command_body)
+        return {"optical_port_mac_topology_3": Decoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def _decode_optical_port_mac_topology_4(command_body):
-        return Decoder.decode_optical_port_mac_topology(command_body)
+        return {"optical_port_mac_topology_4": Decoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def decode_optical_port_mac_topology(command_body):
         """Decodes the opticalportx_mac_topology command."""
         try:
+            body = str(command_body)
             port_number = command_body[0]
             device_macs = {}
             id = 1
-            for i in range(1, len(command_body), 4):
+            for i in range(0, len(command_body), 4):
                 device_mac = command_body[i:i + 4]
                 mac_address = ""
                 for byte in device_mac:
@@ -1440,6 +1442,10 @@ class Command:
         self.parameters['critical_downlink_threshold'] = int(args['critical_downlink_threshold'])
         self.parameters['warning_temperature_threshold'] = int(args['warning_temperature_threshold'])
         self.parameters['critical_temperature_threshold'] = int(args['critical_temperature_threshold'])
+        
+        opt, dru = self.decode_address(self.parameters['address'])
+        self.parameters['device_number'] = dru
+        self.parameters['optical_port'] = opt
 
     def create_command(self, cmd_type):
         cmd_type_map = dict(
@@ -1473,6 +1479,28 @@ class Command:
 
         return frame_len if frame_len > 0 else -2
 
+
+    def decode_address(self,address):
+        # Check if the address starts with 192.168.11
+        if not address.startswith("192.168.11"):
+            return None
+
+        # Determine the opt value based on the starting byte of the IP address
+        opt = None
+        if address.startswith("192.168.11.100"):
+            opt = 1
+        elif address.startswith("192.168.11.120"):
+            opt = 2
+        elif address.startswith("192.168.11.140"):
+            opt = 3
+        elif address.startswith("192.168.11.160"):
+            opt = 4
+
+        # Extract the dru number from the last byte of the IP address
+        dru = int(address.strip()[-1:])+1
+
+        return opt, dru
+
     def create_group_query_command(self):
         """Creates a group query for the given device.
 
@@ -1485,7 +1513,8 @@ class Command:
             dru_ethernet=DRSRemoteCommand,
             discovery_ethernet=DiscoveryCommand,
             discovery_serial=DiscoveryCommand,
-            dmu_serial_service=DRSMasterCommand
+            dmu_serial_service=DRSMasterCommand,
+            dru_serial_service=LtelDruCommand
         )
 
         device = self.parameters['device']
@@ -1661,8 +1690,9 @@ class Command:
         return decoded_commands
 
     def _decode_ifboard_command(self, command: CommandData) -> int:
-
-        if len(command.reply) == 0:
+        reply_len = len(command.reply)
+        query_len = len(command.query)
+        if len(command.reply) < len(command.query)/2:
             return 0
 
         module_function_index = 1
