@@ -299,13 +299,12 @@ class DiscoveryCommand(IntEnum):
     optical_port_mac_topology_4 = NearEndQueryCommandNumber.optical_port_mac_topology_4
 
 class DiscoveryRedBoardCommand(IntEnum):
-    optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_1
-    optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_2
-    optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_3
-    optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_4
+    optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_1
+    optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_2
+    optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_3
+    optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
     # eth_ip_address = HardwarePeripheralDeviceParameterCommand.eth_ip_address
     device_id = NearEndQueryCommandNumber.device_id
-    optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
     optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
     optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
@@ -398,7 +397,7 @@ class Director:
             'Accept': 'application/json',
             'X-HTTP-Method-Override': 'POST'
         }
-
+        
         try:
             q = requests.post(request_url,
                               headers=headers,
@@ -1621,29 +1620,67 @@ class Command:
         return self.parameters
 
     def transmit_and_receive_serial(self, port, baud):
-        rt = time.time()
-        self.serial = self.setSerial(port, baud)
+        """
+        Transmits and receives serial data.
+
+        Args:
+            port (str): The name of the serial port.
+            baud (int): The baud rate of the serial connection.
+
+        Raises:
+            ValueError: If the port is not available.
+
+        Returns:
+            int: The number of successful commands.
+        """
+        try:
+            rt = time.time()
+            self.serial = self.setSerial(port, baud)
+        except serial.SerialException:
+                sys.stderr.write(f"CRITICAL - The specified port {port} is not available at {baud}")
+                sys.exit(CRITICAL)
+        
         self.cmd_number_ok = 0
         for cmd_name in self.list:
+            
             self.write_serial_frame(cmd_name.query)
             query_time = time.time()
             data_received = self.read_serial_frame()
             cmd_name.reply = data_received
             if cmd_name.reply != "":
-                self.cmd_number_ok = self.cmd_number_ok + 1
+                self.cmd_number_ok += 1
             tmp = time.time() - query_time
             time.sleep(tmp)
+        
         self.serial.close()
         rt = str(time.time() - rt)
         self.parameters['rt'] = rt
         return self.cmd_number_ok
 
     def write_serial_frame(self, Trama):
-        cmd_bytes = bytearray.fromhex(Trama)
+        """
+        Writes a serial frame to the serial port.
+
+        Args:
+            Trama (str): The serial frame in hexadecimal format.
+
+        Raises:
+            ValueError: If the frame is not in hexadecimal format.
+
+        Returns:
+            None
+        """
+        try:
+            cmd_bytes = bytearray.fromhex(Trama)
+        except ValueError:
+            sys.stderr.write(f"CRITICAL - Invalid hexadecimal format for the frame {Trama}")
+            sys.exit(CRITICAL)       
+        
         hex_byte = ''
         for cmd_byte in cmd_bytes:
-            hex_byte = ("{0:02x}".format(cmd_byte))
+            hex_byte = "{0:02x}".format(cmd_byte)
             self.serial.write(bytes.fromhex(hex_byte))
+        
         self.serial.flush()
 
     def read_serial_frame(self):
@@ -1656,7 +1693,6 @@ class Command:
             try:
                 response = self.serial.read()
             except serial.SerialException as e:
-
                 return bytearray()
             rcv_hex = response.hex()
             if rcv_count == 0 and rcv_hex == '7e':
@@ -2184,7 +2220,7 @@ class Graphite:
         """
         if self.parameters['device'] in ['dmu_ethernet', 'dru_ethernet', 'dmu_serial_service']:
             return self.dmu_output()
-        elif self.parameters['device'] in ['discovery_ethernet', 'discovery_serial']:
+        elif self.parameters['device'] in ['discovery_ethernet', 'discovery_serial','discovery_redboard_serial']:
             return self.discovery_output()
         elif self.parameters['device'] in ['dmu_serial_host', 'dru_serial_host']:
             return self.dmu_serial_single()
@@ -2288,16 +2324,17 @@ class PluginOutput:
 
     def dru_serial_host_display(self):
         rt = self.parameters['rt']
-        device_id = int(self.parameters["hostname"][3:4])
+        device_id = int(self.parameters["hostname"][3:])
         optical_port = str(self.parameters["optical_port"])
         key_name = f"optical_port_device_id_topology_{optical_port}"
-        optical_port_device_id_topology = self.parameters[key_name]
+        optical_port_device_id_topology = self.parameters.get(key_name, None)
         exit_value = CRITICAL
         message = f"CRITICAL - No id {device_id} found"
-        for key, value in optical_port_device_id_topology.items():
-            if value == device_id:
-                message = f"OK - id {device_id} found"
-                exit_value = OK
+        if optical_port_device_id_topology is not None:
+            for key, value in optical_port_device_id_topology.items():
+                if value == device_id:
+                    message = f"OK - id {device_id} found"
+                    exit_value = OK
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
         plugin_output_message = f"{message}, RTA = {rt} ms | {graphite.dmu_serial_single()}"
@@ -2544,8 +2581,9 @@ class Discovery:
                 fix_ip_end_opt = [0, 100, 120, 140, 160]
                 net = self.parameters["device_id"]
                 id_key = f"optical_port_device_id_topology_{opt}"
-                device_id = self.parameters[id_key][f"id_{connected}"]
-                parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+                #device_id = self.parameters[id_key][f"id_{connected}"]
+                device_id = self.parameters.get(id_key, {}).get(f"id_{connected}")
+                parent = self._get_parent_name(hostname, dru_connected, opt, connected)
                 ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
 
                 if device_id != 0:
@@ -2555,6 +2593,33 @@ class Discovery:
                     self.parameters[connected_ip_addr_name] = ip
 
         return dru_connected
+
+    def _get_parent_name(self, hostname, dru_connected, opt, connected):
+        """
+        Gets the name of the parent according to the given conditions.
+
+        Args:
+            hostname (str): The name of the current host.
+            dru_connected (dict): A dictionary containing information about the DRU connection.
+            opt (int): The option to consider.
+            connected (int): The connection status.
+
+        Returns:
+            str: The name of the parent or None if not found.
+
+        """
+        try: 
+            parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
+        except KeyError:
+            # print("Key not found in dru_connected dictionary")
+            parent = None
+        except IndexError: 
+            # print("Index out of range in dru_connected list")
+            parent = None  
+        except AttributeError:
+            # print("Attribute error accessing .hostname")
+            parent = None
+        return parent
 
     def _discover_device(self, device, imports, cmd_name=None):
         """
@@ -2584,7 +2649,7 @@ class Discovery:
                 update_query = self._create_host_query(dru, device, imports, cmd_name)
 
                 response = director.create_host(director_query=director_query, update_query=update_query)
-                message = "Create -> Success" if response.status_code == 200 else "Create -> Unknown"
+                message = "Create -> Success" if response.status_code == 200 else "Create -> "+str(response)
 
                 self._process_response(dru, message, response, director)
                 if response.status_code == 200:
