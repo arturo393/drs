@@ -167,7 +167,10 @@
                     "required": true,
                     "value": "$address$"
                 },
-                "-b": "$bandwidth$",
+                "-br": {
+                    "description": "Baud Rate",
+                    "value": "$baud_rate$"
+                },
                 "-c": "$cmd_name$",
                 "-cdt": "$cdt$",
                 "-ct": "$cmd_type$",
@@ -16687,6 +16690,11 @@
             "check_interval": 15,
             "fields": [
                 {
+                    "datafield_id": 34,
+                    "is_required": "n",
+                    "var_filter": "host.vars.device=%5B%22dmu_serial_host%22%2C%22dmu_serial_service%22%2C%22discovery_redboard_serial%22%2C%22discovery_serial%22%2C%22dru_serial_host%22%2C%22dru_serial_service%22%5D"
+                },
+                {
                     "datafield_id": 29,
                     "is_required": "n",
                     "var_filter": null
@@ -16709,9 +16717,9 @@
             "object_type": "template",
             "uuid": "9916d017-1778-467d-ad48-3f3215a7adc1",
             "vars": {
-                "cmd_name": "167",
+                "cmd_name": "151",
                 "cmd_type": "single_query",
-                "device": "dmu_serial"
+                "device": "dmu_serial_host"
             }
         }
     },
@@ -16804,6 +16812,11 @@
                     "var_filter": null
                 },
                 {
+                    "datafield_id": 34,
+                    "is_required": "n",
+                    "var_filter": "service.vars.device=%5B%22dmu_serial_service%22%2C%22dru_serial_service%22%2C%22dmu_serial_host%22%2C%22discovery_serial%22%2C%22discovery_redboard_serial%22%2C%22dru_serial_host%22%5D"
+                },
+                {
                     "datafield_id": 3,
                     "is_required": "n",
                     "var_filter": null
@@ -16811,12 +16824,12 @@
                 {
                     "datafield_id": 19,
                     "is_required": "n",
-                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial%22%5D"
+                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial_host%22%2C%22dmu_serial_service%22%5D"
                 },
                 {
                     "datafield_id": 20,
                     "is_required": "n",
-                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial%22%5D"
+                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial%22%2C%22dmu_serial_service%22%5D"
                 },
                 {
                     "datafield_id": 27,
@@ -16873,7 +16886,7 @@
             },
             "zone": "master"
         },
-        "dru_check_serial--service-template2": {
+        "dru_check_serial--service-template": {
             "check_interval": 120,
             "check_timeout": 10,
             "enable_active_checks": true,
@@ -16883,8 +16896,11 @@
             "fields": [],
             "flapping_threshold_high": "30",
             "flapping_threshold_low": "25",
+            "imports": [
+                "check-service-template"
+            ],
             "max_check_attempts": "1",
-            "object_name": "dru_check_serial--service-template2",
+            "object_name": "dru_check_serial--service-template",
             "object_type": "template",
             "retry_interval": 10,
             "use_agent": false,
@@ -16991,16 +17007,18 @@
                     "object_type": "object",
                     "uuid": "00b37b7d-c572-4ded-8085-181c7c25e864",
                     "vars": {
-                        "bandwidth": "15",
-                        "cmd_type": "group_query",
-                        "device": "dru_ethernet"
+                        "dru": "1",
+                        "opt": "2",
+                        "parents": [
+                            "dmu_serial_400"
+                        ]
                     }
                 }
             ],
             "uuid": "e79ba594-2bd5-4aab-818d-5f9a24c474c0"
         },
         "dmu-serial-service-set": {
-            "assign_filter": "\"serial-host-template\"=host.templates&host.vars.device=%22dmu_serial%22",
+            "assign_filter": "\"serial-host-template\"=host.templates&host.vars.device=%22dmu_serial_host%22",
             "object_name": "dmu-serial-service-set",
             "object_type": "template",
             "services": [
@@ -17026,10 +17044,8 @@
                     "uuid": "f7a13d2b-8b7f-4aee-94ee-7aebbe56ea72",
                     "vars": {
                         "bandwidth": "15",
-                        "center_downlink_frequency": "152.5",
-                        "center_uplink_frequency": "172.5",
                         "cmd_type": "group_query",
-                        "device": "dmu_serial"
+                        "device": "dmu_serial_service"
                     }
                 }
             ],
@@ -17043,7 +17059,7 @@
                 {
                     "fields": [],
                     "imports": [
-                        "dru_check_serial--service-template2"
+                        "dru_check_serial--service-template"
                     ],
                     "object_name": "Status",
                     "object_type": "object",
@@ -17245,6 +17261,12 @@
                     "allowed_roles": null
                 },
                 {
+                    "entry_name": "discovery_redboard_serial",
+                    "entry_value": "Discovery Redboard Serial",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
                     "entry_name": "discovery_serial",
                     "entry_value": "Discovery Serial",
                     "format": "string",
@@ -17257,8 +17279,14 @@
                     "allowed_roles": null
                 },
                 {
-                    "entry_name": "dmu_serial",
-                    "entry_value": "Device Master Unit Serial",
+                    "entry_name": "dmu_serial_host",
+                    "entry_value": "Device Master Unit Serial Host",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "dmu_serial_service",
+                    "entry_value": "Device Master Unit Serial Service",
                     "format": "string",
                     "allowed_roles": null
                 },
@@ -17390,6 +17418,31 @@
             "list_name": "opt_port_list",
             "owner": "admin",
             "uuid": "3db408eb-d1b3-45c6-a9f2-4158218f5451"
+        },
+        "baud_rate_list": {
+            "entries": [
+                {
+                    "entry_name": "9600",
+                    "entry_value": "9600",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "19200",
+                    "entry_value": "19200",
+                    "format": "string",
+                    "allowed_roles": null
+                },
+                {
+                    "entry_name": "115200",
+                    "entry_value": "115200",
+                    "format": "string",
+                    "allowed_roles": null
+                }
+            ],
+            "list_name": "baud_rate_list",
+            "owner": "admin",
+            "uuid": "476a40ca-81be-4405-970c-934c6276423b"
         }
     },
     "DirectorJob": {
@@ -17499,6 +17552,20 @@
                 "behavior": "strict",
                 "data_type": "string",
                 "datalist": "deviceDataList"
+            },
+            "category": null
+        },
+        "34": {
+            "uuid": "cf674f19-4295-49e0-a5f5-3f69e6dd485b",
+            "varname": "baud_rate",
+            "caption": "Baud Rate",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
+            "format": null,
+            "settings": {
+                "behavior": "strict",
+                "data_type": "string",
+                "datalist": "baud_rate_list"
             },
             "category": null
         },

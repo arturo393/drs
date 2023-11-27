@@ -39,6 +39,7 @@ def cmd_help():
     -l, --cmd_body_length
     -c, --cmd_name
     -cd, --cmd_data
+    -br, --baud_rate
     -hlwu, --highLevelWarningUplink
     -hlcu, --highLevelCriticalUplink
     -hlwd, --highLevelWarningDownlink
@@ -62,6 +63,7 @@ def args_check():
                         default=drs.NearEndQueryCommandNumber.device_id)
         ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default=-1)
         ap.add_argument("-ct", "--cmd_type", required=False, help="cmd_type es requerido", default="unknow")
+        ap.add_argument("-br", "--baud_rate", required=False, help="baud rate es requerido", default=19200)
         ap.add_argument("-wut", "--warning_uplink_threshold", required=False,
                         help="warning_uplink_threshold es requerido", default=200)
         ap.add_argument("-cut", "--critical_uplink_threshold", required=False,

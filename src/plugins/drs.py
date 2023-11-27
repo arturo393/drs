@@ -306,6 +306,7 @@ class DiscoveryRedBoardCommand(IntEnum):
     optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
     # eth_ip_address = HardwarePeripheralDeviceParameterCommand.eth_ip_address
     device_id = NearEndQueryCommandNumber.device_id
+    optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
     optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
     optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
@@ -1461,6 +1462,11 @@ class Command:
         opt, dru = self.decode_address(self.parameters['address'])
         self.parameters['device_number'] = dru
         self.parameters['optical_port'] = opt
+        
+        self.parameters['baud_rate'] = int(args['baud_rate'])
+            
+             
+            
 
     def create_command(self, cmd_type):
         """Create command based on type.
@@ -1894,19 +1900,17 @@ class Command:
         try:
             device = self.parameters.get('device')
             address = self.parameters.get('address')
-            
-            baud_rate_dmu = 19200
-            baud_rate_dru = 19200
+            baud_rate = self.parameters.get('baud_rate')
             
             os_name = os.name.lower()
             port_dmu, port_dru = self._get_ports(os_name)  
             
             if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
-                if not self._transmit_and_receive_serial(baud=baud_rate_dmu,port=port_dmu):
+                if not self._transmit_and_receive_serial(baud=baud_rate,port=port_dmu):
                     return CRITICAL,self._print_error(port_dmu)
                 
             elif device == 'dru_serial_service':
-                if not self._transmit_and_receive_serial(baud=baud_rate_dru,port=port_dru):
+                if not self._transmit_and_receive_serial(baud=baud_rate,port=port_dru):
                     return CRITICAL,self._print_error(port_dru)
 
                     
@@ -2554,7 +2558,7 @@ class Discovery:
         master_host = socket.gethostbyname(hostname)
         return Director(master_host)
 
-    def _create_host_query(self, dru, device, imports, cmd_name=None):
+    def _create_host_query(self, dru, device, imports, cmd_name=None,baud_rate=19200):
         """
         Generate a query for creating or updating hosts in Icinga 2 Director.
 
@@ -2578,7 +2582,8 @@ class Discovery:
                 'opt': str(dru.port),
                 'dru': str(dru.position),
                 'parents': [dru.parent],
-                'device': device
+                'device': device,
+                'baud_rate' : str(baud_rate)
             }
         }
 
@@ -2603,7 +2608,8 @@ class Discovery:
             'object_type': 'object',
             'vars': {
                 'opt': str(dru.port),
-                'device_number': str(dru.position),
+                'dru': str(dru.position),
+                'parents': [dru.parent],
             }
         }
 
@@ -2727,14 +2733,15 @@ class Discovery:
         dt = time.time()
         director = self._get_director_instance()
         dru_connected = self._dru_connected_search()
+        baud_rate = self.parameters['baud_rate']
 
         for opt in dru_connected:
 
             for dru in dru_connected[opt]:
                 if dru.port in self.cmd_name_map:
                     cmd_name = self.cmd_name_map[dru.port]
-                director_query = self._create_host_query(dru, device, imports, cmd_name)
-                update_query = self._create_host_query(dru, device, imports, cmd_name)
+                director_query = self._create_host_query(dru, device, imports, cmd_name,baud_rate)
+                update_query = self._create_host_query(dru, device, imports, cmd_name,baud_rate)
 
                 response = director.create_host(director_query=director_query, update_query=update_query)
                 message = "Create -> Success" if response.status_code == 200 else "Create -> "+str(response)
