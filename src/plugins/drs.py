@@ -23,6 +23,7 @@ import json
 import requests
 import serial
 import struct
+import os
 from enum import IntEnum, Enum
 
 OK = 0
@@ -1462,19 +1463,31 @@ class Command:
         self.parameters['optical_port'] = opt
 
     def create_command(self, cmd_type):
-        cmd_type_map = dict(
-            single_set=self.create_single_command,
-            single_query=self.create_single_command,
-            group_query=self.create_group_query_command
-        )
-        if cmd_type in cmd_type_map:
-            get_command = cmd_type_map.get(cmd_type)
-            is_created = get_command()
-            return is_created
-        else:
-            return -1
+        """Create command based on type.
 
-    def create_single_command(self):
+        Args: 
+            cmd_type (str): Type of command to create
+        
+        Returns:
+            (int, str): Tuple with status code and message
+        """
+
+        if cmd_type == "single_set":
+            is_created = self._create_single_command()
+        elif cmd_type == "single_query":
+            is_created = self._create_single_command()
+        elif cmd_type == "group_query":
+            is_created = self._create_group_query_command()
+        else:
+            return CRITICAL, f"No command type {cmd_type} defined"
+
+        if is_created:
+            return OK, f"Created {is_created} {cmd_type} commands" 
+        else:
+            return CRITICAL, f"No {cmd_type} commands created"
+        
+
+    def _create_single_command(self):
         """Generates a single command frame.
 
         Returns:
@@ -1492,7 +1505,6 @@ class Command:
             self.list.append(cmd_data)
 
         return frame_len if frame_len > 0 else -2
-
 
     def decode_address(self,address):
         # Check if the address starts with 192.168.11
@@ -1515,7 +1527,7 @@ class Command:
 
         return opt, dru
 
-    def create_group_query_command(self):
+    def _create_group_query_command(self):
         """Creates a group query for the given device.
 
         Returns:
@@ -1597,7 +1609,7 @@ class Command:
                 return command
         return None
 
-    def transmit_and_receive_tcp(self, address):
+    def _transmit_and_receive_tcp(self, address):
         rt = time.time()
         reply_counter = 0
         exception_message = "CRITICAL - "
@@ -1619,7 +1631,7 @@ class Command:
         self.parameters['rt'] = rt
         return self.parameters
 
-    def transmit_and_receive_serial(self, port, baud):
+    def _transmit_and_receive_serial(self, port, baud):
         """
         Transmits and receives serial data.
 
@@ -1843,6 +1855,82 @@ class Command:
                 if times == 2:
                     sys.stderr.write("CRITICAL - " + (e.args.__str__()) + str(port))
                     sys.exit(CRITICAL)
+
+    def transmit_and_receive_old(self):
+        device = self.parameters.get('device')
+        address = self.parameters.get('address')
+        platform = os.name
+        COM1_BAUD = 19200
+        COM2_BAUD = 19200
+            
+        # Realizar acciones basadas en el sistema operativo
+        if platform == 'posix':  # Posix indica que es un sistema tipo Unix, como Linux
+            DMU_PORT = '/dev/ttyS0'
+            DRU_PORT = '/dev/ttyS1'
+        elif platform == 'nt':  # 'nt' indica que es Windows
+            DMU_PORT = 'COM4'
+            DRU_PORT = 'COM2'
+        else:
+            # Acción por defecto para otros sistemas operativos
+            print("Sistema operativo no identificado, ejecutando acción predeterminada.")
+            
+        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
+            if not self._transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
+                sys.stderr.write(f"CRITICAL - no response from {DMU_PORT} at {COM1_BAUD}")
+                sys.exit(CRITICAL)
+        elif device in ['dru_serial_service']:
+            if not self._transmit_and_receive_serial(baud=COM2_BAUD, port=DRU_PORT):
+                sys.stderr.write(f"CRITICAL - no response from {DRU_PORT} at {COM2_BAUD}")
+                sys.exit(CRITICAL)
+        else:
+            if not self._transmit_and_receive_tcp(address):
+                sys.stderr.write(f"CRITICAL - no response from {address}")
+                sys.exit(CRITICAL)
+                          
+    def transmit_and_receive(self):
+        """
+        Transmit and receive data based on device and address.
+        """
+        try:
+            device = self.parameters.get('device')
+            address = self.parameters.get('address')
+            
+            baud_rate_dmu = 19200
+            baud_rate_dru = 19200
+            
+            os_name = os.name.lower()
+            port_dmu, port_dru = self._get_ports(os_name)  
+            
+            if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
+                if not self._transmit_and_receive_serial(baud=baud_rate_dmu,port=port_dmu):
+                    return CRITICAL,self._print_error(port_dmu)
+                
+            elif device == 'dru_serial_service':
+                if not self._transmit_and_receive_serial(baud=baud_rate_dru,port=port_dru):
+                    return CRITICAL,self._print_error(port_dru)
+
+                    
+            else:
+                if not self._transmit_and_receive_tcp(address):
+                    return CRITICAL,self._print_error(address)
+
+            return OK,f"received data"
+        except Exception as e:
+            return CRITICAL,f"Error: {e}"
+        
+    def _get_ports(self, os_name):
+        """Get serial port names based on OS."""
+        if os_name == 'posix':
+            return '/dev/ttyS0', '/dev/ttyS1'
+        elif os_name == 'nt':
+            return 'COM4', 'COM2'
+        else:
+            sys.stderr.write("OS not recognized, using default action.")
+            return '', ''
+            
+    def _print_error(self, device):
+        """Print error message."""
+        return (f"no response from {device}")
 
 
 class Alarm:
@@ -2435,7 +2523,7 @@ class Discovery:
         Args:
             device_type (str): The type of device to discover (e.g., "discovery_ethernet", "discovery_serial").
         """
-
+        
         if device_type in self.discovery_functions:
             discovery_function = self.discovery_functions[device_type]
             discovery_function()

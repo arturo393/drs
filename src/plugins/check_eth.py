@@ -21,7 +21,7 @@ import drs as drs
 #COM1_BAUD = 19200
 #COM2_BAUD = 19200
 
-import os
+
 
 # Detectar el sistema operativo
 
@@ -112,21 +112,8 @@ def args_check():
 
 def main():
 
-    platform = os.name
-    COM1_BAUD = 19200
-    COM2_BAUD = 19200
-        
-    # Realizar acciones basadas en el sistema operativo
-    if platform == 'posix':  # Posix indica que es un sistema tipo Unix, como Linux
-        DMU_PORT = '/dev/ttyS0'
-        DRU_PORT = '/dev/ttyS1'
-    elif platform == 'nt':  # 'nt' indica que es Windows
-        DMU_PORT = 'COM4'
-        DRU_PORT = 'COM2'
-    else:
-        # Acción por defecto para otros sistemas operativos
-        print("Sistema operativo no identificado, ejecutando acción predeterminada.")
-    # -- Analizar los argumentos pasados por el usuario
+
+    # Parse arguments
     global parameters
     args = args_check()
     address = args['address']
@@ -138,29 +125,15 @@ def main():
     if device in ["dru_ethernet", "dmu_ethernet", "discovery_ethernet", 'discovery_serial', 'dmu_serial_host',
                   'dmu_serial_service', 'dru_serial_host', 'dru_serial_service','discovery_redboard_serial']:
         command = drs.Command(args=args)
-        is_created = command.create_command(cmd_type)
-        if is_created == -1:
-            sys.stderr.write("CRITICAL - no command type defined")
-            sys.exit(drs.CRITICAL)
-        elif is_created == -2:
-            sys.stderr.write(f"CRITICAL - no command {args['cmd_name']} known")
-            sys.exit(drs.CRITICAL)
-        elif is_created == -3:
-            sys.stderr.write(f"CRITICAL - no command group known")
+        exit_code, message = command.create_command(cmd_type)
+        if exit_code == drs.CRITICAL:
+            sys.stderr.write(f"CRITICAL - {message}")
             sys.exit(drs.CRITICAL)
 
-        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
-            if not command.transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
-                sys.stderr.write(f"CRITICAL - no response from {DMU_PORT} at {COM1_BAUD}")
-                sys.exit(drs.CRITICAL)
-        elif device in ['dru_serial_service']:
-            if not command.transmit_and_receive_serial(baud=COM2_BAUD, port=DRU_PORT):
-                sys.stderr.write(f"CRITICAL - no response from {DRU_PORT} at {COM2_BAUD}")
-                sys.exit(drs.CRITICAL)
-        else:
-            if not command.transmit_and_receive_tcp(address):
-                sys.stderr.write(f"CRITICAL - no response from {address}")
-                sys.exit(drs.CRITICAL)
+        exit_code, message = command.transmit_and_receive()
+        if exit_code == drs.CRITICAL:
+            sys.stderr.write(f"CRITICAL - {message}")
+            sys.exit(drs.CRITICAL)
 
         if not command.extract_and_decode_received():
             sys.stderr.write(f"CRITICAL - no decoded data")
@@ -179,20 +152,6 @@ def main():
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
         sys.exit(drs.CRITICAL)
-
-
-def create_single_set_command(command):
-    command_number = command.get_command_value()
-    command_body_length = command.parameters['command_body_length']
-    command_data = command.parameters['command_data']
-    cmd_data = drs.CommandData()
-    frame_len = cmd_data.generate_ifboard_frame(
-        command_number=command_number,
-        command_body_length=command_body_length,
-        command_data=command_data,
-    )
-    if frame_len > 0:
-        command.list.append(cmd_data)
 
 
 if __name__ == "__main__":
