@@ -1575,13 +1575,13 @@ class Command:
 
         # Determine the opt value based on the starting byte of the IP address
         opt = None
-        if address.startswith("192.168.11.100"):
+        if address.startswith("192.168.11.10"):
             opt = 1
-        elif address.startswith("192.168.11.120"):
+        elif address.startswith("192.168.11.12"):
             opt = 2
-        elif address.startswith("192.168.11.140"):
+        elif address.startswith("192.168.11.14"):
             opt = 3
-        elif address.startswith("192.168.11.160"):
+        elif address.startswith("192.168.11.16"):
             opt = 4
 
         # Extract the dru number from the last byte of the IP address
@@ -2540,7 +2540,11 @@ class PluginOutput:
     def dru_serial_host_display(self):
         rt = self.parameters['rt']
         device_id = int(self.parameters["hostname"][3:])
-        optical_port = str(self.parameters["optical_port"])
+        optical_port = self.parameters["optical_port"]
+        if optical_port is None:
+            exit_value = CRITICAL
+            message = f"CRITICAL - No optical_port defined in service" 
+            return exit_value,message
         key_name = f"optical_port_device_id_topology_{optical_port}"
         optical_port_device_id_topology = self.parameters.get(key_name, None)
         exit_value = CRITICAL
@@ -2881,7 +2885,7 @@ class Discovery:
                 update_query = self._create_host_query(dru, device, imports, cmd_name,baud_rate)
 
                 response = director.create_host(director_query=director_query, update_query=update_query)
-                message = "Create -> Success" if response.status_code == 200 else "Create -> "+str(response)
+                message = "Create -> Success" if response.status_code == 200 else "Create -> "+str(response.text)
 
                 self._process_response(dru, message, response, director)
                 if response.status_code == 200:
