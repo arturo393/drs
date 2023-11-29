@@ -141,13 +141,14 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(drs.CRITICAL)
 
+            
         if device in ["discovery_ethernet", "discovery_serial",'discovery_redboard_serial']:
             discovery = drs.Discovery(command.parameters)
             if discovery.search_and_create_dru() is not drs.OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
                 sys.exit(drs.WARNING)
 
-        plugin_output = drs.PluginOutput(command.parameters)
+        plugin_output = drs.PluginOutput(command.parameters)        
         exit_code, plugin_output_message = plugin_output.create_message()
         sys.stderr.write(plugin_output_message)
         sys.exit(exit_code)

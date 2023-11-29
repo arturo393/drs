@@ -365,6 +365,62 @@ class DRU:
     def __eq__(self, other):
         return self.position == other.position and self.port == other.position and self.mac == other.mac and self.sn == other.sn
 
+class Icinga_Api:
+    icinga_api_login = "root"
+    icinga_api_password = "Admin.123"
+    
+    def __init__(self, master_host):
+        self.master_host = master_host
+                
+            
+    def _modify_hostname_service(self,hostname,servicename,icinga_query: {}):
+
+        request_url = f"https://{self.master_host}:5665/v1/objects/hosts/{hostname}"
+        headers = {
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'POST'
+        }
+
+        try:
+            q = requests.post(request_url,
+                            headers=headers,
+                            data=json.dumps(icinga_query),
+                            auth=(self.icinga_api_login, self.icinga_api_password),
+                            verify=False,
+                            timeout=1)
+
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
+        except requests.exceptions.ConnectTimeout as e:
+                sys.stderr.write(f"WARNING - {e}")
+                sys.exit(WARNING)
+            # print(json.dumps(q.json(),indent=2))
+        return q
+    
+    def _log_status(self,message):
+        """
+        Log status messages to stderr.
+
+        Args:
+            dru (DRU): A DRU object representing the connected DRU device.
+            message (str): The status message to log.
+        """
+
+        sys.stderr.write(f"{message} \n")
+    
+    def _process_dmu_response(self, message, response):
+        """
+        Process and log the response from Icinga 2 Director, and deploy changes if necessary.
+
+        Args:
+            dru (DRU): A DRU object representing the connected DRU device.
+            message (str): The status message to log.
+            response (requests.Response): The response from the API call.
+            director (Director): An instance of the Director class.
+        """
+        if response.status_code != 304:
+            self._log_status(message)
 
 class Director:
     director_api_login = "admin"
@@ -452,7 +508,7 @@ class Director:
             sys.exit(WARNING)
         # print(json.dumps(q.json(),indent=2))
         return q
-
+    
     def create_dru_host(self, dru: DRU, comm_type: int, type: int, imports, device):
 
         director_query = {
@@ -1927,7 +1983,7 @@ class Command:
         if os_name == 'posix':
             return '/dev/ttyS0', '/dev/ttyS1'
         elif os_name == 'nt':
-            return 'COM4', 'COM2'
+            return 'COM2', 'COM3'
         else:
             sys.stderr.write("OS not recognized, using default action.")
             return '', ''
@@ -2052,6 +2108,14 @@ class HtmlTable:
         table += device_table + channel_table
         table += "</div>"
         return table
+    
+    def discovery_table(self):
+        table = ""
+        table += '<div class="sigma-container">'
+        table += self.get_opt_connected_table()
+        table += "</div>"
+        return table
+        
 
     def dru_table(self):
         power_att_table = self.get_power_table()
@@ -2257,7 +2321,7 @@ class HtmlTable:
             "<tr align=\"center\" style=font-size:12px>" \
             "<th width='12%'>Port</font></th>" \
             "<th width='22%'>Activation Status</font></th>" \
-            "<th width='22%'>Connected Remotes</font></th>" \
+            "<th width='22%'>Connected Devices</font></th>" \
             "<th width='20%'>Transmission Status</font></th>" \
             "</tr></thead>"
 
@@ -2279,6 +2343,64 @@ class HtmlTable:
         table1 += "</table>"
 
         return table1
+    
+    def get_opt_connected_table(self):
+            """
+            Generates an HTML table displaying optical port status information.
+            Determines the number of ports based on the device type.
+
+            Returns:
+                str: The generated HTML table
+            """
+            # Retrieve device type and calculate the optical range
+            device = self.parameters["device"]
+            opt_range = self._get_opt_range(device)
+
+            # Initialize the HTML table with a specified width
+            table_html = "<table width='320'>"
+
+            # Define table header with styling
+            table_html += (
+                "<thead>"
+                "<tr align='center' style='font-size:12px;'>"
+                "<th width='12%'>Port</th>"
+            )
+
+            # Add headers for remote port IDs
+            for remote_number in range(1, 8 + 1):
+                table_html += f"<th width='13%'>Remote {remote_number} id</th>"
+
+            table_html += "</tr></thead>"
+
+            # Populate table body with optical port information
+            table_html += "<tbody>"
+            for i in range(1, 4 + 1):
+                # Construct key names to access parameter values
+                connected_name = f"optical_port_devices_connected_{i}"
+                opt = str(i)
+                connected = self.parameters.get(connected_name, 0)
+
+                table_html += (
+                    "<tr align='center' style='font-size:12px;'>"
+                    f"<td>opt{opt}</td>"
+                )
+
+                # Retrieve optical port device ID topology and populate IDs for connected devices
+                opt_key = f"optical_port_device_id_topology_{opt}"
+                for dru_connected in range(1, connected + 1):
+                    dru_connected_key = f"id_{dru_connected}"
+                    dru_id = self.parameters[opt_key].get(dru_connected_key, "-")
+                    table_html += f"<td>{dru_id}</td>"
+
+                # Fill in placeholders for non-connected ports
+                for id in range(connected + 1, 8 + 1):
+                    table_html += f"<td> - </td>"
+
+                table_html += "</tr>"
+
+            table_html += "</tbody></table>"
+
+            return table_html
 
     def _get_opt_range(self, device):
         """
@@ -2296,7 +2418,8 @@ class HtmlTable:
         elif device in ['dru_ethernet', 'dru_serial_service']:
             return 2
         else:
-            raise ValueError(f"Invalid device type: {device}")
+            return 4
+
 
 
 class Graphite:
@@ -2470,14 +2593,12 @@ class PluginOutput:
     def discovery_display(self):
         rt = self.parameters['rt']
         dt = self.parameters['dt']
-        # for key, value in self.parameters.items():
-        #    if value != "-":
-        #        sys.stderr.write(f"{key}: {value} \n")
-
+        alarm = Alarm(self.parameters)
+        html_table = HtmlTable(self.parameters, alarm)
         graphite = Graphite(self.parameters)
         rt = round(float(rt), 2)
         dt = round(float(dt), 2)
-        plugin_output_message = f"OK - DTA = {dt} ms, RTA = {rt} ms | {graphite.display()}"
+        plugin_output_message = f"{html_table.discovery_table()}|{graphite.display()}"
         exit_code = OK
         return exit_code, plugin_output_message
 
@@ -2506,12 +2627,6 @@ class Discovery:
 
         self.parameters = parameters
 
-        # Define a dictionary mapping device types to their respective discovery methods
-        self.discovery_functions = {
-            "discovery_ethernet": self._discover_ethernet,
-            "discovery_serial": self._discover_serial,
-            "discovery_redboard_serial": self._discover_serial
-        }
 
         self.cmd_name_map = {
             1: DRSRemoteSerialCommand.optical_port_device_id_topology_1,
@@ -2520,31 +2635,21 @@ class Discovery:
             4: DRSRemoteSerialCommand.optical_port_device_id_topology_4,
         }
 
-    def _discover(self, device_type):
-        """
-        Perform discovery based on the specified device type.
-
-        Args:
-            device_type (str): The type of device to discover (e.g., "discovery_ethernet", "discovery_serial").
-        """
-        
-        if device_type in self.discovery_functions:
-            discovery_function = self.discovery_functions[device_type]
-            discovery_function()
-            return OK
-        else:
-            return WARNING
-
     def search_and_create_dru(self):
-        """
-        Determine the appropriate discovery method based on the device type and initiate the discovery process.
-
-        Returns:
-            int: 0 if discovery is successful, 1 if device type is not supported.
-        """
-
+        """Discover DRU based on device type."""
+        
         device = self.parameters["device"]
-        return self._discover(device)
+        
+        if device == "discovery_ethernet":
+            self._discover_ethernet()
+        elif device == "discovery_serial":
+            self._discover_serial()
+        elif device == "discovery_redboard_serial":  
+            self._discover_redboad_serial()
+        else: 
+            return WARNING
+        return OK
+
 
     def _get_director_instance(self):
         """
@@ -2556,6 +2661,7 @@ class Discovery:
 
         hostname = socket.gethostname()
         master_host = socket.gethostbyname(hostname)
+        master_host = '192.168.60.73'
         return Director(master_host)
 
     def _create_host_query(self, dru, device, imports, cmd_name=None,baud_rate=19200):
@@ -2612,7 +2718,7 @@ class Discovery:
                 'parents': [dru.parent],
             }
         }
-
+    
     def _log_status(self, dru, message):
         """
         Log status messages to stderr.
@@ -2649,7 +2755,7 @@ class Discovery:
         if response.status_code != 304:
             self._log_status(dru, message)
             self._deploy_if_needed(director, response)
-
+                  
     def _dru_connected_search(self):
         """
         Identify and gather information about connected DRU devices.
@@ -2686,6 +2792,37 @@ class Discovery:
                     connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
                     self.parameters[connected_ip_addr_name] = ip
 
+        return dru_connected
+    
+    def _get_dru_connected_number(self):
+        """
+        Identify and gather information about connected DRU devices.
+
+        This method iterates through the configured optical ports and retrieves
+        information about the connected DRU devices. It constructs a dictionary
+        storing the discovered DRU devices and their corresponding information.
+
+        Returns:
+            dict: A dictionary containing discovered DRU devices and their information.
+        """
+        # Get the hostname from the parameters
+        hostname = self.parameters["hostname"]
+
+        # Create an empty dictionary to store the connected DRU devices
+        dru_connected = {}
+
+        # Iterate through the optical ports
+        for opt in range(1, 5):
+            # Get the parameter name for the current optical port
+            port_name = f"optical_port_devices_connected_{opt}"
+            
+            # Get the value of the parameter
+            optical_port_devices_connected = 0 if self.parameters[port_name] == "-" else self.parameters[port_name]
+            
+            # Add the connected DRU device to the dictionary
+            dru_connected[f"opt{opt}"] = optical_port_devices_connected
+
+        # Return the dictionary containing the discovered DRU devices
         return dru_connected
 
     def _get_parent_name(self, hostname, dru_connected, opt, connected):
@@ -2804,6 +2941,8 @@ class Discovery:
                 )
 
                 self._process_response(dru, message, response, director)
+
+
 
 # Nagios Exit Codes
 # Exit Code     Status
