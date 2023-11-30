@@ -326,6 +326,8 @@ class SettingCommand(IntEnum):
 class LtelDruCommand(Enum):
     # use the dict keys as the enum member names
     # use the dict values as the associated values
+    # uplink_input_power = (0x04, 0x2505)
+    # rf_power_sitch = (0x04,0x0104)
     uplink_att = (0x04, 0x4004)
     downlink_att = (0x04, 0x4104)
     channel_switch = (0x05, 0x160A)
@@ -335,9 +337,11 @@ class LtelDruCommand(Enum):
     work_bandwidth = (0x07, 0x1A0A)
     channel_bandwidth = (0x07, 0x1B0A)
     downlink_vswr = (0x04, 0x0605)
+    downlink_output_power = (0x04, 0x0305)
     power_amplifier_temperature = (0x04, 0x0105)
-    downlink_output_power = (0x04, 0x0605)
-    uplink_input_power = (0x04, 0x2505)
+    site_subdevice_number = (0x04,0x0201)
+
+
 
 
 class DRU:
@@ -612,9 +616,9 @@ class CommandData:
         tx_rx2 = 0xFF
         length = cmd_name.value[0]
         code = cmd_name.value[1]
-        data = "".zfill(length * 2)
+        length_code = f"{length:02X}{code:04X}"
+        data = length_code.ljust(length*2,'0')
         self.command_number = cmd_name
-
         cmd_unit = (
             f"{unknown1:04X}"
             f"{site_number:08X}"
@@ -624,13 +628,14 @@ class CommandData:
             f"{unknown3:02X}"
             f"{message_type:02X}"
             f"{tx_rx2:02X}"
-            f"{length:02X}"
-            f"{code:04X}"
             f"{data}"
         )
+        
+        #7E010100000000110100800102FF04030500ACA27E sw chino
+        #7E010100000000110100800102FF04030500ACA27E sw uqomm
 
         crc = self.generate_checksum(cmd_unit)
-        self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}"
+        self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
 
     def generate_ifboard_frame(self, command_number, command_data, command_body_length):
         """Generates an IFBoard frame for the given command number, command data, and command body length.
@@ -1864,7 +1869,7 @@ class Command:
         command_body = command.reply[cmd_data_index:cmd_data_index + command_body_length]
         if response_flag == ResponseFlag.SUCCESS:
             command.reply_command_data = command_body
-            command.message = Decoder.ltel_decode(command.command_number, command.command_data)
+            command.message = Decoder.ltel_decode(command.command_number, command_body)
             return 1
         else:
             return 0
@@ -2421,7 +2426,6 @@ class HtmlTable:
             return 4
 
 
-
 class Graphite:
     def __init__(self, parameters):
         self.parameters = parameters
@@ -2689,8 +2693,6 @@ class Discovery:
             'imports': imports,
             'display_name': dru.name,
             'vars': {
-                'opt': str(dru.port),
-                'dru': str(dru.position),
                 'parents': [dru.parent],
                 'device': device,
                 'baud_rate' : str(baud_rate)
@@ -2719,7 +2721,7 @@ class Discovery:
             'vars': {
                 'opt': str(dru.port),
                 'dru': str(dru.position),
-                'parents': [dru.parent],
+                'parents': [dru.parent]
             }
         }
     
@@ -2757,7 +2759,7 @@ class Discovery:
             director (Director): An instance of the Director class.
         """
         if response.status_code != 304:
-            self._log_status(dru, message)
+            #self._log_status(dru, message)
             self._deploy_if_needed(director, response)
                   
     def _dru_connected_search(self):
