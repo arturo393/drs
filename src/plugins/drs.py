@@ -330,7 +330,7 @@ class LtelDruCommand(Enum):
     # rf_power_sitch = (0x04,0x0104)
     uplink_att = (0x04, 0x4004)
     downlink_att = (0x04, 0x4104)
-    channel_switch = (0x05, 0x160A)
+    channel_switch_bit = (0x05, 0x160A)
     working_mode = (0x04, 0xEF0B)
     uplink_start_frequency = (0x07, 0x180A)
     downlink_start_frequency = (0x07, 0x190A)
@@ -339,7 +339,23 @@ class LtelDruCommand(Enum):
     downlink_vswr = (0x04, 0x0605)
     downlink_output_power = (0x04, 0x0305)
     power_amplifier_temperature = (0x04, 0x0105)
-    site_subdevice_number = (0x04,0x0201)
+    channel_1_frequency = (0x05,0x1004)
+    channel_2_frequency = (0x05,0x1104)
+    channel_3_frequency = (0x05,0x1204)
+    channel_4_frequency = (0x05,0x1304)
+    channel_5_frequency = (0x05,0x1404)
+    channel_6_frequency = (0x05,0x1504)
+    channel_7_frequency = (0x05,0x1604)
+    channel_8_frequency = (0x05,0x1704)
+    channel_9_frequency = (0x05,0x1804)
+    channel_10_frequency = (0x05,0x1904)
+    channel_11_frequency = (0x05,0x1a04)
+    channel_12_frequency = (0x05,0x1b04)        
+    channel_13_frequency = (0x05,0x1c04)
+    channel_14_frequency = (0x05,0x1d04)
+    channel_15_frequency = (0x05,0x1e04)
+    channel_16_frequency = (0x05,0x1f04)
+    #data:7E010100000000110100800102FF 05 1104 000006527E
 
 
 
@@ -580,7 +596,6 @@ class Director:
         # print(json.dumps(q.json(),indent=2))
         return q
 
-
 class CommandData:
 
     def __init__(self):
@@ -746,7 +761,6 @@ class CommandData:
         hex_string = ''.join(format(byte, '02X') for byte in byte_array)
         return hex_string
 
-
 class Decoder:
 
     def decode(command_number, command_body):
@@ -854,102 +868,214 @@ class Decoder:
         return temperature
 
     @staticmethod
+    def _s8(byte):
+        if byte > 127:
+            return (256 - byte) * (-1)
+        else:
+            return byte
+
+    @staticmethod
     def _decode_uplink_att(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) != 1:
             return {}
         return {
-            "uplink_att": command_body,
+            "upAtt": int.from_bytes(command_body, byteorder='little'),
         }
 
     @staticmethod
     def _decode_downlink_att(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) != 1:
             return {}
         return {
-            "downlink_att": command_body,
+            "dlAtt":  int.from_bytes(command_body, byteorder='little'),
         }
 
     @staticmethod
-    def _decode_channel_switch(command_body):
+    def _decode_channel_switch_bit(command_body):
         """Decodes uplink attenuation value in dbBm"""
         if len(command_body) < 2:
             return {}
-        return {
-            "downlink_channel_switch ": command_body,
-        }
+        channels = {}
+        for i in range(15, -1, -1):
+            bit = (command_body[0] >> i) & 1
+            status = "ON" if bit == 0 else "OFF"
+            channels["channel" + str(1+i) + "Status"] = status
+            i = i + 1
+        return channels
 
     @staticmethod
     def _decode_working_mode(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        """Decodes the broadband switching command."""
+        if len(command_body) == 0:
             return {}
-        return {
-            "working_mode ": command_body,
+        working_mode = {
+            3: "Channel Mode",
+            2: "WideBand Mode",
         }
+        return {"workingMode": working_mode.get(command_body[0], "Unknown Mode")}
 
     @staticmethod
     def _decode_uplink_start_frequency(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) < 4:
             return {}
         return {
-            "uplink_start_frequency  ": command_body,
+            "uplink_start_frequency": Decoder._frequency_decode(command_body),
         }
 
     @staticmethod
     def _decode_downlink_start_frequency(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) < 4:
             return {}
         return {
-            "downlink_start_frequency   ": command_body,
+            "downlink_start_frequency": Decoder._frequency_decode(command_body),
         }
 
     @staticmethod
     def _decode_work_bandwidth(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) < 4:
             return {}
         return {
-            "work_bandwidth    ": command_body,
+            "work_bandwidth": Decoder._frequency_decode(command_body),
         }
 
     @staticmethod
     def _decode_channel_bandwidth(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) < 4:
             return {}
         return {
-            "channel_bandwidth     ": command_body,
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
         }
+    
+    @staticmethod
+    def _decode_channel_1_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+        
+    @staticmethod
+    def _decode_channel_2_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+        
+    @staticmethod
+    def _decode_channel_3_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+        
+    @staticmethod
+    def _decode_channel_3_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+    @staticmethod
+    def _decode_channel_3_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+    @staticmethod
+    def _decode_channel_3_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+    @staticmethod
+    def _decode_channel_3_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+        
+    @staticmethod
+    def _decode_channel_3_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 4:
+            return {}
+        return {
+            "channel_bandwidth": Decoder._frequency_decode(command_body),
+        }
+        
+    @staticmethod
+    def _frequency_decode(command_body: bytes) -> float:
+        """
+        Decodes the frequency value from the command body.
+
+        Args:
+            command_body: The bytearray containing the command data.
+
+        Returns:
+            The decoded frequency value in MHz.
+        """
+
+        try:
+            # Extract and convert the frequency value to an integer
+            little = int.from_bytes(command_body, byteorder='little')
+        except (TypeError, ValueError):
+            # Handle invalid data format
+            raise ValueError(f"Invalid command body: {command_body}")
+
+        # Calculate the frequency in MHz
+        frequency = little / 10000
+
+        return frequency
 
     @staticmethod
     def _decode_downlink_vswr(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) != 1:
             return {}
+        little = int.from_bytes(command_body, byteorder='little')
+        vswr = little / 10
         return {
-            "downlink_vswr      ": command_body,
+            "downlink_vswr": vswr,
         }
 
     @staticmethod
     def _decode_power_amplifier_temperature(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) != 1:
             return {}
+        little = int.from_bytes(command_body, byteorder='little')
+        power_amlpifier_temperature = little
         return {
-            "power_amplifier_temperature      ": command_body,
+            "power_amplifier_temperature": power_amlpifier_temperature,
         }
 
     @staticmethod
     def _decode_downlink_output_power(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 2:
+        if len(command_body) != 1:
             return {}
+        little = int.from_bytes(command_body, byteorder='little')
+        downlink_output_power = little
         return {
-            "downlink_output_power      ": command_body,
+            "downlink_output_power": downlink_output_power,
         }
 
     @staticmethod
@@ -957,8 +1083,10 @@ class Decoder:
         """Decodes uplink attenuation value in dbBm"""
         if len(command_body) < 2:
             return {}
+        little = int.from_bytes(command_body, byteorder='little')
+        uplink_input_power = little
         return {
-            "uplink_input_power       ": command_body,
+            "uplink_input_power": uplink_input_power,
         }
 
     @staticmethod
@@ -1857,6 +1985,9 @@ class Command:
         Returns:
             The number of decoded commands.
         """
+        
+        if command.reply == '':
+            return 0
 
         module_function_index = 1
         data_type_index = 3
