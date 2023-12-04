@@ -194,7 +194,6 @@ class Rx0SettingCmd(IntEnum):
     frequency_synchronization_switch = 0x84
     rx0_iir_bandwidth = 0xed
 
-
 class Tx0QueryCmd:
     compensation_enable_switch = 0x71
     gain_compensation = 0x73
@@ -206,7 +205,6 @@ class Tx0QueryCmd:
     power_offset = 0xea
     input_and_output_power = 0xf3
 
-
 class Tx0SettingCmd:
     compensation_enable_switch = 0x70
     gain_compensation = 0x71
@@ -214,7 +212,6 @@ class Tx0SettingCmd:
     filter_compensation = 0x78
     peak_output_power = 0x7a
     gain_power_control_att = 0xe7
-
 
 class Tx1QueryCmd:
     compensation_enable_switch = 0x80
@@ -224,7 +221,6 @@ class Tx1QueryCmd:
     peak_output_power = 0x8a
     gain_power_control_att = 0xe8
 
-
 class Tx1SettingCmd:
     compensation_enable_switch = 0x80
     gain_compensation = 0x82
@@ -232,7 +228,6 @@ class Tx1SettingCmd:
     filter_compensation = 0x88
     peak_output_power = 0x8a
     gain_power_control_att = 0xe8
-
 
 class DRSMasterCommand(IntEnum):
     optical_port_devices_connected_1 = 0xf8
@@ -254,7 +249,6 @@ class DRSMasterCommand(IntEnum):
     # rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
 
-
 class DRSRemoteCommand(IntEnum):
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
     input_and_output_power = Tx0QueryCmd.input_and_output_power
@@ -275,13 +269,11 @@ class DRSRemoteCommand(IntEnum):
     optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
     rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
 
-
 class DRSRemoteSerialCommand(IntEnum):
     optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
     optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
     optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
-
 
 class DiscoveryCommand(IntEnum):
     optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_1
@@ -322,7 +314,6 @@ class SettingCommand(IntEnum):
     broadband_switching = 0x80
     channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
 
-
 class LtelDruCommand(Enum):
     # use the dict keys as the enum member names
     # use the dict values as the associated values
@@ -339,26 +330,23 @@ class LtelDruCommand(Enum):
     downlink_vswr = (0x04, 0x0605)
     downlink_output_power = (0x04, 0x0305)
     power_amplifier_temperature = (0x04, 0x0105)
-    channel_1_frequency = (0x05,0x1004)
-    channel_2_frequency = (0x05,0x1104)
-    channel_3_frequency = (0x05,0x1204)
-    channel_4_frequency = (0x05,0x1304)
-    channel_5_frequency = (0x05,0x1404)
-    channel_6_frequency = (0x05,0x1504)
-    channel_7_frequency = (0x05,0x1604)
-    channel_8_frequency = (0x05,0x1704)
-    channel_9_frequency = (0x05,0x1804)
-    channel_10_frequency = (0x05,0x1904)
-    channel_11_frequency = (0x05,0x1a04)
-    channel_12_frequency = (0x05,0x1b04)        
-    channel_13_frequency = (0x05,0x1c04)
-    channel_14_frequency = (0x05,0x1d04)
-    channel_15_frequency = (0x05,0x1e04)
-    channel_16_frequency = (0x05,0x1f04)
+    channel_1_number = (0x05,0x1004)
+    channel_2_number = (0x05,0x1104)
+    channel_3_number = (0x05,0x1204)
+    channel_4_number = (0x05,0x1304)
+    channel_5_number = (0x05,0x1404)
+    channel_6_number = (0x05,0x1504)
+    channel_7_number = (0x05,0x1604)
+    channel_8_number = (0x05,0x1704)
+    channel_9_number = (0x05,0x1804)
+    channel_10_number = (0x05,0x1904)
+    channel_11_number = (0x05,0x1a04)
+    channel_12_number = (0x05,0x1b04)        
+    channel_13_number = (0x05,0x1c04)
+    channel_14_number = (0x05,0x1d04)
+    channel_15_number = (0x05,0x1e04)
+    channel_16_number = (0x05,0x1f04)
     #data:7E010100000000110100800102FF 05 1104 000006527E
-
-
-
 
 class DRU:
     def __init__(self, position, port, device_id, master_hostname, ip_addr, parent):
@@ -953,73 +941,140 @@ class Decoder:
         }
     
     @staticmethod
-    def _decode_channel_1_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
+    def _decode_channel_1_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
             return {}
         return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
+            "channel_1_number": int.from_bytes(command_body, byteorder='little'),
         }
         
     @staticmethod
-    def _decode_channel_2_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
+    def _decode_channel_2_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
             return {}
         return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
+            "channel_2_number": int.from_bytes(command_body, byteorder='little'),
         }
         
     @staticmethod
-    def _decode_channel_3_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
+    def _decode_channel_3_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
             return {}
         return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
+            "channel_3_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    
+    @staticmethod
+    def _decode_channel_4_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_4_number": int.from_bytes(command_body, byteorder='little'),
+        }
+   
+    @staticmethod
+    def _decode_channel_5_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_5_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_6_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_6_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_7_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_7_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_8_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_8_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_9_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_9_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_10_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_10_number": int.from_bytes(command_body, byteorder='little'),
         }
         
     @staticmethod
-    def _decode_channel_3_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
+    def _decode_channel_11_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
             return {}
         return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
-        }
-    @staticmethod
-    def _decode_channel_3_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
-            return {}
-        return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
-        }
-    @staticmethod
-    def _decode_channel_3_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
-            return {}
-        return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
-        }
-    @staticmethod
-    def _decode_channel_3_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
-            return {}
-        return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
+            "channel_11_number": int.from_bytes(command_body, byteorder='little'),
         }
         
     @staticmethod
-    def _decode_channel_3_channel(command_body):
-        """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 4:
+    def _decode_channel_12_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
             return {}
         return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
+            "channel_12_number": int.from_bytes(command_body, byteorder='little'),
         }
+    @staticmethod
+    def _decode_channel_13_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_13_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_14_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_14_number": int.from_bytes(command_body, byteorder='little'),
+        }
+        
+    @staticmethod
+    def _decode_channel_15_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_15_number": int.from_bytes(command_body, byteorder='little'),
+        }
+    @staticmethod
+    def _decode_channel_16_number(command_body):
+        """Decodes channel number"""
+        if len(command_body) != 2:
+            return {}
+        return {
+            "channel_16_number": int.from_bytes(command_body, byteorder='little'),
+        }   
         
     @staticmethod
     def _frequency_decode(command_body: bytes) -> float:
@@ -1615,7 +1670,6 @@ class Decoder:
         parameter_dict['opt4TransmissionStatus'] = temp[7]
         return parameter_dict
 
-
 class Command:
     list = list()
     tcp_port = 65050
@@ -1654,9 +1708,6 @@ class Command:
         
         self.parameters['baud_rate'] = int(args['baud_rate'])
             
-             
-            
-
     def create_command(self, cmd_type):
         """Create command based on type.
 
@@ -1681,7 +1732,6 @@ class Command:
         else:
             return CRITICAL, f"No {cmd_type} commands created"
         
-
     def _create_single_command(self):
         """Generates a single command frame.
 
@@ -2128,7 +2178,6 @@ class Command:
         """Print error message."""
         return (f"no response from {device}")
 
-
 class Alarm:
     """
     Class to manage alarm conditions and generate HTML output.
@@ -2217,7 +2266,6 @@ class Alarm:
             setattr(self, f'{parameter_name}_alarm', CRITICAL)
         elif value >= warning_threshold:
             setattr(self, f'{parameter_name}_alarm', WARNING)
-
 
 class HtmlTable:
 
@@ -2556,7 +2604,6 @@ class HtmlTable:
         else:
             return 4
 
-
 class Graphite:
     def __init__(self, parameters):
         self.parameters = parameters
@@ -2626,7 +2673,6 @@ class Graphite:
         rt_str = "RTA=" + self.parameters['rt'] + ";1000;2000"
         graphite = rt_str + " "
         return graphite
-
 
 class PluginOutput:
     def __init__(self, parameters):
@@ -2749,7 +2795,6 @@ class PluginOutput:
             return exit_code, message
         else:
             return WARNING, f"WARNING  - no output message for {device}"
-
 
 class Discovery:
     """
