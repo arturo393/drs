@@ -1655,18 +1655,32 @@ class Decoder:
         return {'dlAtt': str(output_att), 'ulAtt': str(input_att)}
 
     @staticmethod
-    def _decode_optical_port_switch(command_body):
-        if len(command_body) == 0:
-            return {}
-        message = ""
-        port = 1
-        parameter = {}
-        for opt_port in command_body:
-            status = "ON" if opt_port == 0 else "OFF"
-            key = "opt" + str(port) + "ActivationStatus"
-            parameter[key] = status
-            port = port + 1
-        return parameter
+    def _decode_optical_port_switch(command_body: bytes) -> dict:
+        """Decodes optical port switch information from the command body.
+
+        Args:
+            command_body: The bytearray containing the command data.
+
+        Returns:
+            A dictionary containing optical port activation status information.
+        """
+
+        try:
+            if not command_body:
+                return {}
+
+            parameters = {}
+            port_number = 1
+
+            for optical_port_byte in command_body:
+                status = "ON" if optical_port_byte == 0 else "OFF"
+                parameter_key = f"opt_{port_number}_activation_status"
+                parameters[parameter_key] = status
+                port_number += 1
+
+            return parameters
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid command body for optical port switch: {command_body}")
 
     @staticmethod
     def _decode_optical_port_status(command_body):
@@ -1689,14 +1703,14 @@ class Decoder:
             opt = opt + 1
         parameter_dict = dict()
 
-        parameter_dict['opt1ConnectionStatus'] = temp[0]
-        parameter_dict['opt2ConnectionStatus'] = temp[1]
-        parameter_dict['opt3ConnectionStatus'] = temp[2]
-        parameter_dict['opt4ConnectionStatus'] = temp[3]
-        parameter_dict['opt1TransmissionStatus'] = temp[4]
-        parameter_dict['opt2TransmissionStatus'] = temp[5]
-        parameter_dict['opt3TransmissionStatus'] = temp[6]
-        parameter_dict['opt4TransmissionStatus'] = temp[7]
+        parameter_dict['opt_1_connection_status'] = temp[0]
+        parameter_dict['opt_2_connection_status'] = temp[1]
+        parameter_dict['opt_3_connection_status'] = temp[2]
+        parameter_dict['opt_4_connection_status'] = temp[3]
+        parameter_dict['opt_1_transmission_status'] = temp[4]
+        parameter_dict['opt_2_transmission_status'] = temp[5]
+        parameter_dict['opt_3_transmission_status'] = temp[6]
+        parameter_dict['opt_4_transmission_status'] = temp[7]
         return parameter_dict
 
 
@@ -2113,14 +2127,9 @@ class Command:
 
         dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
                           'optical_port_devices_connected_3': "-",
-                          'optical_port_devices_connected_4': "-", 'opt1ConnectionStatus': "-",
-                          'opt2ConnectionStatus': "-",
-                          'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
-                          'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
-                          'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'ulAtt': "-", 'dlAtt': "-",
-                          'working_mode': "-",
-                          'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
-                          'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
+                          'optical_port_devices_connected_4': "-", 'dlOutputPower': 100.0, 'ulInputPower': 100.0,
+                          'ulAtt': "-", 'dlAtt': "-",
+                          'working_mode': "-", "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
                           'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
 
         parameters.update(dru_parameters)
@@ -2573,42 +2582,56 @@ class HtmlTable:
         Determines the number of ports based on the device type.
 
         Returns:
-            str: The generated HTML table
+            str: The generated HTML table.
         """
+        try:
+            # Attempt to fetch device parameter
+            device = self.parameters["device"]
 
-        device = self.parameters["device"]
-        opt_range = self._get_opt_range(device)
+            # Determine the range for optical ports based on device type
+            opt_range = self._get_opt_range(device)
 
-        table1 = "<table width=280>"
+            # Initiate HTML table string
+            table = "<table width=280>"
 
-        # Define table header with styling
-        table1 += \
-            "<thead>" \
-            "<tr align=\"center\" style=font-size:12px>" \
-            "<th width='12%'>Port</font></th>" \
-            "<th width='22%'>Activation Status</font></th>" \
-            "<th width='22%'>Connected Devices</font></th>" \
-            "<th width='20%'>Transmission Status</font></th>" \
-            "</tr></thead>"
+            # Define HTML table header
+            table += ("<thead><tr align=\"center\" style=font-size:12px>"
+                      "<th width='12%'>Port</font></th>"
+                      "<th width='22%'>Activation Status</font></th>"
+                      "<th width='22%'>Connected Devices</font></th>"
+                      "<th width='20%'>Transmission Status</font></th>"
+                      "</tr></thead>")
 
-        # Populate table body with optical port information
-        table1 += "<tbody>"
-        for i in range(1, opt_range + 1):
-            connected_name = f"optical_port_devices_connected_{i}"
-            opt = str(i)
-            connected = str(self.parameters.get(connected_name, ""))
-            table1 += \
-                "<tr align=\"center\" style=font-size:12px>" \
-                f"<td>opt{opt}</td>" \
-                f"<td>{self.parameters['opt' + opt + 'ActivationStatus']}</td>" \
-                f"<td>{connected}</td>" \
-                f"<td>{self.parameters['opt' + opt + 'TransmissionStatus']}</td>" \
-                "</tr>"
+            # Start HTML table body
+            table += "<tbody>"
 
-        table1 += "</tbody>"
-        table1 += "</table>"
+            for i in range(1, opt_range + 1):
+                # Construct parameter keys for connected devices and transmission status
+                connected_key = f"optical_port_devices_connected_{i}"
+                transmission_status_key = f"opt_{i}_transmission_status"
+                activation_status_key = f"opt_{i}_activation_status"
+                # Try to fetch connected devices and transmission status from parameters
+                connected = str(self.parameters.get(connected_key, ""))
+                transmission_status = str(self.parameters.get(transmission_status_key, ""))
+                activation_status = str(self.parameters.get(activation_status_key, ""))
 
-        return table1
+                # Construct HTML table row with necessary information
+                table += ("<tr align=\"center\" style=font-size:12px>"
+                          f"<td>opt{i}</td>"
+                          f"<td>{activation_status}</td>"
+                          f"<td>{connected}</td>"
+                          f"<td>{transmission_status}</td>"
+                          "</tr>")
+
+            # Close HTML table body and table
+            table += "</tbody></table>"
+
+            return table
+
+        except (KeyError, TypeError) as e:
+            # Print error message to stderr and exit with status UNKNOWN
+            sys.stderr.write(f"UNKNOWN - Error: Invalid data in parameters - {e}")
+            sys.exit(UNKNOWN)
 
     def get_opt_connected_table(self):
         """
