@@ -2387,39 +2387,37 @@ class HtmlTable:
 
         Returns:
             table_html (str): HTML formatted string of the data table.
-        """
 
+        If KeyError occurs during the operation, it prints an error message
+        to stderr and exits with an UNKNOWN status. If a key is not found in self.parameters,
+        it sets the respective parameter value to '-'.
+        """
+        # Initialize empty lists
         frequencies = []
         status = []
 
-        # Try to extract parameters, handle KeyError if parameters not in the dict
         try:
-            working_mode = self.parameters['working_mode']
-            work_bandwidth = self.parameters["work_bandwidth"]
-            central_frequency_point = self.parameters['central_frequency_point']
+            # Fetch parameters with '.get()' and default to '-' if key not found
+            working_mode = self.parameters.get('working_mode', '-')
+            work_bandwidth = self.parameters.get("work_bandwidth", '-')
+            central_frequency_point = self.parameters.get('central_frequency_point', '-')
 
             # Construct frequency and status lists
             for channel in range(1, 17):
-                frequencies.append(self.parameters[f"channel_{channel}_freq"])
-                status.append(self.parameters[f"channel_{channel}_status"])
+                frequencies.append(self.parameters.get(f"channel_{channel}_freq", '-'))
+                status.append(self.parameters.get(f"channel_{channel}_status", '-'))
 
-        except KeyError as ke:
-            sys.stderr.write(f"UNKNOWN - Error: Missing parameter key in self.parameters - {ke}")
+        except Exception as e:
+            sys.stderr.write(f"UNKNOWN - Error: {str(e)}")
             sys.exit(UNKNOWN)
 
         table_html = ""
 
         # Construct HTML table according to working mode
-        try:
-            if working_mode == 'Channel Mode':
-                table_html += self._generate_channel_mode_table(frequencies, status)
-            else:
-                table_html += self._generate_other_mode_table(working_mode,
-                                                              work_bandwidth,
-                                                              central_frequency_point)
-        except IndexError as ie:
-            sys.stderr.write(f"UNKNOWN - Error: List index out of range - {ie}")
-            sys.exit(UNKNOWN)
+        if working_mode == 'Channel Mode':
+            table_html += self._generate_channel_mode_table(frequencies, status)
+        else:
+            table_html += self._generate_other_mode_table(working_mode, work_bandwidth, central_frequency_point)
 
         return table_html
 
@@ -2484,49 +2482,66 @@ class HtmlTable:
         Applies styling based on alarm conditions.
 
         Returns:
-            str: The generated HTML table
+            str: The generated HTML table. In case of an error, an empty string is returned.
         """
+        try:
+            # retrieve and initialize styles
+            default_style = f"style=font-size:12px"
+            uplink_power_style = default_style
+            downlink_power_style = default_style
 
-        # Define default styling
-        default_style = f"style=font-size:12px"
-        uplink_power_style = default_style
-        downlink_power_style = default_style
+            # Update uplink and downlink_power_style based on alarm statuses
+            # _get_alarm_style is extrapolated to be a part of this class and hence we use self
+            if self.alarm.uplink_power_alarm == CRITICAL:
+                uplink_power_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
+            elif self.alarm.uplink_power_alarm == WARNING:
+                uplink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
 
-        # Update styling based on alarm conditions
-        if self.alarm.uplink_power_alarm is CRITICAL:
-            uplink_power_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
-        elif self.alarm.uplink_power_alarm is WARNING:
-            uplink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
+            if self.alarm.downlink_power_alarm == CRITICAL:
+                downlink_power_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
+            elif self.alarm.downlink_power_alarm == WARNING:
+                downlink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
 
-        if self.alarm.downlink_power_alarm is CRITICAL:
-            downlink_power_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
-        elif self.alarm.downlink_power_alarm is WARNING:
-            downlink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
+            uplink_input_power = self.parameters.get('ulInputPower', "")
+            uplink_attenuation_power = self.parameters.get('ulAtt', "")
+            downlink_output_power = self.parameters.get('dlOutputPower', "")
+            downlink_attenuation_power = self.parameters.get('dlAtt', "")
 
-        # Generate the HTML table
-        table2 = "<table width=250>"
+            # Generate HTML structure according to given format
+            table = ("<table width=250>"
+                     "<thead>"
+                     "<tr align=\"center\" style=font-size:12px>"
+                     "<th width='12%'>Link</font></th>"
+                     "<th width='33%'>Power</font></th>"
+                     "<th width='10%'>Attenuation</font></th>"
+                     "</tr></thead>"
+                     "<tbody>"
+                     f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>"
+                     f"<td>{uplink_input_power}[dBm]</td>"
+                     f"<td>{uplink_attenuation_power}[dB]</td></tr>"
+                     f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>"
+                     f"<td>{downlink_output_power}[dBm]</td>"
+                     f"<td>{downlink_attenuation_power}[dB]</td></tr>"
+                     "</tbody></table>")
+            return table
 
-        # Define table header with styling
-        table2 += \
-            "<thead>" \
-            "<tr  align=\"center\" style=font-size:12px>" \
-            "<th width='12%'>Link</font></th>" \
-            f"<th width='33%'>Power</font> </th>" \
-            "<th width='10%'>Attenuation</font></th>" \
-            "</tr>" \
-            "</thead>"
+        except (KeyError, AttributeError) as e:
+            # Write error to stderr and exit with status UNKNOWN when there is an Exception
+            sys.stderr.write(f"UNKNOWN - Error: {str(e)}")
+            sys.exit(UNKNOWN)
 
-        # Populate table body with power and attenuation values
-        table2 += \
-            f"<tbody>" \
-            f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>" \
-            f"<td>{self.parameters['ulInputPower']}[dBm]</td>" \
-            f"<td>{self.parameters['ulAtt']}[dB]</td></tr>" \
-            f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>" \
-            f"<td>{self.parameters['dlOutputPower']}[dBm]</td>" \
-            f"<td>{self.parameters['dlAtt']}[dB]</td></tr>" \
-            f"</tbody></table>"
-        return table2
+    def _get_alarm_style(self, color, font_size):
+        """
+        Defines the HTML style string for alarms.
+
+        Args:
+            color (str): The color for the alarm string.
+            font_size (str): The font size for the alarm string.
+
+        Returns:
+            str: The HTML style string.
+        """
+        return f"style=font-size:{font_size};color:{color}"
 
     def get_vswr_temperature_table(self):
         # Define default styling
@@ -2748,28 +2763,36 @@ class Graphite:
         return graphite
 
     def dmu_output(self):
+        """
+        Constructs a graphite string with parameters data.
 
-        graphite = ""
-        dl_str = f"Downlink={self.parameters['dlOutputPower']}"
-        dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
-        dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
-        temperature_str = "Temperature=" + str(self.parameters['temperature'])
-        temperature_str += ";" + str(self.parameters['warning_temperature_threshold'])
-        temperature_str += ";" + str(self.parameters['critical_temperature_threshold'])
-        graphite = dl_str + " " + temperature_str
-        return graphite
+        Returns:
+            graphite (str): The constructed graphite string.
 
-    def discovery_output(self):
-        rt = self.parameters['rt']
-        dt = self.parameters['dt']
-        rt_str = "RT=" + rt
-        rt_str += ";" + str(1)
-        rt_str += ";" + str(1)
-        dt_str = "DT=" + dt
-        dt_str += ";" + str(2)
-        dt_str += ";" + str(2)
-        graphite = rt_str + " " + dt_str
-        return graphite
+        If any exception occurs during the operation, it will print an error message
+        to stderr and exits with an UNKNOWN status. If a key is not found in self.parameters,
+        it sets the respective parameter value to '-'.
+        """
+        try:
+            # Use dict.get to safely fetch values; defaults to '-' if key is not found
+            dl_output_power = str(self.parameters.get('dlOutputPower', '-'))
+            critical_uplink_threshold = str(self.parameters.get('critical_uplink_threshold', '-'))
+
+            temperature = str(self.parameters.get('temperature', '-'))
+            warning_temperature_threshold = str(self.parameters.get('warning_temperature_threshold', '-'))
+            critical_temperature_threshold = str(self.parameters.get('critical_temperature_threshold', '-'))
+
+            # Structure graphite string using fetched parameters
+            dl_str = f"Downlink={dl_output_power};{critical_uplink_threshold};{critical_uplink_threshold}"
+            temperature_str = f"Temperature={temperature};{warning_temperature_threshold};{critical_temperature_threshold}"
+            graphite = f"{dl_str} {temperature_str}"
+
+            return graphite
+
+        except Exception as e:
+            # Handle any unexpected exception, write error message to stderr & exit
+            sys.stderr.write(f"UNKNOWN - Error: {str(e)}")
+            sys.exit(UNKNOWN)
 
     def dmu_serial_single(self):
         graphite = ""
@@ -2855,20 +2878,8 @@ class PluginOutput:
         return exit_code, plugin_output_message
 
     def get_master_remote_service_message(self):
-        # Default values for downlink and uplink power
-        default_power = 100.0
-        # Get downlink power
-        downlink_power = float(self.parameters.get('dlOutputPower', default_power))
-        # Get uplink power
-        uplink_power = float(self.parameters.get('ulInputPower', default_power))
-        # Set default values if the values are '-'
-        downlink_power = 100.0 if downlink_power == 100.0 else downlink_power
-        uplink_power = 100.0 if uplink_power == 100.0 else uplink_power
+
         graphite = ""
-        if downlink_power > 50.0:
-            self.parameters['dlOutputPower'] = "-"
-        if uplink_power > 50.0:
-            self.parameters['ulInputPower'] = "-"
         alarm = Alarm(self.parameters)
 
         html_table = HtmlTable(self.parameters, alarm)
