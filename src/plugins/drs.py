@@ -31,6 +31,14 @@ WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
 
+# Define constant values
+DEFAULT_WARNING_UPLINK_THRESHOLD = 200
+DEFAULT_CRITICAL_UPLINK_THRESHOLD = 200
+DEFAULT_WARNING_DOWNLINK_THRESHOLD = 200
+DEFAULT_CRITICAL_DOWNLINK_THRESHOLD = 200
+DEFAULT_WARNING_TEMPERATURE_THRESHOLD = 200
+DEFAULT_CRITICAL_TEMPERATURE_THRESHOLD = 200
+
 fix_ip_end = 0x16
 fix_ip_end_opt_1 = 0x64
 fix_ip_end_opt_2 = 0x78
@@ -1724,7 +1732,7 @@ class Command:
 
         self.cmd_number_ok = None
         self.serial = None
-        self.parameters = self.blank_parameter()
+        self.parameters = {}
         self.set_args(args)
 
     def set_args(self, args):
@@ -2119,23 +2127,6 @@ class Command:
             sys.stderr.write(f"CRITICAL - An error occurred during command decoding: {e}")
             sys.exit(CRITICAL)
 
-    def blank_parameter(self):
-        parameters = {}
-        dru_parameters = {'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
-                          'vswr': '-', 'working_mode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
-                          "Downlink Start Frequency": '-'}
-
-        dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
-                          'optical_port_devices_connected_3': "-",
-                          'optical_port_devices_connected_4': "-", 'dlOutputPower': 100.0, 'ulInputPower': 100.0,
-                          'ulAtt': "-", 'dlAtt': "-",
-                          'working_mode': "-", "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
-                          'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
-
-        parameters.update(dru_parameters)
-        parameters.update(dmu_parameters)
-        return parameters
-
     def setSerial(self, port, baudrate):
         for times in range(3):
             try:
@@ -2203,7 +2194,6 @@ class Command:
                 if not self._transmit_and_receive_serial(baud=baud_rate, port=port_dru):
                     return CRITICAL, self._print_error(port_dru)
 
-
             else:
                 if not self._transmit_and_receive_tcp(address):
                     return CRITICAL, self._print_error(address)
@@ -2245,13 +2235,20 @@ class Alarm:
         self.downlink_power_alarm = OK
         self.temperature_alarm = OK
 
-        # Extract alarm thresholds from parameters
-        self.critical_uplink_power_threshold = self.parameters['critical_uplink_threshold']
-        self.warning_uplink_power_threshold = self.parameters['warning_uplink_threshold']
-        self.critical_downlink_power_threshold = self.parameters['critical_downlink_threshold']
-        self.warning_downlink_power_threshold = self.parameters['warning_downlink_threshold']
-        self.critical_temperature_threshold = self.parameters['critical_temperature_threshold']
-        self.warning_temperature_threshold = self.parameters['warning_temperature_threshold']
+        # Extract alarm thresholds from parameters with default values
+        self.critical_uplink_power_threshold = self.parameters.get('critical_uplink_threshold',
+                                                                   DEFAULT_CRITICAL_UPLINK_THRESHOLD)
+        self.warning_uplink_power_threshold = self.parameters.get('warning_uplink_threshold',
+                                                                  DEFAULT_WARNING_UPLINK_THRESHOLD)
+        self.critical_downlink_power_threshold = self.parameters.get('critical_downlink_threshold',
+                                                                     DEFAULT_CRITICAL_DOWNLINK_THRESHOLD)
+        self.warning_downlink_power_threshold = self.parameters.get('warning_downlink_threshold',
+                                                                    DEFAULT_WARNING_DOWNLINK_THRESHOLD)
+        self.critical_temperature_threshold = self.parameters.get('critical_temperature_threshold',
+                                                                  DEFAULT_CRITICAL_TEMPERATURE_THRESHOLD)
+        self.warning_temperature_threshold = self.parameters.get('warning_temperature_threshold',
+                                                                 DEFAULT_WARNING_TEMPERATURE_THRESHOLD)
+
         self.check_alarm()
 
     def check_exit_code(self):
@@ -2270,9 +2267,9 @@ class Alarm:
         """
 
         # Extract power and temperature values from parameters
-        downlink_power = self._get_value(self.parameters['dlOutputPower'], -200)
-        uplink_power = self._get_value(self.parameters['ulInputPower'], -200)
-        temperature = self._get_value(self.parameters['temperature'], -200)
+        downlink_power = self.parameters.get('dlOutputPower', -200)
+        uplink_power = self.parameters.get('ulInputPower', -200)
+        temperature = self.parameters.get('temperature', -200)
 
         alarm = ""
 
@@ -2541,7 +2538,7 @@ class HtmlTable:
             temperature_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
         elif self.alarm.temperature_alarm is WARNING:
             temperature_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
-        temperature = str(self.parameters['temperature'])
+        temperature = self.parameters.get('temperature', "")
 
         # Define table header with styling
         table2 = \
