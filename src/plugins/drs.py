@@ -194,6 +194,7 @@ class Rx0SettingCmd(IntEnum):
     frequency_synchronization_switch = 0x84
     rx0_iir_bandwidth = 0xed
 
+
 class Tx0QueryCmd:
     compensation_enable_switch = 0x71
     gain_compensation = 0x73
@@ -205,6 +206,7 @@ class Tx0QueryCmd:
     power_offset = 0xea
     input_and_output_power = 0xf3
 
+
 class Tx0SettingCmd:
     compensation_enable_switch = 0x70
     gain_compensation = 0x71
@@ -212,6 +214,7 @@ class Tx0SettingCmd:
     filter_compensation = 0x78
     peak_output_power = 0x7a
     gain_power_control_att = 0xe7
+
 
 class Tx1QueryCmd:
     compensation_enable_switch = 0x80
@@ -221,6 +224,7 @@ class Tx1QueryCmd:
     peak_output_power = 0x8a
     gain_power_control_att = 0xe8
 
+
 class Tx1SettingCmd:
     compensation_enable_switch = 0x80
     gain_compensation = 0x82
@@ -228,6 +232,7 @@ class Tx1SettingCmd:
     filter_compensation = 0x88
     peak_output_power = 0x8a
     gain_power_control_att = 0xe8
+
 
 class DRSMasterCommand(IntEnum):
     optical_port_devices_connected_1 = 0xf8
@@ -249,6 +254,7 @@ class DRSMasterCommand(IntEnum):
     # rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
 
+
 class DRSRemoteCommand(IntEnum):
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
     input_and_output_power = Tx0QueryCmd.input_and_output_power
@@ -269,11 +275,13 @@ class DRSRemoteCommand(IntEnum):
     optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
     rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
 
+
 class DRSRemoteSerialCommand(IntEnum):
     optical_port_device_id_topology_1 = NearEndQueryCommandNumber.optical_port_device_id_topology_1
     optical_port_device_id_topology_2 = NearEndQueryCommandNumber.optical_port_device_id_topology_2
     optical_port_device_id_topology_3 = NearEndQueryCommandNumber.optical_port_device_id_topology_3
     optical_port_device_id_topology_4 = NearEndQueryCommandNumber.optical_port_device_id_topology_4
+
 
 class DiscoveryCommand(IntEnum):
     optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_1
@@ -291,6 +299,7 @@ class DiscoveryCommand(IntEnum):
     optical_port_mac_topology_3 = NearEndQueryCommandNumber.optical_port_mac_topology_3
     optical_port_mac_topology_4 = NearEndQueryCommandNumber.optical_port_mac_topology_4
 
+
 class DiscoveryRedBoardCommand(IntEnum):
     optical_port_devices_connected_1 = DRSMasterCommand.optical_port_devices_connected_1
     optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_2
@@ -307,12 +316,14 @@ class DiscoveryRedBoardCommand(IntEnum):
     optical_port_mac_topology_3 = NearEndQueryCommandNumber.optical_port_mac_topology_3
     optical_port_mac_topology_4 = NearEndQueryCommandNumber.optical_port_mac_topology_4
 
+
 class SettingCommand(IntEnum):
     gain_power_control_att = Tx0SettingCmd.gain_power_control_att
     channel_switch = Rx0SettingCmd.channel_switch
     optical_port_switch = NearEndSettingCommandNumber.optical_port_switch
     broadband_switching = 0x80
     channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
+
 
 class LtelDruCommand(Enum):
     # use the dict keys as the enum member names
@@ -330,23 +341,24 @@ class LtelDruCommand(Enum):
     downlink_vswr = (0x04, 0x0605)
     downlink_output_power = (0x04, 0x0305)
     power_amplifier_temperature = (0x04, 0x0105)
-    channel_1_number = (0x05,0x1004)
-    channel_2_number = (0x05,0x1104)
-    channel_3_number = (0x05,0x1204)
-    channel_4_number = (0x05,0x1304)
-    channel_5_number = (0x05,0x1404)
-    channel_6_number = (0x05,0x1504)
-    channel_7_number = (0x05,0x1604)
-    channel_8_number = (0x05,0x1704)
-    channel_9_number = (0x05,0x1804)
-    channel_10_number = (0x05,0x1904)
-    channel_11_number = (0x05,0x1a04)
-    channel_12_number = (0x05,0x1b04)        
-    channel_13_number = (0x05,0x1c04)
-    channel_14_number = (0x05,0x1d04)
-    channel_15_number = (0x05,0x1e04)
-    channel_16_number = (0x05,0x1f04)
-    #data:7E010100000000110100800102FF 05 1104 000006527E
+    channel_1_number = (0x05, 0x1004)
+    channel_2_number = (0x05, 0x1104)
+    channel_3_number = (0x05, 0x1204)
+    channel_4_number = (0x05, 0x1304)
+    channel_5_number = (0x05, 0x1404)
+    channel_6_number = (0x05, 0x1504)
+    channel_7_number = (0x05, 0x1604)
+    channel_8_number = (0x05, 0x1704)
+    channel_9_number = (0x05, 0x1804)
+    channel_10_number = (0x05, 0x1904)
+    channel_11_number = (0x05, 0x1a04)
+    channel_12_number = (0x05, 0x1b04)
+    channel_13_number = (0x05, 0x1c04)
+    channel_14_number = (0x05, 0x1d04)
+    channel_15_number = (0x05, 0x1e04)
+    channel_16_number = (0x05, 0x1f04)
+    # data:7E010100000000110100800102FF 05 1104 000006527E
+
 
 class DRU:
     def __init__(self, position, port, device_id, master_hostname, ip_addr, parent):
@@ -373,15 +385,15 @@ class DRU:
     def __eq__(self, other):
         return self.position == other.position and self.port == other.position and self.mac == other.mac and self.sn == other.sn
 
+
 class Icinga_Api:
     icinga_api_login = "root"
     icinga_api_password = "Admin.123"
-    
+
     def __init__(self, master_host):
         self.master_host = master_host
-                
-            
-    def _modify_hostname_service(self,hostname,servicename,icinga_query: {}):
+
+    def _modify_hostname_service(self, hostname, servicename, icinga_query: {}):
 
         request_url = f"https://{self.master_host}:5665/v1/objects/hosts/{hostname}"
         headers = {
@@ -391,22 +403,22 @@ class Icinga_Api:
 
         try:
             q = requests.post(request_url,
-                            headers=headers,
-                            data=json.dumps(icinga_query),
-                            auth=(self.icinga_api_login, self.icinga_api_password),
-                            verify=False,
-                            timeout=1)
+                              headers=headers,
+                              data=json.dumps(icinga_query),
+                              auth=(self.icinga_api_login, self.icinga_api_password),
+                              verify=False,
+                              timeout=1)
 
         except requests.exceptions.RequestException as e:
             sys.stderr.write(f"CRITICAL - {e}")
             sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
-                sys.stderr.write(f"WARNING - {e}")
-                sys.exit(WARNING)
-            # print(json.dumps(q.json(),indent=2))
+            sys.stderr.write(f"WARNING - {e}")
+            sys.exit(WARNING)
+        # print(json.dumps(q.json(),indent=2))
         return q
-    
-    def _log_status(self,message):
+
+    def _log_status(self, message):
         """
         Log status messages to stderr.
 
@@ -416,7 +428,7 @@ class Icinga_Api:
         """
 
         sys.stderr.write(f"{message} \n")
-    
+
     def _process_dmu_response(self, message, response):
         """
         Process and log the response from Icinga 2 Director, and deploy changes if necessary.
@@ -429,6 +441,7 @@ class Icinga_Api:
         """
         if response.status_code != 304:
             self._log_status(message)
+
 
 class Director:
     director_api_login = "admin"
@@ -463,7 +476,7 @@ class Director:
             'Accept': 'application/json',
             'X-HTTP-Method-Override': 'POST'
         }
-        
+
         try:
             q = requests.post(request_url,
                               headers=headers,
@@ -516,7 +529,7 @@ class Director:
             sys.exit(WARNING)
         # print(json.dumps(q.json(),indent=2))
         return q
-    
+
     def create_dru_host(self, dru: DRU, comm_type: int, type: int, imports, device):
 
         director_query = {
@@ -584,6 +597,7 @@ class Director:
         # print(json.dumps(q.json(),indent=2))
         return q
 
+
 class CommandData:
 
     def __init__(self):
@@ -620,7 +634,7 @@ class CommandData:
         length = cmd_name.value[0]
         code = cmd_name.value[1]
         length_code = f"{length:02X}{code:04X}"
-        data = length_code.ljust(length*2,'0')
+        data = length_code.ljust(length * 2, '0')
         self.command_number = cmd_name
         cmd_unit = (
             f"{unknown1:04X}"
@@ -633,9 +647,9 @@ class CommandData:
             f"{tx_rx2:02X}"
             f"{data}"
         )
-        
-        #7E010100000000110100800102FF04030500ACA27E sw chino
-        #7E010100000000110100800102FF04030500ACA27E sw uqomm
+
+        # 7E010100000000110100800102FF04030500ACA27E sw chino
+        # 7E010100000000110100800102FF04030500ACA27E sw uqomm
 
         crc = self.generate_checksum(cmd_unit)
         self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
@@ -748,6 +762,7 @@ class CommandData:
     def bytearray_to_hex(self, byte_array):
         hex_string = ''.join(format(byte, '02X') for byte in byte_array)
         return hex_string
+
 
 class Decoder:
 
@@ -877,7 +892,7 @@ class Decoder:
         if len(command_body) != 1:
             return {}
         return {
-            "dlAtt":  int.from_bytes(command_body, byteorder='little'),
+            "dlAtt": int.from_bytes(command_body, byteorder='little'),
         }
 
     @staticmethod
@@ -889,7 +904,8 @@ class Decoder:
         for i in range(15, -1, -1):
             bit = (command_body[0] >> i) & 1
             status = "ON" if bit == 0 else "OFF"
-            channels["channel" + str(1+i) + "Status"] = status
+            channel_number = 1 + i
+            channels[f"channel_{channel_number}_status"] = status
             i = i + 1
         return channels
 
@@ -902,7 +918,7 @@ class Decoder:
             3: "Channel Mode",
             2: "WideBand Mode",
         }
-        return {"workingMode": working_mode.get(command_body[0], "Unknown Mode")}
+        return {"working_mode": working_mode.get(command_body[0], "Unknown Mode")}
 
     @staticmethod
     def _decode_uplink_start_frequency(command_body):
@@ -939,7 +955,7 @@ class Decoder:
         return {
             "channel_bandwidth": Decoder._frequency_decode(command_body),
         }
-    
+
     @staticmethod
     def _decode_channel_1_number(command_body):
         """Decodes channel number"""
@@ -948,7 +964,7 @@ class Decoder:
         return {
             "channel_1_number": int.from_bytes(command_body, byteorder='little'),
         }
-        
+
     @staticmethod
     def _decode_channel_2_number(command_body):
         """Decodes channel number"""
@@ -957,7 +973,7 @@ class Decoder:
         return {
             "channel_2_number": int.from_bytes(command_body, byteorder='little'),
         }
-        
+
     @staticmethod
     def _decode_channel_3_number(command_body):
         """Decodes channel number"""
@@ -966,7 +982,7 @@ class Decoder:
         return {
             "channel_3_number": int.from_bytes(command_body, byteorder='little'),
         }
-    
+
     @staticmethod
     def _decode_channel_4_number(command_body):
         """Decodes channel number"""
@@ -975,7 +991,7 @@ class Decoder:
         return {
             "channel_4_number": int.from_bytes(command_body, byteorder='little'),
         }
-   
+
     @staticmethod
     def _decode_channel_5_number(command_body):
         """Decodes channel number"""
@@ -984,6 +1000,7 @@ class Decoder:
         return {
             "channel_5_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_6_number(command_body):
         """Decodes channel number"""
@@ -992,6 +1009,7 @@ class Decoder:
         return {
             "channel_6_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_7_number(command_body):
         """Decodes channel number"""
@@ -1000,6 +1018,7 @@ class Decoder:
         return {
             "channel_7_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_8_number(command_body):
         """Decodes channel number"""
@@ -1008,6 +1027,7 @@ class Decoder:
         return {
             "channel_8_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_9_number(command_body):
         """Decodes channel number"""
@@ -1016,6 +1036,7 @@ class Decoder:
         return {
             "channel_9_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_10_number(command_body):
         """Decodes channel number"""
@@ -1024,7 +1045,7 @@ class Decoder:
         return {
             "channel_10_number": int.from_bytes(command_body, byteorder='little'),
         }
-        
+
     @staticmethod
     def _decode_channel_11_number(command_body):
         """Decodes channel number"""
@@ -1033,7 +1054,7 @@ class Decoder:
         return {
             "channel_11_number": int.from_bytes(command_body, byteorder='little'),
         }
-        
+
     @staticmethod
     def _decode_channel_12_number(command_body):
         """Decodes channel number"""
@@ -1042,6 +1063,7 @@ class Decoder:
         return {
             "channel_12_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_13_number(command_body):
         """Decodes channel number"""
@@ -1050,6 +1072,7 @@ class Decoder:
         return {
             "channel_13_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_14_number(command_body):
         """Decodes channel number"""
@@ -1058,7 +1081,7 @@ class Decoder:
         return {
             "channel_14_number": int.from_bytes(command_body, byteorder='little'),
         }
-        
+
     @staticmethod
     def _decode_channel_15_number(command_body):
         """Decodes channel number"""
@@ -1067,6 +1090,7 @@ class Decoder:
         return {
             "channel_15_number": int.from_bytes(command_body, byteorder='little'),
         }
+
     @staticmethod
     def _decode_channel_16_number(command_body):
         """Decodes channel number"""
@@ -1074,8 +1098,8 @@ class Decoder:
             return {}
         return {
             "channel_16_number": int.from_bytes(command_body, byteorder='little'),
-        }   
-        
+        }
+
     @staticmethod
     def _frequency_decode(command_body: bytes) -> float:
         """
@@ -1458,7 +1482,7 @@ class Decoder:
             3: "Channel Mode",
             2: "WideBand Mode",
         }
-        return {"workingMode": working_mode.get(command_body[0], "Unknown Mode")}
+        return {"working_mode": working_mode.get(command_body[0], "Unknown Mode")}
 
     @staticmethod
     def _decode_optical_port_devices_connected_1(command_body):
@@ -1556,15 +1580,21 @@ class Decoder:
             return {}
 
     @staticmethod
-    def _decode_channel_switch(command_body):
-        if len(command_body) == 0:
+    def _decode_channel_switch(command_body: bytearray) -> dict:
+        """Decodes channel status information from the command body."""
+        # Check if command body is empty
+        if not command_body:
             return {}
-        i = 1
+
         channels = {}
-        for channel in command_body:
+        # Iterate through each byte in the command body
+        for i, channel in enumerate(command_body):
+            # Determine channel status based on byte value
             status = "ON" if channel == 0 else "OFF"
-            channels["channel" + str(i) + "Status"] = status
-            i = i + 1
+            # Create channel status key using channel number
+            channel_status_key = f"channel_{i + 1}_status"
+            # Add channel status to the dictionary
+            channels[channel_status_key] = status
         return channels
 
     @staticmethod
@@ -1612,7 +1642,6 @@ class Decoder:
         for i in range(0, 64, 4):
             number = command_body[i:i + 4]
             number = int.from_bytes(number, byteorder="little")
-            channels["channel" + str(ch) + "ulFreq"] = str(number / 10000)
             channels["channel_" + str(ch) + "_freq"] = str(number / 10000)
             ch = ch + 1
         return channels
@@ -1670,6 +1699,7 @@ class Decoder:
         parameter_dict['opt4TransmissionStatus'] = temp[7]
         return parameter_dict
 
+
 class Command:
     list = list()
     tcp_port = 65050
@@ -1701,13 +1731,13 @@ class Command:
         self.parameters['critical_downlink_threshold'] = int(args['critical_downlink_threshold'])
         self.parameters['warning_temperature_threshold'] = int(args['warning_temperature_threshold'])
         self.parameters['critical_temperature_threshold'] = int(args['critical_temperature_threshold'])
-        
+
         opt, dru = self.decode_address(self.parameters['address'])
         self.parameters['device_number'] = dru
         self.parameters['optical_port'] = opt
-        
+
         self.parameters['baud_rate'] = int(args['baud_rate'])
-            
+
     def create_command(self, cmd_type):
         """Create command based on type.
 
@@ -1728,10 +1758,10 @@ class Command:
             return CRITICAL, f"No command type {cmd_type} defined"
 
         if is_created:
-            return OK, f"Created {is_created} {cmd_type} commands" 
+            return OK, f"Created {is_created} {cmd_type} commands"
         else:
             return CRITICAL, f"No {cmd_type} commands created"
-        
+
     def _create_single_command(self):
         """Generates a single command frame.
 
@@ -1751,7 +1781,7 @@ class Command:
 
         return frame_len if frame_len > 0 else -2
 
-    def decode_address(self,address):
+    def decode_address(self, address):
         # Check if the address starts with 192.168.11
         if not address.startswith("192.168.11"):
             return None
@@ -1768,7 +1798,7 @@ class Command:
             opt = 4
 
         # Extract the dru number from the last byte of the IP address
-        dru = int(address.strip()[-1:])+1
+        dru = int(address.strip()[-1:]) + 1
 
         return opt, dru
 
@@ -1786,7 +1816,7 @@ class Command:
             discovery_serial=DiscoveryCommand,
             dmu_serial_service=DRSMasterCommand,
             dru_serial_service=LtelDruCommand,
-            discovery_redboard_serial = DiscoveryRedBoardCommand
+            discovery_redboard_serial=DiscoveryRedBoardCommand
         )
 
         device = self.parameters['device']
@@ -1894,12 +1924,12 @@ class Command:
             rt = time.time()
             self.serial = self.setSerial(port, baud)
         except serial.SerialException:
-                sys.stderr.write(f"CRITICAL - The specified port {port} is not available at {baud}")
-                sys.exit(CRITICAL)
-        
+            sys.stderr.write(f"CRITICAL - The specified port {port} is not available at {baud}")
+            sys.exit(CRITICAL)
+
         self.cmd_number_ok = 0
         for cmd_name in self.list:
-            
+
             self.write_serial_frame(cmd_name.query)
             query_time = time.time()
             data_received = self.read_serial_frame()
@@ -1908,7 +1938,7 @@ class Command:
                 self.cmd_number_ok += 1
             tmp = time.time() - query_time
             time.sleep(tmp)
-        
+
         self.serial.close()
         rt = str(time.time() - rt)
         self.parameters['rt'] = rt
@@ -1931,13 +1961,13 @@ class Command:
             cmd_bytes = bytearray.fromhex(Trama)
         except ValueError:
             sys.stderr.write(f"CRITICAL - Invalid hexadecimal format for the frame {Trama}")
-            sys.exit(CRITICAL)       
-        
+            sys.exit(CRITICAL)
+
         hex_byte = ''
         for cmd_byte in cmd_bytes:
             hex_byte = "{0:02x}".format(cmd_byte)
             self.serial.write(bytes.fromhex(hex_byte))
-        
+
         self.serial.flush()
 
     def read_serial_frame(self):
@@ -2001,7 +2031,7 @@ class Command:
     def _decode_ifboard_command(self, command: CommandData) -> int:
         reply_len = len(command.reply)
         query_len = len(command.query)
-        if len(command.reply) < len(command.query)/2:
+        if len(command.reply) < len(command.query) / 2:
             return 0
 
         module_function_index = 1
@@ -2027,38 +2057,58 @@ class Command:
             return 0
 
     def _decode_ltel_command(self, command: CommandData) -> int:
-        """Decodes a LtelDru command.
+        """
+        Decodes a LtelDru command and handles the processing of command data.
 
         Args:
-            command: The command to decode.
+            command (CommandData): The command to decode.
 
         Returns:
-            The number of decoded commands.
+            int: The number of decoded commands.
         """
-        
-        if command.reply == '':
-            return 0
+        try:
+            # Check if command.reply is empty; return 0 if so
+            if not command.reply:
+                return 0
 
-        module_function_index = 1
-        data_type_index = 3
-        cmd_number_index = 4
-        respond_flag_index = 5
-        cmd_body_length_index = 14
-        cmd_data_index = 17
-        response_flag = command.reply[respond_flag_index]
-        command_body_length = command.reply[cmd_body_length_index] - 3
-        command_body = command.reply[cmd_data_index:cmd_data_index + command_body_length]
-        if response_flag == ResponseFlag.SUCCESS:
-            command.reply_command_data = command_body
-            command.message = Decoder.ltel_decode(command.command_number, command_body)
-            return 1
-        else:
-            return 0
+            # Define necessary indices
+            respond_flag_index = 5
+            cmd_body_length_index = 14
+            cmd_data_index = 17
+
+            # Extract response flag, command body length, and command body
+            # Catch IndexError if command.reply is shorter than expected
+            try:
+                response_flag = command.reply[respond_flag_index]
+                command_body_length = command.reply[cmd_body_length_index] - 3
+                command_body = command.reply[cmd_data_index: \
+                                             cmd_data_index + command_body_length]
+            except IndexError as e:
+                sys.stderr.write(f"CRITICAL - command.reply is too short: {e}")
+                sys.exit(CRITICAL)
+
+            # Check if response flag indicates success
+            if response_flag == ResponseFlag.SUCCESS:
+                command.reply_command_data = command_body
+                # Attempt to decode command number
+                try:
+                    command.message = Decoder.ltel_decode(command.command_number,
+                                                          command_body)
+                except (TypeError, ValueError) as e:
+                    sys.stderr.write(f"CRITICAL - Cannot decode command number: {e}")
+                    sys.exit(CRITICAL)
+                return 1
+            else:
+                return 0
+
+        except Exception as e:
+            sys.stderr.write(f"CRITICAL - An error occurred during command decoding: {e}")
+            sys.exit(CRITICAL)
 
     def blank_parameter(self):
         parameters = {}
         dru_parameters = {'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'temperature': '-', 'dlAtt': '-', 'ulAtt': '-',
-                          'vswr': '-', 'workingMode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
+                          'vswr': '-', 'working_mode': '-', 'mac': '-', 'sn': '-', "Uplink Start Frequency": '-',
                           "Downlink Start Frequency": '-'}
 
         dmu_parameters = {'optical_port_devices_connected_1': "-", 'optical_port_devices_connected_2': "-",
@@ -2067,27 +2117,14 @@ class Command:
                           'opt2ConnectionStatus': "-",
                           'opt3ConnectionStatus': "-", 'opt4ConnectionStatus': "-", 'opt1TransmissionStatus': "-",
                           'opt2TransmissionStatus': "-", 'opt3TransmissionStatus': "-", 'opt4TransmissionStatus': "-",
-                          'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'ulAtt': "-", 'dlAtt': "-", 'workingMode': "-",
+                          'dlOutputPower': 100.0, 'ulInputPower': 100.0, 'ulAtt': "-", 'dlAtt': "-",
+                          'working_mode': "-",
                           'opt1ActivationStatus': '-', 'opt2ActivationStatus': '-', 'opt3ActivationStatus': '-',
                           'opt4ActivationStatus': '-', "Uplink Start Frequency": '-', "Downlink Start Frequency": '-',
                           'temperature': '-', 'central_frequency_point': '-', 'device_id': "-"}
 
-        channel_parameters = self.blank_channel_dict()
-
         parameters.update(dru_parameters)
         parameters.update(dmu_parameters)
-        parameters.update(channel_parameters)
-        return parameters
-
-    def blank_channel_dict(self):
-        parameters = {}
-        channel = 1
-        while channel <= 16:
-            parameters["channel" + str(channel) + "Status"] = "-"
-            parameters["channel" + str(channel) + "ulFreq"] = "-"
-            parameters["channel" + str(channel) + "dlFreq"] = "-"
-            parameters["channel_" + str(channel) + "_freq"] = "-"
-            channel += 1
         return parameters
 
     def setSerial(self, port, baudrate):
@@ -2110,7 +2147,7 @@ class Command:
         platform = os.name
         COM1_BAUD = 19200
         COM2_BAUD = 19200
-            
+
         # Realizar acciones basadas en el sistema operativo
         if platform == 'posix':  # Posix indica que es un sistema tipo Unix, como Linux
             DMU_PORT = '/dev/ttyS0'
@@ -2121,8 +2158,9 @@ class Command:
         else:
             # Acción por defecto para otros sistemas operativos
             print("Sistema operativo no identificado, ejecutando acción predeterminada.")
-            
-        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
+
+        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host', 'discovery_serial',
+                      'discovery_redboard_serial']:
             if not self._transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
                 sys.stderr.write(f"CRITICAL - no response from {DMU_PORT} at {COM1_BAUD}")
                 sys.exit(CRITICAL)
@@ -2134,7 +2172,7 @@ class Command:
             if not self._transmit_and_receive_tcp(address):
                 sys.stderr.write(f"CRITICAL - no response from {address}")
                 sys.exit(CRITICAL)
-                          
+
     def transmit_and_receive(self):
         """
         Transmit and receive data based on device and address.
@@ -2143,27 +2181,28 @@ class Command:
             device = self.parameters.get('device')
             address = self.parameters.get('address')
             baud_rate = self.parameters.get('baud_rate')
-            
-            os_name = os.name.lower()
-            port_dmu, port_dru = self._get_ports(os_name)  
-            
-            if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host','discovery_serial','discovery_redboard_serial']:
-                if not self._transmit_and_receive_serial(baud=baud_rate,port=port_dmu):
-                    return CRITICAL,self._print_error(port_dmu)
-                
-            elif device == 'dru_serial_service':
-                if not self._transmit_and_receive_serial(baud=baud_rate,port=port_dru):
-                    return CRITICAL,self._print_error(port_dru)
 
-                    
+            os_name = os.name.lower()
+            port_dmu, port_dru = self._get_ports(os_name)
+
+            if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host', 'discovery_serial',
+                          'discovery_redboard_serial']:
+                if not self._transmit_and_receive_serial(baud=baud_rate, port=port_dmu):
+                    return CRITICAL, self._print_error(port_dmu)
+
+            elif device == 'dru_serial_service':
+                if not self._transmit_and_receive_serial(baud=baud_rate, port=port_dru):
+                    return CRITICAL, self._print_error(port_dru)
+
+
             else:
                 if not self._transmit_and_receive_tcp(address):
-                    return CRITICAL,self._print_error(address)
+                    return CRITICAL, self._print_error(address)
 
-            return OK,f"received data"
+            return OK, f"received data"
         except Exception as e:
-            return CRITICAL,f"Error: {e}"
-        
+            return CRITICAL, f"Error: {e}"
+
     def _get_ports(self, os_name):
         """Get serial port names based on OS."""
         if os_name == 'posix':
@@ -2173,10 +2212,11 @@ class Command:
         else:
             sys.stderr.write("OS not recognized, using default action.")
             return '', ''
-            
+
     def _print_error(self, device):
         """Print error message."""
         return (f"no response from {device}")
+
 
 class Alarm:
     """
@@ -2267,6 +2307,7 @@ class Alarm:
         elif value >= warning_threshold:
             setattr(self, f'{parameter_name}_alarm', WARNING)
 
+
 class HtmlTable:
 
     def __init__(self, parameters, alarm: Alarm):
@@ -2286,20 +2327,19 @@ class HtmlTable:
     def display(self):
         # device_table = dmu_table(parameters) if device == 'dmu' else dru_table(parameters)
         device_table = self.if_board_table()
-        channel_table = self.get_channel_freq_table()
+        channel_table = self._get_channel_freq_table()
         table = ""
         table += '<div class="sigma-container">'
         table += device_table + channel_table
         table += "</div>"
         return table
-    
+
     def discovery_table(self):
         table = ""
         table += '<div class="sigma-container">'
         table += self.get_opt_connected_table()
         table += "</div>"
         return table
-        
 
     def dru_table(self):
         power_att_table = self.get_power_table()
@@ -2311,84 +2351,126 @@ class HtmlTable:
         power_table = self.get_power_table()
         return opt_status_table + power_table
 
+    def ltel_board_table(self):
+        device_table = self.if_board_table()
+        channel_table = self._get_ltel_board_channel_freq_table()
+        table = ""
+        table += '<div class="sigma-container">'
+        table += device_table + channel_table
+        table += "</div>"
+        return table
+
     def if_board_table(self):
         opt_status_table = self.get_opt_status_table()
         power_att_table = self.get_power_table()
         vswr_temperature_table = self.get_vswr_temperature_table()
         return opt_status_table + power_att_table + vswr_temperature_table
 
-    def get_channel_freq_tableNEW(self):
-        table3 = ""
-        table = ""
+    def _get_ltel_board_channel_freq_table(self):
 
-        if (self.parameters['workingMode'] == 'Channel Mode'):
-            table = \
-                "<table width=100%>" \
-                "<thead>" \
-                "<tr style=font-size:7px>"
-            for i in range(1, 17):
-                channel = str(i)
-                table += "<th width='5%'>Ch " + channel + "</font></th>"
-            table += "</tr></thead>" \
-                #                "<tbody>"
-        #           "<tr align=\"center\" style=font-size:11px>"
-        #           for i in range(1, 17):
-        #               channel = str(i)
-        #               table += "<th width='5%'>Ch " + self.parameters["channel" + str(channel) + "dlFreq"] + "</font></th>"
-        #           table += "</tr>"
-        #           "<tr align=\"center\" style=font-size:11px>"
-        #           for i in range(1, 17):
-        #               channel = str(i)
-        #               table += "<th width='5%'>Ch " + self.parameters["channel" + str(channel) + "Status"] + "</font></th>"
-        #           table += "</tr>"
-        else:
-            table = "<table width=90%>"
-            table += "<thead><tr style=font-size:12px>"
-            table += "<th width='10%'>Mode</font></th>"
-            table += "<th width='30%'>Work Bandwidth [Mhz]</font></th>"
-            table += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
-            #      table3 += "<th width='30%'>Downlink [Mhz]</font></th>"
-            table += "</tr></thead><tbody>"
-            table += "<tr align=\"center\" style=font-size:12px>"
-            table += "<td>" + self.parameters['workingMode'] + "</td>"
-            table += "<td>" + str(self.parameters["work_bandwidth"]) + "</td>"
-            # table3 += "<td>" + parameter_dic['Uplink Start Frequency'] + "</td>"
-            # table3 += "<td>" + parameter_dic['Downlink Start Frequency'] + "</td>"
-            table += "<td>" + self.parameters['central_frequency_point'] + "</td>"
+        channel_bandwidth = 0.0012
+        uplink_start_frequency = self.parameters.get('uplink_start_frequency', 0)
+        for channel in range(1, 17):
+            self.parameters["channel_" + str(channel) + "_freq"] = uplink_start_frequency + self.parameters.get(
+                'channel_1_number', 0) * channel_bandwidth
+        return self._get_channel_freq_table()
 
-        table += "</tbody></table>"
-        return table
+    def _get_channel_freq_table(self):
+        """
+        Generates HTML table with frequency and status data based on the working mode.
 
-    def get_channel_freq_table(self):
+        Returns:
+            table_html (str): HTML formatted string of the data table.
+        """
 
-        if (self.parameters['workingMode'] == 'Channel Mode'):
-            table3 = "<table width=100%>"
-            table3 += "<thead><tr style=font-size:11px>"
-            table3 += "<th width='5%'>Channel</font></th>"
-            table3 += "<th width='5%'>Status</font></th>"
-            table3 += "<th width='50%'>Downlink [Mhz]</font></th>"
-            table3 += "</tr></thead><tbody>"
-            for i in range(1, 17):
-                channel = str(i)
-                table3 += "<tr align=\"center\" style=font-size:12px>"
-                table3 += "<td>" + channel + "</td>"
-                table3 += "<td>" + self.parameters["channel" + str(channel) + "Status"] + "</td>"
-                table3 += "<td>" + self.parameters["channel_" + str(channel) + "_freq"] + "</td>"
-                table3 += "</tr>"
-        else:
-            table3 = "<table width=90%>"
-            table3 += "<thead><tr style=font-size:12px>"
-            table3 += "<th width='10%'>Mode</font></th>"
-            table3 += "<th width='30%'>Work Bandwidth [Mhz]</font></th>"
-            table3 += "<th width='30%'>Central Frequency Point [Mhz]</font></th>"
-            table3 += "</tr></thead><tbody>"
-            table3 += "<tr align=\"center\" style=font-size:12px>"
-            table3 += "<td>" + self.parameters['workingMode'] + "</td>"
-            table3 += "<td>" + str(self.parameters["work_bandwidth"]) + "</td>"
-            table3 += "<td>" + self.parameters['central_frequency_point'] + "</td>"
+        frequencies = []
+        status = []
 
-        table3 += "</tbody></table>"
-        return table3
+        # Try to extract parameters, handle KeyError if parameters not in the dict
+        try:
+            working_mode = self.parameters['working_mode']
+            work_bandwidth = self.parameters["work_bandwidth"]
+            central_frequency_point = self.parameters['central_frequency_point']
+
+            # Construct frequency and status lists
+            for channel in range(1, 17):
+                frequencies.append(self.parameters[f"channel_{channel}_freq"])
+                status.append(self.parameters[f"channel_{channel}_status"])
+
+        except KeyError as ke:
+            sys.stderr.write(f"UNKNOWN - Error: Missing parameter key in self.parameters - {ke}")
+            sys.exit(UNKNOWN)
+
+        table_html = ""
+
+        # Construct HTML table according to working mode
+        try:
+            if working_mode == 'Channel Mode':
+                table_html += self._generate_channel_mode_table(frequencies, status)
+            else:
+                table_html += self._generate_other_mode_table(working_mode,
+                                                              work_bandwidth,
+                                                              central_frequency_point)
+        except IndexError as ie:
+            sys.stderr.write(f"UNKNOWN - Error: List index out of range - {ie}")
+            sys.exit(UNKNOWN)
+
+        return table_html
+
+    def _generate_channel_mode_table(self, frequencies: list, status: list) -> str:
+        """
+        Generates HTML table for the 'Channel Mode'.
+
+        Arguments:
+            frequencies (list): List of frequency data.
+            status  (list): List of status data.
+
+        Returns:
+            str: HTML formatted string of the data table.
+        """
+        table_html = "<table width=100%>" + \
+                     "<thead><tr style=font-size:11px>" + \
+                     "<th width='5%'>Channel</font></th>" + \
+                     "<th width='5%'>Status</font></th>" + \
+                     "<th width='50%'>Downlink [Mhz]</font></th>" + \
+                     "</tr></thead><tbody>"
+
+        for i in range(16):
+            table_html += f"<tr align='center' style=font-size:12px>" + \
+                          f"<td>{i + 1}</td>" + \
+                          f"<td>{status[i]}</td>" + \
+                          f"<td>{frequencies[i]}</td>" + \
+                          "</tr>"
+
+        return table_html + "</tbody></table>"
+
+    def _generate_other_mode_table(self, working_mode: str,
+                                   work_bandwidth: int,
+                                   central_frequency_point: int) -> str:
+        """
+        Generates HTML table for working modes other than 'Channel Mode'.
+
+        Arguments:
+            working_mode (str): The working mode of the system.
+            work_bandwidth (int): Work bandwidth data.
+            central_frequency_point (int): Central frequency point data.
+
+        Returns:
+            str: HTML formatted string of the data table.
+        """
+        table_html = "<table width=90%>" + \
+                     "<thead><tr style=font-size:12px>" + \
+                     "<th width='10%'>Mode</font></th>" + \
+                     "<th width='30%'>Work Bandwidth [Mhz]</font></th>" + \
+                     "<th width='30%'>Central Frequency Point [Mhz]</font></th>" + \
+                     "</tr></thead><tbody>" + \
+                     "<tr align='center' style=font-size:12px>" + \
+                     f"<td>{working_mode}</td>" + \
+                     f"<td>{work_bandwidth}</td>" + \
+                     f"<td>{central_frequency_point}</td>" + \
+                     "</tr></tbody></table>"
+
+        return table_html
 
     def get_power_table(self):
         """
@@ -2527,64 +2609,64 @@ class HtmlTable:
         table1 += "</table>"
 
         return table1
-    
+
     def get_opt_connected_table(self):
-            """
-            Generates an HTML table displaying optical port status information.
-            Determines the number of ports based on the device type.
+        """
+        Generates an HTML table displaying optical port status information.
+        Determines the number of ports based on the device type.
 
-            Returns:
-                str: The generated HTML table
-            """
-            # Retrieve device type and calculate the optical range
-            device = self.parameters["device"]
-            opt_range = self._get_opt_range(device)
+        Returns:
+            str: The generated HTML table
+        """
+        # Retrieve device type and calculate the optical range
+        device = self.parameters["device"]
+        opt_range = self._get_opt_range(device)
 
-            # Initialize the HTML table with a specified width
-            table_html = "<table width='320'>"
+        # Initialize the HTML table with a specified width
+        table_html = "<table width='320'>"
 
-            # Define table header with styling
+        # Define table header with styling
+        table_html += (
+            "<thead>"
+            "<tr align='center' style='font-size:12px;'>"
+            "<th width='12%'>Port</th>"
+        )
+
+        # Add headers for remote port IDs
+        for remote_number in range(1, 8 + 1):
+            table_html += f"<th width='13%'>Remote {remote_number} id</th>"
+
+        table_html += "</tr></thead>"
+
+        # Populate table body with optical port information
+        table_html += "<tbody>"
+        for i in range(1, 4 + 1):
+            # Construct key names to access parameter values
+            connected_name = f"optical_port_devices_connected_{i}"
+            opt = str(i)
+            connected = self.parameters.get(connected_name, 0)
+
             table_html += (
-                "<thead>"
                 "<tr align='center' style='font-size:12px;'>"
-                "<th width='12%'>Port</th>"
+                f"<td>opt{opt}</td>"
             )
 
-            # Add headers for remote port IDs
-            for remote_number in range(1, 8 + 1):
-                table_html += f"<th width='13%'>Remote {remote_number} id</th>"
+            # Retrieve optical port device ID topology and populate IDs for connected devices
+            opt_key = f"optical_port_device_id_topology_{opt}"
+            for dru_connected in range(1, connected + 1):
+                dru_connected_key = f"id_{dru_connected}"
+                dru_id = self.parameters[opt_key].get(dru_connected_key, "-")
+                table_html += f"<td>{dru_id}</td>"
 
-            table_html += "</tr></thead>"
+            # Fill in placeholders for non-connected ports
+            for id in range(connected + 1, 8 + 1):
+                table_html += f"<td> - </td>"
 
-            # Populate table body with optical port information
-            table_html += "<tbody>"
-            for i in range(1, 4 + 1):
-                # Construct key names to access parameter values
-                connected_name = f"optical_port_devices_connected_{i}"
-                opt = str(i)
-                connected = self.parameters.get(connected_name, 0)
+            table_html += "</tr>"
 
-                table_html += (
-                    "<tr align='center' style='font-size:12px;'>"
-                    f"<td>opt{opt}</td>"
-                )
+        table_html += "</tbody></table>"
 
-                # Retrieve optical port device ID topology and populate IDs for connected devices
-                opt_key = f"optical_port_device_id_topology_{opt}"
-                for dru_connected in range(1, connected + 1):
-                    dru_connected_key = f"id_{dru_connected}"
-                    dru_id = self.parameters[opt_key].get(dru_connected_key, "-")
-                    table_html += f"<td>{dru_id}</td>"
-
-                # Fill in placeholders for non-connected ports
-                for id in range(connected + 1, 8 + 1):
-                    table_html += f"<td> - </td>"
-
-                table_html += "</tr>"
-
-            table_html += "</tbody></table>"
-
-            return table_html
+        return table_html
 
     def _get_opt_range(self, device):
         """
@@ -2604,6 +2686,7 @@ class HtmlTable:
         else:
             return 4
 
+
 class Graphite:
     def __init__(self, parameters):
         self.parameters = parameters
@@ -2617,7 +2700,7 @@ class Graphite:
         """
         if self.parameters['device'] in ['dmu_ethernet', 'dru_ethernet', 'dmu_serial_service']:
             return self.dmu_output()
-        elif self.parameters['device'] in ['discovery_ethernet', 'discovery_serial','discovery_redboard_serial']:
+        elif self.parameters['device'] in ['discovery_ethernet', 'discovery_serial', 'discovery_redboard_serial']:
             return self.discovery_output()
         elif self.parameters['device'] in ['dmu_serial_host', 'dru_serial_host']:
             return self.dmu_serial_single()
@@ -2674,6 +2757,7 @@ class Graphite:
         graphite = rt_str + " "
         return graphite
 
+
 class PluginOutput:
     def __init__(self, parameters):
         self.parameters = parameters
@@ -2714,7 +2798,7 @@ class PluginOutput:
         exit_code = alarm.check_alarm()
         html_table = HtmlTable(self.parameters, alarm)
         graphite = Graphite(self.parameters)
-        # sys.stderr.write(alarm.display() + html_table.display() + "|" + graphite.display())
+        sys.stderr.write(html_table.ltel_board_table() + "|" + graphite.display())
         plugin_output_message = str(self.parameters)
         return exit_code, plugin_output_message
 
@@ -2724,8 +2808,8 @@ class PluginOutput:
         optical_port = self.parameters["optical_port"]
         if optical_port is None:
             exit_value = CRITICAL
-            message = f"CRITICAL - No optical_port defined in service" 
-            return exit_value,message
+            message = f"CRITICAL - No optical_port defined in service"
+            return exit_value, message
         key_name = f"optical_port_device_id_topology_{optical_port}"
         optical_port_device_id_topology = self.parameters.get(key_name, None)
         exit_value = CRITICAL
@@ -2796,6 +2880,7 @@ class PluginOutput:
         else:
             return WARNING, f"WARNING  - no output message for {device}"
 
+
 class Discovery:
     """
     Class responsible for discovering and creating DRU devices.
@@ -2811,7 +2896,6 @@ class Discovery:
 
         self.parameters = parameters
 
-
         self.cmd_name_map = {
             1: DRSRemoteSerialCommand.optical_port_device_id_topology_1,
             2: DRSRemoteSerialCommand.optical_port_device_id_topology_2,
@@ -2821,19 +2905,18 @@ class Discovery:
 
     def search_and_create_dru(self):
         """Discover DRU based on device type."""
-        
+
         device = self.parameters["device"]
-        
+
         if device == "discovery_ethernet":
             self._discover_ethernet()
         elif device == "discovery_serial":
             self._discover_serial()
-        elif device == "discovery_redboard_serial":  
+        elif device == "discovery_redboard_serial":
             self._discover_redboad_serial()
-        else: 
+        else:
             return WARNING
         return OK
-
 
     def _get_director_instance(self):
         """
@@ -2848,7 +2931,7 @@ class Discovery:
         master_host = '192.168.60.73'
         return Director(master_host)
 
-    def _create_host_query(self, dru, device, imports, cmd_name=None,baud_rate=19200):
+    def _create_host_query(self, dru, device, imports, cmd_name=None, baud_rate=19200):
         """
         Generate a query for creating or updating hosts in Icinga 2 Director.
 
@@ -2871,7 +2954,7 @@ class Discovery:
             'vars': {
                 'parents': [dru.parent],
                 'device': device,
-                'baud_rate' : str(baud_rate)
+                'baud_rate': str(baud_rate)
             }
         }
 
@@ -2900,7 +2983,7 @@ class Discovery:
                 'parents': [dru.parent]
             }
         }
-    
+
     def _log_status(self, dru, message):
         """
         Log status messages to stderr.
@@ -2935,9 +3018,9 @@ class Discovery:
             director (Director): An instance of the Director class.
         """
         if response.status_code != 304:
-            #self._log_status(dru, message)
+            # self._log_status(dru, message)
             self._deploy_if_needed(director, response)
-                  
+
     def _dru_connected_search(self):
         """
         Identify and gather information about connected DRU devices.
@@ -2963,7 +3046,7 @@ class Discovery:
                 fix_ip_end_opt = [0, 100, 120, 140, 160]
                 net = self.parameters["device_id"]
                 id_key = f"optical_port_device_id_topology_{opt}"
-                #device_id = self.parameters[id_key][f"id_{connected}"]
+                # device_id = self.parameters[id_key][f"id_{connected}"]
                 device_id = self.parameters.get(id_key, {}).get(f"id_{connected}")
                 parent = self._get_parent_name(hostname, dru_connected, opt, connected)
                 ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
@@ -2975,7 +3058,7 @@ class Discovery:
                     self.parameters[connected_ip_addr_name] = ip
 
         return dru_connected
-    
+
     def _get_dru_connected_number(self):
         """
         Identify and gather information about connected DRU devices.
@@ -2997,10 +3080,10 @@ class Discovery:
         for opt in range(1, 5):
             # Get the parameter name for the current optical port
             port_name = f"optical_port_devices_connected_{opt}"
-            
+
             # Get the value of the parameter
             optical_port_devices_connected = 0 if self.parameters[port_name] == "-" else self.parameters[port_name]
-            
+
             # Add the connected DRU device to the dictionary
             dru_connected[f"opt{opt}"] = optical_port_devices_connected
 
@@ -3021,14 +3104,14 @@ class Discovery:
             str: The name of the parent or None if not found.
 
         """
-        try: 
+        try:
             parent = hostname if connected == 1 else dru_connected[f"opt{opt}"][connected - 2].hostname
         except KeyError:
             # print("Key not found in dru_connected dictionary")
             parent = None
-        except IndexError: 
+        except IndexError:
             # print("Index out of range in dru_connected list")
-            parent = None  
+            parent = None
         except AttributeError:
             # print("Attribute error accessing .hostname")
             parent = None
@@ -3059,11 +3142,11 @@ class Discovery:
             for dru in dru_connected[opt]:
                 if dru.port in self.cmd_name_map:
                     cmd_name = self.cmd_name_map[dru.port]
-                director_query = self._create_host_query(dru, device, imports, cmd_name,baud_rate)
-                update_query = self._create_host_query(dru, device, imports, cmd_name,baud_rate)
+                director_query = self._create_host_query(dru, device, imports, cmd_name, baud_rate)
+                update_query = self._create_host_query(dru, device, imports, cmd_name, baud_rate)
 
                 response = director.create_host(director_query=director_query, update_query=update_query)
-                message = "Create -> Success" if response.status_code == 200 else "Create -> "+str(response.text)
+                message = "Create -> Success" if response.status_code == 200 else "Create -> " + str(response.text)
 
                 self._process_response(dru, message, response, director)
                 if response.status_code == 200:
@@ -3123,8 +3206,6 @@ class Discovery:
                 )
 
                 self._process_response(dru, message, response, director)
-
-
 
 # Nagios Exit Codes
 # Exit Code     Status

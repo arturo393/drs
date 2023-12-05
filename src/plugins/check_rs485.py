@@ -1357,13 +1357,6 @@ def druReplyDecode(parameters, reply_data):
             hexdl, hexup, dl_start, up_start, bandwidth = get_downlink_uplink_freq(hex_as_int)
             parameters["channel" + str(ch_number) + "ulFreq"] = hexup
             parameters["channel" + str(ch_number) + "dlFreq"] = hexdl
-
-
-
-
-
-
-
     elif cmd_number == '160a':
         byte2 = cmd_value[0:2]
         byte1 = cmd_value[2:4]
