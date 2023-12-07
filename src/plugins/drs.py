@@ -350,6 +350,7 @@ class LtelDruCommand(Enum):
     channel_bandwidth = (0x07, 0x1B0A)
     downlink_vswr = (0x04, 0x0605)
     downlink_output_power = (0x04, 0x0305)
+    uplink_input_power = (0x04, 0x2505)
     power_amplifier_temperature = (0x04, 0x0105)
     channel_1_number = (0x05, 0x1004)
     channel_2_number = (0x05, 0x1104)
@@ -1611,7 +1612,7 @@ class Decoder:
 
         downlink_power = Decoder.power_convert(command_body[2:])
         uplink_power = Decoder.power_convert(command_body)
-        return {'dlOutputPower': downlink_power, 'ulInputPower': uplink_power}
+        return {'downlink_output_power': downlink_power, 'uplink_input_power': uplink_power}
 
     @staticmethod
     def power_convert(command_body):
@@ -1659,7 +1660,7 @@ class Decoder:
             return {}
         input_att = command_body[0] / 4
         output_att = command_body[1] / 4
-        return {'dlAtt': str(output_att), 'ulAtt': str(input_att)}
+        return {'dlAtt': str(output_att), 'upAtt': str(input_att)}
 
     @staticmethod
     def _decode_optical_port_switch(command_body: bytes) -> dict:
@@ -2121,7 +2122,7 @@ class Command:
                 command_body = command.reply[cmd_data_index: \
                                              cmd_data_index + command_body_length]
             except IndexError as e:
-                sys.stderr.write(f"UNKNOWN - command.reply is too short: {e}")
+                sys.stderr.write(f"UNKNOWN - command.reply is too short for {command.command_number}: {e}")
                 sys.exit(UNKNOWN)
 
             # Check if response flag indicates success
@@ -2282,8 +2283,8 @@ class Alarm:
         """
 
         # Extract power and temperature values from parameters
-        downlink_power = self.parameters.get('dlOutputPower', -200)
-        uplink_power = self.parameters.get('ulInputPower', -200)
+        downlink_power = self.parameters.get('downlink_output_power', -200)
+        uplink_power = self.parameters.get('uplink_input_power', -200)
         temperature = self.parameters.get('temperature', -200)
 
         alarm = ""
@@ -2389,11 +2390,12 @@ class HtmlTable:
 
     def _get_ltel_board_channel_freq_table(self):
 
-        channel_bandwidth = 0.0012
+        channel_bandwidth = self.parameters.get('channel_bandwidth', 0)
         uplink_start_frequency = self.parameters.get('uplink_start_frequency', 0)
         for channel in range(1, 17):
-            self.parameters["channel_" + str(channel) + "_freq"] = uplink_start_frequency + self.parameters.get(
-                'channel_1_number', 0) * channel_bandwidth
+            channel_key = f"channel_{channel}"
+            ul_ch_freq = uplink_start_frequency + self.parameters.get(f"{channel_key}_number", 0) * channel_bandwidth
+            self.parameters[f"{channel_key}_freq"] = ul_ch_freq
         return self._get_channel_freq_table()
 
     def _get_channel_freq_table(self):
@@ -2414,10 +2416,17 @@ class HtmlTable:
         try:
             # Fetch parameters with '.get()' and default to '-' if key not found
             working_mode = self.parameters.get('working_mode', '-')
-            work_bandwidth = self.parameters.get("work_bandwidth", '-')
-            central_frequency_point = self.parameters.get('central_frequency_point', '-')
+            work_bandwidth = self.parameters.get("work_bandwidth", 0)
+            uplink_start_frequency = self.parameters.get('uplink_start_frequency', 0)
+            work_bandwidth = self.parameters.get('work_bandwidth', 0)
+            central_frequency_point = self.parameters.get('central_frequency_point', 0)
 
-            # Construct frequency and status lists
+            if uplink_start_frequency == 0 or work_bandwidth == 0 or central_frequency_point == 0:
+                central_frequency_point = 0
+            else:
+                central_frequency_point = uplink_start_frequency + (work_bandwidth / 2.0)
+
+                # Construct frequency and status lists
             for channel in range(1, 17):
                 frequencies.append(self.parameters.get(f"channel_{channel}_freq", '-'))
                 status.append(self.parameters.get(f"channel_{channel}_status", '-'))
@@ -2517,9 +2526,9 @@ class HtmlTable:
             elif self.alarm.downlink_power_alarm == WARNING:
                 downlink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
 
-            uplink_input_power = self.parameters.get('ulInputPower', "")
-            uplink_attenuation_power = self.parameters.get('ulAtt', "")
-            downlink_output_power = self.parameters.get('dlOutputPower', "")
+            uplink_input_power = self.parameters.get('uplink_input_power', "")
+            uplink_attenuation_power = self.parameters.get('upAtt', "")
+            downlink_output_power = self.parameters.get('downlink_output_power', "")
             downlink_attenuation_power = self.parameters.get('dlAtt', "")
 
             # Generate HTML structure according to given format
@@ -2568,7 +2577,13 @@ class HtmlTable:
             temperature_style = self._get_alarm_style(self.critical_color, self.alarm_font_size)
         elif self.alarm.temperature_alarm is WARNING:
             temperature_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
-        temperature = self.parameters.get('temperature', "")
+
+        if 'temperature' in self.parameters:
+            temperature = self.parameters.get('temperature', "")
+        elif 'power_amplifier_temperature' in self.parameters:
+            temperature = self.parameters.get('power_amplifier_temperature', "")
+        else:
+            temperature = ""
 
         # Define table header with styling
         table2 = \
@@ -2759,18 +2774,18 @@ class Graphite:
 
     def dru_output(self):
         graphite = ""
-        if self.parameters['dlOutputPower'] == 0.0:
-            self.parameters['dlOutputPower'] = "-"
+        if self.parameters['downlink_output_power'] == 0.0:
+            self.parameters['downlink_output_power'] = "-"
         else:
-            self.parameters['dlOutputPower'] = str(self.parameters['dlOutputPower'])
+            self.parameters['downlink_output_power'] = str(self.parameters['downlink_output_power'])
         pa_temperature = "Temperature=" + str(self.parameters['temperature'])
         pa_temperature += ";" + str(self.parameters['warning_temperature_threshold'])
         pa_temperature += ";" + str(self.parameters['critical_temperature_threshold'])
-        dl_str = f"Downlink={self.parameters['dlOutputPower']}"
+        dl_str = f"Downlink={self.parameters['downlink_output_power']}"
         dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
         dl_str += ";" + str(self.parameters['critical_uplink_threshold'])
         vswr = "VSWR=" + self.parameters['vswr']
-        up_str = f"Uplink={self.parameters['ulInputPower']}"
+        up_str = f"Uplink={self.parameters['uplink_input_power']}"
         up_str += ";" + str(self.parameters['warning_uplink_threshold'])
         up_str += ";" + str(self.parameters['critical_uplink_threshold'])
         rt = "RT=" + self.parameters['rt'] + ";1000;2000"
@@ -2790,7 +2805,7 @@ class Graphite:
         """
         try:
             # Use dict.get to safely fetch values; defaults to '-' if key is not found
-            dl_output_power = str(self.parameters.get('dlOutputPower', '-'))
+            dl_output_power = str(self.parameters.get('downlink_output_power', '-'))
             critical_uplink_threshold = str(self.parameters.get('critical_uplink_threshold', '-'))
 
             temperature = str(self.parameters.get('temperature', '-'))
