@@ -15,16 +15,14 @@ import argparse
 import drs as drs
 
 
-#DMU_PORT = 'COM4'
-#DRU_PORT = 'COM2'
+# DMU_PORT = 'COM4'
+# DRU_PORT = 'COM2'
 
-#COM1_BAUD = 19200
-#COM2_BAUD = 19200
-
+# COM1_BAUD = 19200
+# COM2_BAUD = 19200
 
 
 # Detectar el sistema operativo
-
 
 
 def cmd_help():
@@ -113,19 +111,14 @@ def args_check():
 
 
 def main():
-
-
     # Parse arguments
     global parameters
     args = args_check()
-    address = args['address']
     device = args['device']
-    cmd_name: int = int(args['cmd_name'])
-    cmd_body_length = int(args['cmd_body_length'])
     cmd_type = args['cmd_type']
-    
+
     if device in ["dru_ethernet", "dmu_ethernet", "discovery_ethernet", 'discovery_serial', 'dmu_serial_host',
-                  'dmu_serial_service', 'dru_serial_host', 'dru_serial_service','discovery_redboard_serial']:
+                  'dmu_serial_service', 'dru_serial_host', 'dru_serial_service', 'discovery_redboard_serial']:
         command = drs.Command(args=args)
         exit_code, message = command.create_command(cmd_type)
         if exit_code == drs.CRITICAL:
@@ -141,14 +134,13 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(drs.CRITICAL)
 
-            
-        if device in ["discovery_ethernet", "discovery_serial",'discovery_redboard_serial']:
+        if device in ["discovery_ethernet", "discovery_serial", 'discovery_redboard_serial']:
             discovery = drs.Discovery(command.parameters)
             if discovery.search_and_create_dru() is not drs.OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
                 sys.exit(drs.WARNING)
 
-        plugin_output = drs.PluginOutput(command.parameters)        
+        plugin_output = drs.PluginOutput(command.parameters)
         exit_code, plugin_output_message = plugin_output.create_message()
         sys.stderr.write(plugin_output_message)
         sys.exit(exit_code)

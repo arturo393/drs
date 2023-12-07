@@ -25,6 +25,8 @@ import serial
 import struct
 import os
 from enum import IntEnum, Enum
+from typing import Optional
+from typing import Tuple
 
 OK = 0
 WARNING = 1
@@ -391,7 +393,7 @@ class DRU:
         return response
 
     def __eq__(self, other):
-        return self.position == other.position and self.port == other.position and self.mac == other.mac and self.sn == other.sn
+        return self.position == other.position and self.port == other.position
 
 
 class Icinga_Api:
@@ -431,7 +433,6 @@ class Icinga_Api:
         Log status messages to stderr.
 
         Args:
-            dru (DRU): A DRU object representing the connected DRU device.
             message (str): The status message to log.
         """
 
@@ -442,10 +443,8 @@ class Icinga_Api:
         Process and log the response from Icinga 2 Director, and deploy changes if necessary.
 
         Args:
-            dru (DRU): A DRU object representing the connected DRU device.
             message (str): The status message to log.
             response (requests.Response): The response from the API call.
-            director (Director): An instance of the Director class.
         """
         if response.status_code != 304:
             self._log_status(message)
@@ -1754,10 +1753,9 @@ class Command:
         self.parameters['warning_temperature_threshold'] = int(args['warning_temperature_threshold'])
         self.parameters['critical_temperature_threshold'] = int(args['critical_temperature_threshold'])
 
-        opt, dru = self.decode_address(self.parameters['address'])
+        opt, dru = self._decode_address(self.parameters['address'])
         self.parameters['device_number'] = dru
         self.parameters['optical_port'] = opt
-
         self.parameters['baud_rate'] = int(args['baud_rate'])
 
     def create_command(self, cmd_type):
@@ -1803,26 +1801,43 @@ class Command:
 
         return frame_len if frame_len > 0 else -2
 
-    def decode_address(self, address):
-        # Check if the address starts with 192.168.11
+    def _decode_address(self, address: str) -> Optional[Tuple[int, int]]:
+        """
+        Decodes the address string provided in the configuration and returns a tuple of (opt, dru) values.
+
+        Args:
+            address (str): The address string to decode.
+
+        Returns:
+            Optional[Tuple[int, int]]: A tuple containing the decoded opt and dru values, or None if the address format is invalid.
+        """
+
         if not address.startswith("192.168.11"):
-            return None
+            sys.stderr.write(f"UNKNOWN - Invalid start address format: {address}")
+            sys.exit(UNKNOWN)
 
-        # Determine the opt value based on the starting byte of the IP address
-        opt = None
-        if address.startswith("192.168.11.10"):
-            opt = 1
-        elif address.startswith("192.168.11.12"):
-            opt = 2
-        elif address.startswith("192.168.11.14"):
-            opt = 3
-        elif address.startswith("192.168.11.16"):
-            opt = 4
+        if address == "192.168.11.22":
+            return 0, 0
 
-        # Extract the dru number from the last byte of the IP address
-        dru = int(address.strip()[-1:]) + 1
+        try:
+            # Determine the opt value based on the starting byte of the IP address
+            opt = 0
+            if address.startswith("192.168.11.10"):
+                opt = 1
+            elif address.startswith("192.168.11.12"):
+                opt = 2
+            elif address.startswith("192.168.11.14"):
+                opt = 3
+            elif address.startswith("192.168.11.16"):
+                opt = 4
 
-        return opt, dru
+            # Extract the dru number from the last byte of the IP address
+            dru = int(address.strip()[-1:]) + 1
+
+            return opt, dru
+        except (IndexError, KeyError, ValueError):
+            sys.stderr.write(f"UNKNOWN - Invalid address format: {address}")
+            sys.exit(UNKNOWN)
 
     def _create_group_query_command(self):
         """Creates a group query for the given device.
@@ -2106,8 +2121,8 @@ class Command:
                 command_body = command.reply[cmd_data_index: \
                                              cmd_data_index + command_body_length]
             except IndexError as e:
-                sys.stderr.write(f"CRITICAL - command.reply is too short: {e}")
-                sys.exit(CRITICAL)
+                sys.stderr.write(f"UNKNOWN - command.reply is too short: {e}")
+                sys.exit(UNKNOWN)
 
             # Check if response flag indicates success
             if response_flag == ResponseFlag.SUCCESS:
@@ -2117,15 +2132,15 @@ class Command:
                     command.message = Decoder.ltel_decode(command.command_number,
                                                           command_body)
                 except (TypeError, ValueError) as e:
-                    sys.stderr.write(f"CRITICAL - Cannot decode command number: {e}")
-                    sys.exit(CRITICAL)
+                    sys.stderr.write(f"UNKNOWN - Cannot decode command number: {e}")
+                    sys.exit(UNKNOWN)
                 return 1
             else:
                 return 0
 
         except Exception as e:
-            sys.stderr.write(f"CRITICAL - An error occurred during command decoding: {e}")
-            sys.exit(CRITICAL)
+            sys.stderr.write(f"UNKNOWN - An error occurred during command decoding: {e}")
+            sys.exit(UNKNOWN)
 
     def setSerial(self, port, baudrate):
         for times in range(3):
@@ -2794,6 +2809,18 @@ class Graphite:
             sys.stderr.write(f"UNKNOWN - Error: {str(e)}")
             sys.exit(UNKNOWN)
 
+    def discovery_output(self):
+        rt = self.parameters['rt']
+        dt = self.parameters['dt']
+        rt_str = "RT=" + rt
+        rt_str += ";" + str(1)
+        rt_str += ";" + str(1)
+        dt_str = "DT=" + dt
+        dt_str += ";" + str(2)
+        dt_str += ";" + str(2)
+        graphite = rt_str + " " + dt_str
+        return graphite
+
     def dmu_serial_single(self):
         graphite = ""
         rt_str = "RTA=" + self.parameters['rt'] + ";1000;2000"
@@ -2818,25 +2845,7 @@ class PluginOutput:
         }
 
     def dru_serial_display(self):
-        # Default values for downlink and uplink power
-        default_power = 100.0
-
-        # Get downlink power
-        downlink_power = self.parameters.get('dlOutputPower', default_power)
-
-        # Get uplink power
-        uplink_power = self.parameters.get('ulInputPower', default_power)
-
-        # Set default values if the values are '-'
-        downlink_power = 100.0 if downlink_power == '-' else downlink_power
-        uplink_power = 100.0 if uplink_power == '-' else uplink_power
-
         graphite = ""
-        if downlink_power > 50.0:
-            self.parameters['dlOutputPower'] = "-"
-        if uplink_power > 50.0:
-            self.parameters['ulInputPower'] = "-"
-
         alarm = Alarm(self.parameters)
         exit_code = alarm.check_alarm()
         html_table = HtmlTable(self.parameters, alarm)
