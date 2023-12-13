@@ -344,10 +344,6 @@ class LtelDruCommand(Enum):
     downlink_att = (0x04, 0x4104)
     channel_switch_bit = (0x05, 0x160A)
     working_mode = (0x04, 0xEF0B)
-    uplink_start_frequency = (0x07, 0x180A)
-    downlink_start_frequency = (0x07, 0x190A)
-    work_bandwidth = (0x07, 0x1A0A)
-    channel_bandwidth = (0x07, 0x1B0A)
     downlink_vswr = (0x04, 0x0605)
     downlink_output_power = (0x04, 0x0305)
     uplink_input_power = (0x04, 0x2505)
@@ -611,6 +607,7 @@ class CommandData:
     def __init__(self):
         self.reply_command_data = None
         self.reply = None
+        self.reply_bytes = None
         self.command_type = None
         self.data = None
         self.dru_id = None
@@ -625,6 +622,7 @@ class CommandData:
         self.response_flag = None
         self.command_body_length = None
         self.query = None
+        self.query_bytes = None
         self.message = None
         self.decoder = Decoder()
 
@@ -2374,19 +2372,21 @@ class HtmlTable:
         return opt_status_table + power_table
 
     def ltel_board_table(self):
-        device_table = self.if_board_table()
-        channel_table = self._get_ltel_board_channel_freq_table()
+
         table = ""
         table += '<div class="sigma-container">'
-        table += device_table + channel_table
+        table += self.get_power_table()
+        table += self.get_vswr_temperature_table()
+        table += self._get_ltel_board_channel_freq_table()
         table += "</div>"
         return table
 
     def if_board_table(self):
-        opt_status_table = self.get_opt_status_table()
-        power_att_table = self.get_power_table()
-        vswr_temperature_table = self.get_vswr_temperature_table()
-        return opt_status_table + power_att_table + vswr_temperature_table
+        table = ""
+        table += self.get_opt_status_table()
+        table += self.get_power_table()
+        table += self.get_vswr_temperature_table()
+        return table
 
     def _get_ltel_board_channel_freq_table(self):
 
