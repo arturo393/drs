@@ -335,19 +335,8 @@ class SettingCommand(IntEnum):
     channel_frequency_configuration = Rx0SettingCmd.channel_frequency_configuration
 
 
-class LtelDruCommand(Enum):
-    # use the dict keys as the enum member names
-    # use the dict values as the associated values
-    # uplink_input_power = (0x04, 0x2505)
-    # rf_power_sitch = (0x04,0x0104)
-    uplink_att = (0x04, 0x4004)
-    downlink_att = (0x04, 0x4104)
+class CommBoardCmd(Enum):
     channel_switch_bit = (0x05, 0x160A)
-    working_mode = (0x04, 0xEF0B)
-    downlink_vswr = (0x04, 0x0605)
-    downlink_output_power = (0x04, 0x0305)
-    uplink_input_power = (0x04, 0x2505)
-    power_amplifier_temperature = (0x04, 0x0105)
     channel_1_number = (0x05, 0x1004)
     channel_2_number = (0x05, 0x1104)
     channel_3_number = (0x05, 0x1204)
@@ -364,7 +353,49 @@ class LtelDruCommand(Enum):
     channel_14_number = (0x05, 0x1d04)
     channel_15_number = (0x05, 0x1e04)
     channel_16_number = (0x05, 0x1f04)
-    # data:7E010100000000110100800102FF 05 1104 000006527E
+    uplink_att = (0x04, 0x4004)
+    downlink_att = (0x04, 0x4104)
+    working_mode = (0x04, 0xEF0B)
+    downlink_vswr = (0x04, 0x0605)
+    downlink_output_power = (0x04, 0x0305)
+    uplink_input_power = (0x04, 0x2505)
+    power_amplifier_temperature = (0x04, 0x0105)
+
+
+class ChannelCommBoardCmd(Enum):
+    channel_switch_bit = (0x05, 0x160A)
+    channel_1_number = (0x05, 0x1004)
+    channel_2_number = (0x05, 0x1104)
+    channel_3_number = (0x05, 0x1204)
+    channel_4_number = (0x05, 0x1304)
+    channel_5_number = (0x05, 0x1404)
+    channel_6_number = (0x05, 0x1504)
+    channel_7_number = (0x05, 0x1604)
+    channel_8_number = (0x05, 0x1704)
+    channel_9_number = (0x05, 0x1804)
+    channel_10_number = (0x05, 0x1904)
+    channel_11_number = (0x05, 0x1a04)
+    channel_12_number = (0x05, 0x1b04)
+    channel_13_number = (0x05, 0x1c04)
+    channel_14_number = (0x05, 0x1d04)
+    channel_15_number = (0x05, 0x1e04)
+    channel_16_number = (0x05, 0x1f04)
+
+
+class ParametersCommBoardCmd(Enum):
+    # rf_power_sitch = (0x04,0x0104)
+    uplink_att = (0x04, 0x4004)
+    downlink_att = (0x04, 0x4104)
+    working_mode = (0x04, 0xEF0B)
+    downlink_vswr = (0x04, 0x0605)
+    downlink_output_power = (0x04, 0x0305)
+    uplink_input_power = (0x04, 0x2505)
+    power_amplifier_temperature = (0x04, 0x0105)
+
+
+class CommBoardGroupCmd(Enum):
+    channel = ''.join([f"{cmd.value[0]:02X}{cmd.value[1]:04X}0000" for cmd in ChannelCommBoardCmd])
+    parameters = ''.join([f"{cmd.value[0]:02X}{cmd.value[1]:04X}00" for cmd in ParametersCommBoardCmd])
 
 
 class DRU:
@@ -656,7 +687,36 @@ class CommandData:
 
         # 7E010100000000110100800102FF04030500ACA27E sw chino
         # 7E010100000000110100800102FF04030500ACA27E sw uqomm
+        crc = self.generate_checksum(cmd_unit)
+        self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
 
+    def generate_comm_board_group_frame(self, dru_id, cmd_name_group):
+        start_flag = "7E"
+        end_flag = "7F"
+        unknown1 = 0x0101
+        site_number = 0
+        self.dru_id = dru_id
+        unknown2 = 0x0100
+        tx_rx = 0x80
+        unknown3 = 0x01
+        message_type = 0x02
+        tx_rx2 = 0xFF
+        data_group = cmd_name_group.value
+        self.command_number = cmd_name_group
+        cmd_unit = (
+            f"{unknown1:04X}"
+            f"{site_number:08X}"
+            f"{self.dru_id}"
+            f"{unknown2:04X}"
+            f"{tx_rx:02X}"
+            f"{unknown3:02X}"
+            f"{message_type:02X}"
+            f"{tx_rx2:02X}"
+            f"{data_group}"
+        )
+
+        # 7E010100000000110100800102FF04030500ACA27E sw chino
+        # 7E010100000000110100800102FF04030500ACA27E sw uqomm
         crc = self.generate_checksum(cmd_unit)
         self.query = f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
 
@@ -796,6 +856,14 @@ class Decoder:
             print(f" Command number {command_number} is not supported.")
             return {}
 
+    def comm_board_decode(command_number, command_body):
+        """Decodes a command number."""
+        try:
+            return getattr(Decoder, f"_decode_{command_number.name}")(command_body)
+        except AttributeError:
+            print(f" Command number {command_number} is not supported.")
+            return {}
+
     @staticmethod
     def _decode_optical_module_hw_parameters(array):
         parameters = {}
@@ -875,6 +943,47 @@ class Decoder:
         temperature = struct.unpack(">H", bytes_list)[0]
         temperature = temperature * 0.001
         return temperature
+
+    @staticmethod
+    def _decode_channel(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 86:
+            return {}
+        channel_info = {}
+        channel_info.update(Decoder._decode_channel_switch_bit(command_body[3:5]))
+        channel_info.update(Decoder._decode_channel_1_number(command_body[3 + 5:10]))
+        channel_info.update(Decoder._decode_channel_2_number(command_body[3 + 10:15]))
+        channel_info.update(Decoder._decode_channel_3_number(command_body[3 + 15:20]))
+        channel_info.update(Decoder._decode_channel_4_number(command_body[3 + 20:25]))
+        channel_info.update(Decoder._decode_channel_5_number(command_body[3 + 25:30]))
+        channel_info.update(Decoder._decode_channel_6_number(command_body[3 + 30:35]))
+        channel_info.update(Decoder._decode_channel_7_number(command_body[3 + 35:40]))
+        channel_info.update(Decoder._decode_channel_8_number(command_body[3 + 40:45]))
+        channel_info.update(Decoder._decode_channel_9_number(command_body[3 + 45:50]))
+        channel_info.update(Decoder._decode_channel_10_number(command_body[3 + 50:55]))
+        channel_info.update(Decoder._decode_channel_11_number(command_body[3 + 55:60]))
+        channel_info.update(Decoder._decode_channel_12_number(command_body[3 + 60:65]))
+        channel_info.update(Decoder._decode_channel_13_number(command_body[3 + 65:70]))
+        channel_info.update(Decoder._decode_channel_14_number(command_body[3 + 70:75]))
+        channel_info.update(Decoder._decode_channel_15_number(command_body[3 + 75:80]))
+        channel_info.update(Decoder._decode_channel_16_number(command_body[3 + 80:85]))
+        return channel_info
+
+    @staticmethod
+    def _decode_parameters(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) < 20:
+            return {}
+        parameters = {}
+        parameters.update(Decoder._decode_uplink_att(command_body[3 + 0:4]))
+        parameters.update(Decoder._decode_downlink_att(command_body[3 + 4:8]))
+        parameters.update(Decoder._decode_working_mode(command_body[3 + 8:12]))
+        parameters.update(Decoder._decode_downlink_vswr(command_body[3 + 12:16]))
+        parameters.update(Decoder._decode_downlink_output_power(command_body[3 + 16:20]))
+        parameters.update(Decoder._decode_uplink_input_power(command_body[3 + 20:24]))
+        parameters.update(Decoder._decode_power_amplifier_temperature(command_body[3 + 24:28]))
+
+        return parameters
 
     @staticmethod
     def _s8(byte):
@@ -1851,25 +1960,33 @@ class Command:
             discovery_ethernet=DiscoveryCommand,
             discovery_serial=DiscoveryCommand,
             dmu_serial_service=DRSMasterCommand,
-            dru_serial_service=LtelDruCommand,
+            dru_serial_service=CommBoardGroupCmd,
             discovery_redboard_serial=DiscoveryRedBoardCommand
         )
 
         device = self.parameters['device']
         if device in cmd_name_map:
-            cmd_name_group = cmd_name_map[device]
-            if cmd_name_group == LtelDruCommand:
-                for cmd_name in cmd_name_group:
-                    opt = self.parameters['optical_port']
-                    dru = self.parameters['device_number']
-                    code = cmd_name
-                    dru_id = f"{opt}{dru}"
+            cmd_group = cmd_name_map[device]
+            if cmd_group == CommBoardCmd:
+                opt = self.parameters['optical_port']
+                dru = self.parameters['device_number']
+                dru_id = f"{opt}{dru}"
+                for cmd_name in cmd_group:
                     cmd_data = CommandData()
                     cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
                     if cmd_data.query != "":
                         self.list.append(cmd_data)
+
+            elif cmd_group == CommBoardGroupCmd:
+                opt = self.parameters['optical_port']
+                dru = self.parameters['device_number']
+                dru_id = f"{opt}{dru}"
+                for cmd in cmd_group:
+                    cmd_data = CommandData()
+                    cmd_data.generate_comm_board_group_frame(dru_id=dru_id, cmd_name_group=cmd)
+                    self.list.append(cmd_data)
             else:
-                for cmd_name in cmd_name_group:
+                for cmd_name in cmd_group:
                     cmd_data = CommandData()
                     frame_len = cmd_data.generate_ifboard_frame(
                         command_number=cmd_name,
@@ -1881,7 +1998,15 @@ class Command:
 
             return len(self.list)
         else:
-            return -3
+            self._exit_messagge(UNKNOWN, message=f"No commands created")
+
+    def _exit_messagge(self, code, message):
+        if code == CRITICAL:
+            sys.stderr.write(f"CRITICAL - {message}")
+        elif code == WARNING:
+            sys.stderr.write(f"WARNING - {message}")
+        else:
+            sys.stderr.write(f"UNKNOWN - {message}")
 
     def create_single_set(self):
         command_number = self.get_command_value()
@@ -1941,6 +2066,72 @@ class Command:
         rt = str(time.time() - rt)
         self.parameters['rt'] = rt
         return self.parameters
+
+    def _transmit_and_receive_serial_comm_board(self, port, baud):
+        """
+        Transmits and receives serial data.
+
+        Args:
+            port (str): The name of the serial port.
+            baud (int): The baud rate of the serial connection.
+
+        Raises:
+            ValueError: If the port is not available.
+
+        Returns:
+            int: The number of successful commands.
+        """
+        try:
+            rt = time.time()
+            self.serial = self.setSerial(port, baud)
+        except serial.SerialException:
+            sys.stderr.write(f"CRITICAL - The specified port {port} is not available at {baud}")
+            sys.exit(CRITICAL)
+
+        self.cmd_number_ok = 0
+
+        for cmd_name in self.list:
+            cmd_name.query_bytes = bytearray.fromhex(cmd_name.query)
+            self.serial.write(cmd_name.query_bytes)
+            self.serial.flush()
+            read_time = time.time()
+            timeout = 3
+            cmd_name.reply_bytes = b''
+            id_reply_data_ok = False
+            retry = 0
+
+            while True:
+                cmd_name.reply_bytes = self.serial.read(200)
+
+                cmd_name.reply = cmd_name.reply_bytes.hex()
+                # self.serial.reset_input_buffer()
+
+                if cmd_name.reply_bytes != b'':
+                    if len(cmd_name.query_bytes) == len(cmd_name.reply_bytes):
+                        start_index = 0
+                        id_index = 7
+                        cmd_code_index = 15
+                        if cmd_name.query_bytes[start_index] == cmd_name.reply_bytes[start_index]:
+                            if cmd_name.query_bytes[id_index] == cmd_name.reply_bytes[id_index]:
+                                if cmd_name.query_bytes[cmd_code_index] == cmd_name.reply_bytes[cmd_code_index]:
+                                    if cmd_name.query_bytes[cmd_code_index + 1] == cmd_name.reply_bytes[
+                                        cmd_code_index + 1]:
+                                        self.cmd_number_ok += 1
+                                        break
+
+                if (time.time() - read_time) > timeout:
+                    read_time = time.time()
+                    self.serial.write(cmd_name.query_bytes)
+                    retry += 1
+                    if retry == 3:
+                        break
+
+            # time.sleep(tmp)
+
+        self.serial.close()
+        rt = time.time() - rt
+        self.parameters['rt'] = rt
+        return self.cmd_number_ok
 
     def _transmit_and_receive_serial(self, port, baud):
         """
@@ -2053,8 +2244,10 @@ class Command:
                 command.message = None
                 continue
 
-            if command.command_number in LtelDruCommand:
+            if command.command_number in CommBoardCmd:
                 decoded_commands += self._decode_ltel_command(command)
+            elif command.command_number in CommBoardGroupCmd:
+                decoded_commands += self._decode_comm_board_command(command)
             else:
                 decoded_commands += self._decode_ifboard_command(command)
 
@@ -2092,6 +2285,46 @@ class Command:
         else:
             return 0
 
+    def _decode_comm_board_command(self, command):
+        """
+        Decodes a LtelDru command and handles the processing of command data.
+
+        Args:
+            command (CommandData): The command to decode.
+
+        Returns:
+            int: The number of decoded commands.
+        """
+        try:
+            if not command.reply:
+                return 0
+            respond_flag_index = 10
+            cmd_data_start_index = 14
+            cmd_data_end_index = len(command.reply_bytes) - 4
+            try:
+                response_flag = command.reply_bytes[respond_flag_index]
+                command_body = command.reply_bytes[cmd_data_start_index:cmd_data_end_index]
+                command_body_str = command_body.hex()
+            except IndexError as e:
+                sys.stderr.write(f"UNKNOWN - command.reply is too short for {command.command_number}: {e}")
+                sys.exit(UNKNOWN)
+
+            if response_flag == ResponseFlag.SUCCESS:
+                command.reply_command_data = command_body
+                try:
+                    command.message = Decoder.comm_board_decode(command.command_number,
+                                                                command_body)
+                except (TypeError, ValueError) as e:
+                    sys.stderr.write(f"UNKNOWN - Cannot decode command number: {e}")
+                    sys.exit(UNKNOWN)
+                return 1
+            else:
+                return 0
+
+        except Exception as e:
+            sys.stderr.write(f"UNKNOWN - An error occurred during command decoding: {e}")
+            sys.exit(UNKNOWN)
+
     def _decode_ltel_command(self, command: CommandData) -> int:
         """
         Decodes a LtelDru command and handles the processing of command data.
@@ -2104,21 +2337,21 @@ class Command:
         """
         try:
             # Check if command.reply is empty; return 0 if so
-            if not command.reply:
+            if not command.reply_bytes:
                 return 0
 
             # Define necessary indices
-            respond_flag_index = 5
+            respond_flag_index = 10
             cmd_body_length_index = 14
             cmd_data_index = 17
 
             # Extract response flag, command body length, and command body
             # Catch IndexError if command.reply is shorter than expected
             try:
-                response_flag = command.reply[respond_flag_index]
+                response_flag = command.reply_bytes[respond_flag_index]
                 command_body_length = command.reply[cmd_body_length_index] - 3
-                command_body = command.reply[cmd_data_index: \
-                                             cmd_data_index + command_body_length]
+                command_body = command.reply_bytes[cmd_data_index: \
+                                                   cmd_data_index + command_body_length]
             except IndexError as e:
                 sys.stderr.write(f"UNKNOWN - command.reply is too short for {command.command_number}: {e}")
                 sys.exit(UNKNOWN)
@@ -2155,38 +2388,6 @@ class Command:
                     sys.stderr.write("CRITICAL - " + (e.args.__str__()) + str(port))
                     sys.exit(CRITICAL)
 
-    def transmit_and_receive_old(self):
-        device = self.parameters.get('device')
-        address = self.parameters.get('address')
-        platform = os.name
-        COM1_BAUD = 19200
-        COM2_BAUD = 19200
-
-        # Realizar acciones basadas en el sistema operativo
-        if platform == 'posix':  # Posix indica que es un sistema tipo Unix, como Linux
-            DMU_PORT = '/dev/ttyS0'
-            DRU_PORT = '/dev/ttyS1'
-        elif platform == 'nt':  # 'nt' indica que es Windows
-            DMU_PORT = 'COM4'
-            DRU_PORT = 'COM2'
-        else:
-            # Acción por defecto para otros sistemas operativos
-            print("Sistema operativo no identificado, ejecutando acción predeterminada.")
-
-        if device in ['dmu_serial_host', 'dmu_serial_service', 'dru_serial_host', 'discovery_serial',
-                      'discovery_redboard_serial']:
-            if not self._transmit_and_receive_serial(baud=COM1_BAUD, port=DMU_PORT):
-                sys.stderr.write(f"CRITICAL - no response from {DMU_PORT} at {COM1_BAUD}")
-                sys.exit(CRITICAL)
-        elif device in ['dru_serial_service']:
-            if not self._transmit_and_receive_serial(baud=COM2_BAUD, port=DRU_PORT):
-                sys.stderr.write(f"CRITICAL - no response from {DRU_PORT} at {COM2_BAUD}")
-                sys.exit(CRITICAL)
-        else:
-            if not self._transmit_and_receive_tcp(address):
-                sys.stderr.write(f"CRITICAL - no response from {address}")
-                sys.exit(CRITICAL)
-
     def transmit_and_receive(self):
         """
         Transmit and receive data based on device and address.
@@ -2205,7 +2406,7 @@ class Command:
                     return CRITICAL, self._print_error(port_dmu)
 
             elif device == 'dru_serial_service':
-                if not self._transmit_and_receive_serial(baud=baud_rate, port=port_dru):
+                if not self._transmit_and_receive_serial_comm_board(baud=baud_rate, port=port_dru):
                     return CRITICAL, self._print_error(port_dru)
 
             else:
