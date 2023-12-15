@@ -382,6 +382,13 @@ class ChannelCommBoardCmd(Enum):
     channel_16_number = (0x05, 0x1f04)
 
 
+class FreqCommBoardCmd(Enum):
+    uplink_start_frequency = (0x07, 0x180A)
+    # downlink_start_frequency = (0x07, 0x190A)
+    work_bandwidth = (0x07, 0x1A0A)
+    channel_bandwidth = (0x07, 0x1B0A)
+
+
 class ParametersCommBoardCmd(Enum):
     # rf_power_sitch = (0x04,0x0104)
     uplink_att = (0x04, 0x4004)
@@ -396,6 +403,7 @@ class ParametersCommBoardCmd(Enum):
 class CommBoardGroupCmd(Enum):
     channel = ''.join([f"{cmd.value[0]:02X}{cmd.value[1]:04X}0000" for cmd in ChannelCommBoardCmd])
     parameters = ''.join([f"{cmd.value[0]:02X}{cmd.value[1]:04X}00" for cmd in ParametersCommBoardCmd])
+    frequencies = ''.join([f"{cmd.value[0]:02X}{cmd.value[1]:04X}00000000" for cmd in FreqCommBoardCmd])
 
 
 class DRU:
@@ -945,9 +953,21 @@ class Decoder:
         return temperature
 
     @staticmethod
+    def _decode_frequencies(command_body):
+        """Decodes uplink attenuation value in dbBm"""
+        if len(command_body) == 0:
+            return {}
+        frequencies = {}
+        frequencies.update(Decoder._decode_uplink_start_frequency(command_body[3 + 0:7]))
+        # frequencies.update(Decoder._decode_downlink_start_frequency(command_body[3 + 0:3 + 4]))
+        frequencies.update(Decoder._decode_work_bandwidth(command_body[3 + 7:14]))
+        frequencies.update(Decoder._decode_channel_bandwidth(command_body[3 + 14:28]))
+        return frequencies
+
+    @staticmethod
     def _decode_channel(command_body):
         """Decodes uplink attenuation value in dbBm"""
-        if len(command_body) < 86:
+        if len(command_body) != 85:
             return {}
         channel_info = {}
         channel_info.update(Decoder._decode_channel_switch_bit(command_body[3:5]))
@@ -2083,7 +2103,7 @@ class Command:
         """
         try:
             rt = time.time()
-            self.serial = self.setSerial(port, baud)
+            self.serial = self.set_serial_with_timeout(port, baud, timeout=6)
         except serial.SerialException:
             sys.stderr.write(f"CRITICAL - The specified port {port} is not available at {baud}")
             sys.exit(CRITICAL)
@@ -2094,44 +2114,40 @@ class Command:
             cmd_name.query_bytes = bytearray.fromhex(cmd_name.query)
             self.serial.write(cmd_name.query_bytes)
             self.serial.flush()
-            read_time = time.time()
-            timeout = 3
             cmd_name.reply_bytes = b''
-            id_reply_data_ok = False
             retry = 0
-
             while True:
                 cmd_name.reply_bytes = self.serial.read(200)
-
                 cmd_name.reply = cmd_name.reply_bytes.hex()
-                # self.serial.reset_input_buffer()
-
-                if cmd_name.reply_bytes != b'':
-                    if len(cmd_name.query_bytes) == len(cmd_name.reply_bytes):
-                        start_index = 0
-                        id_index = 7
-                        cmd_code_index = 15
-                        if cmd_name.query_bytes[start_index] == cmd_name.reply_bytes[start_index]:
-                            if cmd_name.query_bytes[id_index] == cmd_name.reply_bytes[id_index]:
-                                if cmd_name.query_bytes[cmd_code_index] == cmd_name.reply_bytes[cmd_code_index]:
-                                    if cmd_name.query_bytes[cmd_code_index + 1] == cmd_name.reply_bytes[
-                                        cmd_code_index + 1]:
-                                        self.cmd_number_ok += 1
-                                        break
-
-                if (time.time() - read_time) > timeout:
-                    read_time = time.time()
-                    self.serial.write(cmd_name.query_bytes)
-                    retry += 1
-                    if retry == 3:
-                        break
-
-            # time.sleep(tmp)
-
+                if self._isValidReply(cmd_name) is True:
+                    self.cmd_number_ok += 1
+                    break
+                self.serial.write(cmd_name.query_bytes)
+                retry += 1
+                if retry == 3:
+                    break
         self.serial.close()
         rt = time.time() - rt
         self.parameters['rt'] = rt
         return self.cmd_number_ok
+
+    def _isValidReply(self, cmd_name):
+        start_index = 0
+        id_index = 7
+        cmd_code_index = 15
+        if cmd_name.reply_bytes == b'':
+            return False
+        if len(cmd_name.query_bytes) != len(cmd_name.reply_bytes):
+            return False
+        if cmd_name.query_bytes[start_index] != cmd_name.reply_bytes[start_index]:
+            return False
+        if cmd_name.query_bytes[id_index] != cmd_name.reply_bytes[id_index]:
+            return False
+        if cmd_name.query_bytes[cmd_code_index] != cmd_name.reply_bytes[cmd_code_index]:
+            return False
+        if cmd_name.query_bytes[cmd_code_index + 1] != cmd_name.reply_bytes[cmd_code_index + 1]:
+            return False
+        return True
 
     def _transmit_and_receive_serial(self, port, baud):
         """
@@ -2379,6 +2395,20 @@ class Command:
             try:
                 s = serial.Serial(port, baudrate)
                 s.timeout = 0.1
+                s.exclusive = True
+                return s
+
+            except serial.SerialException as e:
+                time.sleep(1)
+                if times == 2:
+                    sys.stderr.write("CRITICAL - " + (e.args.__str__()) + str(port))
+                    sys.exit(CRITICAL)
+
+    def set_serial_with_timeout(self, port, baudrate, timeout):
+        for times in range(3):
+            try:
+                s = serial.Serial(port, baudrate)
+                s.timeout = timeout
                 s.exclusive = True
                 return s
 
