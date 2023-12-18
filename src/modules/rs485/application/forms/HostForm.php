@@ -29,24 +29,53 @@ class HostForm extends ConfigForm
         $hostname = $_GET['host'] ?? "";
         $listHost = $this->cargarHostList($hostname);
 
+
         $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
         $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
         $bandwidth = $_GET['bandwidth'] ?? 0;
         $host = $_GET['host'] ?? 0;
         $cmd_type = $_GET['host'] ?? "";
         $device = $_GET['device'] ?? "";
-        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
-        print_r($_GET);
+        #$this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
 
-        if ($device == 'dmu_ethernet' || $device == 'dru_ethernet' || $device == 'dmu_serial_service')
-            $listTrama = $this->tramasDMU($hostname);
-        if ($device == 'dru_serial_service')
-            $listTrama = $this->tramasDRUList();
 
         $this->addElement('select', 'host_remote', array(
             'multiOptions' => $listHost,
             'required' => true,
         ));
+
+        if ($device == 'dmu_ethernet' || $device == 'dru_ethernet' || $device == 'dmu_serial_service') {
+            $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
+            $listTrama = $this->tramasDMU($hostname);
+        }
+
+        if ($device == 'dru_serial_service') {
+
+            $address = $_GET['address'] ?? "0";
+            $opt_dru_list = $this->decodeAddress($address);
+            print_r($opt_dru_list);
+            $opt_dru = 'Optical Port ' . $opt_dru_list[0] . ' Remote ' . $opt_dru_list[1];
+            $list[$opt_dru_list[0] . $opt_dru_list[1]] = $opt_dru;
+            $listIdDRU = $list;
+            $this->setName('form_host');
+            $this->setSubmitLabel($this->translate('Submit Changes'));
+            $this->setAction(sprintf('rs485/host/edit?host=%s&device=%s&address=%s', $host, $device, $address));
+
+
+            $this->addElement(
+                'select',
+                'dru_id',
+                array(
+                    #'label' => $this->translate('Dru Id'),
+                    'multiOptions' => $listIdDRU,
+                    'required' => true,
+                    // 'autosubmit' acts like an AJAX-Request
+                    //'class' => 'autosubmit'
+                )
+            );
+
+            $listTrama = $this->tramasDRUList();
+        }
 
         $this->addElement('select', 'trama', array(
             'multiOptions' => $listTrama,
@@ -54,6 +83,7 @@ class HostForm extends ConfigForm
             'required' => false,
             'class' => 'autosubmit'
         ));
+
 
         if ((isset($formData['trama']) && $formData['trama'] != '') || isset($formData['btn_submit'])) {
             $option = isset($formData['btn_submit']) ? 0 : $formData['trama'];
@@ -125,7 +155,6 @@ class HostForm extends ConfigForm
                 if ($option != $hidden) {
                     $listFrecuencia = $this->frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth);
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     for ($i = 1; $i <= 16; $i++) {
                         $this->addElement('select', "opt{$input}_{$i}", array(
                             'label' => $this->translate("Channel {$i} "),
@@ -137,6 +166,53 @@ class HostForm extends ConfigForm
             }
 
 
+            #22: Uplink ATT [dB]
+            if ($option == 22 || isset($formData["opt22_hidden"])) {
+                $input = 22;
+                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $this->addElement('text', "opt{$input}", [
+                        'placeholder' => $this->translate("Uplink ATT [dB]") . '       - value between 0[dB] - 40[dB]',
+                        'required' => true,
+                    ]);
+                }
+            }
+            #23: Downlink ATT [dB]
+            if ($option == 23 || isset($formData["opt23_hidden"])) {
+                $input = 23;
+                $hidden = $formData["opt{$input}_hidden"] ?? 0;
+                if ($option != $hidden) {
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $this->addElement('text', "opt{$input}", [
+                        'placeholder' => $this->translate("Downlink ATT [dB]") . '   - value between 0[dB] - 40[dB]',
+                        'required' => true,
+                    ]);
+                }
+            }
+            #25: Choice of working mode
+            if ($option == 25 || isset($formData["opt25_hidden"])) {
+                $input = 25;
+                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $this->addElement(
+                        'radio',
+                        "opt{$input}",
+                        array(
+                            'placeholder' => $this->translate("Choice of working mode"),
+                            'multiOptions' => [
+                                '02' => 'WideBand Mode',
+                                '03' => 'Channel Mode'
+                            ],
+                            'required' => true,
+                            // 'autosubmit' acts like an AJAX-Request
+                            //'class' => 'autosubmit'
+                        )
+                    );
+
+                }
+            }
             #26: Uplink Start Frequency
             if ($option == 26 || isset($formData['opt26_hidden'])) {
                 $input = 26;
@@ -144,10 +220,8 @@ class HostForm extends ConfigForm
                 if ($option != $hidden) {
 
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
-                        #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[MHz]',
+                        'placeholder' => $this->translate("Uplink Start Frequency") . '   - Insert frequency[MHz]',
                         'required' => true,
                     ]);
 
@@ -156,14 +230,11 @@ class HostForm extends ConfigForm
             #27: Downlink Start Frequency
             if ($option == 27 || isset($formData['opt27_hidden'])) {
                 $input = 27;
-                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                $hidden = $formData["opt{$input}_hidden"] ?? 0;
                 if ($option != $hidden) {
-
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
-                        #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[MHz]',
+                        'placeholder' => $this->translate("Downlink Start Frequency") . '   - Insert frequency[MHz]',
                         'required' => true,
                     ]);
                 }
@@ -171,14 +242,11 @@ class HostForm extends ConfigForm
             #28: Work bandwidth
             if ($option == 28 || isset($formData['opt28_hidden'])) {
                 $input = 28;
-                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                $hidden = $formData["opt{$input}_hidden"] ?? 0;
                 if ($option != $hidden) {
-                    #    $listFrecuencia = $this->frecuenciaDMU();
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
-                        #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[MHz]',
+                        'placeholder' => $this->translate("Work bandwidth") . '   - Insert frequency[MHz]',
                         'required' => true,
                     ]);
                 }
@@ -186,15 +254,11 @@ class HostForm extends ConfigForm
             #29: Channel bandwidth
             if ($option == 29 || isset($formData['opt29_hidden'])) {
                 $input = 29;
-                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                $hidden = $formData["opt{$input}_hidden"] ?? 0;
                 if ($option != $hidden) {
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
-                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}", [
-                        #'label'       => $this->translate("{$descripcion}"),
-                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[KHz]',
+                        'placeholder' => $this->translate("Channel bandwidth") . '   - Insert frequency[KHz]',
                         'required' => true,
                     ]);
                 }
@@ -278,6 +342,38 @@ class HostForm extends ConfigForm
         return $list;
     }
 
+    private function listDRU($opt_dru)
+    {
+        $id = $this->getIdDataList('druIDDataList');
+        $select = (new Select())
+            ->from('director_datalist_entry r')
+            ->columns(['r.*'])
+            ->where(['r.list_id  = ?' => $id])
+            ->orderBy('r.entry_value', SORT_ASC);
+
+        $list[''] = '(Remotes)';
+
+        foreach ($this->getDb()->select($select) as $row) {
+            $list[$row->entry_name] = $row->entry_value;
+            if ($row->entry_value == $opt_dru) {
+                $value[$row->entry_name] = $row->entry_value;
+                return $value;
+            }
+        }
+        return $list;
+    }
+
+    private function getIdDataList($nameList)
+    {
+        $select = (new Select())
+            ->from('director_datalist r')
+            ->columns(['r.*'])
+            ->where(['r.list_name = ?' => $nameList]);
+        print_r($select);
+        $row = $this->getDb()->select($select)->fetch();
+
+        return $row->id;
+    }
 
     private function getDescripcion($id)
     {
@@ -285,10 +381,44 @@ class HostForm extends ConfigForm
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
 
+        print_r($select);
         $row = $this->getDb()
             ->select($select)->fetch();
+        print_r($row);
 
         return $row->name;
+    }
+
+    private function decodeAddress(string $address): array
+    {
+        print($address);
+        if (substr($address, 0, 10) !== '192.168.11') {
+            return [0, 0];
+        }
+
+        if ($address === "192.168.11.22") {
+            return [0, 0];
+        }
+
+        $opt = 0;
+
+        switch (substr($address, 0, 13)) {
+            case "192.168.11.10":
+                $opt = 1;
+                break;
+            case "192.168.11.12":
+                $opt = 2;
+                break;
+            case "192.168.11.14":
+                $opt = 3;
+                break;
+            case "192.168.11.16":
+                $opt = 4;
+                break;
+        }
+        $dru = (int)rtrim($address, ")")[-1] + 1; // Use rtrim with ")" to handle potential suffix
+
+        return [$opt, $dru];
     }
 
     private function frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth)

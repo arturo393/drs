@@ -58,12 +58,12 @@ class HostController extends Controller
             }
 
             $i = 1;
-            while (!$error && $i <= 5) {
+            while (!$error && $i <= 32) {
                 $existe = $this->_hasParam("opt{$i}_hidden") ? true : false;
                 if ($existe) {
                     $i = 100;
                 }
-                if ($i == 5) {
+                if ($i == 32) {
                     $form->addError("Select a parameter");
                     $error = true;
                 }
@@ -98,154 +98,357 @@ class HostController extends Controller
 
     public function saveAction()
     {
-        $query = "";
-        $queryArray = [];
-        $result = [];
-        $dmuDevice1 = -1;
-        $dmuDevice2 = -1;
-        $cmd_body_length = -1;
-        $cmd_data = -1;
-        $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
-        $host = $this->buscarDataFromDB($this->_getParam('host_remote'));
-        $address = $host->address;
-        $hostname = $host->object_name;
-        $bandwidth = $this->_getParam('bandwidth');
-        $cmd_type = 'single_set';
         $device = $this->_getParam('device');
-        #1: Working mode
-        if ($this->_hasParam('opt1_hidden')) {
-            $trama = $this->tramasDMU($this->_getParam('opt1_hidden'));
-            $cmd_data = $this->_getParam('opt1');
-            $cmd_name = 0x80;
-            $cmd_body_length = 1;
-            $salidaArray = [];
-            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
-            exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(50000);
-            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
-            if ($salidaArray[0] == "OK") {
-                if ($cmd_data == 2) {
-                    $salida = "WideBand";
-                } else if ($cmd_data == 3) {
-                    $salida = "Channel mode";
-                } else {
-                    $salida = "Unkonw mode";
+        if ($device == 'dmu_ethernet' || $device == 'dru_ethernet' || $device == 'dmu_serial_service') {
+            $query = "";
+            $queryArray = [];
+            $result = [];
+            $dmuDevice1 = -1;
+            $dmuDevice2 = -1;
+            $cmd_body_length = -1;
+            $cmd_data = -1;
+            $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
+            $host = $this->buscarDataFromDB($this->_getParam('host_remote'));
+            $address = $host->address;
+            $hostname = $host->object_name;
+            $bandwidth = $this->_getParam('bandwidth');
+            $cmd_type = 'single_set';
+            $device = $this->_getParam('device');
+            #1: Working mode
+            if ($this->_hasParam('opt1_hidden')) {
+                $trama = $this->tramasDMU($this->_getParam('opt1_hidden'));
+                $cmd_data = $this->_getParam('opt1');
+                $cmd_name = 0x80;
+                $cmd_body_length = 1;
+                $salidaArray = [];
+                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
+                exec($ejecutar . " 2>&1", $salidaArray);
+                usleep(50000);
+                $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                if ($salidaArray[0] == "OK") {
+                    if ($cmd_data == 2) {
+                        $salida = "WideBand";
+                    } else if ($cmd_data == 3) {
+                        $salida = "Channel mode";
+                    } else {
+                        $salida = "Unkonw mode";
+                    }
                 }
-            }
-            array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
 
-        }
-        #2: Gain power control ATT
-        if ($this->_hasParam('opt2_hidden')) {
-            $trama = $this->tramasDMU($this->_getParam('opt2_hidden'));
-            $cmd_name = 0xe7;
-            $cmd_body_length = 2;
-            $uplink_att = (int)$this->_getParam('opt2_2');
-            $downlink_att = (int)$this->_getParam('opt2_1');
-            $byte1 = dechex(4 * (int)$this->_getParam('opt2_2'));
-            $byte2 = dechex(4 * (int)$this->_getParam('opt2_1'));
-            $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT);
-            $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT);
-            $cmd_data = "{$byte1}{$byte2}";
-            $salidaArray = [];
-            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
-            exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(50000);
-            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
-            if ($salidaArray[0] == "OK") {
-                $salida = "Uplink ATT: {$uplink_att} [dB] \n Downlink ATT: {$downlink_att} [dB]";
             }
-            array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
-        }
-        #3: Channel Activation Status           
-        if ($this->_hasParam('opt3_hidden')) {
-            $trama = $this->tramasDMU($this->_getParam('opt3_hidden'));
-            $cmd_name = 0x41;
-            $cmd_body_length = 0x10;
-            $byte = "";
-            $message = "<br>";
-            $status = "";
-            for ($i = 1; $i <= 16; $i++) {
-                $input = $this->_getParam("opt3_{$i}");
-                if ($input == 1) {
-                    $byte = "{$byte}00";
-                    $status = "ON";
-                } else {
-                    $byte = "{$byte}01";
-                    $status = "OFF";
+            #2: Gain power control ATT
+            if ($this->_hasParam('opt2_hidden')) {
+                $trama = $this->tramasDMU($this->_getParam('opt2_hidden'));
+                $cmd_name = 0xe7;
+                $cmd_body_length = 2;
+                $uplink_att = (int)$this->_getParam('opt2_2');
+                $downlink_att = (int)$this->_getParam('opt2_1');
+                $byte1 = dechex(4 * (int)$this->_getParam('opt2_2'));
+                $byte2 = dechex(4 * (int)$this->_getParam('opt2_1'));
+                $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT);
+                $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT);
+                $cmd_data = "{$byte1}{$byte2}";
+                $salidaArray = [];
+                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
+                exec($ejecutar . " 2>&1", $salidaArray);
+                usleep(50000);
+                $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                if ($salidaArray[0] == "OK") {
+                    $salida = "Uplink ATT: {$uplink_att} [dB] \n Downlink ATT: {$downlink_att} [dB]";
                 }
-                $message .= "Channel {$i} : {$status} <br>";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
             }
-            $cmd_data = $byte;
-            $salidaArray = [];
-            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
-            exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(50000);
-            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
-            if ($salidaArray[0] == "OK") {
-                $salida = $message;
-            }
-            array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
-
-        }
-        #4: Channel Frecuency Point Configuration
-        if ($this->_hasParam('opt4_hidden')) {
-            $trama = $this->tramasDMU($this->_getParam('opt4_hidden'));
-            $cmd_name = 0x35;
-            $cmd_body_length = 0x40;
-            $byte = "";
-            $message = "<br>";
-            $status = "";
-            for ($i = 1; $i <= 16; $i++) {
-                $input = $this->_getParam("opt4_{$i}");
-                $byte = "{$byte}{$input}";
-                $inverted_bytes = $this->invert_bytes($input);
-                $decimal_value = $this->hex_to_dec($inverted_bytes) / 1000;
-                $message .= "Channel {$i} : {$decimal_value} [MHz] <br>";
-
-            }
-            $cmd_data = $byte;
-            $salidaArray = [];
-            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
-            exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(50000);
-            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
-            if ($salidaArray[0] == "OK") {
-                $salida = $message;
-            }
-            array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
-        }
-        #5: Optical PortState
-        if ($this->_hasParam('opt5_hidden')) {
-            $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));
-            $cmd_name = 0x90;
-            $cmd_body_length = 4;
-            $byte = "";
-            $message = "<br>";
-            $status = "";
-            for ($i = 1; $i <= 4; $i++) {
-                $input = $this->_getParam("opt5_{$i}");
-                if ($input == 1) {
-                    $byte = "{$byte}00";
-                    $status = "ON";
-                } else {
-                    $byte = "{$byte}01";
-                    $status = "OFF";
+            #3: Channel Activation Status
+            if ($this->_hasParam('opt3_hidden')) {
+                $trama = $this->tramasDMU($this->_getParam('opt3_hidden'));
+                $cmd_name = 0x41;
+                $cmd_body_length = 0x10;
+                $byte = "";
+                $message = "<br>";
+                $status = "";
+                for ($i = 1; $i <= 16; $i++) {
+                    $input = $this->_getParam("opt3_{$i}");
+                    if ($input == 1) {
+                        $byte = "{$byte}00";
+                        $status = "ON";
+                    } else {
+                        $byte = "{$byte}01";
+                        $status = "OFF";
+                    }
+                    $message .= "Channel {$i} : {$status} <br>";
                 }
-                $message .= "Optical Port {$i} : {$status} <br>";
+                $cmd_data = $byte;
+                $salidaArray = [];
+                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
+                exec($ejecutar . " 2>&1", $salidaArray);
+                usleep(50000);
+                $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                if ($salidaArray[0] == "OK") {
+                    $salida = $message;
+                }
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
+
             }
-            $cmd_data = $byte;
-            $salidaArray = [];
-            $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
-            exec($ejecutar . " 2>&1", $salidaArray);
-            usleep(50000);
-            $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
-            if ($salidaArray[0] == "OK") {
-                $salida = $message;
+            #4: Channel Frecuency Point Configuration
+            if ($this->_hasParam('opt4_hidden')) {
+                $trama = $this->tramasDMU($this->_getParam('opt4_hidden'));
+                $cmd_name = 0x35;
+                $cmd_body_length = 0x40;
+                $byte = "";
+                $message = "<br>";
+                $status = "";
+                for ($i = 1; $i <= 16; $i++) {
+                    $input = $this->_getParam("opt4_{$i}");
+                    $byte = "{$byte}{$input}";
+                    $inverted_bytes = $this->invert_bytes($input);
+                    $decimal_value = $this->hex_to_dec($inverted_bytes) / 1000;
+                    $message .= "Channel {$i} : {$decimal_value} [MHz] <br>";
+
+                }
+                $cmd_data = $byte;
+                $salidaArray = [];
+                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
+                exec($ejecutar . " 2>&1", $salidaArray);
+                usleep(50000);
+                $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                if ($salidaArray[0] == "OK") {
+                    $salida = $message;
+                }
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
             }
-            array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
+            #5: Optical PortState
+            if ($this->_hasParam('opt5_hidden')) {
+                $trama = $this->tramasDMU($this->_getParam('opt5_hidden'));
+                $cmd_name = 0x90;
+                $cmd_body_length = 4;
+                $byte = "";
+                $message = "<br>";
+                $status = "";
+                for ($i = 1; $i <= 4; $i++) {
+                    $input = $this->_getParam("opt5_{$i}");
+                    if ($input == 1) {
+                        $byte = "{$byte}00";
+                        $status = "ON";
+                    } else {
+                        $byte = "{$byte}01";
+                        $status = "OFF";
+                    }
+                    $message .= "Optical Port {$i} : {$status} <br>";
+                }
+                $cmd_data = $byte;
+                $salidaArray = [];
+                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
+                exec($ejecutar . " 2>&1", $salidaArray);
+                usleep(50000);
+                $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                if ($salidaArray[0] == "OK") {
+                    $salida = $message;
+                }
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
+            }
+        }
+        if ($device == 'dru_serial_service') {
+            $result = [];
+            $ejecutar = "";
+            $host_remote = $this->buscarIpHost($this->_getParam('host_remote'));
+            $druId = $this->_getParam('dru_id');
+            $waitForNewSendTime = 100000;
+
+            #22: Uplink ATT [dB]
+            if ($this->_hasParam('opt22_hidden')) {
+
+                $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));
+                $druCmdLength = $trama->cmd_length;
+                $druCmdCode = $trama->cmd_code;
+                $byte1 = dechex((int)$this->_getParam('opt22'));
+                $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                $salidaArray = [];
+                exec($ejecutar . " 2>&1", $salidaArray);
+                $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                usleep($waitForNewSendTime);
+            }
+            #23: Downlink ATT [dB]
+            if ($this->_hasParam('opt23_hidden')) {
+
+                $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));
+                $druCmdLength = $trama->cmd_length;
+                $druCmdCode = $trama->cmd_code;
+                $byte1 = dechex((int)$this->_getParam('opt23'));
+                $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                $salidaArray = [];
+                exec($ejecutar . " 2>&1", $salidaArray);
+                $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+
+                usleep($waitForNewSendTime);
+            }
+            #25: Choice of working mode
+            if ($this->_hasParam('opt25_hidden')) {
+                $trama = $this->tramasDRU($this->_getParam('opt25_hidden'));
+                $druCmdLength = $trama->cmd_length;
+                $druCmdCode = $trama->cmd_code;
+                $druCmdData = $this->_getParam('opt25');
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+
+
+                $salidaArray = [];
+                exec($ejecutar . " 2>&1", $salidaArray);
+                $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                usleep($waitForNewSendTime);
+            }
+            #26: Uplink Start Frequency
+            if ($this->_hasParam('opt26_hidden')) {
+                $trama = $this->tramasDRU($this->_getParam('opt26_hidden'));
+                $druCmdLength = '07';
+                $druCmdCode = '180A';
+                $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt26')), 10000);
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                $salida = system($ejecutar . " 2>&1");
+                //$salida = "OK";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                usleep(100000);
+            }
+            #27: Downlink Start Frequency
+            if ($this->_hasParam('opt27_hidden')) {
+                $trama = $this->tramasDRU($this->_getParam('opt27_hidden'));
+                $druCmdLength = '07';
+                $druCmdCode = '190A';
+                $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt27')), 10000);
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                $salida = system($ejecutar . " 2>&1");
+                //$salida = "OK";
+
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                usleep(100000);
+            }
+            #28: Work bandwidth
+            if ($this->_hasParam('opt28_hidden')) {
+                $trama = $this->tramasDRU($this->_getParam('opt28_hidden'));
+                $druCmdLength = '07';
+                $druCmdCode = '1A0A';
+                $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt28')), 10000);
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                $salida = system($ejecutar . " 2>&1");
+                //$salida = "OK";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                usleep(100000);
+            }
+            #29: Channel bandwidth
+            if ($this->_hasParam('opt29_hidden')) {
+                $trama = $this->tramasDRU($this->_getParam('opt29_hidden'));        #22: Uplink ATT [dB]
+                if ($this->_hasParam('opt22_hidden')) {
+
+                    $trama = $this->tramasDRU($this->_getParam('opt22_hidden'));
+                    $druCmdLength = $trama->cmd_length;
+                    $druCmdCode = $trama->cmd_code;
+                    $byte1 = dechex((int)$this->_getParam('opt22'));
+                    $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                    $salidaArray = [];
+                    exec($ejecutar . " 2>&1", $salidaArray);
+                    $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                    usleep($waitForNewSendTime);
+                }
+                #23: Downlink ATT [dB]
+                if ($this->_hasParam('opt23_hidden')) {
+
+                    $trama = $this->tramasDRU($this->_getParam('opt23_hidden'));
+                    $druCmdLength = $trama->cmd_length;
+                    $druCmdCode = $trama->cmd_code;
+                    $byte1 = dechex((int)$this->_getParam('opt23'));
+                    $druCmdData = str_pad($byte1, 2, "0", STR_PAD_LEFT);
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                    $salidaArray = [];
+                    exec($ejecutar . " 2>&1", $salidaArray);
+                    $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+
+                    usleep($waitForNewSendTime);
+                }
+                #25: Choice of working mode
+                if ($this->_hasParam('opt25_hidden')) {
+                    $trama = $this->tramasDRU($this->_getParam('opt25_hidden'));
+                    $druCmdLength = $trama->cmd_length;
+                    $druCmdCode = $trama->cmd_code;
+                    $druCmdData = $this->_getParam('opt25');
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+
+
+                    $salidaArray = [];
+                    exec($ejecutar . " 2>&1", $salidaArray);
+                    $salida = count($salidaArray) > 0 ? $salidaArray[0] : "Changes were not applied";
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                    usleep($waitForNewSendTime);
+                }
+                #26: Uplink Start Frequency
+                if ($this->_hasParam('opt26_hidden')) {
+                    $trama = $this->tramasDRU($this->_getParam('opt26_hidden'));
+                    $druCmdLength = '07';
+                    $druCmdCode = '180A';
+                    $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt26')), 10000);
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                    $salida = system($ejecutar . " 2>&1");
+                    //$salida = "OK";
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                    usleep(100000);
+                }
+                #27: Downlink Start Frequency
+                if ($this->_hasParam('opt27_hidden')) {
+                    $trama = $this->tramasDRU($this->_getParam('opt27_hidden'));
+                    $druCmdLength = '07';
+                    $druCmdCode = '190A';
+                    $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt27')), 10000);
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                    $salida = system($ejecutar . " 2>&1");
+                    //$salida = "OK";
+
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                    usleep(100000);
+                }
+                #28: Work bandwidth
+                if ($this->_hasParam('opt28_hidden')) {
+                    $trama = $this->tramasDRU($this->_getParam('opt28_hidden'));
+                    $druCmdLength = '07';
+                    $druCmdCode = '1A0A';
+                    $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt28')), 10000);
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                    $salida = system($ejecutar . " 2>&1");
+                    //$salida = "OK";
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                    usleep(100000);
+                }
+                #29: Channel bandwidth
+                if ($this->_hasParam('opt29_hidden')) {
+                    $trama = $this->tramasDRU($this->_getParam('opt29_hidden'));
+                    $druCmdLength = '07';
+                    $druCmdCode = '1B0A';
+                    $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt29')), 1);
+                    $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                    echo $druCmdData;
+                    $salida = system($ejecutar . " 2>&1");
+                    //$salida = "OK";
+                    array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                    usleep(100000);
+                }
+                $druCmdLength = '07';
+                $druCmdCode = '1B0A';
+                $druCmdData = $this->obtenerhexinvertido(((int)$this->_getParam('opt29')), 1);
+                $ejecutar = $this->comando($host_remote, $druId, $druCmdLength, $druCmdCode, $druCmdData);
+                echo $druCmdData;
+                $salida = system($ejecutar . " 2>&1");
+                //$salida = "OK";
+                array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'ssh' => $ejecutar]);
+                usleep(100000);
+            }
 
         }
+
 
         $this->view->assign('salida', $result);
         $this->view->assign('cmd', $ejecutar);
@@ -308,6 +511,17 @@ class HostController extends Controller
         return $row;
     }
 
+    private function tramasDRU($id)
+    {
+        $select = (new Select())
+            ->from('rs485_dru_trama r')
+            ->columns(['r.*'])
+            ->where(['r.id = ?' => $id]);
+
+        $row = $this->getDb()->select($select)->fetch();
+        return $row;
+    }
+
     private function buscarDataFromDB($id)
     {
         $select = (new Select())
@@ -326,6 +540,23 @@ class HostController extends Controller
             ->where(['r.id = ?' => $id]);
         $row = $this->getDb()->select($select)->fetch();
         return $row->address;
+    }
+
+    private function tramasDRUList()
+    {
+        $select = (new Select())
+            ->from('rs485_dru_trama r')
+            ->columns(['r.*'])
+            ->where(['r.id  in (?)' => $this->listComando])
+            ->orderBy('r.name', SORT_ASC);
+
+        $list[''] = '(Parameters)';
+
+        foreach ($this->getDb()->select($select) as $row) {
+            $list[$row->id] = $row->name;
+
+        }
+        return $list;
     }
 
     function invert_bytes($bytes_string)
