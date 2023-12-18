@@ -141,113 +141,75 @@
                 } ?>
             </li>
         <?php endif ?>
-        <?php if ($this->hasPermission('rs485/master/edit')): ?>
-            <li>
-                <?php if ($object->getType() === $object::TYPE_SERVICE) {
-                    $device = $object->customvars['device'] ?? -1;
-                    if ($device == "dmu_serial_service") {
-                        $device = $object->customvars['device'] ?? -1;
-                        $start_uplink_frequency = $object->customvars['start_uplink_frequency'] ?? 0;
-                        $start_downlink_frequency = $object->customvars['start_downlink_frequency'] ?? 0;
-                        $bandwidth = $object->customvars['bandwidth'] ?? 0;
-                        $frequency = isset($object->customvars['frequencies']) ? $object->customvars['frequencies'] : " ";
-
-                        $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
-                        $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
-                        $bandwidth = $object->customvars['bandwidth'] ?? 0;
-                        $cmd_type = $object->customvars['cmd_type'] ?? 0;
-                        echo $this->qlink(
-                            $this->translate('Device Configuration'),
-                            'rs485/master/edit',
-                            array('host' => $object->host->getName(),
-                                'freq' => $frequency,
-                                'start_uplink_frequency' => $start_uplink_frequency,
-                                'start_downlink_frequency' => $start_downlink_frequency,
-                                'bandwidth' => $bandwidth),
-                            array(
-                                'class' => 'action-link',
-                                'data-base-target' => '_self',
-                                'icon' => 'plug',
-                                'title' => $this->translate(
-                                    'Master Device Configuration'
-                                )
-                            )
-                        );
-                    } else if ($device == "dru_serial_service") {
-                        $opt = $object->customvars['opt'] ?? 0;
-                        $dru = $object->customvars['dru'] ?? 0;
-                        $service = $object->host->getName() . '-opt' . $opt . '-dru' . $dru;
-                        echo $this->qlink(
-                            $this->translate('Device Configuration'),
-                            'rs485/remote/edit',
-                            array('service' => $service),
-                            array(
-                                'class' => 'action-link',
-                                'data-base-target' => '_self',
-                                'icon' => 'plug',
-                                'title' => $this->translate(
-                                    'Remote Device Configuration'
-                                )
-                            )
-                        );
-                    }
-                }
-                ?>
-            </li>
-        <?php endif ?>
         <?php if ($this->hasPermission('rs485/host/edit')): ?>
-            <li>
-                <?php if ($object->getType() === $object::TYPE_SERVICE) {
-                    $device = $object->customvars['device'] ?? -1;
-                    $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
-                    $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
-                    $bandwidth = $object->customvars['bandwidth'] ?? 0;
-                    $cmd_type = $object->customvars['cmd_type'] ?? 0;
-                    if ($device == 'dmu_ethernet' || $device == 'dru_ethernet' || $device = 'dmu_serial_service') {
-                        echo $this->qlink(
-                            $this->translate('Config'),
-                            'rs485/host/edit',
-                            array('host' => $object->getHost()->getName(),
-                                'center_uplink_frequency' => $center_uplink_frequency,
-                                'center_downlink_frequency' => $center_downlink_frequency,
-                                'bandwidth' => $bandwidth,
-                                'cmd_type' => $cmd_type,
-                                'device' => $device
-                            ),
-                            array(
-                                'class' => 'action-link',
-                                'data-base-target' => '_self',
-                                'icon' => 'plug',
-                                'title' => $this->translate(
-                                    'Remote Device Configuration'
-                                )
-                            )
-                        );
-                    }
-                }
-                ?>
-            </li>
-            <li>
-                <?php if ($object->getType() === $object::TYPE_HOST) {
-                    $linkAddress = $object->address;
-                    $address = "http://$linkAddress";
+        <li>
+            <?php if ($object->getType() === $object::TYPE_SERVICE) {
+                $device = $object->customvars['device'] ?? "";
+                $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
+                $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
+                $bandwidth = $object->customvars['bandwidth'] ?? 0;
+                $cmd_type = $object->customvars['cmd_type'] ?? 0;
+                print("device:" . $device);
+                if ($device == 'dmu_ethernet' or $device == 'dru_ethernet' or $device == 'dmu_serial_service') {
                     echo $this->qlink(
-                        $this->translate('Admin'),
-                        $address,
-                        array('host' => $object->getName()),
+                        $this->translate('Config'),
+                        'rs485/host/edit',
+                        array('host' => $object->getHost()->getName(),
+                            'center_uplink_frequency' => $center_uplink_frequency,
+                            'center_downlink_frequency' => $center_downlink_frequency,
+                            'bandwidth' => $bandwidth,
+                            'cmd_type' => $cmd_type,
+                            'device' => $device
+                        ),
                         array(
                             'class' => 'action-link',
-                            'data-base-target' => '_blank',
+                            'data-base-target' => '_self',
                             'icon' => 'plug',
                             'title' => $this->translate(
-                                'Admin Configuration '
-                            ),
-                            'target' => '_blank',
+                                'Master Device Configuration'
+                            )
+                        )
+                    );
+                } else if ($device == 'dru_serial_service') {
+                    echo $this->qlink(
+                        $this->translate('Config'),
+                        'rs485/host/edit',
+                        array('host' => $object->getHost()->getName(),
+                            'device' => $device
+                        ),
+                        array(
+                            'class' => 'action-link',
+                            'data-base-target' => '_self',
+                            'icon' => 'plug',
+                            'title' => $this->translate(
+                                'Remote Device Configuration'
+                            )
                         )
                     );
                 }
-                ?>
-            </li>
-        <?php endif ?>
+            }
+            ?>
+        </li>
+        <li>
+            <?php if ($object->getType() === $object::TYPE_HOST) {
+                $linkAddress = $object->address;
+                $address = "http://$linkAddress";
+                echo $this->qlink(
+                    $this->translate('Admin'),
+                    $address,
+                    array('host' => $object->getName()),
+                    array(
+                        'class' => 'action-link',
+                        'data-base-target' => '_blank',
+                        'icon' => 'plug',
+                        'title' => $this->translate(
+                            'Admin Configuration '
+                        ),
+                        'target' => '_blank',
+                    )
+                );
+            }
+            endif ?>
+        </li>
     </ul>
 </div>
