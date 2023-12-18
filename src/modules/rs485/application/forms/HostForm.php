@@ -28,14 +28,20 @@ class HostForm extends ConfigForm
     {
         $hostname = $_GET['host'] ?? "";
         $listHost = $this->cargarHostList($hostname);
-        $listTrama = $this->tramasDMU($hostname);
+
         $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
         $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
         $bandwidth = $_GET['bandwidth'] ?? 0;
         $host = $_GET['host'] ?? 0;
         $cmd_type = $_GET['host'] ?? "";
-        $device = $_GET['host'] ?? "";
+        $device = $_GET['device'] ?? "";
         $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
+        print_r($_GET);
+
+        if ($device == 'dmu_ethernet' || $device == 'dru_ethernet' || $device == 'dmu_serial_service')
+            $listTrama = $this->tramasDMU($hostname);
+        if ($device == 'dru_serial_service')
+            $listTrama = $this->tramasDRUList();
 
         $this->addElement('select', 'host_remote', array(
             'multiOptions' => $listHost,
@@ -129,6 +135,71 @@ class HostForm extends ConfigForm
                     }
                 }
             }
+
+
+            #26: Uplink Start Frequency
+            if ($option == 26 || isset($formData['opt26_hidden'])) {
+                $input = 26;
+                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {
+
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[MHz]',
+                        'required' => true,
+                    ]);
+
+                }
+            }
+            #27: Downlink Start Frequency
+            if ($option == 27 || isset($formData['opt27_hidden'])) {
+                $input = 27;
+                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {
+
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[MHz]',
+                        'required' => true,
+                    ]);
+                }
+            }
+            #28: Work bandwidth
+            if ($option == 28 || isset($formData['opt28_hidden'])) {
+                $input = 28;
+                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {
+                    #    $listFrecuencia = $this->frecuenciaDMU();
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[MHz]',
+                        'required' => true,
+                    ]);
+                }
+            }
+            #29: Channel bandwidth
+            if ($option == 29 || isset($formData['opt29_hidden'])) {
+                $input = 29;
+                $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
+                if ($option != $hidden) {
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                    $descripcion = $this->getDescripcion($input);
+                    $this->addElement('text', "opt{$input}", [
+                        #'label'       => $this->translate("{$descripcion}"),
+                        'placeholder' => $this->translate("{$descripcion}") . '   - Insert frequency[KHz]',
+                        'required' => true,
+                    ]);
+                }
+            }
+
         }
     }
 
@@ -163,13 +234,50 @@ class HostForm extends ConfigForm
         foreach ($this->getDb()
                      ->select($select) as $row) {
             if (!(strripos($host, "dru") !== false && ($row->id == 4 || $row->id == 3))) {
-                $list[$row
-                    ->id] = $row->name;
+                $list[$row->id] = $row->name;
             }
         }
         $list[999] = 'Setup All Parameters';
         return $list;
     }
+
+
+    private function tramasDRUList()
+    {
+        $listComando = [
+            # 15, #15: Upstream noise switch
+            # 16, #16: High threshold of upstream soise
+            # 17, #17: Low threshold of upstream noise
+            # 18, #18: Uplink noise correction value
+            # 19, #19: Uplink noise Detection parameter 1
+            # 20, #20: Uplink noise Detection parameter 2
+            22, #22: Uplink ATT [dB]  - Cmd data 0x04004
+            23, #23: Downlink ATT [dB] - Cmd data 0x04104
+            25, #25: Choice of working mode - Cmd data 0xEF0B
+            26, #26: Uplink Start Frequency
+            27, #27: Downlink Start Frequency
+            28, #28: Work Bandwidth
+            29, #29: Channel bandwidth
+            #30  #30: Master/Slave Link Alarm Control
+            #31: Device Serial Numner
+            #32: MAC Address
+        ];
+
+        $select = (new Select())
+            ->from('rs485_dru_trama r')
+            ->columns(['r.*'])
+            ->where(['r.id  in (?)' => $listComando])
+            ->orderBy('r.name', SORT_ASC);
+
+        $list[''] = '(Parameters)';
+
+        foreach ($this->getDb()->select($select) as $row) {
+            $list[$row->id] = $row->name;
+
+        }
+        return $list;
+    }
+
 
     private function getDescripcion($id)
     {
@@ -191,12 +299,6 @@ class HostForm extends ConfigForm
             $half_bandwidth = ($bandwidth / 2.0);
             $ul = (float)$center_uplink_frequency - ($bandwidth / 2.0);
             $dl = (float)$center_downlink_frequency - ($bandwidth / 2.0);
-            print($center_downlink_frequency . "\n");
-            print($center_uplink_frequency . "\n");
-            print($half_bandwidth . "\n");
-            print($bandwidth . "\n");
-            print($ul . "\n");
-            print($dl . "\n");
             $wb = $bandwidth;
             $cb = 125; // 12.5 Khz
             $ch_number_length = 4;
@@ -236,6 +338,7 @@ class HostForm extends ConfigForm
                 $ch_number = substr(str_repeat(0, $ch_number_length) . $channel_number, -$ch_number_length);
                 if ($hex_code != "")
                     $list[$hex_code] = "CH " . $ch_number . " - UL [MHZ] : " . $ul_real . " - DL [MHZ] : " . $dl_real;
+
             }
         }
         return $list;
