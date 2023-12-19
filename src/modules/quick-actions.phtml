@@ -149,6 +149,7 @@
                 $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
                 $bandwidth = $object->customvars['bandwidth'] ?? 0;
                 $cmd_type = $object->customvars['cmd_type'] ?? 0;
+                $baud_rate = $object->customvars['baud_rate'] ?? 0;
                 if ($device == 'dmu_ethernet' or $device == 'dru_ethernet' or $device == 'dmu_serial_service') {
                     echo $this->qlink(
                         $this->translate('Config'),
@@ -159,6 +160,7 @@
                             'bandwidth' => $bandwidth,
                             'cmd_type' => $cmd_type,
                             'device' => $device
+
                         ),
                         array(
                             'class' => 'action-link',
@@ -176,7 +178,9 @@
                         'rs485/host/edit',
                         array('host' => $object->getHost()->getName(),
                             'device' => $device,
-                            'address' => $linkAddress
+                            'baudrate' => $baud_rate,
+                            'address' => $linkAddress,
+
                         ),
                         array(
                             'class' => 'action-link',

@@ -360,6 +360,10 @@ class CommBoardCmd(Enum):
     downlink_output_power = (0x04, 0x0305)
     uplink_input_power = (0x04, 0x2505)
     power_amplifier_temperature = (0x04, 0x0105)
+    uplink_start_frequency = (0x07, 0x180A)
+    downlink_start_frequency = (0x07, 0x190A)
+    work_bandwidth = (0x07, 0x1A0A)
+    channel_bandwidth = (0x07, 0x1B0A)
 
 
 class ChannelCommBoardCmd(Enum):
@@ -664,17 +668,17 @@ class CommandData:
         self.query_bytes = None
         self.message = None
         self.decoder = Decoder()
+        self.message_type = None
 
-    def generate_ltel_comunication_board_frame(self, dru_id, cmd_name):
+    def generate_ltel_comunication_board_frame(self, dru_id, cmd_name, message_type):
         start_flag = "7E"
         end_flag = "7F"
         unknown1 = 0x0101
         site_number = 0
         self.dru_id = dru_id
         unknown2 = 0x0100
-        tx_rx = 0x80
         unknown3 = 0x01
-        message_type = 0x02
+        tx_rx = 0x80
         tx_rx2 = 0xFF
         length = cmd_name.value[0]
         code = cmd_name.value[1]
@@ -1861,6 +1865,7 @@ class Command:
         self.serial = None
         self.parameters = {}
         self.set_args(args)
+        self.message_type = None
 
     def set_args(self, args):
         self.parameters['address'] = args['address']
@@ -1868,7 +1873,12 @@ class Command:
         self.parameters['hostname'] = args['hostname']
         self.parameters['cmd_type'] = args['cmd_type']
         self.parameters['cmd_data'] = args['cmd_data']
-        self.parameters['cmd_name'] = int(args['cmd_name'])
+
+        if isinstance(args['cmd_name'], str):
+            if len(args['cmd_name']) < 4:
+                self.parameters['cmd_name'] = int(args['cmd_name'])
+            if len(args['cmd_name']) == 4:
+                self.parameters['cmd_name'] = int(args['cmd_name'], 16)
 
         self.parameters['cmd_body_length'] = int(args['cmd_body_length'])
         self.parameters['device_number'] = int(args['device_number'])
@@ -1916,13 +1926,25 @@ class Command:
         Returns:
             int: The length of the command frame, in bytes.
         """
-
         cmd_data = CommandData()
-        frame_len = cmd_data.generate_ifboard_frame(
-            command_number=self.get_command_value(),
-            command_body_length=self.parameters['cmd_body_length'],
-            command_data=self.parameters['cmd_data'],
-        )
+
+        dru = self.parameters['device_number']
+        opt = self.parameters['optical_port']
+        frame_len = 0
+        if self.parameters['cmd_name'] > 255:
+            cmd_data.generate_ltel_comunication_board_frame(
+                dru_id=f"{dru}{opt}",
+                cmd_name=self.get_command_comm_board_value(),
+                message_type=0x03
+            )
+            self.message_type = 0x03
+            frame_len = 1
+        else:
+            frame_len = cmd_data.generate_ifboard_frame(
+                command_number=self.get_command_value(),
+                command_body_length=self.parameters['cmd_body_length'],
+                command_data=self.parameters['cmd_data'],
+            )
 
         if frame_len > 0:
             self.list.append(cmd_data)
@@ -1993,7 +2015,7 @@ class Command:
                 dru_id = f"{opt}{dru}"
                 for cmd_name in cmd_group:
                     cmd_data = CommandData()
-                    cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name)
+                    cmd_data.generate_ltel_comunication_board_frame(dru_id=dru_id, cmd_name=cmd_name, message_type=0x02)
                     if cmd_data.query != "":
                         self.list.append(cmd_data)
 
@@ -2065,6 +2087,14 @@ class Command:
                 return command
         return None
 
+    def get_command_comm_board_value(self):
+        int_number = self.parameters['cmd_name']
+
+        for command in CommBoardCmd:
+            if command.value[1] == int_number:
+                return command
+        return None
+
     def _transmit_and_receive_tcp(self, address):
         rt = time.time()
         reply_counter = 0
@@ -2101,9 +2131,13 @@ class Command:
         Returns:
             int: The number of successful commands.
         """
+        if self.message_type == 0x03:
+            timeout = 10
+        else:
+            timeout = 6
         try:
             rt = time.time()
-            self.serial = self.set_serial_with_timeout(port, baud, timeout=6)
+            self.serial = self.set_serial_with_timeout(port, baud, timeout=timeout)
         except serial.SerialException:
             sys.stderr.write(f"CRITICAL - The specified port {port} is not available at {baud}")
             sys.exit(CRITICAL)
@@ -2365,7 +2399,7 @@ class Command:
             # Catch IndexError if command.reply is shorter than expected
             try:
                 response_flag = command.reply_bytes[respond_flag_index]
-                command_body_length = command.reply[cmd_body_length_index] - 3
+                command_body_length = command.reply_bytes[cmd_body_length_index] - 3
                 command_body = command.reply_bytes[cmd_data_index: \
                                                    cmd_data_index + command_body_length]
             except IndexError as e:
@@ -2460,6 +2494,14 @@ class Command:
     def _print_error(self, device):
         """Print error message."""
         return (f"no response from {device}")
+
+    def _exit_messagge(self, code, message):
+        if code == CRITICAL:
+            sys.stderr.write(f"CRITICAL - {message}")
+        elif code == WARNING:
+            sys.stderr.write(f"WARNING - {message}")
+        else:
+            sys.stderr.write(f"UNKNOWN - {message}")
 
 
 class Alarm:
@@ -2626,7 +2668,7 @@ class HtmlTable:
         for channel in range(1, 17):
             channel_key = f"channel_{channel}"
             ul_ch_freq = uplink_start_frequency + self.parameters.get(f"{channel_key}_number", 0) * channel_bandwidth
-            self.parameters[f"{channel_key}_freq"] = ul_ch_freq
+            self.parameters[f"{channel_key}_freq"] = round(ul_ch_freq, 3)
         return self._get_channel_freq_table()
 
     def _get_channel_freq_table(self):

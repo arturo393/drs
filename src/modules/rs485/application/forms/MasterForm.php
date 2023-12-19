@@ -17,31 +17,25 @@ class MasterForm extends ConfigForm
         $this->setAction('rs485/master/edit');
     }
 
-    public function refresh($host, $start_uplink_frequency, $start_downlink_frequency, $bandwidth)
+    public function refresh(string $host, int $centerUplinkFrequency, int $centerDownlinkFrequency, int $bandwidth, string $cmd_type, string $device): void
     {
-        $this->setName('form_master');
+        $this->setName('form_host');
         $this->setSubmitLabel($this->translate('Submit Changes'));
-        $options = '&start_uplink_frequency=' . $start_uplink_frequency;
-        $options = $options . '&start_downlink_frequency=' . $start_downlink_frequency;
-        $options = $options . '&bandwidth=' . $bandwidth;
-        $this->setAction('rs485/master/edit?host=' . $host . $options);
-        $start_uplink_frequency = $_GET['start_uplink_frequency'] ?? 0;
-        $start_downlink_frequency = $_GET['start_downlink_frequency'] ?? 0;
-        $bandwidth = $_GET['bandwidth'] ?? 0;
-        $host = $_GET['host'] ?? "";
+        $this->setAction(sprintf('rs485/host/edit?host=%s&center_uplink_frequency=%d&center_downlink_frequency=%d&bandwidth=%d&cmd_type=%s&device=%s', $host, $centerUplinkFrequency, $centerDownlinkFrequency, $bandwidth, $cmd_type, $device));
     }
+
 
     public function createElements(array $formData)
     {
-        $hostname = '';
-        if (isset($_GET['host'])) $hostname = $_GET['host'];
+        $hostname = $_GET['host'] ?? "";
         $listHost = $this->cargarHostList($hostname);
         $listTrama = $this->tramasDMU();
-        $start_uplink_frequency = $_GET['start_uplink_frequency'] ?? 0;
-        $start_downlink_frequency = $_GET['start_downlink_frequency'] ?? 0;
+        $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
+        $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
         $bandwidth = $_GET['bandwidth'] ?? 0;
         $host = $_GET['host'] ?? "";
-        $this->refresh($host, $start_uplink_frequency, $start_downlink_frequency, $bandwidth);
+        $cmd_type = $_GET['host'] ?? "";
+        $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $cmd_type, $bandwidth);
 
 
         $this->addElement('select', 'host_remote', array(
@@ -62,11 +56,11 @@ class MasterForm extends ConfigForm
             #5: Optical PortState
             if ($option == 5 || $option == 999 || isset($formData['opt5_hidden'])) {
                 $input = 5;
-                echo "sdss";
+
                 $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
+
                     $this->addElement('checkbox', "opt{$input}_1", ['label' => "Enable - Port 1"]);
 
                     $this->addElement('checkbox', "opt{$input}_2", ['label' => "Enable - Port 2"]);
@@ -98,9 +92,7 @@ class MasterForm extends ConfigForm
                 $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     $this->addElement('text', "opt{$input}_1", ['label' => "Uplink ATT [dB]", 'placeholder' => 'between 0[dB] and 30[dB]', 'required' => true,]);
-
                     $this->addElement('text', "opt{$input}_2", ['label' => 'Downlink ATT [dB]', 'placeholder' => 'between 0[dB] and 30[dB]', 'required' => true,
 
                     ]);
@@ -112,7 +104,6 @@ class MasterForm extends ConfigForm
                 $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    $descripcion = $this->getDescripcion($input);
                     for ($i = 1; $i <= 16; $i++) {
                         $this->addElement('radio', "opt{$input}_{$i}", array(
                             'label' => $this->translate("Channel {$i}"),
@@ -130,7 +121,7 @@ class MasterForm extends ConfigForm
                 $input = 4;
                 $hidden = isset($formData["opt{$input}_hidden"]) ? $formData["opt{$input}_hidden"] : 0;
                 if ($option != $hidden) {
-                    $listFrecuencia = $this->frequencyTables($start_downlink_frequency, $start_uplink_frequency, $bandwidth);
+                    $listFrecuencia = $this->frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth);
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
                     $descripcion = $this->getDescripcion($input);
                     for ($i = 1; $i <= 16; $i++) {
@@ -194,18 +185,17 @@ class MasterForm extends ConfigForm
         return $row->name;
     }
 
-    private function frequencyTables($start_downlink_frequency, $start_uplink_frequency, $bandwidth)
+    private function frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth)
     {
-
-        $dl = $start_downlink_frequency;
-        $ul = $start_uplink_frequency;
-        $wb = $bandwidth;
-        $ch_number_length = 4;
-        $cb = 125;
-
-        if ($start_downlink_frequency == 0 or $start_uplink_frequency == 0 or $bandwidth == 0) {
+        if ($center_downlink_frequency == 0 or $bandwidth == 0 or $center_uplink_frequency == 0) {
             $list = ["Unknown Frequencies"];
         } else {
+            $ul = (float)$center_uplink_frequency - (int)($bandwidth) / 2;
+            $dl = (float)$center_downlink_frequency - (int)($bandwidth) / 2;
+            $wb = $bandwidth;
+            $cb = 125; // 12.5 Khz
+            $ch_number_length = 4;
+
             $total_channel = ($wb / $cb) * 10000;
             for ($i = 0; $i < $total_channel + 1; $i++) {
                 $dl_real = $dl * 10000 + $i * $cb;
@@ -242,35 +232,6 @@ class MasterForm extends ConfigForm
                 if ($hex_code != "")
                     $list[$hex_code] = "CH " . $ch_number . " - UL [MHZ] : " . $ul_real . " - DL [MHZ] : " . $dl_real;
             }
-        }
-        return $list;
-    }
-
-    private function frecuenciaDMU($id)
-    {
-        if ($id == "uhf") {
-            $select = (new Select())->from('rs485_frecuencia r')
-                ->columns(['r.*'])
-                ->orderBy('r.channel', SORT_ASC);
-
-            $list[''] = '(Frequencies List)';
-        } elseif ($id == "vhf") {
-            $select = (new Select())->from('rs485_frecuencia_vhf r')
-                ->columns(['r.*'])
-                ->orderBy('r.channel', SORT_ASC);
-
-            $list[''] = '(Frequencies List)';
-        } else {
-            $select = (new Select(" "));
-
-            $list[''] = '(Unknown frequency)';
-            return $list;
-        }
-
-        foreach ($this->getDb()
-                     ->select($select) as $row) {
-            $list[$row
-                ->code_hex] = $row->description;
         }
         return $list;
     }
