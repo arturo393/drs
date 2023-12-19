@@ -28,14 +28,13 @@ class HostForm extends ConfigForm
     {
         $hostname = $_GET['host'] ?? "";
         $listHost = $this->cargarHostList($hostname);
-
-
         $center_uplink_frequency = $_GET['center_uplink_frequency'] ?? 0;
         $center_downlink_frequency = $_GET['center_downlink_frequency'] ?? 0;
         $bandwidth = $_GET['bandwidth'] ?? 0;
         $host = $_GET['host'] ?? 0;
         $cmd_type = $_GET['host'] ?? "";
         $device = $_GET['device'] ?? "";
+
         #$this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
 
 
@@ -50,16 +49,19 @@ class HostForm extends ConfigForm
         }
 
         if ($device == 'dru_serial_service') {
-
             $address = $_GET['address'] ?? "0";
+            $baud_rate = $_GET['baudrate'] ?? 0;
+            $baud_rate = $_GET['baudrate'] ?? 0;
             $opt_dru_list = $this->decodeAddress($address);
-            print_r($opt_dru_list);
             $opt_dru = 'Optical Port ' . $opt_dru_list[0] . ' Remote ' . $opt_dru_list[1];
             $list[$opt_dru_list[0] . $opt_dru_list[1]] = $opt_dru;
             $listIdDRU = $list;
+            //print_r($_GET);
             $this->setName('form_host');
             $this->setSubmitLabel($this->translate('Submit Changes'));
-            $this->setAction(sprintf('rs485/host/edit?host=%s&device=%s&address=%s', $host, $device, $address));
+            $this->setAction(sprintf(
+                '/rs485/host/edit?host=%s&device=%s&baudrate=%s&address=%s',
+                $host, $device, $baud_rate, $address));
 
 
             $this->addElement(
@@ -369,7 +371,6 @@ class HostForm extends ConfigForm
             ->from('director_datalist r')
             ->columns(['r.*'])
             ->where(['r.list_name = ?' => $nameList]);
-        print_r($select);
         $row = $this->getDb()->select($select)->fetch();
 
         return $row->id;
@@ -381,17 +382,13 @@ class HostForm extends ConfigForm
             ->columns(['r.*'])
             ->where(['r.id = ?' => $id]);
 
-        print_r($select);
         $row = $this->getDb()
             ->select($select)->fetch();
-        print_r($row);
-
         return $row->name;
     }
 
     private function decodeAddress(string $address): array
     {
-        print($address);
         if (substr($address, 0, 10) !== '192.168.11') {
             return [0, 0];
         }
