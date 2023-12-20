@@ -3138,8 +3138,7 @@ class PluginOutput:
         exit_code = alarm.check_alarm()
         html_table = HtmlTable(self.parameters, alarm)
         graphite = Graphite(self.parameters)
-        sys.stderr.write(html_table.ltel_board_table() + "|" + graphite.display())
-        plugin_output_message = str(self.parameters)
+        plugin_output_message = (html_table.ltel_board_table() + "|" + graphite.display())
         return exit_code, plugin_output_message
 
     def dru_serial_host_display(self):

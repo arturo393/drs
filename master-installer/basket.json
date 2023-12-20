@@ -16646,6 +16646,11 @@
                     "var_filter": null
                 },
                 {
+                    "datafield_id": 27,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
                     "datafield_id": 21,
                     "is_required": "n",
                     "var_filter": null
@@ -16684,7 +16689,11 @@
             ],
             "object_name": "ethernet-host-template",
             "object_type": "template",
-            "uuid": "cbfe3250-8ad1-4f7a-ad67-6d20650e00f3"
+            "uuid": "cbfe3250-8ad1-4f7a-ad67-6d20650e00f3",
+            "vars": {
+                "cmd_type": "single_query",
+                "device": "dmu_ethernet"
+            }
         },
         "serial-host-template": {
             "check_interval": 15,
@@ -16755,7 +16764,7 @@
         },
         "discovery-service-template": {
             "check_command": "check_eth",
-            "check_interval": 15,
+            "check_interval": 600,
             "check_timeout": 10,
             "enable_active_checks": true,
             "enable_flapping": true,
@@ -16788,7 +16797,9 @@
             "uuid": "be71a930-211e-4d7e-8520-cc86ae9f7553",
             "vars": {
                 "addToMap": false,
-                "cmd_type": "group_query"
+                "cmd_type": "group_query",
+                "opt1_connected": "$host.name$",
+                "opt2_connected": "$host.vars.opt1_connected$"
             },
             "zone": "master"
         },
@@ -16824,12 +16835,12 @@
                 {
                     "datafield_id": 19,
                     "is_required": "n",
-                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial_host%22%2C%22dmu_serial_service%22%5D"
+                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial_host%22%2C%22dmu_serial_service%22%2C%22dru_serial_service%22%5D"
                 },
                 {
                     "datafield_id": 20,
                     "is_required": "n",
-                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial%22%2C%22dmu_serial_service%22%5D"
+                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial%22%2C%22dmu_serial_service%22%2C%22dru_serial_service%22%5D"
                 },
                 {
                     "datafield_id": 27,
@@ -16887,8 +16898,8 @@
             "zone": "master"
         },
         "dru_check_serial--service-template": {
-            "check_interval": 120,
-            "check_timeout": 10,
+            "check_interval": 600,
+            "check_timeout": 230,
             "enable_active_checks": true,
             "enable_flapping": true,
             "enable_notifications": false,
@@ -16902,11 +16913,107 @@
             "max_check_attempts": "1",
             "object_name": "dru_check_serial--service-template",
             "object_type": "template",
-            "retry_interval": 10,
+            "retry_interval": 300,
             "use_agent": false,
             "uuid": "6195e5c5-6b76-4d58-adc1-89abb75d21f8",
             "vars": {
                 "addToMap": false
+            },
+            "zone": "master"
+        },
+        "dru_check_ethernet-service-template": {
+            "check_command": "check_eth",
+            "check_interval": 120,
+            "check_timeout": 10,
+            "enable_active_checks": true,
+            "enable_flapping": true,
+            "enable_notifications": true,
+            "enable_passive_checks": true,
+            "fields": [
+                {
+                    "datafield_id": 16,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 18,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 34,
+                    "is_required": "n",
+                    "var_filter": "service.vars.device=%5B%22dmu_serial_service%22%2C%22dru_serial_service%22%2C%22dmu_serial_host%22%2C%22discovery_serial%22%2C%22discovery_redboard_serial%22%2C%22dru_serial_host%22%5D"
+                },
+                {
+                    "datafield_id": 3,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 19,
+                    "is_required": "n",
+                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial_host%22%2C%22dmu_serial_service%22%2C%22dru_serial_service%22%5D"
+                },
+                {
+                    "datafield_id": 20,
+                    "is_required": "n",
+                    "var_filter": "service.vars.device=%5B%22dmu_ethernet%22%2C%22dmu_serial%22%2C%22dmu_serial_service%22%2C%22dru_serial_service%22%5D"
+                },
+                {
+                    "datafield_id": 27,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 11,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 4,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 21,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 5,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 6,
+                    "is_required": "n",
+                    "var_filter": "service.vars.device!=%22discovery%2A%22"
+                }
+            ],
+            "flapping_threshold_high": "30",
+            "flapping_threshold_low": "25",
+            "max_check_attempts": "1",
+            "object_name": "dru_check_ethernet-service-template",
+            "object_type": "template",
+            "retry_interval": 10,
+            "use_agent": false,
+            "uuid": "d9cc2558-af34-4e62-b417-f62b16e56404",
+            "vars": {
+                "addToMap": false,
+                "cdt": "41",
+                "cmd_type": "group_query",
+                "ctt": "50",
+                "cut": "31",
+                "device": "dru_ethernet",
+                "wdt": "38",
+                "wtt": "45",
+                "wut": "38"
             },
             "zone": "master"
         }
@@ -17001,16 +17108,17 @@
                 {
                     "fields": [],
                     "imports": [
-                        "check-service-template"
+                        "check-service-template",
+                        "dru_check_ethernet-service-template"
                     ],
                     "object_name": "Status",
                     "object_type": "object",
                     "uuid": "00b37b7d-c572-4ded-8085-181c7c25e864",
                     "vars": {
-                        "dru": "1",
-                        "opt": "2",
+                        "dru": "2",
+                        "opt": "1",
                         "parents": [
-                            "dmu_serial_400"
+                            "dru2"
                         ]
                     }
                 }
@@ -17065,6 +17173,7 @@
                     "object_type": "object",
                     "uuid": "96172e01-3fa8-4108-8ea9-26ef6b4a07b1",
                     "vars": {
+                        "baud_rate": "9600",
                         "cmd_type": "group_query",
                         "device": "dru_serial_service"
                     }
@@ -17541,6 +17650,21 @@
             "settings": {},
             "category": null
         },
+        "27": {
+            "uuid": "e7dfda46-0699-4da9-ae6b-2f48c87a411a",
+            "varname": "cmd_type",
+            "caption": "Command Type",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
+            "format": null,
+            "settings": {
+                "behavior": "strict",
+                "data_type": "string",
+                "rename_vars": "y",
+                "datalist": "command_type"
+            },
+            "category": null
+        },
         "21": {
             "uuid": "9d80ea7b-31bc-4a9e-9e97-b8967af118f1",
             "varname": "device",
@@ -17580,21 +17704,6 @@
                 "behavior": "strict",
                 "data_type": "string",
                 "datalist": "cmd_name_list"
-            },
-            "category": null
-        },
-        "27": {
-            "uuid": "e7dfda46-0699-4da9-ae6b-2f48c87a411a",
-            "varname": "cmd_type",
-            "caption": "Command Type",
-            "description": null,
-            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeDatalist",
-            "format": null,
-            "settings": {
-                "behavior": "strict",
-                "data_type": "string",
-                "rename_vars": "y",
-                "datalist": "command_type"
             },
             "category": null
         },
