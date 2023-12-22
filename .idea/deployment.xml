@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="drs-server" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="rs485-module-zublin" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
       <paths name="WSL">
@@ -14,7 +14,28 @@
       <paths name="drs-server">
         <serverdata>
           <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$/src/modules/" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="plugins">
+        <serverdata>
+          <mappings>
             <mapping deploy="/" local="$PROJECT_DIR$/src/plugins" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="rs485-module">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$/src/modules/rs485" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="rs485-module-zublin">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$/src/modules/rs485" web="/" />
           </mappings>
         </serverdata>
       </paths>
