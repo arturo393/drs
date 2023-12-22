@@ -245,6 +245,30 @@ edit /etc/icingaweb2/enabledModules/monitoring/application/views/scripts/show/co
 edit this file for custom lef menu
 vim /etc/icingaweb2/enabledModules/monitoring/configuration.php
 
+# Edit about page
+
+  ```
+'/usr/share/icingaweb2/application/views/scripts/about/index.phtml'
+  ```
+
+with
+
+  ```
+src/base_customization/index.phtml
+  ```
+
+copy uqomm image
+
+  ```
+ image with src/base_customization/LOGOS6.png 
+  ```
+
+to
+
+  ```
+/usr/share/icingaweb2/public/img
+  ```
+
 ~               
 | |
 |------------------------------------------------------------------------------------------------------------------------|
