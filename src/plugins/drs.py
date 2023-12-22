@@ -2310,7 +2310,11 @@ class Command:
     def _decode_ifboard_command(self, command: CommandData) -> int:
         reply_len = len(command.reply)
         query_len = len(command.query)
-        if len(command.reply) < len(command.query) / 2:
+        if self.parameters['cmd_type'] == 'group_query':
+            if len(command.reply) < len(command.query) / 2:
+                return 0
+
+        if len(command.reply) == 0:
             return 0
 
         module_function_index = 1
@@ -2694,10 +2698,11 @@ class HtmlTable:
             work_bandwidth = self.parameters.get('work_bandwidth', 0)
             central_frequency_point = self.parameters.get('central_frequency_point', 0)
 
-            if uplink_start_frequency == 0 or work_bandwidth == 0 or central_frequency_point == 0:
-                central_frequency_point = 0
-            else:
-                central_frequency_point = uplink_start_frequency + (work_bandwidth / 2.0)
+            if central_frequency_point == 0:
+                if uplink_start_frequency == 0 and work_bandwidth == 0:
+                    central_frequency_point = 0
+                else:
+                    central_frequency_point = uplink_start_frequency + (work_bandwidth / 2.0)
 
                 # Construct frequency and status lists
             for channel in range(1, 17):
@@ -2729,12 +2734,18 @@ class HtmlTable:
         Returns:
             str: HTML formatted string of the data table.
         """
-        table_html = "<table width=100%>" + \
-                     "<thead><tr style=font-size:11px>" + \
-                     "<th width='5%'>Channel</font></th>" + \
-                     "<th width='5%'>Status</font></th>" + \
-                     "<th width='50%'>Downlink [Mhz]</font></th>" + \
-                     "</tr></thead><tbody>"
+
+        if self.parameters['device'] == 'dmu_ethernet':
+            frequency = "Downlink"
+        else:
+            frequency = "Uplink"
+
+        table_html = f"<table width=100%>" \
+                     f"<thead><tr style=font-size:11px>" \
+                     f"<th width='5%'>Channel</font></th>" \
+                     f"<th width='5%'>Status</font></th>" \
+                     f"<th width='50%'>{frequency} [Mhz]</font></th>" \
+                     f"</tr></thead><tbody>"
 
         for i in range(16):
             table_html += f"<tr align='center' style=font-size:12px>" + \
@@ -3255,7 +3266,7 @@ class Discovery:
 
         hostname = socket.gethostname()
         master_host = socket.gethostbyname(hostname)
-        master_host = '192.168.60.73'
+        # master_host = '192.168.60.73'
         return Director(master_host)
 
     def _create_host_query(self, dru, device, imports, cmd_name=None, baud_rate=19200):

@@ -34,20 +34,15 @@ class HostForm extends ConfigForm
         $host = $_GET['host'] ?? 0;
         $cmd_type = $_GET['host'] ?? "";
         $device = $_GET['device'] ?? "";
-
         #$this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
-
-
         $this->addElement('select', 'host_remote', array(
             'multiOptions' => $listHost,
             'required' => true,
         ));
-
         if ($device == 'dmu_ethernet' || $device == 'dru_ethernet' || $device == 'dmu_serial_service') {
             $this->refresh($host, $center_uplink_frequency, $center_downlink_frequency, $bandwidth, $cmd_type, $device);
             $listTrama = $this->tramasDMU($hostname);
         }
-
         if ($device == 'dru_serial_service') {
             $address = $_GET['address'] ?? "0";
             $baud_rate = $_GET['baudrate'] ?? 0;
@@ -56,7 +51,6 @@ class HostForm extends ConfigForm
             $opt_dru = 'Optical Port ' . $opt_dru_list[0] . ' Remote ' . $opt_dru_list[1];
             $list[$opt_dru_list[0] . $opt_dru_list[1]] = $opt_dru;
             $listIdDRU = $list;
-            //print_r($_GET);
             $this->setName('form_host');
             $this->setSubmitLabel($this->translate('Submit Changes'));
             $this->setAction(sprintf(
@@ -78,15 +72,12 @@ class HostForm extends ConfigForm
 
             $listTrama = $this->tramasDRUList();
         }
-
         $this->addElement('select', 'trama', array(
             'multiOptions' => $listTrama,
             'value' => '',
             'required' => false,
             'class' => 'autosubmit'
         ));
-
-
         if ((isset($formData['trama']) && $formData['trama'] != '') || isset($formData['btn_submit'])) {
             $option = isset($formData['btn_submit']) ? 0 : $formData['trama'];
 
@@ -98,13 +89,13 @@ class HostForm extends ConfigForm
                 if ($option != $hidden) {
                     $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
 
-                    $this->addElement('checkbox', "opt{$input}_1", ['label' => "Enable - Port 1"]);
+                    $this->addElement('checkbox', "opt{$input}_1", ['label' => "Enable - Port 1", 'checked' => true]);
 
-                    $this->addElement('checkbox', "opt{$input}_2", ['label' => "Enable - Port 2"]);
+                    $this->addElement('checkbox', "opt{$input}_2", ['label' => "Enable - Port 2", 'checked' => true]);
 
-                    $this->addElement('checkbox', "opt{$input}_3", ['label' => "Enable - Port 3"]);
+                    $this->addElement('checkbox', "opt{$input}_3", ['label' => "Enable - Port 3", 'checked' => true]);
 
-                    $this->addElement('checkbox', "opt{$input}_4", ['label' => "Enable - Port 4"]);
+                    $this->addElement('checkbox', "opt{$input}_4", ['label' => "Enable - Port 4", 'checked' => true]);
                 }
             }
             #1: Working mode
@@ -144,29 +135,31 @@ class HostForm extends ConfigForm
                             'multiOptions' => [1 => 'ON',
                                 0 => 'OFF'],
                             'required' => true,
-
+                            'value' => 1
                         ));
 
                     }
                 }
             }
             #4: Channel Frecuency Point Configuration
-            if ($option == 4 || $option == 999 || isset($formData['opt4_hidden'])) {
-                $input = 4;
-                $hidden = $formData["opt{$input}_hidden"] ?? 0;
-                if ($option != $hidden) {
-                    $listFrecuencia = $this->frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth);
-                    $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
-                    for ($i = 1; $i <= 16; $i++) {
-                        $this->addElement('select', "opt{$input}_{$i}", array(
-                            'label' => $this->translate("Channel {$i} "),
-                            'multiOptions' => $listFrecuencia,
-                            'required' => true,
-                        ));
+            if ($device == "dmu_ethernet") {
+                if ($option == 4 || $option == 999 || isset($formData['opt4_hidden'])) {
+                    $input = 4;
+                    $hidden = $formData["opt{$input}_hidden"] ?? 0;
+                    if ($option != $hidden) {
+                        $listFrecuencia = $this->frequencyTables($center_downlink_frequency, $center_uplink_frequency, $bandwidth);
+                        $this->addElement('hidden', "opt{$input}_hidden", ['value' => $input]);
+                        for ($i = 1; $i <= 16; $i++) {
+                            $this->addElement('select', "opt{$input}_{$i}", array(
+                                'label' => $this->translate("Channel {$i} "),
+                                'multiOptions' => $listFrecuencia,
+                                'required' => true,
+                            ));
+                        }
                     }
                 }
-            }
 
+            }
 
             #22: Uplink ATT [dB]
             if ($option == 22 || isset($formData["opt22_hidden"])) {
@@ -299,7 +292,7 @@ class HostForm extends ConfigForm
 
         foreach ($this->getDb()
                      ->select($select) as $row) {
-            if (!(strripos($host, "dru") !== false && ($row->id == 4 || $row->id == 3))) {
+            if (!(strripos($host, "dru") !== false && ($row->id == 4))) {
                 $list[$row->id] = $row->name;
             }
         }

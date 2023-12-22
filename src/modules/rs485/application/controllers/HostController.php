@@ -94,7 +94,17 @@ class HostController extends Controller
         $comando = "/usr/lib/nagios/plugins/check_eth.py ";
 
         $ejecutar = $comando . $paramFijos;
-        //print_r($ejecutar);
+        #print_r($ejecutar);
+        return $ejecutar;
+    }
+
+    private function comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth)
+    {
+        $paramFijos = "-a {$address} -d {$device}  -ct {$cmd_type} -n ${hostname} -l {$cmd_body_length} -c {$cmd_name} -cd {$cmd_data} -b {$bandwidth}";
+        $comando = "/usr/lib/nagios/plugins/check_eth.py ";
+
+        $ejecutar = $comando . $paramFijos;
+        #print_r($ejecutar);
         return $ejecutar;
     }
 
@@ -124,10 +134,12 @@ class HostController extends Controller
                 $cmd_name = 0x80;
                 $cmd_body_length = 1;
                 $salidaArray = [];
-                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth, $baud_rate);
+                $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
                 usleep(50000);
+                #print_r($salidaArray);
                 $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                #print_r($salida);
                 if ($salidaArray[0] == "OK") {
                     if ($cmd_data == 2) {
                         $salida = "WideBand";
@@ -153,13 +165,17 @@ class HostController extends Controller
                 $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT);
                 $cmd_data = "{$byte1}{$byte2}";
                 $salidaArray = [];
-                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth, $baud_rate);
+                $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
                 usleep(50000);
+
+                print_r($salidaArray);
                 $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
+                print_r($salida);
                 if ($salidaArray[0] == "OK") {
                     $salida = "Uplink ATT: {$uplink_att} [dB] \n Downlink ATT: {$downlink_att} [dB]";
                 }
+
                 array_push($result, ['comando' => $trama->name, 'resultado' => $salida, 'query' => $query]);
             }
             #3: Channel Activation Status
@@ -183,7 +199,7 @@ class HostController extends Controller
                 }
                 $cmd_data = $byte;
                 $salidaArray = [];
-                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth, $baud_rate);
+                $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
                 usleep(50000);
                 $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
@@ -209,7 +225,7 @@ class HostController extends Controller
                 }
                 $cmd_data = $byte;
                 $salidaArray = [];
-                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth, $baud_rate);
+                $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
                 usleep(50000);
                 $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
@@ -226,7 +242,8 @@ class HostController extends Controller
                 $byte = "";
                 $message = "<br>";
                 $status = "";
-                for ($i = 1; $i <= 4; $i++) {
+                $ports = 4;
+                for ($i = 1; $i <= $ports; $i++) {
                     $input = $this->_getParam("opt5_{$i}");
                     if ($input == 1) {
                         $byte = "{$byte}00";
@@ -239,7 +256,7 @@ class HostController extends Controller
                 }
                 $cmd_data = $byte;
                 $salidaArray = [];
-                $ejecutar = $this->comando($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth, $baud_rate);
+                $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
                 usleep(50000);
                 $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
