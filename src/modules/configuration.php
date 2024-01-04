@@ -137,42 +137,42 @@ $section = $this->menuSection(N_('Problems'), array(
         'SummaryNavigationItemRenderer',
         'state' => 'critical'
     ),
-    'icon'      => 'attention-circled',
-    'priority'  => 20
+    'icon' => 'attention-circled',
+    'priority' => 20
 ));
 $section->add(N_('Host Problems'), array(
-    'icon'        => 'host',
+    'icon' => 'host',
     'description' => $this->translate('List current host problems'),
-    'renderer'    => array(
+    'renderer' => array(
         'MonitoringBadgeNavigationItemRenderer',
         'columns' => array(
             'hosts_down_unhandled' => $this->translate('%d unhandled hosts down')
         ),
-        'state'    => 'critical',
+        'state' => 'critical',
         'dataView' => 'unhandledhostproblems'
     ),
-    'url'       => 'monitoring/list/hosts?host_problem=1&sort=host_severity',
-    'priority'  => 50
+    'url' => 'monitoring/list/hosts?host_problem=1&sort=host_severity',
+    'priority' => 50
 ));
 $section->add(N_('Service Problems'), array(
-    'icon'        => 'service',
+    'icon' => 'service',
     'description' => $this->translate('List current service problems'),
-    'renderer'    => array(
+    'renderer' => array(
         'MonitoringBadgeNavigationItemRenderer',
         'columns' => array(
             'services_critical_unhandled' => $this->translate('%d unhandled services critical')
         ),
-        'state'    => 'critical',
+        'state' => 'critical',
         'dataView' => 'unhandledserviceproblems'
     ),
-    'url'       => 'monitoring/list/services?service_problem=1&sort=service_severity&dir=desc',
-    'priority'  => 60
+    'url' => 'monitoring/list/services?service_problem=1&sort=service_severity&dir=desc',
+    'priority' => 60
 ));
 $section->add(N_('Service Grid'), array(
-    'icon'        => 'services',
+    'icon' => 'services',
     'description' => $this->translate('Display service problems as grid'),
-    'url'         => 'monitoring/list/servicegrid?problems',
-    'priority'    => 70
+    'url' => 'monitoring/list/servicegrid?problems',
+    'priority' => 70
 ));
 #$section->add(N_('Current Downtimes'), array(
 #    'icon'        => 'plug',
@@ -185,26 +185,26 @@ $section->add(N_('Service Grid'), array(
  * Overview Section
  */
 $section = $this->menuSection(N_('Overview'), array(
-    'icon'      => 'binoculars',
-    'priority'  => 30
+    'icon' => 'binoculars',
+    'priority' => 30
 ));
 $section->add(N_('Tactical Overview'), array(
-    'icon'        => 'chart-pie',
+    'icon' => 'chart-pie',
     'description' => $this->translate('Open tactical overview'),
-    'url'         => 'monitoring/tactical',
-    'priority'    => 40
+    'url' => 'monitoring/tactical',
+    'priority' => 40
 ));
 $section->add(N_('Hosts'), array(
-    'icon'        => 'host',
+    'icon' => 'host',
     'description' => $this->translate('List hosts'),
-    'url'         => 'monitoring/list/hosts',
-    'priority'    => 50
+    'url' => 'monitoring/list/hosts',
+    'priority' => 50
 ));
 $section->add(N_('Services'), array(
-    'icon'        => 'service',
+    'icon' => 'service',
     'description' => $this->translate('List services'),
-    'url'         => 'monitoring/list/services',
-    'priority'    => 50
+    'url' => 'monitoring/list/services',
+    'priority' => 50
 ));
 #$section->add(N_('Servicegroups'), array(
 #    'icon'        => 'services',
@@ -221,12 +221,12 @@ $section->add(N_('Services'), array(
 
 // Checking the permission here since navigation items don't support negating permissions
 $auth = Auth::getInstance();
-if ($auth->hasPermission('*') || ! $auth->hasPermission('no-monitoring/contacts')) {
+if ($auth->hasPermission('*') || !$auth->hasPermission('no-monitoring/contacts')) {
     $section->add(N_('Contacts'), array(
-        'icon'        => 'user',
+        'icon' => 'user',
         'description' => $this->translate('List contacts'),
-        'url'         => 'monitoring/list/contacts',
-        'priority'    => 70
+        'url' => 'monitoring/list/contacts',
+        'priority' => 70
     ));
 #    $section->add(N_('Contactgroups'), array(
 #        'icon'        => 'users',
@@ -253,40 +253,40 @@ if ($auth->hasPermission('*') || ! $auth->hasPermission('no-monitoring/contacts'
  * History Section
  */
 $section = $this->menuSection(N_('History'), array(
-    'icon'      => 'history',
-    'priority'  => 90
+    'icon' => 'history',
+    'priority' => 90
 ));
 $section->add(N_('Event Grid'), array(
-    'icon'        => 'history',
+    'icon' => 'history',
     'description' => $this->translate('Open event grid'),
-    'priority'    => 10,
-    'url'         => 'monitoring/list/eventgrid'
+    'priority' => 10,
+    'url' => 'monitoring/list/eventgrid'
 ));
 $section->add(N_('Event Overview'), array(
-    'icon'        => 'history',
+    'icon' => 'history',
     'description' => $this->translate('Open event overview'),
-    'priority'    => 20,
-    'url'         => 'monitoring/list/eventhistory?timestamp>=-7%20days'
+    'priority' => 20,
+    'url' => 'monitoring/list/eventhistory?timestamp>=-7%20days'
 ));
 $section->add(N_('Notifications'), array(
-    'icon'        => 'bell',
+    'icon' => 'bell',
     'description' => $this->translate('List notifications'),
-    'priority'    => 30,
-    'url'         => 'monitoring/list/notifications?notification_timestamp>=-7%20days',
+    'priority' => 30,
+    'url' => 'monitoring/list/notifications?notification_timestamp>=-7%20days',
 ));
 $section->add(N_('Timeline'), array(
-    'icon'        => 'clock',
+    'icon' => 'clock',
     'description' => $this->translate('Open timeline'),
-    'priority'    => 40,
-    'url'         => 'monitoring/timeline'
+    'priority' => 40,
+    'url' => 'monitoring/timeline'
 ));
 
 /*
  * Reporting Section
  */
 $section = $this->menuSection(N_('Reporting'), array(
-    'icon'      => 'barchart',
-    'priority'  => 100
+    'icon' => 'barchart',
+    'priority' => 100
 ));
 
 /*
@@ -294,11 +294,11 @@ $section = $this->menuSection(N_('Reporting'), array(
  */
 $section = $this->menuSection(N_('System'));
 $section->add(N_('Monitoring Health'), array(
-    'icon'        => 'check',
+    'icon' => 'check',
     'description' => $this->translate('Open monitoring health'),
-    'url'         => 'monitoring/health/info',
-    'priority'    => 720,
-    'renderer'    => 'BackendAvailabilityNavigationItemRenderer'
+    'url' => 'monitoring/health/info',
+    'priority' => 720,
+    'renderer' => 'BackendAvailabilityNavigationItemRenderer'
 ));
 
 /*
