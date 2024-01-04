@@ -33,6 +33,13 @@
           </advancedOptions>
         </fileTransfer>
       </webServer>
+      <webServer id="b9501824-e345-4c39-bd95-baa852ed9ce8" name="base_custom_zublin">
+        <fileTransfer rootFolder="/usr/share/icingaweb2/application/views/scripts/about" accessType="SFTP" host="10.25.174.31" port="22" sshConfigId="00dc55f5-e9c6-408b-a2a3-76e06228b8fc" sshConfig="root@10.25.174.31:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
     </option>
   </component>
 </project>
