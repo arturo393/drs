@@ -1791,7 +1791,7 @@ class Decoder:
             return {}
         input_att = command_body[0] / 4
         output_att = command_body[1] / 4
-        return {'dlAtt': str(output_att), 'upAtt': str(input_att)}
+        return {'dlAtt': str(input_att), 'upAtt': str(output_att)}
 
     @staticmethod
     def _decode_optical_port_switch(command_body: bytes) -> dict:
@@ -2811,10 +2811,15 @@ class HtmlTable:
                 downlink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
 
             uplink_input_power = self.parameters.get('uplink_input_power', "")
-            uplink_attenuation_power = self.parameters.get('upAtt', "")
             downlink_output_power = self.parameters.get('downlink_output_power', "")
-            downlink_attenuation_power = self.parameters.get('dlAtt', "")
 
+            device = self.parameters.get('device', "")
+            if device == "dmu_ethernet":
+                uplink_attenuation_power = self.parameters.get('upAtt', "")
+                downlink_attenuation_power = self.parameters.get('dlAtt', "")
+            else:
+                uplink_attenuation_power = self.parameters.get('dlAtt', "")
+                downlink_attenuation_power = self.parameters.get('upAtt', "")
             # Generate HTML structure according to given format
             table = ("<table width=250>"
                      "<thead>"

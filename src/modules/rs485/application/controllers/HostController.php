@@ -125,7 +125,6 @@ class HostController extends Controller
             $hostname = $host->object_name;
             $bandwidth = $this->_getParam('bandwidth');
             $cmd_type = 'single_set';
-            $device = $this->_getParam('device');
             $baud_rate = $this->_getParam('baudrate');
             #1: Working mode
             if ($this->_hasParam('opt1_hidden')) {
@@ -163,15 +162,20 @@ class HostController extends Controller
                 $byte2 = dechex(4 * (int)$this->_getParam('opt2_1'));
                 $byte1 = str_pad($byte1, 2, "0", STR_PAD_LEFT);
                 $byte2 = str_pad($byte2, 2, "0", STR_PAD_LEFT);
-                $cmd_data = "{$byte1}{$byte2}";
+                if ($device == 'dmu_ethernet') {
+                    $cmd_data = "{$byte1}{$byte2}";
+                } else {
+                    $cmd_data = "{$byte2}{$byte1}";
+                }
+                print("{$device} {$cmd_data}");
                 $salidaArray = [];
                 $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
                 usleep(50000);
 
-                print_r($salidaArray);
+                #print_r($salidaArray);
                 $salida = $salidaArray[0] == "OK" ? $salidaArray[0] : "Changes were not applied";
-                print_r($salida);
+                #print_r($salida);
                 if ($salidaArray[0] == "OK") {
                     $salida = "Uplink ATT: {$uplink_att} [dB] \n Downlink ATT: {$downlink_att} [dB]";
                 }
