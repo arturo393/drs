@@ -11,35 +11,35 @@
         <?php elseif /** @var \Icinga\Module\Monitoring\Object\MonitoredObject $object */
         ($this->hasPermission('monitoring/command/acknowledge-problem') && !(in_array((int)$object->state, array(0, 99)))): ?>
             <li>
-                <?php if ($object->getType() === $object::TYPE_HOST) {
-                    echo $this->qlink(
-                        $this->translate('Acknowledge'),
-                        'monitoring/host/acknowledge-problem',
-                        array('host' => $object->getName()),
-                        array(
-                            'class' => 'action-link',
-                            'data-base-target' => '_self',
-                            'icon' => 'edit',
-                            'title' => $this->translate(
-                                'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
+                        echo $this->qlink(
+                            $this->translate('Acknowledge'),
+                            'monitoring/host/acknowledge-problem',
+                            array('host' => $object->getName()),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'edit',
+                                'title' => $this->translate(
+                                    'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
+                                )
                             )
-                        )
-                    );
-                } else {
-                    echo $this->qlink(
-                        $this->translate('Acknowledge'),
-                        'monitoring/service/acknowledge-problem',
-                        array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
-                        array(
-                            'class' => 'action-link',
-                            'data-base-target' => '_self',
-                            'icon' => 'edit',
-                            'title' => $this->translate(
-                                'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
+                        );
+                    } else {
+                        echo $this->qlink(
+                            $this->translate('Acknowledge'),
+                            'monitoring/service/acknowledge-problem',
+                            array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'edit',
+                                'title' => $this->translate(
+                                    'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
+                                )
                             )
-                        )
-                    );
-                } ?>
+                        );
+                    } -->
 
 
             </li>
@@ -49,7 +49,7 @@
         <?php endif ?>
         <?php if ($this->hasPermission('monitoring/command/comment/add')): ?>
             <li>
-                <?php if ($object->getType() === $object::TYPE_HOST) {
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
                     echo $this->qlink(
                         $this->translate('Comment'),
                         'monitoring/host/add-comment',
@@ -73,12 +73,12 @@
                             'title' => $this->translate('Add a new comment to this service')
                         )
                     );
-                } ?>
+                } -->
             </li>
         <?php endif ?>
         <?php if ($this->hasPermission('monitoring/command/send-custom-notification')): ?>
             <li>
-                <?php if ($object->getType() === $object::TYPE_HOST) {
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
                     echo $this->qlink(
                         $this->translate('Notification'),
                         'monitoring/host/send-custom-notification',
@@ -105,12 +105,12 @@
                             )
                         )
                     );
-                } ?>
+                } -->
             </li>
         <?php endif ?>
         <?php if ($this->hasPermission('monitoring/command/downtime/schedule')): ?>
             <li>
-                <?php if ($object->getType() === $object::TYPE_HOST) {
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
                     echo $this->qlink(
                         $this->translate('Downtime'),
                         'monitoring/host/schedule-downtime',
@@ -138,7 +138,7 @@
                             )
                         )
                     );
-                } ?>
+                } -->
             </li>
         <?php endif ?>
         <?php if ($this->hasPermission('rs485/host/edit')): ?>
