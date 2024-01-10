@@ -2810,16 +2810,17 @@ class HtmlTable:
             elif self.alarm.downlink_power_alarm == WARNING:
                 downlink_power_style = self._get_alarm_style(self.warning_color, self.alarm_font_size)
 
-            uplink_input_power = self.parameters.get('uplink_input_power', "")
-            downlink_output_power = self.parameters.get('downlink_output_power', "")
-
             device = self.parameters.get('device', "")
             if device == "dmu_ethernet":
                 uplink_attenuation_power = self.parameters.get('upAtt', "")
                 downlink_attenuation_power = self.parameters.get('dlAtt', "")
+                downlink_output_power = self.parameters.get('uplink_input_power', "")
+                uplink_input_power = self.parameters.get('downlink_output_power', "")
             else:
                 uplink_attenuation_power = self.parameters.get('dlAtt', "")
                 downlink_attenuation_power = self.parameters.get('upAtt', "")
+                uplink_input_power = self.parameters.get('uplink_input_power', "")
+                downlink_output_power = self.parameters.get('downlink_output_power', "")
             # Generate HTML structure according to given format
             table = ("<table width=250>"
                      "<thead>"
