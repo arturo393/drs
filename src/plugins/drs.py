@@ -644,6 +644,31 @@ class Director:
         # print(json.dumps(q.json(),indent=2))
         return q
 
+    def get_dru_name(self, dru: DRU):
+
+        # Construct query parameters as a string
+        query_params = f"name={dru.hostname}"
+
+        request_url = f"http://{self.master_host}/director/host?{query_params}"
+        headers = {'Accept': 'application/json'}  # Remove unnecessary header
+
+        try:
+            q = requests.get(request_url,
+                             headers=headers,
+                             auth=(self.director_api_login, self.director_api_password),
+                             verify=False,
+                             timeout=1)
+
+
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
+        except requests.exceptions.ConnectTimeout as e:
+            sys.stderr.write(f"WARNING - {e}")
+            sys.exit(WARNING)
+        # print(json.dumps(q.json(),indent=2))
+        return q
+
 
 class CommandData:
 
@@ -3486,6 +3511,12 @@ class Discovery:
             for dru in dru_connected[opt]:
                 if dru.port in self.cmd_name_map:
                     cmd_name = self.cmd_name_map[dru.port]
+                response = director.get_dru_name(dru)
+                if response.status_code == 200:
+                    text = response.text
+                    data = json.loads(text)
+                    dru.name = data.get('display_name', dru.name)
+
                 director_query = self._create_host_query(dru, device, imports, cmd_name, baud_rate)
                 update_query = self._create_host_query(dru, device, imports, cmd_name, baud_rate)
 
