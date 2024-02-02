@@ -772,7 +772,7 @@ src/base_customization/index.phtml
 copy uqomm image
 
   ```
- image with src/base_customization/LOGOS6.png 
+src/base_customization/LOGOS6.png 
   ```
 
 to

@@ -259,6 +259,12 @@
         src: hostalive.ini-graphite.j2
         dest: /usr/share/icingaweb2/modules/graphite/templates/hostalive.ini
 
+    - name: Upload storage-schemas.conf
+      copy:
+        src: /tmp/sigma-rds/src/modules/graphite/templates/storage-schemas.conf
+        dest: /opt/graphite/conf
+        remote_src: yes
+
     - name: Restart Icinga2 service
       service:
         name: icinga2
@@ -292,6 +298,36 @@
         - /usr/share/php/Icinga/Web/Controller/ActionController.php
         - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
 
+    - name: Remove Custom Variables and Feature Commands
+      copy:
+        src: /tmp/sigma-rds/src/modules/flags.phtml
+        dest: /etc/icingaweb2/enabledModules/monitoring/application/views/scripts/show/components/flags.phtml
+        remote_src: yes
+
+    - name: Edit left menu
+      copy:
+        src: /tmp/sigma-rds/src/modules/configuration.php
+        dest: /usr/share/icingaweb2/modules/monitoring/configuration.php
+        remote_src: yes
+
+    - name: Edit Monitoring Page
+      copy:
+        src: /tmp/sigma-rds/src/modules/detail-content.phtml
+        dest: /usr/share/icingaweb2/application/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml
+        remote_src: yes
+
+    - name: Edit about page
+      copy:
+        src: /tmp/sigma-rds/src/base_customization/index.phtml
+        dest: /usr/share/icingaweb2/application/views/scripts/about/index.phtml
+        remote_src: yes
+
+    - name: Edit uqomm image
+      copy:
+        src: /tmp/sigma-rds/src/base_customization/LOGOS6.png
+        dest: /usr/share/icingaweb2/public/img/
+        remote_src: yes
+
     ## Notifications Customization
     - name: mailutils install
       apt:
@@ -310,6 +346,42 @@
         dest: /etc/icinga2/scripts/mail-host-notification.sh
         mode: 0755
         remote_src: yes
+
+    - name: Create and manage Icinga Director Monitoring Service
+      hosts: all  # Replace with your target hosts
+
+    - name: Create systemd service file
+      copy:
+        dest: /etc/systemd/system/icinga-director-monitor.service
+        content: |
+          [Unit]
+          Description=Icinga Director Monitoring Service
+          After=icinga-director.service
+
+          [Service]
+          Type=simple
+          ExecStart=/bin/bash -c 'while true; do systemctl status icinga-director.service > /dev/null; if [[ $? != 0 ]]; then
+            systemctl restart icinga-director.service; fi; sleep 300; done'
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Reload systemd
+      systemd:
+        state: reloaded
+
+    - name: Start the service
+      systemd:
+        name: icinga-director-monitor.service
+        state: started
+
+    - name: Enable the service (optional)
+      systemd:
+        name: icinga-director-monitor.service
+        enabled: yes
     ##################################################################
 
     - name: Enable icingaweb2 extra modules

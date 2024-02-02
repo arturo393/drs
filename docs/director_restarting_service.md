@@ -16,7 +16,6 @@ systemctl restart icinga-director.service; fi; sleep 300; done'
 
 [Install]
 WantedBy=multi-user.target
-Utiliza el código con precaución. Más información
 ```
 
 **2. Reload systemd:**

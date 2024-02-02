@@ -167,7 +167,7 @@ class HostController extends Controller
                 } else {
                     $cmd_data = "{$byte2}{$byte1}";
                 }
-                print("{$device} {$cmd_data}");
+                //print("{$device} {$cmd_data}");
                 $salidaArray = [];
                 $ejecutar = $this->comando_ethernet($address, $device, $hostname, $cmd_body_length, $cmd_name, $cmd_data, $cmd_type, $bandwidth);
                 exec($ejecutar . " 2>&1", $salidaArray);
