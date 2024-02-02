@@ -382,6 +382,29 @@
       systemd:
         name: icinga-director-monitor.service
         enabled: yes
+
+
+    - name: Download xorgxrdp package
+      get_url:
+        url: https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xorgxrdp/xorgxrdp_0.2.15-1_amd64.deb
+        dest: /tmp/xorgxrdp_0.2.15-1_amd64.deb
+      register: xorgxrdp_download
+
+    - name: Download xrdp package
+      get_url:
+        url: https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xrdp/xrdp_0.9.15-1_amd64.deb
+        dest: /tmp/xrdp_0.9.15-1_amd64.deb
+      register: xrdp_download
+
+    - name: Install xorgxrdp package
+      apt:
+        deb: /tmp/xorgxrdp_0.2.15-1_amd64.deb
+      when: xorgxrdp_download.changed
+
+    - name: Install xrdp package
+      apt:
+        deb: /tmp/xrdp_0.9.15-1_amd64.deb
+      when: xrdp_download.changed
     ##################################################################
 
     - name: Enable icingaweb2 extra modules

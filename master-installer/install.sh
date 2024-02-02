@@ -35,32 +35,6 @@ else
     echo "Google Chrome ya está instalado"
 fi
 
-echo "Downloading compatible xorgxrdp and xrdp packages for Debian Bullseye..."
-
-wget https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xorgxrdp/xorgxrdp_0.2.15-1_amd64.deb || {
-    echo "Error: Failed to download xorgxrdp package. Check your internet connection and try again."
-    exit 1
-}
-
-wget https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xrdp/xrdp_0.9.15-1_amd64.deb || {
-    echo "Error: Failed to download xrdp package. Check your internet connection and try again."
-    exit 1
-}
-
-echo "Downloads complete. Installing packages..."
-
-sudo apt install ./xorgxrdp_0.2.15-1_amd64.deb || {
-    echo "Error: Failed to install xorgxrdp package. Check the package and try again."
-    exit 1
-}
-
-sudo apt install ./xrdp_0.9.15-1_amd64.deb || {
-    echo "Error: Failed to install xrdp package. Check the package and try again."
-    exit 1
-}
-
-echo "Installation successful!"
-
 #Install RCC
 #############################################################################
 rcc_url="https://downloads.robocorp.com/rcc/releases/latest/linux64/rcc"
