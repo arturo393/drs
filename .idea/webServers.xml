@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="f2b63812-d8c7-45e4-8745-ace555f89345" name="drs-server">
-        <fileTransfer rootFolder="/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object" accessType="SFTP" host="10.25.174.31" port="22" sshConfigId="00dc55f5-e9c6-408b-a2a3-76e06228b8fc" sshConfig="root@10.25.174.31:22 password">
+        <fileTransfer rootFolder="/usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object" accessType="SFTP" host="192.168.60.73" port="22" sshConfigId="767b985f-ccc5-4529-9599-1544f65920dc" sshConfig="root@192.168.60.73:22 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
@@ -13,7 +13,7 @@
         <fileTransfer mountedRoot="\\wsl$\Ubuntu\home\sigmadev\sigma-rds\master-installer" accessType="MOUNT" port="0" />
       </webServer>
       <webServer id="09c06816-0fa7-400a-af5c-aa6ef255d2c9" name="rs485-module">
-        <fileTransfer rootFolder="/usr/share/icingaweb2/modules/rs485" accessType="SFTP" host="10.25.174.31" port="22" sshConfigId="00dc55f5-e9c6-408b-a2a3-76e06228b8fc" sshConfig="root@10.25.174.31:22 password">
+        <fileTransfer rootFolder="/usr/share/icingaweb2/modules/rs485" accessType="SFTP" host="192.168.60.73" port="22" sshConfigId="767b985f-ccc5-4529-9599-1544f65920dc" sshConfig="root@192.168.60.73:22 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
@@ -27,7 +27,7 @@
         </fileTransfer>
       </webServer>
       <webServer id="f6dfe663-6d4e-49d0-b7e4-f13bcaf317c3" name="plugins">
-        <fileTransfer rootFolder="/usr/lib/nagios/plugins" accessType="SFTP" host="10.25.174.31" port="22" sshConfigId="00dc55f5-e9c6-408b-a2a3-76e06228b8fc" sshConfig="root@10.25.174.31:22 password">
+        <fileTransfer rootFolder="/usr/lib/nagios/plugins" accessType="SFTP" host="192.168.60.73" port="22" sshConfigId="767b985f-ccc5-4529-9599-1544f65920dc" sshConfig="root@192.168.60.73:22 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
