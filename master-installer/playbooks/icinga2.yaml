@@ -23,38 +23,6 @@
         - icingaweb2-module-ipl
       when: ansible_distribution_release == 'bullseye'
 
-    - name: Install Python, Dev And Pip
-      apt:
-        name:
-          - python3
-          - python3-dev
-          - python3-pip
-          - python3-serial
-        state: present
-
-
-    - name: Create a Symbolic Link Python3
-      ansible.builtin.file:
-        src: /usr/bin/python3
-        dest: /usr/bin/python
-        state: link
-        force: yes
-
-    - name: Create a Symbolic Link Pip3
-      ansible.builtin.file:
-        src: /usr/bin/pip3
-        dest: /usr/bin/pip
-        state: link
-        force: yes
-
-
-    - name: Install Bottle Python Package
-      ansible.builtin.pip:
-        name:
-          - requests
-          - crccheck
-          - psutil
-
     # Icinga2
     - name: Apply API user Template
       template:
