@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e -o nounset
 start_time=$(date +%s) # Start timestamp
-clear
 connection=$1
 if [ "$connection" != "serial" ] && [ "$connection" != "ethernet" ]; then
     echo "La conexión no es válida. Saliendo del script."
@@ -34,7 +33,6 @@ then
 else
     echo "Google Chrome ya está instalado"
 fi
-
 #Install RCC
 #############################################################################
 rcc_url="https://downloads.robocorp.com/rcc/releases/latest/linux64/rcc"
@@ -63,7 +61,7 @@ hosts=($(./get_hosts.sh inventory/hosts.yaml))
 # Step 1 (Base)
 #############################################################################
 echo "Setup Icinga & Icingaweb2 Base"
-rm -rf /tmp/setup.token
+#rm -rf /tmp/setup.token
 ansible-playbook step1.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
 for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     # Extract hostname and IP address from the result variable
@@ -76,7 +74,6 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     rcc task run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password --variable token:$token setup_icingaweb2.robot
     cd ../..
 done
-
 
 #Step 2 (Setup extras)
 ############################################################################
@@ -91,12 +88,6 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password tasks.robot
     cd ../..
 done
-
-
-# Final Step
-#############################################################################
-ansible-playbook playbooks/final-step.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
-
 
 # Add director basket and create Services Apply Rules
 ansible-playbook step3.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"

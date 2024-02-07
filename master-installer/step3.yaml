@@ -7,8 +7,8 @@
     - ./vars.yaml
 
 
-- name: "Director Configuration"
-  import_playbook: playbooks/director_config.yaml
+- name: "Basket Configuration"
+  import_playbook: playbooks/basket_config.yaml
 
 - name: "Extra Customizations"
   import_playbook: playbooks/extras_customizations.yaml

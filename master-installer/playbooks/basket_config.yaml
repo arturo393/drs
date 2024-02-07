@@ -1,13 +1,19 @@
 # Install MiniPC Software
 ---
-- name: Restarting extra modules services
+- name: Upload icinga basket
   hosts: icinga_master
   become: true
   vars_files:
     - ../vars.yaml
 
   tasks:
-  - name: Copy basket.json to the remote host from 
+
+  - name: Restart icinga-director service
+    service:
+      name: icinga-director
+      state: restarted
+
+  - name: Copy basket.json to the remote host from
     copy:
       src: "{{ local_basket_file }}"
       dest: "{{ remote_basket_file }}"
@@ -20,11 +26,6 @@
     become: true
     become_user: root
 
-  - name: Display output of basket restore
-    shell: cat "{{ remote_basket_file }}" | icingacli director basket restore
-    register: basket_restore_output
-    become: true
-    become_user: root
 
-  - debug:
-      var: basket_restore_output.stdout_lines
+  - name: Deploying The Changes
+    command: icingacli director config deploy
