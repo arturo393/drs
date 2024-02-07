@@ -1,13 +1,23 @@
-# Install MiniPC Software
 ---
-- name: Remove Unused features
+- name: Extra Customizations
   hosts: icinga_master
   become: true
   vars_files:
     - ../vars.yaml
 
   tasks:
+    - name: Links to device configuration
+      template:
+        src: quick-actions.j2
+        dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
 
+    - name: Change Tab Names
+      shell:
+        cmd: sed -i 's/Icinga Web/DRS/g' {{ item }}
+      with_items:
+        - /usr/share/php/Icinga/Web/Controller/ActionController.php
+        - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+        -
     - name: Remove Custom Variables and Feature Commands
       template:
         src: flags.j2
@@ -48,7 +58,6 @@
       systemd:
         name: icinga-director-monitor.service
         enabled: yes
-
 
     - name: Download xorgxrdp package
       get_url:

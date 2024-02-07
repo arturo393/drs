@@ -279,18 +279,7 @@
 
         ## Base Customizations
 
-    - name: Links to device configuration
-      copy:
-        src: /tmp/sigma-rds/src/modules/quick-actions.phtml
-        dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
-        remote_src: yes
 
-    - name: Change Tab Names
-      shell:
-        cmd: sed -i 's/Icinga Web/DRS/g' {{ item }}
-      with_items:
-        - /usr/share/php/Icinga/Web/Controller/ActionController.php
-        - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
 
     ## Notifications Customization
     - name: mailutils install
