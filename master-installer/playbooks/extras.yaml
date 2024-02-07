@@ -41,8 +41,8 @@
       with_items:
         - incubator
         - reactbundle
-        - director
         - graphite
+        - director
 
     - name: Removing Dependencies database
       mysql_db:
@@ -70,7 +70,7 @@
         repo: https://github.com/icinga/icingaweb2-module-director
         dest: /usr/share/icingaweb2/modules/director
         #single_branch: yes
-        version: master
+        version: v1.10.0
 
     - name: Creating icingadirector user
       user:
@@ -259,12 +259,6 @@
         src: hostalive.ini-graphite.j2
         dest: /usr/share/icingaweb2/modules/graphite/templates/hostalive.ini
 
-    - name: Upload storage-schemas.conf
-      copy:
-        src: /tmp/sigma-rds/src/modules/graphite/templates/storage-schemas.conf
-        dest: /opt/graphite/conf
-        remote_src: yes
-
     - name: Restart Icinga2 service
       service:
         name: icinga2
@@ -298,36 +292,6 @@
         - /usr/share/php/Icinga/Web/Controller/ActionController.php
         - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
 
-    - name: Remove Custom Variables and Feature Commands
-      copy:
-        src: /tmp/sigma-rds/src/modules/flags.phtml
-        dest: /etc/icingaweb2/enabledModules/monitoring/application/views/scripts/show/components/flags.phtml
-        remote_src: yes
-
-    - name: Edit left menu
-      copy:
-        src: /tmp/sigma-rds/src/modules/configuration.php
-        dest: /usr/share/icingaweb2/modules/monitoring/configuration.php
-        remote_src: yes
-
-    - name: Edit Monitoring Page
-      copy:
-        src: /tmp/sigma-rds/src/modules/detail-content.phtml
-        dest: /usr/share/icingaweb2/application/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml
-        remote_src: yes
-
-    - name: Edit about page
-      copy:
-        src: /tmp/sigma-rds/src/base_customization/index.phtml
-        dest: /usr/share/icingaweb2/application/views/scripts/about/index.phtml
-        remote_src: yes
-
-    - name: Edit uqomm image
-      copy:
-        src: /tmp/sigma-rds/src/base_customization/LOGOS6.png
-        dest: /usr/share/icingaweb2/public/img/
-        remote_src: yes
-
     ## Notifications Customization
     - name: mailutils install
       apt:
@@ -336,72 +300,16 @@
           - postfix
     - name: Copy mail-service-notification.sh file
       copy:
-        src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-service-notification.sh
+        src: /tmp/sigma-rds/src/mail-patch-files/mail-service-notification.sh
         dest: /etc/icinga2/scripts/mail-service-notification.sh
         mode: 0755
         remote_src: yes
     - name: Copy mail-host-notification.sh file
       copy:
-        src: /tmp/sigma-rds/master-installer/mail-patch-files/mail-host-notification.sh
+        src: /tmp/sigma-rds/src/mail-patch-files/mail-host-notification.sh
         dest: /etc/icinga2/scripts/mail-host-notification.sh
         mode: 0755
         remote_src: yes
-
-    - name: Create systemd service file
-      copy:
-        dest: /etc/systemd/system/icinga-director-monitor.service
-        content: |
-          [Unit]
-          Description=Icinga Director Monitoring Service
-          After=icinga-director.service
-
-          [Service]
-          Type=simple
-          ExecStart=/bin/bash -c 'while true; do systemctl status icinga-director.service > /dev/null; if [[ $? != 0 ]]; then
-            systemctl restart icinga-director.service; fi; sleep 300; done'
-
-          [Install]
-          WantedBy=multi-user.target
-        owner: root
-        group: root
-        mode: 0644
-
-    - name: Reload systemd
-      systemd:
-        state: reloaded
-
-    - name: Start the service
-      systemd:
-        name: icinga-director-monitor.service
-        state: started
-
-    - name: Enable the service (optional)
-      systemd:
-        name: icinga-director-monitor.service
-        enabled: yes
-
-
-    - name: Download xorgxrdp package
-      get_url:
-        url: https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xorgxrdp/xorgxrdp_0.2.15-1_amd64.deb
-        dest: /tmp/xorgxrdp_0.2.15-1_amd64.deb
-      register: xorgxrdp_download
-
-    - name: Download xrdp package
-      get_url:
-        url: https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xrdp/xrdp_0.9.15-1_amd64.deb
-        dest: /tmp/xrdp_0.9.15-1_amd64.deb
-      register: xrdp_download
-
-    - name: Install xorgxrdp package
-      apt:
-        deb: /tmp/xorgxrdp_0.2.15-1_amd64.deb
-      when: xorgxrdp_download.changed
-
-    - name: Install xrdp package
-      apt:
-        deb: /tmp/xrdp_0.9.15-1_amd64.deb
-      when: xrdp_download.changed
     ##################################################################
 
     - name: Enable icingaweb2 extra modules
@@ -438,6 +346,3 @@
         group: "nagios"
         recurse: yes
 
-
-  
-        
