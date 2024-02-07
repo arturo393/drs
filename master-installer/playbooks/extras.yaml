@@ -70,7 +70,7 @@
         repo: https://github.com/icinga/icingaweb2-module-director
         dest: /usr/share/icingaweb2/modules/director
         #single_branch: yes
-        version: v1.10.0
+        version: v1.11.0
 
     - name: Creating icingadirector user
       user:
@@ -277,10 +277,6 @@
         dest: /usr/share/icingaweb2/public/img/favicon.png
         remote_src: yes
 
-        ## Base Customizations
-
-
-
     ## Notifications Customization
     - name: mailutils install
       apt:
@@ -299,6 +295,7 @@
         dest: /etc/icinga2/scripts/mail-host-notification.sh
         mode: 0755
         remote_src: yes
+
     ##################################################################
 
     - name: Enable icingaweb2 extra modules

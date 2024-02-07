@@ -1,3 +1,4 @@
+# Install MiniPC Software
 ---
 - name: Extra Customizations
   hosts: icinga_master
@@ -11,13 +12,14 @@
         src: quick-actions.j2
         dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
 
-    - name: Change Tab Names
+    - name: Change Tab AuthenticationController.php
       shell:
-        cmd: sed -i 's/Icinga Web/DRS/g' {{ item }}
-      with_items:
-        - /usr/share/php/Icinga/Web/Controller/ActionController.php
-        - /usr/share/icingaweb2/application/controllers/AuthenticationController.php
-        -
+        cmd: sed -i 's/Icinga Web/DRS/g' /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+
+    - name: Change Tab Names ActionController.php
+      shell:
+        cmd: sed -i 's/Icinga Web/DRS/g' /usr/share/php/Icinga/Web/Controller/ActionController.php
+
     - name: Remove Custom Variables and Feature Commands
       template:
         src: flags.j2
