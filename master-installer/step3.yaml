@@ -11,4 +11,4 @@
   import_playbook: playbooks/director_config.yaml
 
 - name: "Extra Customizations"
-  import_playbooks: playbooks/extras_customizations.yaml
+  import_playbook: playbooks/extras_customizations.yaml

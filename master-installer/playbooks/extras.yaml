@@ -56,7 +56,7 @@
         repo: https://github.com/Icinga/icingaweb2-module-incubator
         dest: /usr/share/icingaweb2/modules/incubator
         #single_branch: yes
-        version: v0.20.0
+        version: v0.21.0
 
     - name: Install reactbundle module
       git:
@@ -70,7 +70,7 @@
         repo: https://github.com/icinga/icingaweb2-module-director
         dest: /usr/share/icingaweb2/modules/director
         #single_branch: yes
-        version: v1.11.0
+        version: v1.10.3
 
     - name: Creating icingadirector user
       user:
@@ -84,7 +84,7 @@
       shell:
         cmd: install -d -o icingadirector -g icingaweb2 -m 0750 /var/lib/icingadirector
 
-    - name: Copy icingadirector service daemon
+    - name: Copy icinga-director service daemon
       copy:
         src: /usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service
         dest: /etc/systemd/system/
@@ -94,11 +94,11 @@
       systemd:
         daemon_reload: true
 
-    # - name: start director daemon
-    #   systemd:
-    #     name: icinga-director
-    #     state: started
-    #     enabled: true
+    - name: start director daemon
+      systemd:
+         name: icinga-director
+         state: started
+         enabled: true
 
     ### NetworkMaps
     - name: Copy networkmaps module
@@ -141,6 +141,7 @@
         state: present
         login_user: root
         login_password: "{{ mysql_root_password }}"
+
     - name: Import dependencies sql
       mysql_db:
         # mysql -U dependencies -D c < /usr/share/icingaweb2/modules/network_maps/application/schema/init.sql
