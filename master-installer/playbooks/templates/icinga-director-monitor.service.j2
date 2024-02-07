@@ -1,0 +1,12 @@
+[Unit]
+Description=Check and Restart Icinga Director Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c "/usr/bin/systemctl status icinga-director.service | grep running &>/dev/null && exit 0 || /usr/bin/systemctl restart icinga-director.service"
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target
