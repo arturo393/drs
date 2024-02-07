@@ -4,6 +4,14 @@
     - ../vars.yaml
   tasks:
 
+    
+    - name: Install Bottle Python Package
+      ansible.builtin.pip:
+        name:
+          - requests
+          - crccheck
+          - psutil
+
     - name: Installing Status Plugin
       copy:
         remote_src: true
