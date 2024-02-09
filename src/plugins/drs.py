@@ -3120,17 +3120,31 @@ class Graphite:
         """
         try:
             # Use dict.get to safely fetch values; defaults to '-' if key is not found
+
+            device = self.parameters.get('device', "")
+            if device == "dmu_ethernet":
+                downlink_output_power = self.parameters.get('uplink_input_power', "")
+                uplink_input_power = self.parameters.get('downlink_output_power', "")
+            else:
+                uplink_input_power = self.parameters.get('uplink_input_power', "")
+                downlink_output_power = self.parameters.get('downlink_output_power', "")
+
+
             dl_output_power = str(self.parameters.get('downlink_output_power', '-'))
+            critical_downlink_threshold = str(self.parameters.get('critical_downlink_threshold', '-'))
+            warning_downlink_threshold = str(self.parameters.get('warning_downlink_threshold', '-'))
             critical_uplink_threshold = str(self.parameters.get('critical_uplink_threshold', '-'))
+            warning_uplink_threshold = str(self.parameters.get('warning_uplink_threshold', '-'))
 
             temperature = str(self.parameters.get('temperature', '-'))
             warning_temperature_threshold = str(self.parameters.get('warning_temperature_threshold', '-'))
             critical_temperature_threshold = str(self.parameters.get('critical_temperature_threshold', '-'))
 
             # Structure graphite string using fetched parameters
-            dl_str = f"Downlink={dl_output_power};{critical_uplink_threshold};{critical_uplink_threshold}"
+            dl_str = f"Downlink={downlink_output_power};{warning_downlink_threshold};{critical_downlink_threshold}"
+            up_str = f"Uplink={uplink_input_power};{warning_uplink_threshold};{critical_uplink_threshold}"
             temperature_str = f"Temperature={temperature};{warning_temperature_threshold};{critical_temperature_threshold}"
-            graphite = f"{dl_str} {temperature_str}"
+            graphite = f"{dl_str}{up_str} {temperature_str}"
 
             return graphite
 
