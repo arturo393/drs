@@ -17,7 +17,6 @@ Setup Hosts
     Log To Console    ---
     Open Icingaweb2 page
     Login
-    Add UqommWeb host    Uqommweb    localhost-host-template    Master
     Add hostname host    ${hostname}    ${connection}-host-template    ${hostname}    dmu_${connection}
     Deploy
 

@@ -34,8 +34,6 @@ then
     done
 fi
 
-
-
 echo "Please enter the ansible_host:"
 read ansible_host
 
@@ -54,48 +52,6 @@ then
     read ansible_host
 fi
 
-echo "Please enter the master host (digital_board):"
-read master_host
-
-
-echo "You entered the following master host: $master_host. Is this correct? (y/n)"
-read answer
-
-while [ "$answer" != "y" ] && [ "$answer" != "n" ]
-do
-    echo "Please enter y or n:"
-    read answer
-done
-
-if [ "$answer" == "n" ]
-then
-    echo "Please enter the master host:"
-    read master_host
-fi
-
-echo "Which type of connection do you want to use? (serial/ethernet)"
-read connection_type
-
-while [ "$connection_type" != "serial" ] && [ "$connection_type" != "ethernet" ]
-do
-    echo "Please enter 'serial' or 'ethernet':"
-    read connection_type
-done
-
-echo "Are you sure you want to use $connection_type as the connection? (y/n)"
-read answer
-
-while [ "$answer" != "y" ] && [ "$answer" != "n" ]
-do
-    echo "Please enter y or n:"
-    read answer
-done
-
-if [ "$answer" == "n" ]
-then
-    echo "Please enter the ansible_host:"
-    read connection_type
-fi
 
 # Store the sudo password in a variable (replace 'YourPassword' with the actual password)
 password="Admin.123"
@@ -117,6 +73,8 @@ icinga_master:
       ansible_port: 22 
 EOF
 
+master_host="192.168.11.22"
+connection_type="ethernet"
 cd ..
 sed -i "/icinga2_monitor_hostname:/ s/.*/icinga2_monitor_hostname: \"$ansible_host\"/" ./vars.yaml
 sed -i "/icinga2_monitor_host:/ s/.*/icinga2_monitor_host: \"$host\"/" ./vars.yaml

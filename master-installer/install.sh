@@ -89,7 +89,7 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     cd ../..
 done
 
-# Add director basket and create Services Apply Rules
+
 ansible-playbook step3.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
 for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     # Extract hostname and IP address from the result variable

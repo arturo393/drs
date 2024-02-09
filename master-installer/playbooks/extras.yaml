@@ -56,7 +56,7 @@
         repo: https://github.com/Icinga/icingaweb2-module-incubator
         dest: /usr/share/icingaweb2/modules/incubator
         #single_branch: yes
-        version: v0.21.0
+        version: v0.20.0
 
     - name: Install reactbundle module
       git:
@@ -70,7 +70,7 @@
         repo: https://github.com/icinga/icingaweb2-module-director
         dest: /usr/share/icingaweb2/modules/director
         #single_branch: yes
-        version: v1.10.3
+        version: v1.11.0
 
     - name: Creating icingadirector user
       user:
@@ -94,11 +94,6 @@
       systemd:
         daemon_reload: true
 
-    - name: start director daemon
-      systemd:
-         name: icinga-director
-         state: started
-         enabled: true
 
     ### NetworkMaps
     - name: Copy networkmaps module
@@ -310,6 +305,12 @@
         - rs485
         - graphite
         - sigma-theme
+
+    - name: start director daemon
+      systemd:
+        name: icinga-director
+        state: started
+        enabled: true
         # - cube
 
     - name: Fix /usr/share/icingaweb2/ permissions
