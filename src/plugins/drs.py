@@ -3144,7 +3144,7 @@ class Graphite:
             dl_str = f"Downlink={downlink_output_power};{warning_downlink_threshold};{critical_downlink_threshold}"
             up_str = f"Uplink={uplink_input_power};{warning_uplink_threshold};{critical_uplink_threshold}"
             temperature_str = f"Temperature={temperature};{warning_temperature_threshold};{critical_temperature_threshold}"
-            graphite = f"{dl_str}{up_str} {temperature_str}"
+            graphite = f"{dl_str} {up_str}{temperature_str}"
 
             return graphite
 
