@@ -35,6 +35,18 @@
         src: detail-content.j2
         dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml
 
+    - name: Replace text in Director configuration file
+      replace:
+        path: /usr/share/icingaweb2/modules/director/configuration.php
+        from: '$mainTitle = N_(\'Icinga Director\');'
+        to: '$mainTitle = N_(\'Director\');'
+
+    - name: Replace text in Director configuration file
+      replace:
+        path: /usr/share/icingaweb2/modules/director/configuration.php
+        from: 'return $this->translate(\'Icinga Director Configuration\');'
+        to: 'return $this->translate(\'Director Configuration\');'
+
     - name: Edit about page
       template:
         src: index.j2
