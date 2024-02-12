@@ -43,7 +43,7 @@
 
     - name: Replace text in Director configuration file
       replace:
-        path: /usr/share/icingaweb2/modules/director/configuration.php
+        path: /usr/share/icingaweb2/modules/director/library/Director/Dashboard/DirectorDashboard.php
         from: 'return $this->translate(\'Icinga Director Configuration\');'
         to: 'return $this->translate(\'Director Configuration\');'
 
