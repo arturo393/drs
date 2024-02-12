@@ -3130,6 +3130,13 @@ class Graphite:
                 downlink_output_power = self.parameters.get('downlink_output_power', "")
 
 
+            if uplink_input_power > 20:
+                uplink_input_power = "-"
+
+            if downlink_output_power > 20:
+                downlink_output_power = "-"
+
+
             dl_output_power = str(self.parameters.get('downlink_output_power', '-'))
             critical_downlink_threshold = str(self.parameters.get('critical_downlink_threshold', '-'))
             warning_downlink_threshold = str(self.parameters.get('warning_downlink_threshold', '-'))
