@@ -1,172 +1,167 @@
 <div class="quick-actions">
     <ul class="nav tab-nav">
         <?php if (isset($removeAckForm)): ?>
-        <li>
-            <?php
-            $removeAckForm = clone $removeAckForm;
-            $removeAckForm->setLabelEnabled(true);
-            echo $removeAckForm;
-            ?>
-        </li>
-        <?php elseif /** @var \Icinga\Module\Monitoring\Object\MonitoredObject $object */($this->hasPermission('monitoring/command/acknowledge-problem') && !(in_array((int) $object->state, array(0, 99)))): ?>
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                echo $this->qlink(
-                    $this->translate('Acknowledge'),
-                    'monitoring/host/acknowledge-problem',
-                    array('host' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'edit',
-                        'title' => $this->translate(
-                            'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
-                        )
-                    )
-                );
-            } else {
-                echo $this->qlink(
-                    $this->translate('Acknowledge'),
-                    'monitoring/service/acknowledge-problem',
-                    array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'edit',
-                        'title' => $this->translate(
-                            'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
-                        )
-                    )
-                );
-            } ?>
-        </li>
+            <li>
+                <?php
+                $removeAckForm = clone $removeAckForm;
+                $removeAckForm->setLabelEnabled(true);
+                echo $removeAckForm;
+                ?>
+            </li>
+        <?php elseif /** @var \Icinga\Module\Monitoring\Object\MonitoredObject $object */
+        ($this->hasPermission('monitoring/command/acknowledge-problem') && !(in_array((int)$object->state, array(0, 99)))): ?>
+            <li>
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
+                        echo $this->qlink(
+                            $this->translate('Acknowledge'),
+                            'monitoring/host/acknowledge-problem',
+                            array('host' => $object->getName()),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'edit',
+                                'title' => $this->translate(
+                                    'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
+                                )
+                            )
+                        );
+                    } else {
+                        echo $this->qlink(
+                            $this->translate('Acknowledge'),
+                            'monitoring/service/acknowledge-problem',
+                            array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
+                            array(
+                                'class' => 'action-link',
+                                'data-base-target' => '_self',
+                                'icon' => 'edit',
+                                'title' => $this->translate(
+                                    'Acknowledge this problem, suppress all future notifications for it and tag it as being handled'
+                                )
+                            )
+                        );
+                    } -->
+
+
+            </li>
         <?php endif ?>
         <?php if (isset($checkNowForm)): // Form is unset if the current user lacks the respective permission ?>
-        <li><?= $checkNowForm ?></li>
+            <li><?= $checkNowForm ?></li>
         <?php endif ?>
         <?php if ($this->hasPermission('monitoring/command/comment/add')): ?>
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                echo $this->qlink(
-                    $this->translate('Comment'),
-                    'monitoring/host/add-comment',
-                    array('host' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'comment-empty',
-                        'title' => $this->translate('Add a new comment to this host')
-                    )
-                );
-            } else {
-                echo $this->qlink(
-                    $this->translate('Comment'),
-                    'monitoring/service/add-comment',
-                    array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'comment-empty',
-                        'title' => $this->translate('Add a new comment to this service')
-                    )
-                );
-            } ?>
-        </li>
+            <li>
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
+                    echo $this->qlink(
+                        $this->translate('Comment'),
+                        'monitoring/host/add-comment',
+                        array('host' => $object->getName()),
+                        array(
+                            'class' => 'action-link',
+                            'data-base-target' => '_self',
+                            'icon' => 'comment-empty',
+                            'title' => $this->translate('Add a new comment to this host')
+                        )
+                    );
+                } else {
+                    echo $this->qlink(
+                        $this->translate('Comment'),
+                        'monitoring/service/add-comment',
+                        array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
+                        array(
+                            'class' => 'action-link',
+                            'data-base-target' => '_self',
+                            'icon' => 'comment-empty',
+                            'title' => $this->translate('Add a new comment to this service')
+                        )
+                    );
+                } -->
+            </li>
         <?php endif ?>
         <?php if ($this->hasPermission('monitoring/command/send-custom-notification')): ?>
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                echo $this->qlink(
-                    $this->translate('Notification'),
-                    'monitoring/host/send-custom-notification',
-                    array('host' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'bell',
-                        'title' => $this->translate(
-                            'Send a custom notification to contacts responsible for this host'
+            <li>
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
+                    echo $this->qlink(
+                        $this->translate('Notification'),
+                        'monitoring/host/send-custom-notification',
+                        array('host' => $object->getName()),
+                        array(
+                            'class' => 'action-link',
+                            'data-base-target' => '_self',
+                            'icon' => 'bell',
+                            'title' => $this->translate(
+                                'Send a custom notification to contacts responsible for this host')
                         )
-                    )
-                );
-            } else {
-                echo $this->qlink(
-                    $this->translate('Notification'),
-                    'monitoring/service/send-custom-notification',
-                    array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'bell',
-                        'title' => $this->translate(
-                            'Send a custom notification to contacts responsible for this service'
+                    );
+                } else {
+                    echo $this->qlink(
+                        $this->translate('Notification'),
+                        'monitoring/service/send-custom-notification',
+                        array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
+                        array(
+                            'class' => 'action-link',
+                            'data-base-target' => '_self',
+                            'icon' => 'bell',
+                            'title' => $this->translate(
+                                'Send a custom notification to contacts responsible for this service'
+                            )
                         )
-                    )
-                );
-            } ?>
-        </li>
+                    );
+                } -->
+            </li>
         <?php endif ?>
         <?php if ($this->hasPermission('monitoring/command/downtime/schedule')): ?>
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                echo $this->qlink(
-                    $this->translate('Downtime'),
-                    'monitoring/host/schedule-downtime',
-                    array('host' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'plug',
-                        'title' => $this->translate(
-                            'Schedule a downtime to suppress all problem notifications within a specific period of time'
-                        )
-                    )
-                );
-            } else {
-                echo $this->qlink(
-                    $this->translate('Downtime'),
-                    'monitoring/service/schedule-downtime',
-                    array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
-                    array(
-                        'class' => 'action-link',
-                        'data-base-target' => '_self',
-                        'icon' => 'plug',
-                        'title' => $this->translate(
-                            'Schedule a downtime to suppress all problem notifications within a specific period of time'
-                        )
-                    )
-                );
-            } ?>
-        </li>
-        <?php endif ?>
-        <?php if ($this->hasPermission('rs485/master/edit')): ?>
-
-        <li>
-            <?php if ($object->getType() === $object::TYPE_HOST) {
-                if (substr($object->host, 5, 3) === 'opt') {
+            <li>
+                <!--?php if ($object->getType() === $object::TYPE_HOST) {
                     echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/remote/edit',
+                        $this->translate('Downtime'),
+                        'monitoring/host/schedule-downtime',
                         array('host' => $object->getName()),
                         array(
                             'class' => 'action-link',
                             'data-base-target' => '_self',
                             'icon' => 'plug',
                             'title' => $this->translate(
-                                'Remote Device Configuration'
+                                'Schedule a downtime to suppress all problem notifications within a specific period of time'
                             )
                         )
                     );
-                 } 
-            } else {
-                if (substr($object->service, 0, 6) === 'Master' ) {
-                    
-                    $frequency = isset($object->customvars['frequencies']) ? $object->customvars['frequencies'] :" " ;
-                    $service = $object->host->getName() . '-freq' . $frequency;
+                } else {
                     echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/master/edit',
-                        array('host' => $object->host->getName(),'freq'=> $frequency),
+                        $this->translate('Downtime'),
+                        'monitoring/service/schedule-downtime',
+                        array('host' => $object->getHost()->getName(), 'service' => $object->getName()),
+                        array(
+                            'class' => 'action-link',
+                            'data-base-target' => '_self',
+                            'icon' => 'plug',
+                            'title' => $this->translate(
+                                'Schedule a downtime to suppress all problem notifications within a specific period of time'
+                            )
+                        )
+                    );
+                } -->
+            </li>
+        <?php endif ?>
+        <?php if ($this->hasPermission('rs485/host/edit')): ?>
+        <li>
+            <?php if ($object->getType() === $object::TYPE_SERVICE) {
+                $device = $object->customvars['device'] ?? "";
+                $center_uplink_frequency = $object->customvars['center_uplink_frequency'] ?? 0;
+                $center_downlink_frequency = $object->customvars['center_downlink_frequency'] ?? 0;
+                $bandwidth = $object->customvars['bandwidth'] ?? 0;
+                $cmd_type = $object->customvars['cmd_type'] ?? 0;
+                $baud_rate = $object->customvars['baud_rate'] ?? 0;
+                if ($device == 'dmu_ethernet' or $device == 'dru_ethernet' or $device == 'dmu_serial_service') {
+                    echo $this->qlink(
+                        $this->translate('Config'),
+                        'rs485/host/edit',
+                        array('host' => $object->getHost()->getName(),
+                            'center_uplink_frequency' => $center_uplink_frequency,
+                            'center_downlink_frequency' => $center_downlink_frequency,
+                            'bandwidth' => $bandwidth,
+                            'cmd_type' => $cmd_type,
+                            'device' => $device
+
+                        ),
                         array(
                             'class' => 'action-link',
                             'data-base-target' => '_self',
@@ -176,14 +171,17 @@
                             )
                         )
                     );
-                } else if (isset($object->customvars['opt']) && $object->customvars['dru']) {
-                    $opt = $object->customvars['opt'];
-                    $dru = $object->customvars['dru'];
-                    $service = $object->host->getName() . '-opt' . $opt . '-dru' . $dru;
+                } else if ($device == 'dru_serial_service') {
+                    $linkAddress = $object->host_address;
                     echo $this->qlink(
-                        $this->translate('Device Configuration'),
-                        'rs485/remote/edit',
-                        array('service' => $service),
+                        $this->translate('Config'),
+                        'rs485/host/edit',
+                        array('host' => $object->getHost()->getName(),
+                            'device' => $device,
+                            'baudrate' => $baud_rate,
+                            'address' => $linkAddress,
+
+                        ),
                         array(
                             'class' => 'action-link',
                             'data-base-target' => '_self',
@@ -196,7 +194,27 @@
                 }
             }
             ?>
-            <?php endif ?>
+        </li>
+        <li>
+            <?php if ($object->getType() === $object::TYPE_HOST) {
+                $linkAddress = $object->address;
+                $address = "http://$linkAddress";
+                echo $this->qlink(
+                    $this->translate('Admin'),
+                    $address,
+                    array('host' => $object->getName()),
+                    array(
+                        'class' => 'action-link',
+                        'data-base-target' => '_blank',
+                        'icon' => 'plug',
+                        'title' => $this->translate(
+                            'Admin Configuration '
+                        ),
+                        'target' => '_blank',
+                    )
+                );
+            }
+            endif ?>
         </li>
     </ul>
 </div>

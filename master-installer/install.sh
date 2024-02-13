@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e -o nounset
 start_time=$(date +%s) # Start timestamp
-clear
-
+connection=$1
+if [ "$connection" != "serial" ] && [ "$connection" != "ethernet" ]; then
+    echo "La conexión no es válida. Saliendo del script."
+    exit 1
+fi
 # Comprueba si Google Chrome ya está instalado
 if [ $(dpkg-query -W -f='${Status}' google-chrome-stable 2>/dev/null | grep -c "ok installed") -eq 0 ]
 then
@@ -30,7 +33,6 @@ then
 else
     echo "Google Chrome ya está instalado"
 fi
-
 #Install RCC
 #############################################################################
 rcc_url="https://downloads.robocorp.com/rcc/releases/latest/linux64/rcc"
@@ -51,13 +53,15 @@ fi
 #############################################################################
 ansible_user=$(./read_yaml.sh vars.yaml icinga2_monitor_user| sed 's/"//g')
 admin_password=$(./read_yaml.sh vars.yaml admin_password| sed 's/"//g')
+master_host=$(./read_yaml.sh vars.yaml master_host| sed 's/"//g')
 hosts=($(./get_hosts.sh inventory/hosts.yaml))
+# Obtener el valor del parámetro de conexión
 
 
 # Step 1 (Base)
 #############################################################################
 echo "Setup Icinga & Icingaweb2 Base"
-rm -rf /tmp/setup.token
+#rm -rf /tmp/setup.token
 ansible-playbook step1.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
 for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     # Extract hostname and IP address from the result variable
@@ -70,7 +74,6 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     rcc task run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password --variable token:$token setup_icingaweb2.robot
     cd ../..
 done
-
 
 #Step 2 (Setup extras)
 ############################################################################
@@ -87,12 +90,6 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
 done
 
 
-# Final Step
-#############################################################################
-ansible-playbook playbooks/final-step.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
-
-
-# Add director basket and create Services Apply Rules
 ansible-playbook step3.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
 for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     # Extract hostname and IP address from the result variable
@@ -101,11 +98,13 @@ for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     echo "Setting up Director Service Apply Rules: $ip_address"
     echo "\tPlease wait until rcc setup is finished...browser will open..."
     cd rpa/setup_extras
-     rcc run --silent --interactive --task scripting -- --variable host:$ip_address --variable passwd:$admin_password setup_director.robot
+    rcc run --silent --interactive --task scripting -- --variable hostname:$hostname --variable host:$ip_address --variable passwd:$admin_password --variable master_host:$master_host --variable connection:$connection setup_director.robot
     cd ../..
 done
 
 end_time=$(date +%s) # End timestamp
 duration=$(((end_time - start_time)/60)) # Duration in seconds
+
+
 
 echo "Script execution completed in ${duration} minutes."

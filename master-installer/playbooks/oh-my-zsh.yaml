@@ -1,12 +1,49 @@
 # Install MiniPC Software 
 ---
-- name: Install Debian Image Dependencies   
+- name: Install Debian Image Dependencies
   hosts: icinga_master
   become: true
   roles:
-  - role: gantsign.oh-my-zsh
-    users:
-      - username: sigmadev
-      - username: root
+    - role: gantsign.oh-my-zsh
+      users:
+        - username: sigmadev
+        - username: root
   vars_files:
     - ../vars.yaml
+
+  tasks:
+    - name: Install zsh-autosuggestions plugin
+      git:
+        repo: https://github.com/zsh-users/zsh-autosuggestions.git
+        dest: ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+        update: yes
+    - name: Install zsh-syntax-highlighting plugin
+      git:
+        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+        dest: ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+        update: yes
+
+    - name: Add zsh plugins to .zshrc file
+      lineinfile:
+        path: ~/.zshrc
+        line: 'plugins=(zsh-autosuggestions zsh-syntax-highlighting)'
+
+    - name: Install zsh-autosuggestions plugin for root user
+      become: yes
+      git:
+        repo: https://github.com/zsh-users/zsh-autosuggestions.git
+        dest: /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+        update: yes
+
+    - name: Install zsh-syntax-highlighting plugin for root user
+      become: yes
+      git:
+        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+        dest: /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+        update: yes
+
+    - name: Add zsh plugins to .zshrc file for root user
+      become: yes
+      lineinfile:
+        path: /root/.zshrc
+        line: 'plugins=(zsh-autosuggestions zsh-syntax-highlighting)'

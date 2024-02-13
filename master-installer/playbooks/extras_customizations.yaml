@@ -1,0 +1,105 @@
+# Install MiniPC Software
+---
+- name: Extra Customizations
+  hosts: icinga_master
+  become: true
+  vars_files:
+    - ../vars.yaml
+
+  tasks:
+    - name: Links to device configuration
+      template:
+        src: quick-actions.j2
+        dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/quick-actions.phtml
+
+    - name: Change Tab AuthenticationController.php
+      shell:
+        cmd: sed -i 's/Icinga Web/DRS/g' /usr/share/icingaweb2/application/controllers/AuthenticationController.php
+
+    - name: Change Tab Names ActionController.php
+      shell:
+        cmd: sed -i 's/Icinga Web/DRS/g' /usr/share/php/Icinga/Web/Controller/ActionController.php
+
+    - name: Remove Custom Variables and Feature Commands
+      template:
+        src: flags.j2
+        dest: /etc/icingaweb2/enabledModules/monitoring/application/views/scripts/show/components/flags.phtml
+
+    - name: Edit left menu
+      template:
+        src: configuration.j2
+        dest: /usr/share/icingaweb2/modules/monitoring/configuration.php
+
+    - name: Edit Monitoring Page
+      template:
+        src: detail-content.j2
+        dest: /usr/share/icingaweb2/modules/monitoring/application/views/scripts/partials/object/detail-content.phtml
+
+    - name: Replace text in Director configuration file
+      replace:
+        path: /usr/share/icingaweb2/modules/director/configuration.php
+        from: '$mainTitle = N_(\'Icinga Director\');'
+        to: '$mainTitle = N_(\'Director\');'
+
+    - name: Replace text in Director configuration file
+      replace:
+        path: /usr/share/icingaweb2/modules/director/library/Director/Dashboard/DirectorDashboard.php
+        from: 'return $this->translate(\'Icinga Director Configuration\');'
+        to: 'return $this->translate(\'Director Configuration\');'
+
+    - name: Edit about page
+      template:
+        src: index.j2
+        dest: /usr/share/icingaweb2/application/views/scripts/about/index.phtml
+
+    - name: Edit uqomm image
+      copy:
+        src: /tmp/sigma-rds/src/modules/sigma-theme/LOGOS6.png
+        dest: /usr/share/icingaweb2/public/img/
+        remote_src: yes
+
+    - name: Create systemd service file
+      template:
+        src: icinga-director-monitor.service.j2
+        dest: /etc/systemd/system/icinga-director-monitor.service
+
+    - name: Start the service
+      systemd:
+        name: icinga-director-monitor.service
+        state: started
+
+    - name: Enable the service (optional)
+      systemd:
+        name: icinga-director-monitor.service
+        enabled: yes
+
+    - name: Download xorgxrdp package
+      get_url:
+        url: https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xorgxrdp/xorgxrdp_0.2.15-1_amd64.deb
+        dest: /tmp/xorgxrdp_0.2.15-1_amd64.deb
+      register: xorgxrdp_download
+
+    - name: Download xrdp package
+      get_url:
+        url: https://snapshot.debian.org/archive/debian/20210302T032219Z/pool/main/x/xrdp/xrdp_0.9.15-1_amd64.deb
+        dest: /tmp/xrdp_0.9.15-1_amd64.deb
+      register: xrdp_download
+
+    - name: Install xorgxrdp package
+      apt:
+        deb: /tmp/xorgxrdp_0.2.15-1_amd64.deb
+      when: xorgxrdp_download.changed
+
+    - name: Install xrdp package
+      apt:
+        deb: /tmp/xrdp_0.9.15-1_amd64.deb
+      when: xrdp_download.changed
+      ##################################################################
+
+    - name: Upload storage-schemas.conf
+      template:
+        src: storage-schemas.j2
+        dest: /opt/graphite/conf/storage-schemas.conf
+
+  
+        

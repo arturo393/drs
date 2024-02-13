@@ -1,31 +1,98 @@
-- hosts: icinga_satellite
+- hosts: icinga_master
   become: true
   vars_files:
-       - ../vars.yaml
+    - ../vars.yaml
   tasks:
 
-  - name: Downloading Sigma Software
-    git:
-      repo: https://{{gitlabuser | urlencode}}:{{gitlabpassword | urlencode}}@gitlab.com/sigma-telecom/sigma-rds.git
-      dest: /tmp/sigma-rds
-      version: development
-      accept_hostkey: true
-      
-  - name: Create Installation Directory
-    file:
-      path: /usr/lib/monitoring
-      state: directory
-      mode: '0755'
+    
+    - name: Install Bottle Python Package
+      ansible.builtin.pip:
+        name:
+          - requests
+          - crccheck
+          - psutil
 
-  - name: Installing Plugins
-    copy:
-      remote_src: true
-      src: /tmp/sigma-rds/src/plugins/
-      dest: /usr/lib/monitoring-plugins
-  
-  - name: Change Monitoring-plugins Ownership, Group And Permissions
-    file:
-        path: /usr/lib/monitoring-plugins
-        mode: '0755'
-        state: directory
-        recurse: yes
+    - name: Installing Status Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_eth.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_eth.py
+      file:
+        path: /usr/lib/nagios/plugins/check_eth.py
+        mode: +x
+
+    - name: Installing Status Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_rs485.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_rs485.py
+      file:
+        path: /usr/lib/nagios/plugins/check_rs485.py
+        mode: +x
+
+    - name: Installing Status Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/dru_check_rs485.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to dru_check_rs485.py
+      file:
+        path: /usr/lib/nagios/plugins/dru_check_rs485.py
+        mode: +x
+
+    - name: Installing Status Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/drs.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to drs.py
+      file:
+        path: /usr/lib/nagios/plugins/drs.py
+        mode: +x
+
+
+    - name: Installing Memory Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_memory.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_memory.py
+      file:
+        path: /usr/lib/nagios/plugins/check_memory.py
+        mode: +x
+
+    - name: Installing Disk Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_disk.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_disk.py
+      file:
+        path: /usr/lib/nagios/plugins/check_disk.py
+        mode: +x
+
+    - name: Installing Load Plugin
+      copy:
+        remote_src: true
+        src: /tmp/sigma-rds/src/plugins/check_load.py
+        dest: /usr/lib/nagios/plugins/
+
+    - name: Add +x permission to check_disk.py
+      file:
+        path: /usr/lib/nagios/plugins/check_load.py
+        mode: +x
+
+
+    - name: Add the user nagios to the dialout group
+      user:
+        name: nagios
+        groups:
+          - dialout
