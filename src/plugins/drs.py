@@ -1797,13 +1797,41 @@ class Decoder:
         power = round(power, 2)
         return power
 
+
+
+
+
+    @staticmethod
+    def replace_hex_sequence(data):
+        """Searches for the hexadecimal sequence 0x5e5d in a bytearray and replaces it with 0x5d.
+
+        Args:
+            data: The bytearray to search and modify.
+
+        Returns:
+            The modified bytearray with the replacements made.
+        """
+
+        output = bytearray()  # Create a new bytearray to store the modified data
+        i = 0
+        while i < len(data):
+            if i < len(data) - 1 and data[i] == 0x5e and data[i + 1] == 0x5d:
+                output.extend(b'\x5e')  # Append 0x5d to the output bytearray
+                i += 2  # Skip both bytes of the sequence
+            else:
+                output.append(data[i])  # Append the current byte to the output
+                i += 1
+        return output
     @staticmethod
     def _decode_channel_frequency_configuration(command_body):
         if len(command_body) == 0:
             return {}
+        command_body = Decoder.replace_hex_sequence(command_body)
+        temp = command_body.hex()
         ch = 1
         channels = {}
         for i in range(0, 64, 4):
+            number = command_body[i:i + 4].hex()
             number = command_body[i:i + 4]
             number = int.from_bytes(number, byteorder="little")
             channels["channel_" + str(ch) + "_freq"] = str(number / 10000)
