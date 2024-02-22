@@ -38,14 +38,14 @@
     - name: Replace text in Director configuration file
       replace:
         path: /usr/share/icingaweb2/modules/director/configuration.php
-        from: '$mainTitle = N_(\'Icinga Director\');'
-        to: '$mainTitle = N_(\'Director\');'
+        regexp: '$mainTitle = N_(\"Icinga Director\");'
+        replace: '$mainTitle = N_(\"Director\");'
 
     - name: Replace text in Director configuration file
       replace:
         path: /usr/share/icingaweb2/modules/director/library/Director/Dashboard/DirectorDashboard.php
-        from: 'return $this->translate(\'Icinga Director Configuration\');'
-        to: 'return $this->translate(\'Director Configuration\');'
+        regexp: 'return $this->translate(\"Icinga Director Configuration\");'
+        replace: 'return $this->translate(\"Director Configuration\");'
 
     - name: Edit about page
       template:
