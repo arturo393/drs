@@ -283,7 +283,7 @@ class DRSRemoteCommand(IntEnum):
     optical_port_devices_connected_2 = DRSMasterCommand.optical_port_devices_connected_2
     optical_port_devices_connected_3 = DRSMasterCommand.optical_port_devices_connected_3
     optical_port_devices_connected_4 = DRSMasterCommand.optical_port_devices_connected_4
-    rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
+    #rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
 
 
 class DRSRemoteSerialCommand(IntEnum):
