@@ -2867,30 +2867,52 @@ class HtmlTable:
             if device == "dmu_ethernet":
                 uplink_attenuation_power = self.parameters.get('upAtt', "")
                 downlink_attenuation_power = self.parameters.get('dlAtt', "")
-                downlink_output_power = self.parameters.get('uplink_input_power', "")
-                uplink_input_power = self.parameters.get('downlink_output_power', "")
+                downlink_input_power = self.parameters.get('uplink_input_power', "")
+                uplink_output_power = self.parameters.get('downlink_output_power', "")
+                table = ("<table width=250>"
+                     "<thead>"
+                     "<tr align=\"center\" style=font-size:12px>"
+                     "<th width='12%'>Link</font></th>"
+                     "<th width='12%'>Direction</font></th>"
+                     "<th width='33%'>Power</font></th>"
+                     "<th width='10%'>Attenuation</font></th>"
+                     "</tr></thead>"
+                     "<tbody>"
+                     f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>"
+                     f"<td>Output</td>"
+                     f"<td>{uplink_output_power}[dBm]</td>"
+                     f"<td>{uplink_attenuation_power}[dB]</td></tr>"
+                     f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>"
+                     f"<td>Input</td>"
+                     f"<td>{downlink_input_power}[dBm]</td>"
+                     f"<td>{downlink_attenuation_power}[dB]</td></tr>"
+                     "</tbody></table>")
+                return table
             else:
                 uplink_attenuation_power = self.parameters.get('dlAtt', "")
                 downlink_attenuation_power = self.parameters.get('upAtt', "")
                 uplink_input_power = self.parameters.get('uplink_input_power', "")
                 downlink_output_power = self.parameters.get('downlink_output_power', "")
             # Generate HTML structure according to given format
-            table = ("<table width=250>"
-                     "<thead>"
-                     "<tr align=\"center\" style=font-size:12px>"
-                     "<th width='12%'>Link</font></th>"
-                     "<th width='33%'>Power</font></th>"
-                     "<th width='10%'>Attenuation</font></th>"
-                     "</tr></thead>"
-                     "<tbody>"
-                     f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>"
-                     f"<td>{uplink_input_power}[dBm]</td>"
-                     f"<td>{uplink_attenuation_power}[dB]</td></tr>"
-                     f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>"
-                     f"<td>{downlink_output_power}[dBm]</td>"
-                     f"<td>{downlink_attenuation_power}[dB]</td></tr>"
-                     "</tbody></table>")
-            return table
+                table = ("<table width=250>"
+                        "<thead>"
+                        "<tr align=\"center\" style=font-size:12px>"
+                        "<th width='12%'>Link</font></th>"
+                        "<th width='12%'>Direction</font></th>"
+                        "<th width='33%'>Power</font></th>"
+                        "<th width='10%'>Attenuation</font></th>"
+                        "</tr></thead>"
+                        "<tbody>"
+                        f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>"
+                        f"<td>Input</td>"
+                        f"<td>{uplink_input_power}[dBm]</td>"
+                        f"<td>{uplink_attenuation_power}[dB]</td></tr>"
+                        f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>"
+                        f"<td>Output</td>"
+                        f"<td>{downlink_output_power}[dBm]</td>"
+                        f"<td>{downlink_attenuation_power}[dB]</td></tr>"
+                        "</tbody></table>")
+                return table
 
         except (KeyError, AttributeError) as e:
             # Write error to stderr and exit with status UNKNOWN when there is an Exception
@@ -3151,35 +3173,52 @@ class Graphite:
 
             device = self.parameters.get('device', "")
             if device == "dmu_ethernet":
-                downlink_output_power = self.parameters.get('uplink_input_power', "")
-                uplink_input_power = self.parameters.get('downlink_output_power', "")
+                downlink_input_power = self.parameters.get('uplink_input_power', "-")
+                uplink_output_power = self.parameters.get('downlink_output_power', "-")
+                if isinstance(uplink_output_power, (int, float)) and uplink_output_power > 20:
+                    uplink_output_power = "-"
+
+                if isinstance(downlink_input_power, (int, float)) and downlink_input_power > 20:
+                    downlink_input_power = "-"
+                    
+                critical_downlink_threshold = str(self.parameters.get('critical_downlink_threshold', '-'))
+                warning_downlink_threshold = str(self.parameters.get('warning_downlink_threshold', '-'))
+                critical_uplink_threshold = str(self.parameters.get('critical_uplink_threshold', '-'))
+                warning_uplink_threshold = str(self.parameters.get('warning_uplink_threshold', '-'))
+
+                temperature = str(self.parameters.get('temperature', '-'))
+                warning_temperature_threshold = str(self.parameters.get('warning_temperature_threshold', '-'))
+                critical_temperature_threshold = str(self.parameters.get('critical_temperature_threshold', '-'))
+
+                # Structure graphite string using fetched parameters
+                dl_str = f"Downlink={downlink_input_power};{warning_downlink_threshold};{critical_downlink_threshold}"
+                up_str = f"Uplink={uplink_output_power};{warning_uplink_threshold};{critical_uplink_threshold}"
+                temperature_str = f"Temperature={temperature};{warning_temperature_threshold};{critical_temperature_threshold}"
+                graphite = f"{dl_str} {up_str} {temperature_str}"
             else:
-                uplink_input_power = self.parameters.get('uplink_input_power', "")
-                downlink_output_power = self.parameters.get('downlink_output_power', "")
+                uplink_input_power = self.parameters.get('uplink_input_power', "-")
+                downlink_output_power = self.parameters.get('downlink_output_power', "-")
 
+                if isinstance(uplink_input_power, (int, float)) and uplink_input_power > 20:
+                    uplink_input_power = "-"
 
-            if uplink_input_power > 20:
-                uplink_input_power = "-"
+                if isinstance(downlink_output_power, (int, float)) and downlink_output_power > 20:
+                    downlink_output_power = "-"
 
-            if downlink_output_power > 20:
-                downlink_output_power = "-"
+                critical_downlink_threshold = str(self.parameters.get('critical_downlink_threshold', '-'))
+                warning_downlink_threshold = str(self.parameters.get('warning_downlink_threshold', '-'))
+                critical_uplink_threshold = str(self.parameters.get('critical_uplink_threshold', '-'))
+                warning_uplink_threshold = str(self.parameters.get('warning_uplink_threshold', '-'))
 
+                temperature = str(self.parameters.get('temperature', '-'))
+                warning_temperature_threshold = str(self.parameters.get('warning_temperature_threshold', '-'))
+                critical_temperature_threshold = str(self.parameters.get('critical_temperature_threshold', '-'))
 
-            dl_output_power = str(self.parameters.get('downlink_output_power', '-'))
-            critical_downlink_threshold = str(self.parameters.get('critical_downlink_threshold', '-'))
-            warning_downlink_threshold = str(self.parameters.get('warning_downlink_threshold', '-'))
-            critical_uplink_threshold = str(self.parameters.get('critical_uplink_threshold', '-'))
-            warning_uplink_threshold = str(self.parameters.get('warning_uplink_threshold', '-'))
-
-            temperature = str(self.parameters.get('temperature', '-'))
-            warning_temperature_threshold = str(self.parameters.get('warning_temperature_threshold', '-'))
-            critical_temperature_threshold = str(self.parameters.get('critical_temperature_threshold', '-'))
-
-            # Structure graphite string using fetched parameters
-            dl_str = f"Downlink={downlink_output_power};{warning_downlink_threshold};{critical_downlink_threshold}"
-            up_str = f"Uplink={uplink_input_power};{warning_uplink_threshold};{critical_uplink_threshold}"
-            temperature_str = f"Temperature={temperature};{warning_temperature_threshold};{critical_temperature_threshold}"
-            graphite = f"{dl_str} {up_str} {temperature_str}"
+                # Structure graphite string using fetched parameters
+                dl_str = f"Downlink={downlink_output_power};{warning_downlink_threshold};{critical_downlink_threshold}"
+                up_str = f"Uplink={uplink_input_power};{warning_uplink_threshold};{critical_uplink_threshold}"
+                temperature_str = f"Temperature={temperature};{warning_temperature_threshold};{critical_temperature_threshold}"
+                graphite = f"{dl_str} {up_str} {temperature_str}"
 
             return graphite
 
