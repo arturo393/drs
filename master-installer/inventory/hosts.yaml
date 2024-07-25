@@ -1,5 +1,5 @@
 icinga_master:
   hosts:
     dmu1:
-      ansible_host: 192.168.60.77
+      ansible_host: 192.168.60.73
       ansible_port: 22 

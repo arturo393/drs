@@ -134,6 +134,7 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(drs.CRITICAL)
 
+
         if device in ["discovery_ethernet", "discovery_serial", 'discovery_redboard_serial']:
             discovery = drs.Discovery(command.parameters)
             if discovery.search_and_create_dru() is not drs.OK:

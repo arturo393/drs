@@ -62,7 +62,7 @@ hosts=($(./get_hosts.sh inventory/hosts.yaml))
 #############################################################################
 echo "Setup Icinga & Icingaweb2 Base"
 #rm -rf /tmp/setup.token
-ansible-playbook step1.yaml --extra-vars "ansible_user=$ansible_user ansible_password=$admin_password ansible_sudo_pass=$admin_password"
+
 for ((i = 0; i< ${#hosts[@]}; i+=2)); do
     # Extract hostname and IP address from the result variable
     hostname=${hosts[i]}

@@ -158,7 +158,8 @@ Create Resource
 
     Log To Console    Create Resource ${resource_name}
     Close Page    CURRENT
-    New Page    http://${host}/config/createresource
+    New Page    http://${host}/config/create
+    resource
 
     Type Text    xpath=//input[@name="name"]    ${resource_name}     # Resource Name
     Type Text    xpath=//input[@name="dbname"]    ${database_name}        # Database Name
