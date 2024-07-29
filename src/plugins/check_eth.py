@@ -13,8 +13,8 @@ import sys
 import argparse
 
 from src.plugins.drs.command import Command
-from src.plugins.drs.definitions import CRITICAL, OK, WARNING
-from src.plugins.drs.definitions import NearEndQueryCommandNumber
+from src.plugins.drs.definitions.nagios import CRITICAL, OK, WARNING
+from src.plugins.drs.definitions.santone_commands import NearEndQueryCommandNumber
 from src.plugins.drs.discovery import Discovery
 from src.plugins.drs.plugin_output import PluginOutput
 from src.plugins.drs.parameters import Parameters
@@ -159,7 +159,7 @@ def main():
             deviceIdcommandData = command.get_commandData_by_commandNumber(NearEndQueryCommandNumber.device_id)
             parameters = Parameters(command.parameters)
             dru_connected = parameters.get_connected_dru()
-            discovery = Discovery(parameters.parameters['baud_rate'], dru_connected)
+            discovery = Discovery(command.parameters['baud_rate'], dru_connected)
             if discovery.discover_remotes(command.parameters) is not OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
                 sys.exit(WARNING)
