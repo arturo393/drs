@@ -243,7 +243,6 @@ class Tx1SettingCmd:
     peak_output_power = 0x8a
     gain_power_control_att = 0xe8
 
-
 class DRSMasterCommand(IntEnum):
     optical_port_devices_connected_1 = 0xf8
     optical_port_devices_connected_2 = 0xf9
@@ -263,6 +262,7 @@ class DRSMasterCommand(IntEnum):
     # optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
     # rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
+#    datt = HardwarePeripheralDeviceParameterCommand.datt
 
 
 class DRSRemoteCommand(IntEnum):
@@ -1844,7 +1844,7 @@ class Decoder:
             return {}
         input_att = command_body[0] / 4
         output_att = command_body[1] / 4
-        return {'dlAtt': str(input_att), 'upAtt': str(output_att)}
+        return {'dlAtt':input_att, 'upAtt': output_att}
 
     @staticmethod
     def _decode_optical_port_switch(command_body: bytes) -> dict:
@@ -2876,16 +2876,22 @@ class HtmlTable:
                      "<th width='12%'>Direction</font></th>"
                      "<th width='33%'>Power</font></th>"
                      "<th width='10%'>Attenuation</font></th>"
+                    "<th width='12%'>Direction</font></th>"
+                    "<th width='12%'>Power</font></th>"
                      "</tr></thead>"
                      "<tbody>"
                      f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>"
                      f"<td>Output</td>"
                      f"<td>{uplink_output_power}[dBm]</td>"
-                     f"<td>{uplink_attenuation_power}[dB]</td></tr>"
+                     f"<td>{uplink_attenuation_power}[dB]</td>"
+                     f"<td>Input</td>"
+                     f"<td>{round(uplink_output_power-uplink_attenuation_power,2)}[dBm]</td></tr>"
                      f"<tr align=\"center\"{downlink_power_style}><td>Downlink</td>"
                      f"<td>Input</td>"
                      f"<td>{downlink_input_power}[dBm]</td>"
-                     f"<td>{downlink_attenuation_power}[dB]</td></tr>"
+                     f"<td>{downlink_attenuation_power}[dB]</td>"
+                     f"<td>Output</td>"
+                     f"<td>{round(downlink_input_power - downlink_attenuation_power,2)}[dBm]</td></tr>"
                      "</tbody></table>")
                 return table
             else:
@@ -2901,6 +2907,7 @@ class HtmlTable:
                         "<th width='12%'>Direction</font></th>"
                         "<th width='33%'>Power</font></th>"
                         "<th width='10%'>Attenuation</font></th>"
+                        "<th width='12%'>Direction</font></th>"
                         "</tr></thead>"
                         "<tbody>"
                         f"<tr align=\"center\" {uplink_power_style}><td>Uplink</td>"

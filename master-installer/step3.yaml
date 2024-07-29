@@ -11,4 +11,4 @@
   import_playbook: playbooks/basket_config.yaml
 
 - name: "Extra Customizations"
-  import_playbook: playbooks/extras_customizations.yaml
+  import_playbook: playbooks/extras_customizations.yaml+
