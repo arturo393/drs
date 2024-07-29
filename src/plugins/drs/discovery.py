@@ -3,10 +3,16 @@ import socket
 import sys
 import time
 
-from src.plugins.drs.definitions import OK, WARNING
-from src.plugins.drs.definitions import DRSRemoteSerialCommand
+from src.plugins.drs.definitions.nagios import OK, WARNING
+from src.plugins.drs.definitions.santone_commands import DRSRemoteSerialCommand
 from src.plugins.drs.director import Director
 from src.plugins.drs.dru import DRU
+
+fix_ip_end = 0x16
+fix_ip_end_opt_1 = 0x64
+fix_ip_end_opt_2 = 0x78
+fix_ip_end_opt_3 = 0x8C
+fix_ip_end_opt_4 = 0xA0
 
 class Discovery:
     """

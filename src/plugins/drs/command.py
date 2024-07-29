@@ -9,9 +9,9 @@ from typing import Tuple
 
 from src.plugins.drs.command_data import CommandData
 from src.plugins.drs.decoder import Decoder
-from src.plugins.drs.definitions import WARNING, CRITICAL, OK, UNKNOWN
-from src.plugins.drs.definitions import DRSMasterCommand, DRSRemoteCommand, DiscoveryCommand, DiscoveryCommand, DRSMasterCommand, CommBoardGroupCmd, DiscoveryRedBoardCommand, CommBoardCmd, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber, ResponseFlag
-
+from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
+from src.plugins.drs.definitions.santone_commands import DRSMasterCommand, DRSRemoteCommand, DiscoveryCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber, ResponseFlag
+from src.plugins.drs.definitions.ltel_commands import CommBoardGroupCmd, CommBoardCmd
 
 class Command:
     list = list()

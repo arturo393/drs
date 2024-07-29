@@ -1,7 +1,11 @@
 from crccheck.crc import Crc16Xmodem
 
 from src.plugins.drs.decoder import Decoder
-from src.plugins.drs.definitions import DONWLINK_MODULE, DataType, ResponseFlag
+from src.plugins.drs.definitions.santone_commands import DataType, ResponseFlag
+
+DONWLINK_MODULE = 0 << 7
+UPLINK_MODULE = 1 << 7
+
 
 class CommandData:
 
