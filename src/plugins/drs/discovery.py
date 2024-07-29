@@ -19,7 +19,7 @@ class Discovery:
     Class responsible for discovering and creating DRU devices.
     """
 
-    def w__init__(self, baud_rate, dru_connected):
+    def __init__(self, baud_rate, dru_connected):
 
         self.baud_rate = baud_rate
         self.dru_connected = dru_connected
@@ -220,7 +220,7 @@ class Discovery:
         """
 
         director = self._get_director_instance()
-        dru_connected = self._dru_connected_search()
+        dru_connected = self.dru_connected
 
         for opt in dru_connected:
             for dru in dru_connected[opt]:
