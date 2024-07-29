@@ -153,11 +153,13 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(CRITICAL)
 
+
         if device in discovery_commands:
             commandData = command.get_commandData_by_commandNumber(NearEndQueryCommandNumber.device_id)
             query = commandData.query
-            discovery = Discovery(command.parameters)
-            if discovery.search_and_create_dru() is not OK:
+            discovery = Discovery(command.parameters["hostname"] , command.parameters["device_id"])
+
+            if discovery.discover_remotes(command.parameters) is not OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
                 sys.exit(WARNING)
 

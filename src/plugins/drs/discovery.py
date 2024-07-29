@@ -13,15 +13,16 @@ class Discovery:
     Class responsible for discovering and creating DRU devices.
     """
 
-    def __init__(self, parameters):
+    def __init__(self, hostname, net_prefix):
+
+        self.hostname = hostname
+        self.net_prefix = net_prefix
         """
         Initialize the Discovery object with the provided parameters.
 
         Args:
             parameters (dict): A dictionary containing discovery parameters.
         """
-
-        self.parameters = parameters
 
         self.cmd_name_map = {
             1: DRSRemoteSerialCommand.optical_port_device_id_topology_1,
@@ -30,20 +31,6 @@ class Discovery:
             4: DRSRemoteSerialCommand.optical_port_device_id_topology_4,
         }
 
-    def search_and_create_dru(self):
-        """Discover DRU based on device type."""
-
-        device = self.parameters["device"]
-
-        if device == "discovery_ethernet":
-            self._discover_ethernet()
-        elif device == "discovery_serial":
-            self._discover_serial()
-        elif device == "discovery_redboard_serial":
-            self._discover_redboad_serial()
-        else:
-            return WARNING
-        return OK
 
     def _get_director_instance(self):
         """
@@ -53,10 +40,10 @@ class Discovery:
             Director: An instance of the Director class.
         """
 
-        hostname = socket.gethostname()
-        master_host = socket.gethostbyname(hostname)
+        _hostname = socket.gethostname()
+        _master_host = socket.gethostbyname(_hostname)
         # master_host = '192.168.60.73'
-        return Director(master_host)
+        return Director(_master_host)
 
     def _create_host_query(self, dru, device, imports, cmd_name=None, baud_rate=19200):
         """
@@ -148,7 +135,7 @@ class Discovery:
             # self._log_status(dru, message)
             self._deploy_if_needed(director, response)
 
-    def _dru_connected_search(self):
+    def _dru_connected_search(self, parameters):
         """
         Identify and gather information about connected DRU devices.
 
@@ -156,37 +143,48 @@ class Discovery:
         information about the connected DRU devices. It constructs a dictionary
         storing the discovered DRU devices and their corresponding information.
 
+        Args:
+            parameters (dict): A dictionary containing the necessary parameters.
+
         Returns:
             dict: A dictionary containing discovered DRU devices and their information.
         """
-
-        hostname = self.parameters["hostname"]
         dru_connected = {}
 
-        for opt in range(1, 5):
-            port_name = f"optical_port_devices_connected_{opt}"
-            optical_port_devices_connected = 0 if self.parameters[port_name] == "-" else self.parameters[port_name] + 1
+        for optical_port in range(1, 5):
+            port_name = f"optical_port_devices_connected_{optical_port}"
+            devices_connected = parameters[port_name]
+            if devices_connected == "-":
+                continue
 
-            dru_connected[f"opt{opt}"] = []
-            for connected in range(1, optical_port_devices_connected):
-                fix_ip_start = 0xC0
-                fix_ip_end_opt = [0, 100, 120, 140, 160]
-                net = self.parameters["device_id"]
-                id_key = f"optical_port_device_id_topology_{opt}"
-                # device_id = self.parameters[id_key][f"id_{connected}"]
-                device_id = self.parameters.get(id_key, {}).get(f"id_{connected}")
-                parent = self._get_parent_name(hostname, dru_connected, opt, connected)
-                ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
-
+            dru_connected[f"opt{optical_port}"] = []
+            for connected in range(1, int(devices_connected) + 1):
+                device_id = self._get_device_id(parameters, optical_port, connected)
                 if device_id == 0:
-                    pass
-                else:
-                    d = DRU(connected, opt, device_id, hostname, ip, parent)
-                    dru_connected[f"opt{opt}"].append(d)
-                    connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
-                    self.parameters[connected_ip_addr_name] = ip
+                    continue
+
+                ip = self._generate_ip(self.net_prefix, optical_port, connected)
+                parent = self._get_parent_name(self.hostname, dru_connected, optical_port, connected)
+
+                dru = DRU(connected, optical_port, device_id, self.hostname, ip, parent)
+                dru_connected[f"opt{optical_port}"].append(dru)
+
+                self._update_parameters_with_ip(parameters, optical_port, connected, ip)
 
         return dru_connected
+
+    def _get_device_id(self, parameters, opt, connected):
+        id_key = f"optical_port_device_id_topology_{opt}"
+        return parameters.get(id_key, {}).get(f"id_{connected}", 0)
+
+    def _generate_ip(self, net, opt, connected):
+        fix_ip_start = 0xC0
+        fix_ip_end_opt = [0, 100, 120, 140, 160]
+        return f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
+
+    def _update_parameters_with_ip(self, parameters, opt, connected, ip):
+        connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"
+        parameters[connected_ip_addr_name] = ip
 
     def _get_dru_connected_number(self):
         """
@@ -246,48 +244,73 @@ class Discovery:
             parent = None
         return parent
 
-    def _discover_device(self, device, imports, cmd_name=None):
+    def discover_remotes(self, parameters):
         """
         Handle device discovery for the specified device type.
 
-        This method performs the discovery process for the given device type.
+        This method performs the discovery process for DRU Ethernet devices.
         It identifies connected DRU devices, creates the necessary host objects
         in Icinga 2 Director, and updates the parameters dictionary with
         the execution time.
+        """
+        start_time = time.time()
+        director = self._get_director_instance()
+        dru_connected = self._dru_connected_search(parameters=parameters)
+
+        device_config = {
+            "type": "dru_ethernet",
+            "imports": ["ethernet-host-template"],
+            "baud_rate": parameters['baud_rate']
+        }
+
+        for opt, dru_list in dru_connected.items():
+            for dru in dru_list:
+                self._process_dru(director, dru, device_config)
+
+        parameters["dt"] = str(time.time() - start_time)
+
+        return OK
+
+    def _process_dru(self, director, dru, device_config):
+        """
+        Process a single DRU device.
 
         Args:
-            device (str): The type of device to discover (e.g., "dru_ethernet", "dru_serial_host").
-            imports (list): A list of imports for the host template.
-            cmd_name (str, optional): The command name for serial devices. Defaults to None.
+            director: The Director instance.
+            dru: The DRU object to process.
+            device_config (dict): Configuration for the device.
         """
+        cmd_name = self.cmd_name_map.get(dru.port)
+        dru.name = self._get_dru_name(director, dru)
 
-        dt = time.time()
-        director = self._get_director_instance()
-        dru_connected = self._dru_connected_search()
-        baud_rate = self.parameters['baud_rate']
+        director_query = self._create_host_query(dru, device_config["type"], device_config["imports"], cmd_name,
+                                                 device_config["baud_rate"])
+        update_query = self._create_host_query(dru, device_config["type"], device_config["imports"], cmd_name,
+                                               device_config["baud_rate"])
 
-        for opt in dru_connected:
+        response = director.create_host(director_query=director_query, update_query=update_query)
+        message = "Create -> Success" if response.status_code == 200 else f"Create -> {response.text}"
 
-            for dru in dru_connected[opt]:
-                if dru.port in self.cmd_name_map:
-                    cmd_name = self.cmd_name_map[dru.port]
-                response = director.get_dru_name(dru)
-                if response.status_code == 200:
-                    text = response.text
-                    data = json.loads(text)
-                    dru.name = data.get('display_name', dru.name)
+        self._process_response(dru, message, response, director)
+        if response.status_code == 200:
+            self._modify_service_status()
 
-                director_query = self._create_host_query(dru, device, imports, cmd_name, baud_rate)
-                update_query = self._create_host_query(dru, device, imports, cmd_name, baud_rate)
+    def _get_dru_name(self, director, dru):
+        """
+        Get the DRU name from the director.
 
-                response = director.create_host(director_query=director_query, update_query=update_query)
-                message = "Create -> Success" if response.status_code == 200 else "Create -> " + str(response.text)
+        Args:
+            director: The Director instance.
+            dru: The DRU object.
 
-                self._process_response(dru, message, response, director)
-                if response.status_code == 200:
-                    self._modify_service_status()
-
-        self.parameters["dt"] = str(time.time() - dt)
+        Returns:
+            str: The DRU name.
+        """
+        response = director.get_dru_name(dru)
+        if response.status_code == 200:
+            data = json.loads(response.text)
+            return data.get('display_name', dru.name)
+        return dru.name
 
     def _discover_ethernet(self):
         """
@@ -298,24 +321,8 @@ class Discovery:
 
         """
 
-        device = "dru_ethernet"
-        imports = ["ethernet-host-template"]
-        self._discover_device(device, imports)
 
-    def _discover_serial(self):
-        """
-        Perform discovery and creation for Serial DRU devices.
-
-        This method handles the discovery process for Serial-based DRU devices.
-        It creates the necessary host objects in Icinga 2 Director and deploys the changes.
-        Additionally, it updates the service status for the discovered devices.
-
-        """
-
-        device = "dru_serial_host"
-        imports = ["serial-host-template"]
-        cmd_name = "254"
-        self._discover_device(device, imports, cmd_name)
+        self._discover_device()
 
     def _modify_service_status(self):
         """
