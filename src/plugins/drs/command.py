@@ -156,6 +156,12 @@ class Command:
             sys.stderr.write(f"UNKNOWN - Invalid address format: {address}")
             sys.exit(UNKNOWN)
 
+    def get_commandData_by_commandNumber(self , command_number):
+        for commandData in self.list:
+            if commandData.command_number == command_number:
+                return commandData
+        return None
+
     def _create_group_query_command(self):
         """Creates a group query for the given device.
 
