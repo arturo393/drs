@@ -3516,7 +3516,6 @@ class Discovery:
                 ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
 
                 if device_id == 0:
-                    # Buscar entre los remotos
                     pass
                 else:
                     d = DRU(connected, opt, device_id, hostname, ip, parent)

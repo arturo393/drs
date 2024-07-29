@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import psutil
 import sys
-import math
 
 OK = 0
 WARNING = 1

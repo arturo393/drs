@@ -12,8 +12,11 @@
 import sys
 import argparse
 
-import drs as drs
-
+from src.plugins.drs.command import Command
+from src.plugins.drs.definitions import CRITICAL, OK, WARNING
+from src.plugins.drs.definitions import NearEndQueryCommandNumber
+from src.plugins.drs.discovery import Discovery
+from src.plugins.drs.plugin_output import PluginOutput
 
 # DMU_PORT = 'COM4'
 # DRU_PORT = 'COM2'
@@ -65,7 +68,7 @@ def args_check():
         ap.add_argument("-l", "--cmd_body_length", required=False,
                         help="hostname es requerido", default="0")
         ap.add_argument("-c", "--cmd_name", required=False, help="cmd_name es requerido",
-                        default=drs.NearEndQueryCommandNumber.device_id)
+                        default=NearEndQueryCommandNumber.device_id)
         ap.add_argument("-cd", "--cmd_data", required=False,
                         help="bandwidth es requerido", default=-1)
         ap.add_argument("-ct", "--cmd_type", required=False,
@@ -115,7 +118,7 @@ def args_check():
         # print help information and exit:
         sys.stderr.write("CRITICAL - " + str(e) + "\n")
         cmd_help()
-        sys.exit(drs.CRITICAL)
+        sys.exit(CRITICAL)
 
     return args
 
@@ -135,34 +138,34 @@ def main():
     all_commands = discovery_commands + dru_devices + dmu_devices
 
     if device in all_commands:
-        command = drs.Command(args=args)
+        command = Command(args=args)
         exit_code, message = command.create_command(cmd_type)
-        if exit_code == drs.CRITICAL:
+        if exit_code == CRITICAL:
             sys.stderr.write(f"CRITICAL - {message}")
-            sys.exit(drs.CRITICAL)
+            sys.exit(CRITICAL)
 
         exit_code, message = command.transmit_and_receive()
-        if exit_code == drs.CRITICAL:
+        if exit_code == CRITICAL:
             sys.stderr.write(f"CRITICAL - {message}")
-            sys.exit(drs.CRITICAL)
+            sys.exit(CRITICAL)
 
         if not command.extract_and_decode_received():
             sys.stderr.write(f"CRITICAL - no decoded data")
-            sys.exit(drs.CRITICAL)
+            sys.exit(CRITICAL)
 
         if device in discovery_commands:
-            discovery = drs.Discovery(command.parameters)
-            if discovery.search_and_create_dru() is not drs.OK:
+            discovery = Discovery(command.parameters)
+            if discovery.search_and_create_dru() is not OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
-                sys.exit(drs.WARNING)
+                sys.exit(WARNING)
 
-        plugin_output = drs.PluginOutput(command.parameters)
+        plugin_output = PluginOutput(command.parameters)
         exit_code, plugin_output_message = plugin_output.create_message()
         sys.stderr.write(plugin_output_message)
         sys.exit(exit_code)
     else:
         sys.stderr.write("\nCRITICAL - " + "No drs device detected")
-        sys.exit(drs.CRITICAL)
+        sys.exit(CRITICAL)
 
 
 if __name__ == "__main__":
