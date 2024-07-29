@@ -17,6 +17,7 @@ from src.plugins.drs.definitions import CRITICAL, OK, WARNING
 from src.plugins.drs.definitions import NearEndQueryCommandNumber
 from src.plugins.drs.discovery import Discovery
 from src.plugins.drs.plugin_output import PluginOutput
+from src.plugins.drs.parameters import Parameters
 
 # DMU_PORT = 'COM4'
 # DRU_PORT = 'COM2'
@@ -155,10 +156,10 @@ def main():
 
 
         if device in discovery_commands:
-            commandData = command.get_commandData_by_commandNumber(NearEndQueryCommandNumber.device_id)
-            query = commandData.query
-            discovery = Discovery(command.parameters["hostname"] , command.parameters["device_id"])
-
+            deviceIdcommandData = command.get_commandData_by_commandNumber(NearEndQueryCommandNumber.device_id)
+            parameters = Parameters(command.parameters)
+            dru_connected = parameters.get_connected_dru()
+            discovery = Discovery(parameters.parameters['baud_rate'], dru_connected)
             if discovery.discover_remotes(command.parameters) is not OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
                 sys.exit(WARNING)
