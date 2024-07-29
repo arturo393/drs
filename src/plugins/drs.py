@@ -3508,7 +3508,10 @@ class Discovery:
                 parent = self._get_parent_name(hostname, dru_connected, opt, connected)
                 ip = f"{fix_ip_start}.{net}.{fix_ip_end_opt[opt] + connected - 1}"
 
-                if device_id != 0:
+                if device_id == 0:
+                    # Buscar entre los remotos
+                    pass
+                else:
                     d = DRU(connected, opt, device_id, hostname, ip, parent)
                     dru_connected[f"opt{opt}"].append(d)
                     connected_ip_addr_name = f"optical_port_connected_ip_addr_{opt}{connected}"

@@ -50,18 +50,28 @@ def args_check():
     # Add the arguments to the parser
     # ap.add_argument("-h", "--help", required=False,  help="help")
     try:
-        ap.add_argument("-a", "--address", required=False, help="address es requerido", default="192.168.11.22")
-        ap.add_argument("-d", "--device", required=True, help="device es requerido", default="dmu")
-        ap.add_argument("-n", "--hostname", required=True, help="hostname es requerido", default="dmu0")
-        ap.add_argument("-op", "--optical_port", required=False, help="hostname es requerido", default="0")
-        ap.add_argument("-dn", "--device_number", required=False, help="device_number es requerido", default="0")
-        ap.add_argument("-b", "--bandwidth", required=False, help="bandwidth es requerido", default=0)
-        ap.add_argument("-l", "--cmd_body_length", required=False, help="hostname es requerido", default="0")
+        ap.add_argument("-a", "--address", required=False,
+                        help="address es requerido", default="192.168.11.22")
+        ap.add_argument("-d", "--device", required=True,
+                        help="device es requerido", default="dmu")
+        ap.add_argument("-n", "--hostname", required=True,
+                        help="hostname es requerido", default="dmu0")
+        ap.add_argument("-op", "--optical_port", required=False,
+                        help="hostname es requerido", default="0")
+        ap.add_argument("-dn", "--device_number", required=False,
+                        help="device_number es requerido", default="0")
+        ap.add_argument("-b", "--bandwidth", required=False,
+                        help="bandwidth es requerido", default=0)
+        ap.add_argument("-l", "--cmd_body_length", required=False,
+                        help="hostname es requerido", default="0")
         ap.add_argument("-c", "--cmd_name", required=False, help="cmd_name es requerido",
                         default=drs.NearEndQueryCommandNumber.device_id)
-        ap.add_argument("-cd", "--cmd_data", required=False, help="bandwidth es requerido", default=-1)
-        ap.add_argument("-ct", "--cmd_type", required=False, help="cmd_type es requerido", default="unknow")
-        ap.add_argument("-br", "--baud_rate", required=False, help="baud rate es requerido", default=19200)
+        ap.add_argument("-cd", "--cmd_data", required=False,
+                        help="bandwidth es requerido", default=-1)
+        ap.add_argument("-ct", "--cmd_type", required=False,
+                        help="cmd_type es requerido", default="unknow")
+        ap.add_argument("-br", "--baud_rate", required=False,
+                        help="baud rate es requerido", default=19200)
         ap.add_argument("-wut", "--warning_uplink_threshold", required=False,
                         help="warning_uplink_threshold es requerido", default=200)
         ap.add_argument("-cut", "--critical_uplink_threshold", required=False,
@@ -117,8 +127,14 @@ def main():
     device = args['device']
     cmd_type = args['cmd_type']
 
-    if device in ["dru_ethernet", "dmu_ethernet", "discovery_ethernet", 'discovery_serial', 'dmu_serial_host',
-                  'dmu_serial_service', 'dru_serial_host', 'dru_serial_service', 'discovery_redboard_serial']:
+    discovery_commands = ["discovery_ethernet",
+                          "discovery_serial", 'discovery_redboard_serial']
+    dru_devices = ["dru_ethernet", 'dru_serial_host', 'dru_serial_service']
+    dmu_devices = ["dmu_ethernet", 'dmu_serial_host', 'dmu_serial_service']
+
+    all_commands = discovery_commands + dru_devices + dmu_devices
+
+    if device in all_commands:
         command = drs.Command(args=args)
         exit_code, message = command.create_command(cmd_type)
         if exit_code == drs.CRITICAL:
@@ -134,7 +150,7 @@ def main():
             sys.stderr.write(f"CRITICAL - no decoded data")
             sys.exit(drs.CRITICAL)
 
-        if device in ["discovery_ethernet", "discovery_serial", 'discovery_redboard_serial']:
+        if device in discovery_commands:
             discovery = drs.Discovery(command.parameters)
             if discovery.search_and_create_dru() is not drs.OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
