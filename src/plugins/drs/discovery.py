@@ -1,4 +1,5 @@
 import json
+import requests
 import socket
 import sys
 import time
@@ -14,16 +15,13 @@ fix_ip_end_opt_2 = 0x78
 fix_ip_end_opt_3 = 0x8C
 fix_ip_end_opt_4 = 0xA0
 
+
 class Discovery:
     """
     Class responsible for discovering and creating DRU devices.
     """
 
     def __init__(self, baud_rate, dru_connected):
-
-        self.baud_rate = baud_rate
-        self.dru_connected = dru_connected
-
         """
         Initialize the Discovery object with the provided parameters.
 
@@ -31,13 +29,15 @@ class Discovery:
             parameters (dict): A dictionary containing discovery parameters.
         """
 
+        self.baud_rate = baud_rate
+        self.dru_connected = dru_connected
+
         self.cmd_name_map = {
             1: DRSRemoteSerialCommand.optical_port_device_id_topology_1,
             2: DRSRemoteSerialCommand.optical_port_device_id_topology_2,
             3: DRSRemoteSerialCommand.optical_port_device_id_topology_3,
             4: DRSRemoteSerialCommand.optical_port_device_id_topology_4,
         }
-
 
     def _get_director_instance(self):
         """
@@ -47,12 +47,12 @@ class Discovery:
             Director: An instance of the Director class.
         """
 
-        _hostname = socket.gethostname()
-        _master_host = socket.gethostbyname(_hostname)
+        hostname = socket.gethostname()
+        master_host = socket.gethostbyname(hostname)
         # master_host = '192.168.60.73'
-        return Director(_master_host)
+        return Director(master_host)
 
-    def _create_host_query(self, dru, device, imports, cmd_name=None, baud_rate=19200):
+    def _create_host_query(self, dru: DRU, device: str, imports: list, cmd_name=None, baud_rate: int = 19200):
         """
         Generate a query for creating or updating hosts in Icinga 2 Director.
 
@@ -61,6 +61,7 @@ class Discovery:
             device (str): The type of device to discover (e.g., "dru_ethernet", "dru_serial_host").
             imports (list): A list of imports for the host template.
             cmd_name (str, optional): The command name for serial devices. Defaults to None.
+            baud_rate (int): Baud rate.
 
         Returns:
             dict: A query dictionary for creating or updating hosts in Icinga 2 Director.
@@ -116,7 +117,7 @@ class Discovery:
 
         sys.stderr.write(f"{dru} {message} \n")
 
-    def _deploy_if_needed(self, director, response):
+    def _deploy_if_needed(self, response: requests.Response, director: Director):
         """
         Deploy changes to Icinga 2 Director if the response status code indicates a need to deploy.
 
@@ -128,22 +129,7 @@ class Discovery:
         if response.status_code != 304:
             director.deploy()
 
-    def _process_response(self, dru, message, response, director):
-        """
-        Process and log the response from Icinga 2 Director, and deploy changes if necessary.
-
-        Args:
-            dru (DRU): A DRU object representing the connected DRU device.
-            message (str): The status message to log.
-            response (requests.Response): The response from the API call.
-            director (Director): An instance of the Director class.
-        """
-        if response.status_code != 304:
-            # self._log_status(dru, message)
-            self._deploy_if_needed(director, response)
-
-
-    def discover_remotes(self, parameters):
+    def discover_remotes(self, parameters: dict):
         """
         Handle device discovery for the specified device type.
 
@@ -161,7 +147,7 @@ class Discovery:
             "baud_rate": self.baud_rate
         }
 
-        for opt, dru_list in self.dru_connected.items():
+        for _, dru_list in self.dru_connected.items():
             for dru in dru_list:
                 self._process_dru(director, dru, device_config)
 
@@ -169,7 +155,7 @@ class Discovery:
 
         return OK
 
-    def _process_dru(self, director, dru, device_config):
+    def _process_dru(self, director: Director, dru: DRU, device_config: dict):
         """
         Process a single DRU device.
 
@@ -186,14 +172,15 @@ class Discovery:
         update_query = self._create_host_query(dru, device_config["type"], device_config["imports"], cmd_name,
                                                device_config["baud_rate"])
 
-        response = director.create_host(director_query=director_query, update_query=update_query)
-        message = "Create -> Success" if response.status_code == 200 else f"Create -> {response.text}"
+        response = director.create_host(
+            director_query=director_query, update_query=update_query)
+        # message = "Create -> Success" if response.status_code == 200 else f"Create -> {response.text}"
 
-        self._process_response(dru, message, response, director)
+        self._deploy_if_needed(response, director)
         if response.status_code == 200:
             self._modify_service_status()
 
-    def _get_dru_name(self, director, dru):
+    def _get_dru_name(self, director: Director, dru: DRU):
         """
         Get the DRU name from the director.
 
@@ -225,7 +212,8 @@ class Discovery:
         for opt in dru_connected:
             for dru in dru_connected[opt]:
                 director_query = self._update_service_query(dru)
-                response = director.modify_service(director_query=director_query)
+                response = director.modify_service(
+                    director_query=director_query)
 
                 message = (
                     f"Success - Service modified"
@@ -233,5 +221,4 @@ class Discovery:
                     else f"Error - {response.text}"
                 )
 
-                self._process_response(dru, message, response, director)
-
+                self._deploy_if_needed(response, director)

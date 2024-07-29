@@ -12,7 +12,7 @@ class Parameters:
         self.net_prefix = parameters["device_id"]
         self.hostname = parameters["hostname"]
 
-    def get_connected_dru(self):
+    def get_connected_dru(self) -> dict:
         """
         Identify and gather information about connected DRU devices.
 

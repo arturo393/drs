@@ -5,6 +5,7 @@ import sys
 from src.plugins.drs.definitions.nagios import CRITICAL, WARNING
 from src.plugins.drs.dru import DRU
 
+
 class Director:
     director_api_login = "admin"
     director_api_password = "Admin.123"
@@ -12,7 +13,7 @@ class Director:
     def __init__(self, master_host):
         self.master_host = master_host
 
-    def deploy(self):
+    def deploy(self) -> requests.Response:
         director_url = "http://" + self.master_host + "/director/config/deploy"
         director_headers = {
             'Accept': 'application/json',
@@ -22,7 +23,8 @@ class Director:
         try:
             q = requests.post(director_url,
                               headers=director_headers,
-                              auth=(self.director_api_login, self.director_api_password),
+                              auth=(self.director_api_login,
+                                    self.director_api_password),
                               verify=False,
                               timeout=1)
         except requests.exceptions.RequestException as e:
@@ -31,7 +33,7 @@ class Director:
 
         return q
 
-    def create_host(self, director_query: dict, update_query: dict):
+    def create_host(self, director_query: dict, update_query: dict) -> requests.Response:
 
         request_url = "http://" + self.master_host + "/director/host"
         headers = {
@@ -43,7 +45,8 @@ class Director:
             q = requests.post(request_url,
                               headers=headers,
                               data=json.dumps(director_query),
-                              auth=(self.director_api_login, self.director_api_password),
+                              auth=(self.director_api_login,
+                                    self.director_api_password),
                               verify=False,
                               timeout=1)
 
@@ -53,21 +56,22 @@ class Director:
                 q = requests.post(request_url,
                                   headers=headers,
                                   data=json.dumps(update_query),
-                                  auth=(self.director_api_login, self.director_api_password),
+                                  auth=(self.director_api_login,
+                                        self.director_api_password),
                                   verify=False,
                                   timeout=1)
             # sys.stderr.write(f"{q.status_code} {q.text}")
 
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write(f"CRITICAL - {e}")
-            sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
             sys.stderr.write(f"WARNING - {e}")
             sys.exit(WARNING)
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
         # print(json.dumps(q.json(),indent=2))
         return q
 
-    def modify_service(self, director_query: dict):
+    def modify_service(self, director_query: dict) -> requests.Response:
 
         request_url = "http://" + self.master_host + "/director/service?name=Status"
         headers = {
@@ -79,20 +83,21 @@ class Director:
             q = requests.post(request_url,
                               headers=headers,
                               data=json.dumps(director_query),
-                              auth=(self.director_api_login, self.director_api_password),
+                              auth=(self.director_api_login,
+                                    self.director_api_password),
                               verify=False,
                               timeout=1)
 
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write(f"CRITICAL - {e}")
-            sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
             sys.stderr.write(f"WARNING - {e}")
             sys.exit(WARNING)
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
         # print(json.dumps(q.json(),indent=2))
         return q
 
-    def create_dru_host(self, dru: DRU, comm_type: int, type: int, imports, device):
+    def create_dru_host(self, dru: DRU, comm_type: int, type: int, imports, device) -> requests.Response:
 
         director_query = {
             'object_name': dru.hostname,
@@ -120,7 +125,8 @@ class Director:
             q = requests.post(request_url,
                               headers=headers,
                               data=json.dumps(director_query),
-                              auth=(self.director_api_login, self.director_api_password),
+                              auth=(self.director_api_login,
+                                    self.director_api_password),
                               verify=False,
                               timeout=1)
             # sys.stderr.write(f"{q.status_code} {q.text}")
@@ -141,25 +147,27 @@ class Director:
 
                     }
                 }
-                request_url = "http://" + self.master_host + "/director/host?name=" + dru.hostname
+                request_url = "http://" + self.master_host + \
+                    "/director/host?name=" + dru.hostname
                 q = requests.post(request_url,
                                   headers=headers,
                                   data=json.dumps(update_query),
-                                  auth=(self.director_api_login, self.director_api_password),
+                                  auth=(self.director_api_login,
+                                        self.director_api_password),
                                   verify=False,
                                   timeout=1)
                 # sys.stderr.write(f"{q.status_code} {q.text}")
 
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write(f"CRITICAL - {e}")
-            sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
             sys.stderr.write(f"WARNING - {e}")
             sys.exit(WARNING)
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
         # print(json.dumps(q.json(),indent=2))
         return q
 
-    def get_dru_name(self, dru: DRU):
+    def get_dru_name(self, dru: DRU) -> requests.Response:
 
         # Construct query parameters as a string
         query_params = f"name={dru.hostname}"
@@ -170,16 +178,16 @@ class Director:
         try:
             q = requests.get(request_url,
                              headers=headers,
-                             auth=(self.director_api_login, self.director_api_password),
+                             auth=(self.director_api_login,
+                                   self.director_api_password),
                              verify=False,
                              timeout=1)
 
-
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write(f"CRITICAL - {e}")
-            sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
             sys.stderr.write(f"WARNING - {e}")
             sys.exit(WARNING)
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
         # print(json.dumps(q.json(),indent=2))
         return q
