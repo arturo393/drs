@@ -4,7 +4,7 @@ import sys
 
 from src.plugins.drs.definitions.nagios import CRITICAL, WARNING
 
-class Icinga_Api:
+class IcingaApi:
     icinga_api_login = "root"
     icinga_api_password = "Admin.123"
 
@@ -27,12 +27,12 @@ class Icinga_Api:
                               verify=False,
                               timeout=1)
 
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write(f"CRITICAL - {e}")
-            sys.exit(CRITICAL)
         except requests.exceptions.ConnectTimeout as e:
             sys.stderr.write(f"WARNING - {e}")
             sys.exit(WARNING)
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"CRITICAL - {e}")
+            sys.exit(CRITICAL)
         # print(json.dumps(q.json(),indent=2))
         return q
 
