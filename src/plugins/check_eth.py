@@ -151,6 +151,8 @@ def main():
             sys.exit(drs.CRITICAL)
 
         if device in discovery_commands:
+            commandData = command.get_commandData_by_commandNumber(drs.NearEndQueryCommandNumber.device_id)
+            query = commandData.query
             discovery = drs.Discovery(command.parameters)
             if discovery.search_and_create_dru() is not drs.OK:
                 sys.stderr.write(f"WARNING  - no output message for {device}")
