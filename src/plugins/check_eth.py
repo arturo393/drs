@@ -12,7 +12,7 @@
 import sys
 import argparse
 
-from src.plugins.drs.command import Command
+from src.plugins.drs.command_executor import CommandExecutor
 from src.plugins.drs.definitions.nagios import CRITICAL, OK, WARNING
 from src.plugins.drs.definitions.santone_commands import NearEndQueryCommandNumber
 from src.plugins.drs.discovery import Discovery
@@ -139,22 +139,9 @@ def main():
     all_commands = discovery_commands + dru_devices + dmu_devices
 
     if device in all_commands:
-        command = Command(args=args)
-        exit_code, message = command.create_command(cmd_type)
-        if exit_code == CRITICAL:
-            sys.stderr.write(f"CRITICAL - {message}")
-            sys.exit(CRITICAL)
-
-        exit_code, message = command.transmit_and_receive()
-        if exit_code == CRITICAL:
-            sys.stderr.write(f"CRITICAL - {message}")
-            sys.exit(CRITICAL)
-
-        if not command.extract_and_decode_received():
-            sys.stderr.write(f"CRITICAL - no decoded data")
-            sys.exit(CRITICAL)
-
-
+        executor = CommandExecutor(args)
+        executor.execute(cmd_type)
+        command = executor.get_command()
         if device in discovery_commands:
             deviceIdcommandData = command.get_commandData_by_commandNumber(NearEndQueryCommandNumber.device_id)
             parameters = Parameters(command.parameters)
