@@ -7,11 +7,15 @@ import sys
 from typing import Optional
 from typing import Tuple
 
-from src.plugins.drs.command_data import CommandData
+from src.plugins.drs.comunication_protocol import ComunicationProtocol
 from src.plugins.drs.decoder import Decoder
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
-from src.plugins.drs.definitions.santone_commands import DRSMasterCommand, DRSRemoteCommand, DiscoveryCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber, ResponseFlag
+from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber, ResponseFlag
 from src.plugins.drs.definitions.ltel_commands import CommBoardGroupCmd, CommBoardCmd
+from src.plugins.drs.ltel_protocol import LtelProtocol
+from src.plugins.drs.ltel_protocol_group import LTELProtocolGroup
+from src.plugins.drs.santone_protocol import SantoneProtocol
+
 
 class Command:
     list = list()
@@ -62,6 +66,8 @@ class Command:
         self.parameters['optical_port'] = opt
         self.parameters['baud_rate'] = int(args['baud_rate'])
 
+
+
     def create_command(self, cmd_type):
         """Create command based on type.
 
@@ -92,7 +98,7 @@ class Command:
         Returns:
             int: The length of the command frame, in bytes.
         """
-        cmd_data = CommandData()
+        cmd_data = ComunicationProtocol()
 
         dru = self.parameters['device_number']
         opt = self.parameters['optical_port']
@@ -183,36 +189,24 @@ class Command:
         if device in cmd_name_map:
             cmd_group = cmd_name_map[device]
             if cmd_group == CommBoardCmd:
+
                 opt = self.parameters['optical_port']
                 dru = self.parameters['device_number']
                 dru_id = f"{opt}{dru}"
                 for cmd_name in cmd_group:
-                    cmd_data = CommandData()
-                    cmd_data.generate_ltel_comunication_board_frame(
-                        dru_id=dru_id, cmd_name=cmd_name, message_type=0x02)
-                    if cmd_data.query != "":
-                        self.list.append(cmd_data)
+                    LtelProtocol(dru_id, cmd_name, 0x02)
+                    self.list.append(LtelProtocol(dru_id, cmd_name, 0x02))
 
             elif cmd_group == CommBoardGroupCmd:
                 opt = self.parameters['optical_port']
                 dru = self.parameters['device_number']
                 dru_id = f"{opt}{dru}"
                 for cmd in cmd_group:
-                    cmd_data = CommandData()
-                    cmd_data.generate_comm_board_group_frame(
-                        dru_id=dru_id, cmd_name_group=cmd)
-                    self.list.append(cmd_data)
+                    self.list.append(LTELProtocolGroup(dru_id, cmd))
             else:
                 for cmd_name in cmd_group:
-                    cmd_data = CommandData()
-                    frame_len = cmd_data.generate_ifboard_frame(
-                        command_number=cmd_name,
-                        command_body_length=0x00,
-                        command_data=-1
-                    )
-                    if frame_len > 0:
-                        self.list.append(cmd_data)
-
+                    santone_protocol = SantoneProtocol(cmd_name, 0x00, -1)
+                    self.list.append(santone_protocol)
             return len(self.list)
         else:
             self._exit_messagge(UNKNOWN, message=f"No commands created")
@@ -229,7 +223,7 @@ class Command:
         command_number = self.get_command_value()
         command_body_length = self.parameters['command_body_length']
         command_data = self.parameters['command_data']
-        cmd_data = CommandData()
+        cmd_data = ComunicationProtocol()
         frame_len = cmd_data.generate_ifboard_frame(
             command_number=command_number,
             command_body_length=command_body_length,
@@ -274,17 +268,16 @@ class Command:
         rt = time.time()
         reply_counter = 0
         exception_message = "CRITICAL - "
-        for cmd_name in self.list:
+        for message in self.list:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((address, self.tcp_port))
                     sock.settimeout(2)
-                    data_bytes = bytearray.fromhex(cmd_name.query)
-                    sock.sendall(data_bytes)
+                    sock.sendall(message.get_command_query_as_bytearray())
                     data_received = sock.recv(1024)
                     sock.close()
-                    cmd_name.reply = data_received
-                    reply_counter = reply_counter + 1
+                    if message.save_if_valid(data_received):
+                        reply_counter = reply_counter + 1
             except Exception as e:
                 return 0
 
@@ -468,7 +461,7 @@ class Command:
         """
         decoded_commands = 0
         for command in self.list:
-            if command.reply is None:
+            if command.has_reply():
                 command.reply_command_data = None
                 command.message = None
                 continue
@@ -486,7 +479,7 @@ class Command:
 
         return decoded_commands
 
-    def _decode_ifboard_command(self, command: CommandData) -> int:
+    def _decode_ifboard_command(self, command: ComunicationProtocol) -> int:
         reply_len = len(command.reply)
         query_len = len(command.query)
         if self.parameters['cmd_type'] == 'group_query':
@@ -525,7 +518,7 @@ class Command:
         Decodes a LtelDru command and handles the processing of command data.
 
         Args:
-            command (CommandData): The command to decode.
+            command (ComunicationProtocol): The command to decode.
 
         Returns:
             int: The number of decoded commands.
@@ -563,12 +556,12 @@ class Command:
                 f"UNKNOWN - An error occurred during command decoding: {e}")
             sys.exit(UNKNOWN)
 
-    def _decode_ltel_command(self, command: CommandData) -> int:
+    def _decode_ltel_command(self, command: ComunicationProtocol) -> int:
         """
         Decodes a LtelDru command and handles the processing of command data.
 
         Args:
-            command (CommandData): The command to decode.
+            command (ComunicationProtocol): The command to decode.
 
         Returns:
             int: The number of decoded commands.
