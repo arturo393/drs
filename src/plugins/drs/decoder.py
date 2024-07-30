@@ -10,7 +10,8 @@ class Decoder:
             print(f" Command number {command_number} is not supported.")
             return {}
 
-    def ifboard_decode(self, command_number, command_body):
+    @staticmethod
+    def ifboard_decode(command_number, command_body):
         """Decodes a command number."""
         try:
             return getattr(Decoder, f"_decode_{command_number.name}")(command_body)
@@ -18,6 +19,7 @@ class Decoder:
             print(f" Command number {command_number} is not supported.")
             return {}
 
+    @staticmethod
     def ltel_decode(command_number, command_body):
         """Decodes a command number."""
         try:
@@ -26,6 +28,7 @@ class Decoder:
             print(f" Command number {command_number} is not supported.")
             return {}
 
+    @staticmethod
     def comm_board_decode(command_number, command_body):
         """Decodes a command number."""
         try:

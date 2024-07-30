@@ -278,6 +278,7 @@ class Command:
                     sock.close()
                     if message.save_if_valid(data_received):
                         reply_counter = reply_counter + 1
+                    time.sleep(0.1)
             except Exception as e:
                 return 0
 
@@ -461,21 +462,11 @@ class Command:
         """
         decoded_commands = 0
         for command in self.list:
-            if command.has_reply():
-                command.reply_command_data = None
-                command.message = None
-                continue
-
-            if command.command_number in CommBoardCmd:
-                decoded_commands += self._decode_ltel_command(command)
-            elif command.command_number in CommBoardGroupCmd:
-                decoded_commands += self._decode_comm_board_command(command)
-            else:
-                decoded_commands += self._decode_ifboard_command(command)
-
+            value = command.get_reply_value()
             # Update the parameters with the decoded data.
-            if command.message:
-                self.parameters.update(command.message)
+            if value:
+                decoded_commands += 1
+                self.parameters.update(value)
 
         return decoded_commands
 
@@ -541,8 +532,7 @@ class Command:
             if response_flag == ResponseFlag.SUCCESS:
                 command.reply_command_data = command_body
                 try:
-                    command.message = Decoder.comm_board_decode(command.command_number,
-                                                                command_body)
+                    command.message = Decoder.comm_board_decode(command_body)
                 except (TypeError, ValueError) as e:
                     sys.stderr.write(
                         f"UNKNOWN - Cannot decode command number: {e}")
@@ -593,8 +583,7 @@ class Command:
                 command.reply_command_data = command_body
                 # Attempt to decode command number
                 try:
-                    command.message = Decoder.ltel_decode(command.command_number,
-                                                          command_body)
+                    command.message = Decoder.ltel_decode(command_body)
                 except (TypeError, ValueError) as e:
                     sys.stderr.write(
                         f"UNKNOWN - Cannot decode command number: {e}")

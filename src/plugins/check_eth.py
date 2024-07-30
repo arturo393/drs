@@ -143,7 +143,6 @@ def main():
         executor.execute(cmd_type)
         command = executor.get_command()
         if device in discovery_commands:
-            deviceIdcommandData = command.get_commandData_by_commandNumber(NearEndQueryCommandNumber.device_id)
             parameters = Parameters(command.parameters)
             dru_connected = parameters.get_connected_dru()
             discovery = Discovery(command.parameters['baud_rate'], dru_connected)

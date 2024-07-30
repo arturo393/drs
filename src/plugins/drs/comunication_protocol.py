@@ -11,27 +11,7 @@ UPLINK_MODULE = 1 << 7
 
 class ComunicationProtocol:
     def __init__(self):
-        self._reply_command_data = None
-        self._reply = None
-        self._reply_bytes = None
-        self._command_type = None
-        self._data = None
-        self._dru_id = None
-        self._length = None
-        self._code = None
-        self._data = None
-        self._module_address = None
-        self._module_link = None
-        self._module_function = None
-        self._command_number = None
-        self._command_data = None
-        self._response_flag = None
-        self._command_body_length = None
-        self._query = None
-        self._query_bytes = None
-        self._message = None
-        self._decoder = Decoder()
-        self._message_type = None
+        pass
 
     @abstractmethod
     def generate_frame(self):
@@ -42,11 +22,34 @@ class ComunicationProtocol:
         pass
 
     @abstractmethod
-    def is_valid_reply(self, reply):
+    def _is_valid_reply(self, reply):
         """
         Abstract method to generate a frame.
         This method should be implemented by all subclasses.
         """
+        pass
+
+    @abstractmethod
+    def get_reply_value(self):
+        if self.has_reply():
+            self._extract_data_from_reply()
+            decoded_reply = self._decode()
+        else:
+            decoded_reply = None
+
+        return decoded_reply
+
+    @abstractmethod
+    def _decode(self):
+        """Decodes a command number."""
+        try:
+            return getattr(Decoder, f"_decode_{self._command_number.name}")(self._command_body)
+        except AttributeError:
+            print(f" Command number {self._command_number} is not supported.")
+            return {}
+
+    @abstractmethod
+    def _extract_data_from_reply(self):
         pass
 
     def __str__(self):
@@ -109,7 +112,7 @@ class ComunicationProtocol:
     def get_command_query_as_bytearray(self):
         return bytearray.fromhex(self.generate_frame())
 
-    def set_reply_message(self, reply: bytearray):
+    def _set_reply_message(self, reply: bytearray):
         self._reply = reply
 
     def has_reply(self) -> bool:
@@ -120,8 +123,8 @@ class ComunicationProtocol:
         return self._reply is not None and len(self._reply) > 0
 
     def save_if_valid(self, reply: bytearray) -> bool:
-        if self.is_valid_reply(reply):
-            self.set_reply_message(reply)
+        if self._is_valid_reply(reply):
+            self._set_reply_message(reply)
             return True
         return False
 
