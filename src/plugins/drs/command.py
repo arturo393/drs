@@ -470,48 +470,6 @@ class Command:
 
         return decoded_commands
 
-    def _decode_comm_board_command(self, command):
-        """
-        Decodes a LtelDru command and handles the processing of command data.
-
-        Args:
-            command (ComunicationProtocol): The command to decode.
-
-        Returns:
-            int: The number of decoded commands.
-        """
-        try:
-            if not command.reply:
-                return 0
-            respond_flag_index = 10
-            cmd_data_start_index = 14
-            cmd_data_end_index = len(command.reply_bytes) - 4
-            try:
-                response_flag = command.reply_bytes[respond_flag_index]
-                command_body = command.reply_bytes[cmd_data_start_index:cmd_data_end_index]
-                command_body_str = command_body.hex()
-            except IndexError as e:
-                sys.stderr.write(
-                    f"UNKNOWN - command.reply is too short for {command.command_number}: {e}")
-                sys.exit(UNKNOWN)
-
-            if response_flag == ResponseFlag.SUCCESS:
-                command.reply_command_data = command_body
-                try:
-                    command.message = Decoder.comm_board_decode(command_body)
-                except (TypeError, ValueError) as e:
-                    sys.stderr.write(
-                        f"UNKNOWN - Cannot decode command number: {e}")
-                    sys.exit(UNKNOWN)
-                return 1
-            else:
-                return 0
-
-        except Exception as e:
-            sys.stderr.write(
-                f"UNKNOWN - An error occurred during command decoding: {e}")
-            sys.exit(UNKNOWN)
-
     def setSerial(self, port, baudrate):
         for times in range(3):
             try:

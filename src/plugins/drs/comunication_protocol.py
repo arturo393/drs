@@ -45,10 +45,20 @@ class CommunicationProtocol(ABC):
         except AttributeError:
             print(f"Command number {self._command_number} is not supported.")
 
-    @abstractmethod
-    def _get_cmd_body_length_index(self) -> int:
-        """Return the index of the command body length in the reply."""
-        pass
+    def _extract_data_from_reply(self) -> bool:
+        """Extract data from the reply using protocol-specific indices."""
+        if not self._reply:
+            return False
+
+        try:
+            cmd_data_index = self._get_cmd_data_index()
+            cmd_data_end_index = len(self._reply) - self._get_end_adjustment()
+            self._command_body_length = self._get_command_body_length()
+            self._command_body = self._reply[cmd_data_index:cmd_data_end_index]
+            return True
+        except IndexError:
+            print(f"Error extracting data from reply: IndexError")
+            return False
 
     @abstractmethod
     def _get_cmd_data_index(self) -> int:
@@ -56,26 +66,14 @@ class CommunicationProtocol(ABC):
         pass
 
     @abstractmethod
-    def _get_length_adjustment(self) -> int:
-        """Return the adjustment to be made to the command body length."""
+    def _get_end_adjustment(self) -> int:
+        """Return the adjustment to be made at the end of the reply."""
         pass
 
-    def _extract_data_from_reply(self) -> bool:
-        """Extract data from the reply using protocol-specific indices."""
-        if not self._reply:
-            return False
-
-        try:
-            cmd_body_length_index = self._get_cmd_body_length_index()
-            cmd_data_index = self._get_cmd_data_index()
-            length_adjustment = self._get_length_adjustment()
-
-            self._command_body_length = self._reply[cmd_body_length_index] - length_adjustment
-            self._command_body = self._reply[cmd_data_index:cmd_data_index + self._command_body_length]
-            return True
-        except IndexError:
-            print(f"Error extracting data from reply: IndexError")
-            return False
+    @abstractmethod
+    def _get_command_body_length(self) -> int:
+        """Return the length of the command body."""
+        pass
 
     def __str__(self) -> str:
         if self.has_reply():

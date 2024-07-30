@@ -49,11 +49,11 @@ class LtelProtocol(CommunicationProtocol):
         else:
             return False
 
-    def _get_cmd_body_length_index(self) -> int:
-        return 14
-
     def _get_cmd_data_index(self) -> int:
         return 17
 
-    def _get_length_adjustment(self) -> int:
-        return 3
+    def _get_end_adjustment(self) -> int:
+        return 5  # Assuming 2 bytes for CRC and 3 bytes for end flags
+
+    def _get_command_body_length(self) -> int:
+        return self._reply[14] - 3 if self._reply else 0

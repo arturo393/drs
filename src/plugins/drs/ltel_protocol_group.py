@@ -1,12 +1,9 @@
+from src.plugins.check_status import ResponseFlag
 from src.plugins.drs.comunication_protocol import CommunicationProtocol
 
 
 class LTELProtocolGroup(CommunicationProtocol):
-    def _is_valid_reply(self, reply: bytearray) -> bool:
-        pass
 
-    def _extract_data_from_reply(self) -> None:
-        pass
 
     def __init__(self, dru_id, cmd_name_group):
         super().__init__()
@@ -38,5 +35,24 @@ class LTELProtocolGroup(CommunicationProtocol):
         crc = self.generate_checksum(cmd_unit)
         return f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
 
+    def _is_valid_reply(self, reply: bytearray) -> bool:
 
+        if not reply:
+            return False
 
+        respond_flag_index = 10
+
+        self._response_flag = reply[respond_flag_index]
+        if self._response_flag == ResponseFlag.SUCCESS:
+            return True
+        else:
+            return False
+
+    def _get_cmd_data_index(self) -> int:
+        return 14
+
+    def _get_end_adjustment(self) -> int:
+        return 4
+
+    def _get_command_body_length(self) -> int:
+        return len(self._reply) - self._get_cmd_data_index() - self._get_end_adjustment()

@@ -59,11 +59,11 @@ class SantoneProtocol(CommunicationProtocol):
 
         return True
 
-    def _get_cmd_body_length_index(self) -> int:
-        return 6
-
     def _get_cmd_data_index(self) -> int:
         return 7
 
-    def _get_length_adjustment(self) -> int:
-        return 0
+    def _get_end_adjustment(self) -> int:
+        return 3  # Assuming 2 bytes for CRC and 1 byte for end flag
+
+    def _get_command_body_length(self) -> int:
+        return self._reply[6] if self._reply else 0
