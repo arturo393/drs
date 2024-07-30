@@ -43,8 +43,6 @@ class SantoneProtocol(CommunicationProtocol):
         if len(reply) < 7:  # Minimum length to include all necessary fields
             return False
 
-        module_function_index = 1
-        data_type_index = 3
         cmd_number_index = 4
         respond_flag_index = 5
 
@@ -56,14 +54,16 @@ class SantoneProtocol(CommunicationProtocol):
         if reply[respond_flag_index] != ResponseFlag.SUCCESS:
             return False
 
-        # Additional checks can be added here if needed
+        # Additional checks cans be added here if needed
         # For example, checking module_function or data_type if they should have specific values
 
         return True
 
-    def _extract_data_from_reply(self):
-        cmd_body_length_index = 6
-        cmd_data_index = 7
-        self._command_body_length = self._reply[cmd_body_length_index]
-        self._command_body = self._reply[cmd_data_index:
-                                         cmd_data_index + self._command_body_length]
+    def _get_cmd_body_length_index(self) -> int:
+        return 6
+
+    def _get_cmd_data_index(self) -> int:
+        return 7
+
+    def _get_length_adjustment(self) -> int:
+        return 0

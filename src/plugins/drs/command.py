@@ -512,57 +512,6 @@ class Command:
                 f"UNKNOWN - An error occurred during command decoding: {e}")
             sys.exit(UNKNOWN)
 
-    def _decode_ltel_command(self, command: CommunicationProtocol) -> int:
-        """
-        Decodes a LtelDru command and handles the processing of command data.
-
-        Args:
-            command (ComunicationProtocol): The command to decode.
-
-        Returns:
-            int: The number of decoded commands.
-        """
-        try:
-            # Check if command.reply is empty; return 0 if so
-            if not command.reply_bytes:
-                return 0
-
-            # Define necessary indices
-            respond_flag_index = 10
-            cmd_body_length_index = 14
-            cmd_data_index = 17
-
-            # Extract response flag, command body length, and command body
-            # Catch IndexError if command.reply is shorter than expected
-            try:
-                response_flag = command.reply_bytes[respond_flag_index]
-                command_body_length = command.reply_bytes[cmd_body_length_index] - 3
-                command_body = command.reply_bytes[cmd_data_index:
-                                                   cmd_data_index + command_body_length]
-            except IndexError as e:
-                sys.stderr.write(
-                    f"UNKNOWN - command.reply is too short for {command.command_number}: {e}")
-                sys.exit(UNKNOWN)
-
-            # Check if response flag indicates success
-            if response_flag == ResponseFlag.SUCCESS:
-                command.reply_command_data = command_body
-                # Attempt to decode command number
-                try:
-                    command.message = Decoder.ltel_decode(command_body)
-                except (TypeError, ValueError) as e:
-                    sys.stderr.write(
-                        f"UNKNOWN - Cannot decode command number: {e}")
-                    sys.exit(UNKNOWN)
-                return 1
-            else:
-                return 0
-
-        except Exception as e:
-            sys.stderr.write(
-                f"UNKNOWN - An error occurred during command decoding: {e}")
-            sys.exit(UNKNOWN)
-
     def setSerial(self, port, baudrate):
         for times in range(3):
             try:

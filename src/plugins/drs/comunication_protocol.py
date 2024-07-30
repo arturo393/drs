@@ -44,12 +44,38 @@ class CommunicationProtocol(ABC):
             return decode_method(self._command_body)
         except AttributeError:
             print(f"Command number {self._command_number} is not supported.")
-            return {}
 
     @abstractmethod
-    def _extract_data_from_reply(self) -> None:
-        """Extract data from the reply."""
+    def _get_cmd_body_length_index(self) -> int:
+        """Return the index of the command body length in the reply."""
         pass
+
+    @abstractmethod
+    def _get_cmd_data_index(self) -> int:
+        """Return the starting index of the command body in the reply."""
+        pass
+
+    @abstractmethod
+    def _get_length_adjustment(self) -> int:
+        """Return the adjustment to be made to the command body length."""
+        pass
+
+    def _extract_data_from_reply(self) -> bool:
+        """Extract data from the reply using protocol-specific indices."""
+        if not self._reply:
+            return False
+
+        try:
+            cmd_body_length_index = self._get_cmd_body_length_index()
+            cmd_data_index = self._get_cmd_data_index()
+            length_adjustment = self._get_length_adjustment()
+
+            self._command_body_length = self._reply[cmd_body_length_index] - length_adjustment
+            self._command_body = self._reply[cmd_data_index:cmd_data_index + self._command_body_length]
+            return True
+        except IndexError:
+            print(f"Error extracting data from reply: IndexError")
+            return False
 
     def __str__(self) -> str:
         if self.has_reply():
