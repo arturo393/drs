@@ -215,10 +215,10 @@ class Discovery:
                 response = director.modify_service(
                     director_query=director_query)
 
-                message = (
-                    f"Success - Service modified"
-                    if response.status_code == 200
-                    else f"Error - {response.text}"
-                )
+                # message = (
+                #     f"Success - Service modified"
+                #     if response.status_code == 200
+                #     else f"Error - {response.text}"
+                # )
 
                 self._deploy_if_needed(response, director)
