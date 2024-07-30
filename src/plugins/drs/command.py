@@ -7,7 +7,7 @@ import sys
 from typing import Optional
 from typing import Tuple
 
-from src.plugins.drs.comunication_protocol import ComunicationProtocol
+from src.plugins.drs.comunication_protocol import CommunicationProtocol
 from src.plugins.drs.decoder import Decoder
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
 from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber, ResponseFlag
@@ -98,7 +98,7 @@ class Command:
         Returns:
             int: The length of the command frame, in bytes.
         """
-        cmd_data = ComunicationProtocol()
+        cmd_data = CommunicationProtocol()
 
         dru = self.parameters['device_number']
         opt = self.parameters['optical_port']
@@ -223,7 +223,7 @@ class Command:
         command_number = self.get_command_value()
         command_body_length = self.parameters['command_body_length']
         command_data = self.parameters['command_data']
-        cmd_data = ComunicationProtocol()
+        cmd_data = CommunicationProtocol()
         frame_len = cmd_data.generate_ifboard_frame(
             command_number=command_number,
             command_body_length=command_body_length,
@@ -470,40 +470,6 @@ class Command:
 
         return decoded_commands
 
-    def _decode_ifboard_command(self, command: ComunicationProtocol) -> int:
-        reply_len = len(command.reply)
-        query_len = len(command.query)
-        if self.parameters['cmd_type'] == 'group_query':
-            if len(command.reply) < len(command.query) / 2:
-                return 0
-
-        if len(command.reply) == 0:
-            return 0
-
-        module_function_index = 1
-        data_type_index = 3
-        cmd_number_index = 4
-        respond_flag_index = 5
-        cmd_body_length_index = 6
-        cmd_data_index = 7
-        module_function = command.reply[module_function_index]
-        data_type = command.reply[data_type_index]
-        command_number = command.reply[cmd_number_index]
-        if command_number == command.command_number.value:
-            response_flag = command.reply[respond_flag_index]
-            command_body_length = command.reply[cmd_body_length_index]
-            command_body = command.reply[cmd_data_index:
-                                         cmd_data_index + command_body_length]
-            if response_flag == ResponseFlag.SUCCESS:
-                command.reply_command_data = command_body
-                command.message = command.decoder.ifboard_decode(
-                    command.command_number, command_body)
-                return 1
-            else:
-                return 0
-        else:
-            return 0
-
     def _decode_comm_board_command(self, command):
         """
         Decodes a LtelDru command and handles the processing of command data.
@@ -546,7 +512,7 @@ class Command:
                 f"UNKNOWN - An error occurred during command decoding: {e}")
             sys.exit(UNKNOWN)
 
-    def _decode_ltel_command(self, command: ComunicationProtocol) -> int:
+    def _decode_ltel_command(self, command: CommunicationProtocol) -> int:
         """
         Decodes a LtelDru command and handles the processing of command data.
 

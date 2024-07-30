@@ -1,7 +1,13 @@
-from src.plugins.drs.comunication_protocol import ComunicationProtocol
+from src.plugins.drs.comunication_protocol import CommunicationProtocol
 
 
-class LTELProtocolGroup(ComunicationProtocol):
+class LTELProtocolGroup(CommunicationProtocol):
+    def _is_valid_reply(self, reply: bytearray) -> bool:
+        pass
+
+    def _extract_data_from_reply(self) -> None:
+        pass
+
     def __init__(self, dru_id, cmd_name_group):
         super().__init__()
         self.dru_id = dru_id
@@ -31,5 +37,6 @@ class LTELProtocolGroup(ComunicationProtocol):
         )
         crc = self.generate_checksum(cmd_unit)
         return f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
+
 
 

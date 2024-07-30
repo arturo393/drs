@@ -6,9 +6,6 @@ from src.plugins.drs.definitions.santone_commands import ResponseFlag
 
 
 class CommunicationProtocol(ABC):
-    DOWNLINK_MODULE = 0 << 7
-    UPLINK_MODULE = 1 << 7
-
     def __init__(self):
         self._reply: Optional[bytearray] = None
         self._command_number: Optional[int] = None

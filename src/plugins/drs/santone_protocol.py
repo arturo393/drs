@@ -1,20 +1,22 @@
 from src.plugins.check_status import ResponseFlag
-from src.plugins.drs.comunication_protocol import ComunicationProtocol, DONWLINK_MODULE
+from src.plugins.drs.comunication_protocol import CommunicationProtocol
 from src.plugins.drs.decoder import Decoder
 from src.plugins.drs.definitions.santone_commands import DataType
 
 
-class SantoneProtocol(ComunicationProtocol):
+class SantoneProtocol(CommunicationProtocol):
 
     def __init__(self, command_number, command_body_length, command_data):
         super().__init__()
         self._command_number = command_number
         self._command_data = command_data
         self._command_body_length = command_body_length
+        self._DOWNLINK_MODULE = 0 << 7
+        self._UPLINK_MODULE = 1 << 7
 
     def generate_frame(self):
         start_flag = "7E"
-        module_address = DONWLINK_MODULE | 0
+        module_address = self._DOWNLINK_MODULE | 0
         module_function = 0x07
         command_type = DataType.DATA_INITIATION
         response_flag = ResponseFlag.SUCCESS
