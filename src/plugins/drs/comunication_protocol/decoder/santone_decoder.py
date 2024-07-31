@@ -1,13 +1,10 @@
-import struct
-from distutils.version import Version
-
 from src.plugins.drs.comunication_protocol.decoder.decoder import Decoder
 
 
 class SantoneDecoder(Decoder):
 
     @staticmethod
-    def _decode_optical_module_hw_parameters(self,array):
+    def _decode_optical_module_hw_parameters(self, array):
         parameters = {}
         step = 4
 
@@ -320,7 +317,8 @@ class SantoneDecoder(Decoder):
             module_type = "unknown"
             return
 
-        software_version_number = f"Year: {year}, Month: {month}, Day: {day}, Version Number: {version_number}, Module type: {module_type}"
+        software_version_number = f"Year: {year}, Month: {month}, Day: {
+            day}, Version Number: {version_number}, Module type: {module_type}"
         # Convert year to full year format
 
         return {'fpga_version_number': fpga_version_number, 'software_version_number': software_version_number}
