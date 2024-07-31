@@ -56,8 +56,7 @@ class CommunicationProtocol(ABC):
             raise ValueError("Command number or body not set")
 
         try:
-            decoder = DecoderFacade()
-            return decoder.decode(self._command_number, self._command_body)
+            return DecoderFacade.decode(self._command_number, self._command_body)
             # decode_method = getattr(Decoder, f"_decode_{self._command_number.name}")
             # return decode_method(self._command_body)
         except AttributeError:
