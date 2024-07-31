@@ -1,7 +1,7 @@
 import sys
 
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
-from src.plugins.drs.command import Command
+from src.plugins.drs.command.command import Command
 
 
 class CommandExecutor:

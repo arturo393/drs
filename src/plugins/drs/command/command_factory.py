@@ -36,8 +36,8 @@ class CommandFactory:
 
 
     @staticmethod
-    def create_group_query_commands(
-            device: str, dru_id: str) -> List[CommunicationProtocol]:
+    def create_group_query_commands(dru_id: str,
+            device: str ) -> List[CommunicationProtocol]:
         """Creates a list of group query commands based on the device type."""
         commands = []
         cmd_group = CommandFactory.COMMAND_CLASS_MAP.get(device)
@@ -45,7 +45,7 @@ class CommandFactory:
         return CommandFactory._get_command_from_group(cmd_group, commands, dru_id)
 
     @staticmethod
-    def create_single_command(self, dru_id: str, cmd_number):
+    def create_single_command(dru_id: str, cmd_number: int):
 
         """Generates a single command frame.
 

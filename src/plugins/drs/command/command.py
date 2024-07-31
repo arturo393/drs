@@ -20,23 +20,33 @@ class Command:
     remote_to_rs485_udp_port = 65053
 
     def __init__(self, args):
-
         self.cmd_number_ok = None
         self.serial = None
         self.parameters = {}
         self.set_args(args)
         self.message_type = None
-        self._optical_port = self.parameters["optical_port"]
-        self._remote_position = self.parameters["device_number"]
 
-        # Create commands based on command type
-        if self.parameters["cmd_type"] == "group_query":
-            self.commands = CommandFactory.create_group_query_commands(
-                self.parameters["device"], self._get_remote_tree_id())
-        elif self.parameters["cmd_type"] == "single_set":
-            self._create_single_command()
-        elif self.parameters["cmd_type"] == "single_query":
-            self._create_single_command()
+        # Extract parameters for clarity and conciseness
+        device = self.parameters.get("device")
+        cmd_name = self.parameters.get("cmd_name")
+        cmd_type = self.parameters.get("cmd_type")
+
+        # Use a dictionary to map command types to creation methods
+        command_creators = {
+            "group_query": CommandFactory.create_group_query_commands,
+            "single_set": CommandFactory.create_single_command,  # Assuming this is the same method for set
+            "single_query": CommandFactory.create_single_command,
+        }
+
+        # Create commands using the appropriate creation method based on command type
+        create_command = command_creators.get(cmd_type)
+        if create_command:
+            if cmd_type == "group_query":
+                self.commands = create_command(self._get_remote_tree_id(), device)
+            else:
+                self.commands = create_command(self._get_remote_tree_id(), cmd_name)
+        else:
+            self.commands = None  # Or handle the unknown command type appropriately
 
     def set_args(self, args):
         self.parameters['address'] = args['address']
