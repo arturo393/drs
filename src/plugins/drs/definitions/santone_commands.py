@@ -202,10 +202,7 @@ class DRSMasterCommand(IntEnum):
     subband_bandwidth = Rx0QueryCmd.subband_bandwidth
     rx0_broadband_power = HardwarePeripheralDeviceParameterCommand.rx0_broadband_power
     rx1_broadband_power = HardwarePeripheralDeviceParameterCommand.rx1_broadband_power
-    # optical_module_hw_parameters = NearEndQueryCommandNumber.optical_module_hw_parameters
-    # rx0_iir_bandwidth = Rx0QueryCmd.rx0_iir_bandwidth
     temperature = HardwarePeripheralDeviceParameterCommand.temperature
-#    datt = HardwarePeripheralDeviceParameterCommand.datt
 
 
 class DRSRemoteCommand(IntEnum):
