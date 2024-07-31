@@ -22,7 +22,7 @@ class LTELProtocolBase(CommunicationProtocol, ABC):
     TX_RX2 = 0xFF
     RESPOND_FLAG_INDEX = 10
 
-    def __init__(self, dru_id: int):
+    def __init__(self, dru_id: str):
         """Initialize LTELProtocolBase object."""
         super().__init__()
         self.dru_id = dru_id

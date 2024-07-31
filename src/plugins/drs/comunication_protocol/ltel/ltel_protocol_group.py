@@ -9,7 +9,7 @@ class LTELProtocolGroup(LTELProtocolBase):
     CMD_DATA_INDEX = 14
     END_ADJUSTMENT = 4
 
-    def __init__(self, dru_id: int, cmd_name_group: Any):
+    def __init__(self, dru_id: str, cmd_name_group: Any):
         """Initialize LTELProtocolGroup object."""
         super().__init__(dru_id)
         self.cmd_name_group = cmd_name_group

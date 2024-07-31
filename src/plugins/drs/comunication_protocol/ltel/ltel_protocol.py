@@ -11,7 +11,7 @@ class LtelProtocol(LTELProtocolBase):
     BODY_LENGTH_INDEX = 14
     BODY_LENGTH_ADJUSTMENT = 3
 
-    def __init__(self, dru_id: int, command_name: Any, message_type: int):
+    def __init__(self, dru_id: str, command_name: Any, message_type: int):
         """Initialize LtelProtocol object."""
         super().__init__(dru_id)
         self.command_name = command_name
