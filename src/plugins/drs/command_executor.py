@@ -9,10 +9,11 @@ class CommandExecutor:
         self.args = args
         self.command = Command(args=self.args)
 
+
     def execute(self, cmd_type):
         # Create command
-        exit_code, message = self.command.create_command(cmd_type)
-        self._check_critical(exit_code, message)
+#        exit_code, message = self.command.create_command(cmd_type)
+#        self._check_critical(exit_code, message)
 
         # Transmit and receive
         exit_code, message = self.command.transmit_and_receive()

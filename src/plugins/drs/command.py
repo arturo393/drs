@@ -1,3 +1,4 @@
+
 import os
 import time
 import serial
@@ -7,6 +8,7 @@ import sys
 from typing import Optional
 from typing import Tuple
 
+from src.plugins.drs.command_factory import CommandFactory
 from src.plugins.drs.comunication_protocol.comunication_protocol import CommunicationProtocol
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
 from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber
@@ -29,6 +31,17 @@ class Command:
         self.parameters = {}
         self.set_args(args)
         self.message_type = None
+
+        # Create commands based on command type
+        if self.parameters["cmd_type"] == "group_query":
+            self.commands = CommandFactory.create_group_query_commands(
+                self.parameters["device"], self.parameters
+            )
+        else:
+            # Handle other command types (single_set, single_query)
+            # You'll likely need to implement logic here or call
+            # appropriate methods to create these commands
+            pass
 
     def set_args(self, args):
         self.parameters['address'] = args['address']
@@ -70,7 +83,7 @@ class Command:
     def create_command(self, cmd_type):
         """Create command based on type.
 
-        Args: 
+        Args:
             cmd_type (str): Type of command to create
 
         Returns:
@@ -188,7 +201,6 @@ class Command:
         if device in cmd_name_map:
             cmd_group = cmd_name_map[device]
             if cmd_group == CommBoardCmd:
-
                 opt = self.parameters['optical_port']
                 dru = self.parameters['device_number']
                 dru_id = f"{opt}{dru}"
@@ -267,7 +279,7 @@ class Command:
         rt = time.time()
         reply_counter = 0
         exception_message = "CRITICAL - "
-        for message in self.list:
+        for message in self.commands:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((address, self.tcp_port))
@@ -460,8 +472,8 @@ class Command:
             The number of decoded commands.
         """
         decoded_commands = 0
-        for command in self.list:
-            value = command.get_reply_value()
+        for communication_protocol in self.commands:
+            value = communication_protocol.get_reply_value()
             # Update the parameters with the decoded data.
             if value:
                 decoded_commands += 1
