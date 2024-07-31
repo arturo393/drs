@@ -30,4 +30,8 @@ class Transceiver(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def get_reply(self, query_frame: bytearray) -> bytearray:
+        pass
+
 

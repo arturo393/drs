@@ -23,7 +23,7 @@ class Command:
         self.message_type = None
         self._optical_port = self.parameters.get("optical_port")
         self._remote_position = self.parameters.get("device_number")
-
+        self.parameters["device_id"] = self._get_remote_tree_id()
         # Extract parameters for clarity and conciseness
         device = self.parameters.get("device")
         cmd_name = self.parameters.get("cmd_name")
@@ -93,6 +93,7 @@ class Command:
         self.parameters["device_number"] = dru
         self.parameters["optical_port"] = opt
         self.parameters["baud_rate"] = int(args["baud_rate"])
+
 
     def _get_remote_tree_id(self) -> str:
         """Returns the remote tree ID."""
@@ -184,21 +185,18 @@ class Command:
                     return CRITICAL, self._print_error(port_dru)
                 self.parameters.update(result)
             else:
-                tcp_transceiver = TCPTransceiver()
-                result = tcp_transceiver.transmit_and_receive(
-                    self.commands, address=address)
+                tcp_transceiver = TCPTransceiver(address, 65050, 65053)
+                reply_counter = 0
+                for command_protocol in self.commands:
+                    reply_frame = tcp_transceiver.get_reply(command_protocol.get_command_query_as_bytearray())
+                    if command_protocol.save_if_valid(reply_frame):
+                        reply_counter = reply_counter + 1
+
+                result = {"rt": "1", "reply_counter": reply_counter}
+                self.parameters.update(result)
                 if isinstance(result, int) and not result:
                     return CRITICAL, self._print_error(address)
-                self.parameters.update(result)
-
-            decoded_commands = self.extract_and_decode_received()
-            if decoded_commands > 0:
                 return OK, f"Received data from {device}"
-            else:
-                return (
-                    WARNING,
-                    f"No data received from {device}. Commands may not be supported.",
-                )
 
         except Exception as e:
             return CRITICAL, f"Error: {e}"
