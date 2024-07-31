@@ -9,7 +9,6 @@ class CommandExecutor:
         self.args = args
         self.command = Command(args=self.args)
 
-
     def execute(self, cmd_type):
         # Create command
 
