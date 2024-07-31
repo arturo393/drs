@@ -35,7 +35,7 @@ class SantoneDecoder(Decoder):
                 fb_number = (i % 16) - 1
 
             temp = array[i:i + 2]
-            temp = Decoder.optic_module_power_convert(temp, 0.1)
+            temp = SantoneDecoder.optic_module_power_convert(temp, 0.1)
 
             parameter_name = "Fb{}_Temp".format(
                 fb_number,
@@ -72,7 +72,7 @@ class SantoneDecoder(Decoder):
         if len(command_body) < 2:
             return {}
 
-        rx0_broadband_power = Decoder.power_convert(command_body)
+        rx0_broadband_power = SantoneDecoder.power_convert(command_body)
 
         return {
             "rx0_broadband_power": rx0_broadband_power,
@@ -84,7 +84,7 @@ class SantoneDecoder(Decoder):
         if len(command_body) < 2:
             return {}
 
-        rx1_broadband_power = Decoder.power_convert(command_body)
+        rx1_broadband_power = SantoneDecoder.power_convert(command_body)
 
         return {
             "rx1_broadband_power": rx1_broadband_power,
@@ -387,19 +387,19 @@ class SantoneDecoder(Decoder):
 
     @staticmethod
     def _decode_optical_port_devices_connected_1(command_body):
-        return {"optical_port_devices_connected_1": Decoder.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_1": SantoneDecoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_2(command_body):
-        return {"optical_port_devices_connected_2": Decoder.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_2": SantoneDecoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_3(command_body):
-        return {"optical_port_devices_connected_3": Decoder.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_3": SantoneDecoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def _decode_optical_port_devices_connected_4(command_body):
-        return {"optical_port_devices_connected_4": Decoder.decode_optical_port_devices_connected(command_body)}
+        return {"optical_port_devices_connected_4": SantoneDecoder.decode_optical_port_devices_connected(command_body)}
 
     @staticmethod
     def decode_optical_port_devices_connected(command_body):
@@ -409,25 +409,25 @@ class SantoneDecoder(Decoder):
 
     @staticmethod
     def _decode_optical_port_device_id_topology_1(command_body):
-        device_ids = Decoder.decode_optical_port_device_id_topology(
+        device_ids = SantoneDecoder.decode_optical_port_device_id_topology(
             command_body)
         return {"optical_port_device_id_topology_1": device_ids}
 
     @staticmethod
     def _decode_optical_port_device_id_topology_2(command_body):
-        device_ids = Decoder.decode_optical_port_device_id_topology(
+        device_ids = SantoneDecoder.decode_optical_port_device_id_topology(
             command_body)
         return {"optical_port_device_id_topology_2": device_ids}
 
     @staticmethod
     def _decode_optical_port_device_id_topology_3(command_body):
-        device_ids = Decoder.decode_optical_port_device_id_topology(
+        device_ids = SantoneDecoder.decode_optical_port_device_id_topology(
             command_body)
         return {"optical_port_device_id_topology_3": device_ids}
 
     @staticmethod
     def _decode_optical_port_device_id_topology_4(command_body):
-        device_ids = Decoder.decode_optical_port_device_id_topology(
+        device_ids = SantoneDecoder.decode_optical_port_device_id_topology(
             command_body)
         return {"optical_port_device_id_topology_4": device_ids}
 
@@ -449,19 +449,19 @@ class SantoneDecoder(Decoder):
 
     @staticmethod
     def _decode_optical_port_mac_topology_1(command_body):
-        return {"optical_port_mac_topology_1": Decoder.decode_optical_port_mac_topology(command_body)}
+        return {"optical_port_mac_topology_1": SantoneDecoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def _decode_optical_port_mac_topology_2(command_body):
-        return {"optical_port_mac_topology_2": Decoder.decode_optical_port_mac_topology(command_body)}
+        return {"optical_port_mac_topology_2": SantoneDecoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def _decode_optical_port_mac_topology_3(command_body):
-        return {"optical_port_mac_topology_3": Decoder.decode_optical_port_mac_topology(command_body)}
+        return {"optical_port_mac_topology_3": SantoneDecoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def _decode_optical_port_mac_topology_4(command_body):
-        return {"optical_port_mac_topology_4": Decoder.decode_optical_port_mac_topology(command_body)}
+        return {"optical_port_mac_topology_4": SantoneDecoder.decode_optical_port_mac_topology(command_body)}
 
     @staticmethod
     def decode_optical_port_mac_topology(command_body):
@@ -507,8 +507,8 @@ class SantoneDecoder(Decoder):
         if len(command_body) == 0:
             return {}
 
-        downlink_power = Decoder.power_convert(command_body[2:])
-        uplink_power = Decoder.power_convert(command_body)
+        downlink_power = SantoneDecoder.power_convert(command_body[2:])
+        uplink_power = SantoneDecoder.power_convert(command_body)
         return {'downlink_output_power': downlink_power, 'uplink_input_power': uplink_power}
 
     @staticmethod
@@ -564,7 +564,7 @@ class SantoneDecoder(Decoder):
     def _decode_channel_frequency_configuration(command_body):
         if len(command_body) == 0:
             return {}
-        command_body = Decoder.replace_hex_sequence(command_body)
+        command_body = SantoneDecoder.replace_hex_sequence(command_body)
         temp = command_body.hex()
         ch = 1
         channels = {}
