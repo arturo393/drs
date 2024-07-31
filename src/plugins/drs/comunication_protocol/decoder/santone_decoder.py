@@ -316,9 +316,11 @@ class SantoneDecoder(Decoder):
         else:
             module_type = "unknown"
             return
-
-        software_version_number = f"Year: {year}, Month: {month}, Day: {
-            day}, Version Number: {version_number}, Module type: {module_type}"
+        software_version_number = f"Year: {year},"
+        software_version_number += f"Month: {month},"
+        software_version_number += f"Day: {day},"
+        software_version_number += f"Version Number: {version_number},"
+        software_version_number += f" Module type: {module_type}"
         # Convert year to full year format
 
         return {'fpga_version_number': fpga_version_number, 'software_version_number': software_version_number}
