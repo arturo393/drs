@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.plugins.drs.LtelProtocolBase import LTELProtocolBase
+from src.plugins.drs.ltel_protocol_base import LTELProtocolBase
 
 
 
