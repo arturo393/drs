@@ -12,7 +12,7 @@
 import sys
 import argparse
 
-from src.plugins.drs.command_executor import CommandExecutor
+from src.plugins.drs.command.command_executor import CommandExecutor
 from src.plugins.drs.definitions.nagios import CRITICAL, OK, WARNING
 from src.plugins.drs.definitions.santone_commands import NearEndQueryCommandNumber
 from src.plugins.drs.discovery import Discovery
