@@ -34,12 +34,12 @@ class LtelDecoder(Decoder):
             return {}
         frequencies = {}
         frequencies.update(
-            Decoder._decode_uplink_start_frequency(command_body[3 + 0:7]))
-        # frequencies.update(Decoder._decode_downlink_start_frequency(command_body[3 + 0:3 + 4]))
+            LtelDecoder._decode_uplink_start_frequency(command_body[3 + 0:7]))
+        # frequencies.update(LtelDecoder._decode_downlink_start_frequency(command_body[3 + 0:3 + 4]))
         frequencies.update(
-            Decoder._decode_work_bandwidth(command_body[3 + 7:14]))
+            LtelDecoder._decode_work_bandwidth(command_body[3 + 7:14]))
         frequencies.update(
-            Decoder._decode_channel_bandwidth(command_body[3 + 14:28]))
+            LtelDecoder._decode_channel_bandwidth(command_body[3 + 14:28]))
         return frequencies
 
     @staticmethod
@@ -49,39 +49,39 @@ class LtelDecoder(Decoder):
             return {}
         channel_info = {}
         channel_info.update(
-            Decoder._decode_channel_switch_bit(command_body[3:5]))
+            LtelDecoder._decode_channel_switch_bit(command_body[3:5]))
         channel_info.update(
-            Decoder._decode_channel_1_number(command_body[3 + 5:10]))
+            LtelDecoder._decode_channel_1_number(command_body[3 + 5:10]))
         channel_info.update(
-            Decoder._decode_channel_2_number(command_body[3 + 10:15]))
+            LtelDecoder._decode_channel_2_number(command_body[3 + 10:15]))
         channel_info.update(
-            Decoder._decode_channel_3_number(command_body[3 + 15:20]))
+            LtelDecoder._decode_channel_3_number(command_body[3 + 15:20]))
         channel_info.update(
-            Decoder._decode_channel_4_number(command_body[3 + 20:25]))
+            LtelDecoder._decode_channel_4_number(command_body[3 + 20:25]))
         channel_info.update(
-            Decoder._decode_channel_5_number(command_body[3 + 25:30]))
+            LtelDecoder._decode_channel_5_number(command_body[3 + 25:30]))
         channel_info.update(
-            Decoder._decode_channel_6_number(command_body[3 + 30:35]))
+            LtelDecoder._decode_channel_6_number(command_body[3 + 30:35]))
         channel_info.update(
-            Decoder._decode_channel_7_number(command_body[3 + 35:40]))
+            LtelDecoder._decode_channel_7_number(command_body[3 + 35:40]))
         channel_info.update(
-            Decoder._decode_channel_8_number(command_body[3 + 40:45]))
+            LtelDecoder._decode_channel_8_number(command_body[3 + 40:45]))
         channel_info.update(
-            Decoder._decode_channel_9_number(command_body[3 + 45:50]))
+            LtelDecoder._decode_channel_9_number(command_body[3 + 45:50]))
         channel_info.update(
-            Decoder._decode_channel_10_number(command_body[3 + 50:55]))
+            LtelDecoder._decode_channel_10_number(command_body[3 + 50:55]))
         channel_info.update(
-            Decoder._decode_channel_11_number(command_body[3 + 55:60]))
+            LtelDecoder._decode_channel_11_number(command_body[3 + 55:60]))
         channel_info.update(
-            Decoder._decode_channel_12_number(command_body[3 + 60:65]))
+            LtelDecoder._decode_channel_12_number(command_body[3 + 60:65]))
         channel_info.update(
-            Decoder._decode_channel_13_number(command_body[3 + 65:70]))
+            LtelDecoder._decode_channel_13_number(command_body[3 + 65:70]))
         channel_info.update(
-            Decoder._decode_channel_14_number(command_body[3 + 70:75]))
+            LtelDecoder._decode_channel_14_number(command_body[3 + 70:75]))
         channel_info.update(
-            Decoder._decode_channel_15_number(command_body[3 + 75:80]))
+            LtelDecoder._decode_channel_15_number(command_body[3 + 75:80]))
         channel_info.update(
-            Decoder._decode_channel_16_number(command_body[3 + 80:85]))
+            LtelDecoder._decode_channel_16_number(command_body[3 + 80:85]))
         return channel_info
 
     @staticmethod
@@ -90,16 +90,16 @@ class LtelDecoder(Decoder):
         if len(command_body) < 20:
             return {}
         parameters = {}
-        parameters.update(Decoder._decode_uplink_att(command_body[3 + 0:4]))
-        parameters.update(Decoder._decode_downlink_att(command_body[3 + 4:8]))
-        parameters.update(Decoder._decode_working_mode(command_body[3 + 8:12]))
-        parameters.update(Decoder._decode_downlink_vswr(
+        parameters.update(LtelDecoder._decode_uplink_att(command_body[3 + 0:4]))
+        parameters.update(LtelDecoder._decode_downlink_att(command_body[3 + 4:8]))
+        parameters.update(LtelDecoder._decode_working_mode(command_body[3 + 8:12]))
+        parameters.update(LtelDecoder._decode_downlink_vswr(
             command_body[3 + 12:16]))
-        parameters.update(Decoder._decode_downlink_output_power(
+        parameters.update(LtelDecoder._decode_downlink_output_power(
             command_body[3 + 16:20]))
-        parameters.update(Decoder._decode_uplink_input_power(
+        parameters.update(LtelDecoder._decode_uplink_input_power(
             command_body[3 + 20:24]))
-        parameters.update(Decoder._decode_power_amplifier_temperature(
+        parameters.update(LtelDecoder._decode_power_amplifier_temperature(
             command_body[3 + 24:28]))
 
         return parameters
@@ -153,7 +153,7 @@ class LtelDecoder(Decoder):
         if len(command_body) < 4:
             return {}
         return {
-            "uplink_start_frequency": Decoder._frequency_decode(command_body),
+            "uplink_start_frequency": LtelDecoder._frequency_decode(command_body),
         }
 
     @staticmethod
@@ -162,7 +162,7 @@ class LtelDecoder(Decoder):
         if len(command_body) < 4:
             return {}
         return {
-            "downlink_start_frequency": Decoder._frequency_decode(command_body),
+            "downlink_start_frequency": LtelDecoder._frequency_decode(command_body),
         }
 
     @staticmethod
@@ -171,7 +171,7 @@ class LtelDecoder(Decoder):
         if len(command_body) < 4:
             return {}
         return {
-            "work_bandwidth": Decoder._frequency_decode(command_body),
+            "work_bandwidth": LtelDecoder._frequency_decode(command_body),
         }
 
     @staticmethod
@@ -180,7 +180,7 @@ class LtelDecoder(Decoder):
         if len(command_body) < 4:
             return {}
         return {
-            "channel_bandwidth": Decoder._frequency_decode(command_body),
+            "channel_bandwidth": LtelDecoder._frequency_decode(command_body),
         }
 
     @staticmethod

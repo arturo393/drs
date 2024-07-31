@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any
 from crccheck.crc import Crc16Xmodem
-from src.plugins.drs.comunication_protocol.decoder.decoder_facade import DecoderFacade
+from src.plugins.drs.comunication_protocol.decoder.decoder_facade import DecoderFacade, UnknownCommand
 from src.plugins.drs.definitions.santone_commands import ResponseFlag, DataType
 
 
@@ -59,7 +59,7 @@ class CommunicationProtocol(ABC):
             return DecoderFacade.decode(self._command_number, self._command_body)
             # decode_method = getattr(Decoder, f"_decode_{self._command_number.name}")
             # return decode_method(self._command_body)
-        except AttributeError:
+        except UnknownCommand:
             print(f"Command number {self._command_number} is not supported.")
             return None  # Explicitly return None for unsupported commands
 
