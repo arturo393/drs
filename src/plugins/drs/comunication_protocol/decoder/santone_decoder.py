@@ -1,4 +1,5 @@
 import struct
+from distutils.version import Version
 
 from src.plugins.drs.comunication_protocol.decoder.decoder import Decoder
 
@@ -6,7 +7,7 @@ from src.plugins.drs.comunication_protocol.decoder.decoder import Decoder
 class SantoneDecoder(Decoder):
 
     @staticmethod
-    def _decode_optical_module_hw_parameters(array):
+    def _decode_optical_module_hw_parameters(self,array):
         parameters = {}
         step = 4
 
@@ -15,8 +16,8 @@ class SantoneDecoder(Decoder):
             fb_number = i // step
             rx_pwr = array[i:i + 2]
             tx_pwr = array[i + 2:i + 4]
-            rx_pwr = Decoder.optic_module_power_convert(rx_pwr, 0.001)
-            tx_pwr = Decoder.optic_module_power_convert(tx_pwr, 0.001)
+            rx_pwr = self.optic_module_power_convert(rx_pwr, 0.001)
+            tx_pwr = self.optic_module_power_convert(tx_pwr, 0.001)
             parameter_name = "Fb{}_Rx_Pwr".format(
                 fb_number,
             )
@@ -299,8 +300,10 @@ class SantoneDecoder(Decoder):
         day = fpga_data[1]
         version_number = fpga_data[0]
         year += 2000
-        fpga_version_number = f"Year: {year}, Month: {
-            month}, Day: {day}, Version Number: {version_number}"
+        fpga_version_number = f"Year: {year},"
+        fpga_version_number += f", Month: {month},"
+        fpga_version_number += f" Day: {day},"
+        fpga_version_number += f" Version Number: {version_number}"
 
         software_data = command_body[4:]
         year = software_data[4]
@@ -317,8 +320,7 @@ class SantoneDecoder(Decoder):
             module_type = "unknown"
             return
 
-        software_version_number = f"Year: {year}, Month: {month}, Day: {
-            day}, Version Number: {version_number}, Module type: {module_type}"
+        software_version_number = f"Year: {year}, Month: {month}, Day: {day}, Version Number: {version_number}, Module type: {module_type}"
         # Convert year to full year format
 
         return {'fpga_version_number': fpga_version_number, 'software_version_number': software_version_number}
