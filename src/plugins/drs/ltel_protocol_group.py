@@ -1,58 +1,51 @@
-from src.plugins.check_status import ResponseFlag
-from src.plugins.drs.comunication_protocol import CommunicationProtocol
+from typing import Any
+
+from src.plugins.drs.LtelProtocolBase import LTELProtocolBase
+from src.plugins.drs.definitions.santone_commands import ResponseFlag
 
 
-class LTELProtocolGroup(CommunicationProtocol):
+class LTELProtocolGroup(LTELProtocolBase):
+    """Communication protocol for LTEL command groups."""
 
+    TX_RX = 0x80
+    UNKNOWN3 = 0x01
+    MESSAGE_TYPE = 0x02
+    TX_RX2 = 0xFF
 
-    def __init__(self, dru_id, cmd_name_group):
-        super().__init__()
-        self.dru_id = dru_id
+    def __init__(self, dru_id: int, cmd_name_group: Any):
+        """Initialize LTELProtocolGroup object."""
+        super().__init__(dru_id)
         self.cmd_name_group = cmd_name_group
 
-    def generate_frame(self):
-        # This method now implements the abstract method from the parent class
-        start_flag = "7E"
-        unknown1 = 0x0101
-        site_number = 0
-        unknown2 = 0x0100
-        tx_rx = 0x80
-        unknown3 = 0x01
-        message_type = 0x02
-        tx_rx2 = 0xFF
-        data_group = self.cmd_name_group.value
-        cmd_unit = (
-            f"{unknown1:04X}"
-            f"{site_number:08X}"
-            f"{self.dru_id}"
-            f"{unknown2:04X}"
-            f"{tx_rx:02X}"
-            f"{unknown3:02X}"
-            f"{message_type:02X}"
-            f"{tx_rx2:02X}"
-            f"{data_group}"
+    def generate_frame(self) -> str:
+        """Generate a frame for the LTEL command group."""
+        command_unit = (
+            f"{self._generate_common_header()}"
+            f"{self.TX_RX:02X}"
+            f"{self.UNKNOWN3:02X}"
+            f"{self.MESSAGE_TYPE:02X}"
+            f"{self.TX_RX2:02X}"
+            f"{self.cmd_name_group.value}"
         )
-        crc = self.generate_checksum(cmd_unit)
-        return f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
+        return self._generate_ltel_frame(command_unit)
 
     def _is_valid_reply(self, reply: bytearray) -> bool:
-
+        """Check if the reply is valid."""
         if not reply:
             return False
 
         respond_flag_index = 10
-
         self._response_flag = reply[respond_flag_index]
-        if self._response_flag == ResponseFlag.SUCCESS:
-            return True
-        else:
-            return False
+        return self._response_flag == ResponseFlag.SUCCESS
 
     def _get_cmd_data_index(self) -> int:
+        """Return the starting index of the command body in the reply."""
         return 14
 
     def _get_end_adjustment(self) -> int:
+        """Return the adjustment to be made at the end of the reply."""
         return 4
 
     def _get_command_body_length(self) -> int:
+        """Return the length of the command body."""
         return len(self._reply) - self._get_cmd_data_index() - self._get_end_adjustment()

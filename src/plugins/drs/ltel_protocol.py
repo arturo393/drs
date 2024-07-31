@@ -1,59 +1,51 @@
-from src.plugins.drs.comunication_protocol import CommunicationProtocol
+from typing import Any
+
+from src.plugins.drs.LtelProtocolBase import LTELProtocolBase
 
 
-class LtelProtocol(CommunicationProtocol):
 
-    def __init___(self, dru_id, command_name, message_type):
-        super().__init__()
-        self.dru_id = dru_id
+class LtelProtocol(LTELProtocolBase):
+    """Communication protocol for individual LTEL commands."""
+
+    def __init__(self, dru_id: int, command_name: Any, message_type: int):
+        """Initialize LtelProtocol object."""
+        super().__init__(dru_id)
         self.command_name = command_name
         self.message_type = message_type
 
-    def generate_frame(self):
-        start_flag = "7E"
-        unknown1 = 0x0101
-        site_number = 0
-        unknown2 = 0x0100
-        unknown3 = 0x01
-        tx_rx = 0x80
-        tx_rx2 = 0xFF
-        length = self.command_name.value[0]
-        code = self.command_name.value[1]
+    def generate_frame(self) -> str:
+        """Generate a frame for the LTEL command."""
+        length, code = self.command_name.value
         length_code = f"{length:02X}{code:04X}"
-        data = length_code.ljust(length * 2, '0')
-        cmd_unit = (
-            f"{unknown1:04X}"
-            f"{site_number:08X}"
-            f"{self.dru_id}"
-            f"{unknown2:04X}"
-            f"{tx_rx:02X}"
-            f"{unknown3:02X}"
+        data = length_code.ljust(length * 2, "0")
+
+        command_unit = (
+            f"{self._generate_common_header()}"
+            f"{LTELProtocolBase.TX_RX:02X}"
+            f"{LTELProtocolBase.UNKNOWN3:02X}"
             f"{self.message_type:02X}"
-            f"{tx_rx2:02X}"
+            f"{LTELProtocolBase.TX_RX2:02X}"
             f"{data}"
         )
-
-        crc = self.generate_checksum(cmd_unit)
-        return f"{start_flag}{cmd_unit}{crc}{start_flag}{start_flag}"
+        return self._generate_ltel_frame(command_unit)
 
     def _is_valid_reply(self, reply: bytearray) -> bool:
-        # Define necessary indices
-        respond_flag_index = 10
-
+        """Check if the reply is valid."""
         if not reply:
             return False
 
+        respond_flag_index = 10
         self._response_flag = reply[respond_flag_index]
-        if self._response_flag == ResponseFlag.SUCCESS:
-            return True
-        else:
-            return False
+        return self._response_flag == ResponseFlag.SUCCESS
 
     def _get_cmd_data_index(self) -> int:
+        """Return the starting index of the command body in the reply."""
         return 17
 
     def _get_end_adjustment(self) -> int:
-        return 5  # Assuming 2 bytes for CRC and 3 bytes for end flags
+        """Return the adjustment to be made at the end of the reply."""
+        return 5
 
     def _get_command_body_length(self) -> int:
+        """Return the length of the command body."""
         return self._reply[14] - 3 if self._reply else 0

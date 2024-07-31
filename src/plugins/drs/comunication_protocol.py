@@ -2,11 +2,19 @@ from abc import ABC, abstractmethod
 from typing import Optional, Any
 from crccheck.crc import Crc16Xmodem
 from src.plugins.drs.decoder import Decoder
-from src.plugins.drs.definitions.santone_commands import ResponseFlag
+from src.plugins.drs.definitions.santone_commands import ResponseFlag, DataType
 
 
 class CommunicationProtocol(ABC):
+    """
+    Abstract base class for communication protocols.
+
+    This class defines the common interface and behavior for different
+    communication protocols, allowing for easy extension and maintenance.
+    """
+
     def __init__(self):
+        """Initialize CommunicationProtocol object."""
         self._reply: Optional[bytearray] = None
         self._command_number: Optional[int] = None
         self._command_body_length: Optional[int] = None
@@ -23,7 +31,11 @@ class CommunicationProtocol(ABC):
         pass
 
     def get_reply_value(self) -> Optional[Any]:
-        """Extract and decode the reply value."""
+        """
+        Extract and decode the reply value.
+
+        Returns None if no reply is available or if an error occurs during decoding.
+        """
         if not self.has_reply():
             return None
 
@@ -35,7 +47,11 @@ class CommunicationProtocol(ABC):
             return None
 
     def _decode(self) -> Any:
-        """Decode the command body."""
+        """
+        Decode the command body using the appropriate decoder method.
+
+        Raises ValueError if command number or body is not set.
+        """
         if not self._command_number or not self._command_body:
             raise ValueError("Command number or body not set")
 
@@ -44,6 +60,7 @@ class CommunicationProtocol(ABC):
             return decode_method(self._command_body)
         except AttributeError:
             print(f"Command number {self._command_number} is not supported.")
+            return None  # Explicitly return None for unsupported commands
 
     def _extract_data_from_reply(self) -> bool:
         """Extract data from the reply using protocol-specific indices."""
@@ -76,6 +93,7 @@ class CommunicationProtocol(ABC):
         pass
 
     def __str__(self) -> str:
+        """Return a string representation of the communication protocol."""
         if self.has_reply():
             reply = self.bytearray_to_hex(self._reply)
             message = self.get_reply_message()
@@ -91,7 +109,11 @@ class CommunicationProtocol(ABC):
         self._command_body_length = command_body_length
 
     def get_reply_message(self) -> str:
-        """Get a human-readable message for the reply."""
+        """
+        Get a human-readable message for the reply.
+
+        Returns "No message returned" if no reply or reply is too short.
+        """
         if not self.has_reply() or len(self._reply) < 6:
             return "No message returned"
 
@@ -117,12 +139,12 @@ class CommunicationProtocol(ABC):
         crc = f"{crc:04X}"
         checksum = crc[2:4] + crc[0:2]
         checksum = checksum.upper()
-        return checksum.replace('5E', '5E5D').replace('7E', '5E7D')
+        return checksum.replace("5E", "5E5D").replace("7E", "5E7D")
 
     @staticmethod
     def bytearray_to_hex(byte_array: bytearray) -> str:
         """Convert a bytearray to a hexadecimal string."""
-        return ''.join(f"{byte:02X}" for byte in byte_array)
+        return "".join(f"{byte:02X}" for byte in byte_array)
 
     def get_command_query_as_str(self) -> str:
         """Get the command query as a string."""
