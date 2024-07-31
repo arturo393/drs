@@ -37,6 +37,8 @@ class Decoder:
             print(f" Command number {command_number} is not supported.")
             return {}
 
+
+
     @staticmethod
     def _decode_optical_module_hw_parameters(array):
         parameters = {}

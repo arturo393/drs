@@ -69,6 +69,7 @@ class NearEndQueryCommandNumber(IntEnum):
     actual_delay_optical_port_4 = 0xa5
     optical_port_mac_topology_4 = 0xa6
     optical_module_hw_parameters = 0xa7
+    mi_comndo = 0xaa
 
 
 # Add more query command numbers

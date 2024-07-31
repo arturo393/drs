@@ -7,14 +7,13 @@ import sys
 from typing import Optional
 from typing import Tuple
 
-from src.plugins.drs.comunication_protocol import CommunicationProtocol
-from src.plugins.drs.decoder import Decoder
+from src.plugins.drs.comunication_protocol.comunication_protocol import CommunicationProtocol
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
-from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber, ResponseFlag
+from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber
 from src.plugins.drs.definitions.ltel_commands import CommBoardGroupCmd, CommBoardCmd
-from src.plugins.drs.ltel_protocol import LtelProtocol
-from src.plugins.drs.ltel_protocol_group import LTELProtocolGroup
-from src.plugins.drs.santone_protocol import SantoneProtocol
+from src.plugins.drs.comunication_protocol.ltel.ltel_protocol import LtelProtocol
+from src.plugins.drs.comunication_protocol.ltel.ltel_protocol_group import LTELProtocolGroup
+from src.plugins.drs.comunication_protocol.santone_protocol import SantoneProtocol
 
 
 class Command:

@@ -1,11 +1,15 @@
 from typing import Any
 
-from src.plugins.drs.ltel_protocol_base import LTELProtocolBase
-
+from src.plugins.drs.comunication_protocol.ltel.ltel_protocol_base import LTELProtocolBase
 
 
 class LtelProtocol(LTELProtocolBase):
     """Communication protocol for individual LTEL commands."""
+
+    CMD_DATA_INDEX = 17
+    END_ADJUSTMENT = 5
+    BODY_LENGTH_INDEX = 14
+    BODY_LENGTH_ADJUSTMENT = 3
 
     def __init__(self, dru_id: int, command_name: Any, message_type: int):
         """Initialize LtelProtocol object."""
@@ -19,33 +23,22 @@ class LtelProtocol(LTELProtocolBase):
         length_code = f"{length:02X}{code:04X}"
         data = length_code.ljust(length * 2, "0")
 
-        command_unit = (
-            f"{self._generate_common_header()}"
-            f"{LTELProtocolBase.TX_RX:02X}"
-            f"{LTELProtocolBase.UNKNOWN3:02X}"
-            f"{self.message_type:02X}"
-            f"{LTELProtocolBase.TX_RX2:02X}"
-            f"{data}"
-        )
+        command_unit = f"{self._generate_common_header()}{data}"
         return self._generate_ltel_frame(command_unit)
-
-    def _is_valid_reply(self, reply: bytearray) -> bool:
-        """Check if the reply is valid."""
-        if not reply:
-            return False
-
-        respond_flag_index = 10
-        self._response_flag = reply[respond_flag_index]
-        return self._response_flag == ResponseFlag.SUCCESS
 
     def _get_cmd_data_index(self) -> int:
         """Return the starting index of the command body in the reply."""
-        return 17
+        return self.CMD_DATA_INDEX
 
     def _get_end_adjustment(self) -> int:
         """Return the adjustment to be made at the end of the reply."""
-        return 5
+        return self.END_ADJUSTMENT
 
     def _get_command_body_length(self) -> int:
         """Return the length of the command body."""
-        return self._reply[14] - 3 if self._reply else 0
+        return (
+            self._reply[self.BODY_LENGTH_INDEX] - self.BODY_LENGTH_ADJUSTMENT
+            if self._reply
+            else 0
+        )
+
