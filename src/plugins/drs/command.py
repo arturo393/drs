@@ -1,4 +1,3 @@
-
 import os
 import time
 import serial
@@ -11,7 +10,9 @@ from typing import Tuple
 from src.plugins.drs.command_factory import CommandFactory
 from src.plugins.drs.comunication_protocol.comunication_protocol import CommunicationProtocol
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
-from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, RemoteQueryCommandNumber
+from src.plugins.drs.definitions.santone_commands import DRSRemoteCommand, DiscoveryCommand, DRSMasterCommand, \
+    DiscoveryRedBoardCommand, SettingCommand, NearEndQueryCommandNumber, HardwarePeripheralDeviceParameterCommand, \
+    RemoteQueryCommandNumber
 from src.plugins.drs.definitions.ltel_commands import CommBoardGroupCmd, CommBoardCmd
 from src.plugins.drs.comunication_protocol.ltel.ltel_protocol import LtelProtocol
 from src.plugins.drs.comunication_protocol.ltel.ltel_protocol_group import LTELProtocolGroup
@@ -31,17 +32,17 @@ class Command:
         self.parameters = {}
         self.set_args(args)
         self.message_type = None
+        self._optical_port = self.parameters["optical_port"]
+        self._remote_position = self.parameters["device_number"]
 
         # Create commands based on command type
         if self.parameters["cmd_type"] == "group_query":
             self.commands = CommandFactory.create_group_query_commands(
-                self.parameters["device"], self.parameters
-            )
-        else:
-            # Handle other command types (single_set, single_query)
-            # You'll likely need to implement logic here or call
-            # appropriate methods to create these commands
-            pass
+                self.parameters["device"], self._get_remote_tree_id())
+        elif self.parameters["cmd_type"] == "single_set":
+            self._create_single_command()
+        elif self.parameters["cmd_type"] == "single_query":
+            self._create_single_command()
 
     def set_args(self, args):
         self.parameters['address'] = args['address']
@@ -78,62 +79,8 @@ class Command:
         self.parameters['optical_port'] = opt
         self.parameters['baud_rate'] = int(args['baud_rate'])
 
-
-
-    def create_command(self, cmd_type):
-        """Create command based on type.
-
-        Args:
-            cmd_type (str): Type of command to create
-
-        Returns:
-            (int, str): Tuple with status code and message
-        """
-
-        if cmd_type == "single_set":
-            is_created = self._create_single_command()
-        elif cmd_type == "single_query":
-            is_created = self._create_single_command()
-        elif cmd_type == "group_query":
-            is_created = self._create_group_query_command()
-        else:
-            return CRITICAL, f"No command type {cmd_type} defined"
-
-        if is_created:
-            return OK, f"Created {is_created} {cmd_type} commands"
-        else:
-            return CRITICAL, f"No {cmd_type} commands created"
-
-    def _create_single_command(self):
-        """Generates a single command frame.
-
-        Returns:
-            int: The length of the command frame, in bytes.
-        """
-        cmd_data = CommunicationProtocol()
-
-        dru = self.parameters['device_number']
-        opt = self.parameters['optical_port']
-        frame_len = 0
-        if self.parameters['cmd_name'] > 255:
-            cmd_data.generate_ltel_comunication_board_frame(
-                dru_id=f"{dru}{opt}",
-                cmd_name=self.get_command_comm_board_value(),
-                message_type=0x03
-            )
-            self.message_type = 0x03
-            frame_len = 1
-        else:
-            frame_len = cmd_data.generate_ifboard_frame(
-                command_number=self.get_command_value(),
-                command_body_length=self.parameters['cmd_body_length'],
-                command_data=self.parameters['cmd_data'],
-            )
-
-        if frame_len > 0:
-            self.list.append(cmd_data)
-
-        return frame_len if frame_len > 0 else -2
+    def _get_remote_tree_id(self):
+        return f"{self._optical_port}{self._remote_position}"
 
     def _decode_address(self, address: str) -> Optional[Tuple[int, int]]:
         """
@@ -174,53 +121,11 @@ class Command:
             sys.stderr.write(f"UNKNOWN - Invalid address format: {address}")
             sys.exit(UNKNOWN)
 
-    def get_commandData_by_commandNumber(self , command_number):
+    def get_commandData_by_commandNumber(self, command_number):
         for commandData in self.list:
             if commandData.command_number == command_number:
                 return commandData
         return None
-
-    def _create_group_query_command(self):
-        """Creates a group query for the given device.
-
-        Returns:
-            int: The number of commands in the group query.
-        """
-
-        cmd_name_map = dict(
-            dmu_ethernet=DRSMasterCommand,
-            dru_ethernet=DRSRemoteCommand,
-            discovery_ethernet=DiscoveryCommand,
-            discovery_serial=DiscoveryCommand,
-            dmu_serial_service=DRSMasterCommand,
-            dru_serial_service=CommBoardGroupCmd,
-            discovery_redboard_serial=DiscoveryRedBoardCommand
-        )
-
-        device = self.parameters['device']
-        if device in cmd_name_map:
-            cmd_group = cmd_name_map[device]
-            if cmd_group == CommBoardCmd:
-                opt = self.parameters['optical_port']
-                dru = self.parameters['device_number']
-                dru_id = f"{opt}{dru}"
-                for cmd_name in cmd_group:
-                    LtelProtocol(dru_id, cmd_name, 0x02)
-                    self.list.append(LtelProtocol(dru_id, cmd_name, 0x02))
-
-            elif cmd_group == CommBoardGroupCmd:
-                opt = self.parameters['optical_port']
-                dru = self.parameters['device_number']
-                dru_id = f"{opt}{dru}"
-                for cmd in cmd_group:
-                    self.list.append(LTELProtocolGroup(dru_id, cmd))
-            else:
-                for cmd_name in cmd_group:
-                    santone_protocol = SantoneProtocol(cmd_name, 0x00, -1)
-                    self.list.append(santone_protocol)
-            return len(self.list)
-        else:
-            self._exit_messagge(UNKNOWN, message=f"No commands created")
 
     def _exit_messagge(self, code, message):
         if code == CRITICAL:
@@ -247,31 +152,6 @@ class Command:
     def get_setting_command_value(self, int_number):
         for command in SettingCommand:
             if command.value == int_number:
-                return command
-        return None
-
-    def get_command_value(self):
-        int_number = self.parameters['cmd_name']
-
-        for command in SettingCommand:
-            if command.value == int_number:
-                return command
-        for command in NearEndQueryCommandNumber:
-            if command.value == int_number:
-                return command
-        for command in HardwarePeripheralDeviceParameterCommand:
-            if command.value == int_number:
-                return command
-        for command in RemoteQueryCommandNumber:
-            if command.value == int_number:
-                return command
-        return None
-
-    def get_command_comm_board_value(self):
-        int_number = self.parameters['cmd_name']
-
-        for command in CommBoardCmd:
-            if command.value[1] == int_number:
                 return command
         return None
 
