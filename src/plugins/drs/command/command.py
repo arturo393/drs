@@ -5,8 +5,9 @@ from typing import Optional
 from typing import Tuple
 
 from src.plugins.drs.command.command_factory import CommandFactory
-from src.plugins.drs.command_transmission import CommandTransmission
 from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
+from src.plugins.drs.definitions.transceiver.serial_transceiver import SerialTransceiver
+from src.plugins.drs.definitions.transceiver.tcp_transceiver import TCPTransceiver
 
 
 class Command:
@@ -165,24 +166,27 @@ class Command:
                 "discovery_serial",
                 "discovery_redboard_serial",
             ]:
-                result = CommandTransmission._transmit_serial(
-                    self.commands, port_dmu, baud_rate
+
+                serial_transceiver = SerialTransceiver()
+                result = serial_transceiver.transmit_and_receive(
+                    self.commands, port=port_dmu, baud=baud_rate
                 )
                 if isinstance(result, int) and not result:
                     return CRITICAL, self._print_error(port_dmu)
                 self.parameters.update(result)
 
             elif device == "dru_serial_service":
-                result = CommandTransmission._transmit_serial(
-                    self.commands, port_dru, baud_rate, timeout=10
+                serial_transceiver = SerialTransceiver()
+                result = serial_transceiver.transmit_and_receive(
+                    self.commands, port=port_dru, baud=baud_rate, timeout=10
                 )
                 if isinstance(result, int) and not result:
                     return CRITICAL, self._print_error(port_dru)
                 self.parameters.update(result)
             else:
-                result = CommandTransmission._transmit_tcp(
-                    self.commands, address
-                )
+                tcp_transceiver = TCPTransceiver()
+                result = tcp_transceiver.transmit_and_receive(
+                    self.commands, address=address)
                 if isinstance(result, int) and not result:
                     return CRITICAL, self._print_error(address)
                 self.parameters.update(result)

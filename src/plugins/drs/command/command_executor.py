@@ -1,6 +1,6 @@
 import sys
 
-from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
+from src.plugins.drs.definitions.nagios import CRITICAL
 from src.plugins.drs.command.command import Command
 
 
