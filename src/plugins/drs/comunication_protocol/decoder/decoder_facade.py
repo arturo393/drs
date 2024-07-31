@@ -10,7 +10,9 @@ class DecoderFacade:
         for dec in decoders:
             try:
                 return dec.decode(command_number, command_body)
-            except AttributeError:
+            except AttributeError as e:
+                fail = True
+            except Exception as e:
                 fail = True
         
         if fail:
