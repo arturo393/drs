@@ -12,12 +12,12 @@
 import sys
 import argparse
 
-from .drs.command.command_executor import CommandExecutor
-from .drs.definitions.nagios import CRITICAL, OK, WARNING
-from .drs.definitions.santone_commands import NearEndQueryCommandNumber
-from .drs.discovery import Discovery
-from .drs.plugin_output import PluginOutput
-from .drs.parameters import Parameters
+from drs.command.command_executor import CommandExecutor
+from drs.definitions.nagios import CRITICAL, OK, WARNING
+from drs.definitions.santone_commands import NearEndQueryCommandNumber
+from drs.discovery import Discovery
+from drs.plugin_output import PluginOutput
+from drs.parameters import Parameters
 
 # DMU_PORT = 'COM4'
 # DRU_PORT = 'COM2'
