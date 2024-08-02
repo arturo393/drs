@@ -2,8 +2,8 @@ import time
 import serial
 import sys
 from typing import Union
-from src.plugins.drs.definitions.nagios import CRITICAL
-from src.plugins.drs.transceiver.transceiver import Transceiver
+from ..definitions.nagios import CRITICAL
+from ..transceiver.transceiver import Transceiver
 
 
 class SerialTransceiver(Transceiver):

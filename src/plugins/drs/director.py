@@ -2,8 +2,8 @@ import json
 import requests
 import sys
 
-from src.plugins.drs.definitions.nagios import CRITICAL, WARNING
-from src.plugins.drs.dru import DRU
+from .definitions.nagios import CRITICAL, WARNING
+from .dru import DRU
 
 
 class Director:

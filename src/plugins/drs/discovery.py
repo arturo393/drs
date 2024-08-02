@@ -4,10 +4,10 @@ import socket
 import sys
 import time
 
-from src.plugins.drs.definitions.nagios import OK, WARNING
-from src.plugins.drs.definitions.santone_commands import DRSRemoteSerialCommand
-from src.plugins.drs.director import Director
-from src.plugins.drs.dru import DRU
+from .definitions.nagios import OK, WARNING
+from .definitions.santone_commands import DRSRemoteSerialCommand
+from .director import Director
+from .dru import DRU
 
 fix_ip_end = 0x16
 fix_ip_end_opt_1 = 0x64

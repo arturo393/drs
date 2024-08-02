@@ -1,7 +1,7 @@
 import sys
 
-from src.plugins.drs.alarm import Alarm
-from src.plugins.drs.definitions.nagios import CRITICAL, WARNING, UNKNOWN
+from .alarm import Alarm
+from .definitions.nagios import CRITICAL, WARNING, UNKNOWN
 
 class HtmlTable:
 

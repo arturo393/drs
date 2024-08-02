@@ -1,5 +1,5 @@
-from src.plugins.drs.comunication_protocol.decoder.ltel_decoder import LtelDecoder
-from src.plugins.drs.comunication_protocol.decoder.santone_decoder import SantoneDecoder
+from .ltel_decoder import LtelDecoder
+from .santone_decoder import SantoneDecoder
 
 class UnknownCommand(Exception):
     pass

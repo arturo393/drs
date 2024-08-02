@@ -1,7 +1,7 @@
-from src.plugins.drs.alarm import Alarm
-from src.plugins.drs.definitions.nagios import OK, WARNING, CRITICAL
-from src.plugins.drs.graphite import Graphite
-from src.plugins.drs.html_table import HtmlTable
+from .alarm import Alarm
+from .definitions.nagios import OK, WARNING, CRITICAL
+from .graphite import Graphite
+from .html_table import HtmlTable
 
 class PluginOutput:
     def __init__(self, parameters):

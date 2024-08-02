@@ -1,7 +1,7 @@
 import sys
 
-from src.plugins.drs.definitions.nagios import CRITICAL
-from src.plugins.drs.command.command import Command
+from ..definitions.nagios import CRITICAL
+from ..command.command import Command
 
 
 class CommandExecutor:
@@ -27,6 +27,7 @@ class CommandExecutor:
         if exit_code == CRITICAL:
             self._exit_critical(message)
 
+    @staticmethod
     def _exit_critical(self, message):
         sys.stderr.write(f"CRITICAL - {message}")
         sys.exit(CRITICAL)

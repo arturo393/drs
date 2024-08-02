@@ -1,6 +1,6 @@
 import sys
 
-from src.plugins.drs.definitions.nagios import UNKNOWN
+from .definitions.nagios import UNKNOWN
 
 class Graphite:
     def __init__(self, parameters):

@@ -2,7 +2,8 @@ import json
 import requests
 import sys
 
-from src.plugins.drs.definitions.nagios import CRITICAL, WARNING
+from .definitions.nagios import CRITICAL, WARNING
+
 
 class IcingaApi:
     icinga_api_login = "root"

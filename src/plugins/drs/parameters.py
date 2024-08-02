@@ -1,6 +1,6 @@
 
 
-from src.plugins.drs.dru import DRU
+from .dru import DRU
 
 
 class Parameters:

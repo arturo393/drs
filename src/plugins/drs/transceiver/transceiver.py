@@ -1,12 +1,6 @@
 import abc
-import time
-import serial
-import socket
-import sys
+from typing import Union
 
-from typing import Optional, Tuple, Union
-
-from src.plugins.drs.definitions.nagios import CRITICAL
 
 class Transceiver(abc.ABC):
     """

@@ -1,4 +1,4 @@
-from src.plugins.drs.definitions.nagios import OK, CRITICAL, WARNING 
+from .definitions.nagios import OK, CRITICAL, WARNING
 
 DEFAULT_WARNING_UPLINK_THRESHOLD = 200
 DEFAULT_CRITICAL_UPLINK_THRESHOLD = 200

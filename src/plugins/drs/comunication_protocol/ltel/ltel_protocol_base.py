@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.plugins.drs.comunication_protocol.comunication_protocol import CommunicationProtocol
-from src.plugins.drs.definitions.santone_commands import ResponseFlag
+from ..comunication_protocol import CommunicationProtocol
+from ...definitions.santone_commands import ResponseFlag
 
 
 class LTELProtocolBase(CommunicationProtocol, ABC):

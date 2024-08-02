@@ -1,4 +1,4 @@
-from src.plugins.drs.comunication_protocol.decoder.decoder import Decoder
+from .decoder import Decoder
 
 
 class LtelDecoder(Decoder):

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any
 from crccheck.crc import Crc16Xmodem
-from src.plugins.drs.comunication_protocol.decoder.decoder_facade import DecoderFacade, UnknownCommand
-from src.plugins.drs.definitions.santone_commands import ResponseFlag, DataType
+from ..comunication_protocol.decoder.decoder_facade import DecoderFacade, UnknownCommand
+from ..definitions.santone_commands import ResponseFlag, DataType
 
 
 class CommunicationProtocol(ABC):

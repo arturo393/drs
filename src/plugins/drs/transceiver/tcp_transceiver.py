@@ -2,7 +2,7 @@ import time
 import socket
 
 from typing import Union
-from src.plugins.drs.transceiver.transceiver import Transceiver
+from ..transceiver.transceiver import Transceiver
 
 
 class TCPTransceiver(Transceiver):

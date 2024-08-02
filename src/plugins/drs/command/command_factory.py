@@ -1,18 +1,11 @@
 from typing import Dict, Any, Type, List
 
-from src.plugins.drs.comunication_protocol.comunication_protocol import (
-    CommunicationProtocol,
-)
-from src.plugins.drs.comunication_protocol.ltel.ltel_protocol import LtelProtocol
-from src.plugins.drs.comunication_protocol.ltel.ltel_protocol_group import (
-    LTELProtocolGroup,
-)
-from src.plugins.drs.comunication_protocol.santone_protocol import SantoneProtocol
-from src.plugins.drs.definitions.ltel_commands import (
-    CommBoardGroupCmd,
-    CommBoardCmd,
-)
-from src.plugins.drs.definitions.santone_commands import (
+from ..comunication_protocol.comunication_protocol import CommunicationProtocol
+from ..comunication_protocol.ltel.ltel_protocol import LtelProtocol
+from ..comunication_protocol.ltel.ltel_protocol_group import LTELProtocolGroup
+from ..comunication_protocol.santone_protocol import SantoneProtocol
+from ..definitions.ltel_commands import CommBoardGroupCmd,CommBoardCmd
+from ..definitions.santone_commands import (
     DRSMasterCommand,
     DRSRemoteCommand,
     DiscoveryCommand,

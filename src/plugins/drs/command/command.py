@@ -1,13 +1,13 @@
 import os
 import sys
-
 from typing import Optional
 from typing import Tuple
 
-from src.plugins.drs.command.command_factory import CommandFactory
-from src.plugins.drs.definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
-from src.plugins.drs.transceiver.serial_transceiver import SerialTransceiver
-from src.plugins.drs.transceiver.tcp_transceiver import TCPTransceiver
+from .command_factory import CommandFactory
+from ..definitions.nagios import WARNING, CRITICAL, OK, UNKNOWN
+from ..transceiver.serial_transceiver import SerialTransceiver
+from ..transceiver.tcp_transceiver import TCPTransceiver
+
 
 
 class Command:

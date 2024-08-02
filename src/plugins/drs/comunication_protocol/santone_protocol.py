@@ -1,6 +1,5 @@
-from src.plugins.check_status import ResponseFlag
-from src.plugins.drs.comunication_protocol.comunication_protocol import CommunicationProtocol
-from src.plugins.drs.definitions.santone_commands import DataType
+from ..comunication_protocol.comunication_protocol import CommunicationProtocol
+from ..definitions.santone_commands import DataType, ResponseFlag
 
 
 class SantoneProtocol(CommunicationProtocol):
