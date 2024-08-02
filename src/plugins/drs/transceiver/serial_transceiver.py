@@ -1,13 +1,18 @@
+import os
 import time
 import serial
 import sys
-from typing import Union
+from typing import Union, Tuple
 from ..definitions.nagios import CRITICAL
 from ..transceiver.transceiver import Transceiver
 
 
 class SerialTransceiver(Transceiver):
     """Transceiver for communicating over a serial port."""
+
+    def __init__(self):
+        os_name = os.name.lower()
+        self.port_dmu, self.port_dru = self._get_ports(os_name)
 
     @staticmethod
     def _set_serial_with_timeout(
@@ -29,10 +34,22 @@ class SerialTransceiver(Transceiver):
                     )
                     sys.exit(CRITICAL)
 
+    @staticmethod
+    def _get_ports(os_name: str) -> Tuple[str, str]:
+        """Get serial port names based on OS."""
+        if os_name == "posix":
+            return "/dev/ttyS0", "/dev/ttyS1"
+        elif os_name == "nt":
+            return "COM2", "COM3"
+        else:
+            sys.stderr.write("OS not recognized, using default action.\n")
+            return "", ""
+
+
     def transmit_and_receive(self, commands: list, **kwargs) -> Union[dict, int]:
         """Transmits commands over the serial port and receives responses."""
-        port = kwargs.get("port")
-        baud = kwargs.get("baud")
+        port = self.port
+        baud = self.baud
         timeout = kwargs.get("timeout", 6)  # Default timeout
 
         try:

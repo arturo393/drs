@@ -148,68 +148,6 @@ class Command:
         else:
             sys.stderr.write(f"UNKNOWN - {message}\n")
 
-    def transmit_and_receive(self) -> Tuple[int, str]:
-        """
-        Transmit commands and receive responses based on device and connection type.
-        """
-        try:
-            device = self.parameters.get("device")
-            address = self.parameters.get("address")
-            baud_rate = self.parameters.get("baud_rate")
-
-            os_name = os.name.lower()
-            port_dmu, port_dru = self._get_ports(os_name)
-
-            if device in [
-                "dmu_serial_host",
-                "dmu_serial_service",
-                "dru_serial_host",
-                "discovery_serial",
-                "discovery_redboard_serial",
-            ]:
-
-                serial_transceiver = SerialTransceiver()
-                result = serial_transceiver.transmit_and_receive(
-                    self.commands, port=port_dmu, baud=baud_rate
-                )
-                if isinstance(result, int) and not result:
-                    return CRITICAL, self._print_error(port_dmu)
-                self.parameters.update(result)
-
-            elif device == "dru_serial_service":
-                serial_transceiver = SerialTransceiver()
-                result = serial_transceiver.transmit_and_receive(
-                    self.commands, port=port_dru, baud=baud_rate, timeout=10
-                )
-                if isinstance(result, int) and not result:
-                    return CRITICAL, self._print_error(port_dru)
-                self.parameters.update(result)
-            else:
-                tcp_transceiver = TCPTransceiver(address, 65050, 65053)
-                reply_counter = 0
-                for command_protocol in self.commands:
-                    reply_frame = tcp_transceiver.get_reply(command_protocol.get_command_query_as_bytearray())
-                    if command_protocol.save_if_valid(reply_frame):
-                        reply_counter = reply_counter + 1
-
-                result = {"rt": "1", "reply_counter": reply_counter}
-                self.parameters.update(result)
-                if isinstance(result, int) and not result:
-                    return CRITICAL, self._print_error(address)
-                return OK, f"Received data from {device}"
-
-        except Exception as e:
-            return CRITICAL, f"Error: {e}"
-
-    def _get_ports(self, os_name: str) -> Tuple[str, str]:
-        """Get serial port names based on OS."""
-        if os_name == "posix":
-            return "/dev/ttyS0", "/dev/ttyS1"
-        elif os_name == "nt":
-            return "COM2", "COM3"
-        else:
-            sys.stderr.write("OS not recognized, using default action.\n")
-            return "", ""
 
     def _print_error(self, device: str) -> str:
         """Print error message."""

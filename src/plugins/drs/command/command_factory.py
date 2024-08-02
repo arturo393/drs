@@ -23,6 +23,7 @@ class CommandFactory:
         "discovery_serial": DiscoveryCommand,
         "dmu_serial_service": DRSMasterCommand,
         "dru_serial_service": CommBoardGroupCmd,
+        "ltel_master": CommBoardGroupCmd,
         "discovery_redboard_serial": DiscoveryRedBoardCommand,
     }
 

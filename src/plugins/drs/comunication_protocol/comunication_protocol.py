@@ -46,6 +46,15 @@ class CommunicationProtocol(ABC):
             print(f"Error processing reply: {str(e)}")
             return None
 
+    def get_value(self, reply) -> Optional[Any]:
+        """
+        Extract and decode the reply value.
+
+        Returns None if no reply is available or if an error occurs during decoding.
+        """
+        if self.save_if_valid(reply):
+            return self.get_reply_value()
+
     def _decode(self) -> Any:
         """
         Decode the command body using the appropriate decoder method.

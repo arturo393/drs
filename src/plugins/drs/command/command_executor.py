@@ -1,7 +1,10 @@
+import os
 import sys
 
-from ..definitions.nagios import CRITICAL
+from ..definitions.nagios import CRITICAL, OK
 from ..command.command import Command
+from ..transceiver.serial_transceiver import SerialTransceiver
+from ..transceiver.tcp_transceiver import TCPTransceiver
 
 
 class CommandExecutor:
@@ -13,12 +16,32 @@ class CommandExecutor:
         # Create command
 
         # Transmit and receive
-        exit_code, message = self.command.transmit_and_receive()
-        self._check_critical(exit_code, message)
 
-        # Extract and decode
-        if not self.command.extract_and_decode_received():
-            self._exit_critical("No decoded data")
+        try:
+            device = self.command.parameters.get("device")
+            address = self.command.parameters.get("address")
+
+
+            tcp_transceiver = TCPTransceiver(address, 65050, 65053)
+            reply_counter = 0
+            for command_protocol in self.command.commands:
+
+
+
+
+
+                reply_frame = tcp_transceiver.get_reply(command_protocol.get_command_query_as_bytearray())
+                data = command_protocol.get_value(reply_frame)
+                if data:
+                    self.command.parameters.update(data)
+
+            result = {"rt": "1", "reply_counter": reply_counter}
+            self.command.parameters.update(result)
+            if isinstance(result, int) and not result:
+                return CRITICAL, self._print_error(address)
+
+        except Exception as e:
+            return CRITICAL, f"Error: {e}"
 
     def get_command(self):
         return self.command
@@ -28,6 +51,9 @@ class CommandExecutor:
             self._exit_critical(message)
 
     @staticmethod
-    def _exit_critical(self, message):
+    def _exit_critical(message: object) -> object:
         sys.stderr.write(f"CRITICAL - {message}")
         sys.exit(CRITICAL)
+
+    def _print_error(self, address):
+        pass
